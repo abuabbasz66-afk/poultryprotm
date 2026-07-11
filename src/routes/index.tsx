@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import heroImg from "@/assets/hero-poultry.jpg";
+import heroAsset from "@/assets/hero-layer-birds.jpg.asset.json";
 import founderAsset from "@/assets/founder-abubakar.jpg.asset.json";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import eggsImg from "@/assets/eggs.jpg";
@@ -95,7 +95,7 @@ function Index() {
 
           <div className="lg:col-span-6 relative">
             <div className="relative rounded-3xl overflow-hidden shadow-[var(--shadow-lift)] ring-1 ring-border">
-              <img src={heroImg} alt="Modern poultry farm" width={1600} height={1200} className="w-full h-[520px] object-cover" />
+              <img src={heroAsset.url} alt="Modern poultry farm" width={1600} height={1200} className="w-full h-[520px] object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--forest)]/40 via-transparent to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 flex gap-3">
                 <div className="flex-1 rounded-2xl bg-background/95 backdrop-blur px-4 py-3">
