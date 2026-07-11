@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import heroAsset from "@/assets/hero-layer-birds.jpg.asset.json";
 import founderAsset from "@/assets/founder-abubakar.jpg.asset.json";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
@@ -59,9 +59,9 @@ function Index() {
             <a href="#founder" className="text-muted-foreground hover:text-foreground transition">Founder</a>
             <a href="#roadmap" className="text-muted-foreground hover:text-foreground transition">Roadmap</a>
           </nav>
-          <a href="#contact" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition">
-            Partner with us <ArrowRight className="h-3.5 w-3.5" />
-          </a>
+          <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition">
+            View Dashboard <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
       </header>
 
