@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import heroImg from "@/assets/hero-poultry.jpg";
-import founderImg from "@/assets/founder.jpg";
+import founderAsset from "@/assets/founder-abubakar.jpg.asset.json";
+import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import eggsImg from "@/assets/eggs.jpg";
 import {
   Egg, Bird, LineChart, HeartPulse, Wheat, Wallet, LayoutDashboard,
@@ -46,10 +47,8 @@ function Index() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/60">
         <div className="container-x flex h-16 items-center justify-between">
-          <a href="#top" className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <Egg className="h-4 w-4" />
-            </span>
+          <a href="#top" className="flex items-center gap-2.5">
+            <img src={logoAsset.url} alt="PoultryPro" width={40} height={40} className="h-9 w-9 object-contain" />
             <span className="font-display text-lg font-semibold tracking-tight">
               PoultryPro<sup className="text-[10px] text-muted-foreground">™</sup>
             </span>
@@ -222,7 +221,7 @@ function Index() {
         <div className="container-x grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-4">
             <div className="relative">
-              <img src={founderImg} alt="Abubakar Sadiq Abbas" width={900} height={1100} loading="lazy" className="rounded-3xl object-cover w-full h-[520px]" />
+              <img src={founderAsset.url} alt="Abubakar Sadiq Abbas" width={900} height={1100} loading="lazy" className="rounded-3xl object-cover object-top w-full h-[520px]" />
               <div className="absolute -bottom-5 -right-5 bg-[color:var(--gold)] text-[color:var(--ink)] rounded-2xl px-5 py-3">
                 <div className="text-[10px] uppercase tracking-widest">Founder</div>
                 <div className="font-display text-lg font-semibold">ABZ Global</div>
@@ -316,9 +315,7 @@ function Index() {
       <footer className="border-t border-border py-10">
         <div className="container-x flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
-            <span className="grid h-7 w-7 place-items-center rounded-md bg-primary text-primary-foreground">
-              <Egg className="h-3.5 w-3.5" />
-            </span>
+            <img src={logoAsset.url} alt="PoultryPro" width={28} height={28} className="h-7 w-7 object-contain" />
             <span className="font-display font-semibold text-foreground">PoultryPro™</span>
             <span>· Katsina State, Nigeria</span>
           </div>
