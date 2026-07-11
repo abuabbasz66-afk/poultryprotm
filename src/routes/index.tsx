@@ -224,7 +224,7 @@ function Index() {
               <img src={founderAsset.url} alt="Abubakar Sadiq Abbas" width={900} height={1100} loading="lazy" className="rounded-3xl object-cover object-top w-full h-[520px]" />
               <div className="absolute -bottom-5 -right-5 bg-[color:var(--gold)] text-[color:var(--ink)] rounded-2xl px-5 py-3">
                 <div className="text-[10px] uppercase tracking-widest">Founder</div>
-                <div className="font-display text-lg font-semibold">ABZ Global</div>
+                <div className="font-display text-lg font-semibold">Abubakar Sadiq Abbas</div>
               </div>
             </div>
           </div>
