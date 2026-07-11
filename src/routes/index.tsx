@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import heroImg from "@/assets/hero-poultry.jpg";
-import founderImg from "@/assets/founder.jpg";
+import founderAsset from "@/assets/founder-abubakar.jpg.asset.json";
+import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import eggsImg from "@/assets/eggs.jpg";
 import {
   Egg, Bird, LineChart, HeartPulse, Wheat, Wallet, LayoutDashboard,
