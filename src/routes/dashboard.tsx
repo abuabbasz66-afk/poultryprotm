@@ -910,7 +910,7 @@ function AiCard({ icon: Icon, title, desc, active, onClick, actionLabel, badge }
 /* ------------------ Production Forecast ------------------ */
 
 function ProductionForecast({ eggs, totalBirds }: { eggs: EggRow[]; totalBirds: number }) {
-  const forecast = useMemo(() => computeForecast(eggs), [eggs]);
+  const forecast = useMemo(() => computeForecast(eggs, totalBirds), [eggs, totalBirds]);
 
   if (!forecast) {
     return (
