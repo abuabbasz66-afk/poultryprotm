@@ -1685,3 +1685,520 @@ function computeMortalityRisk(
     periodLabel,
   };
 }
+
+/* ------------------ Feed Efficiency Monitor ------------------ */
+
+type FeedEfficiencyProps = {
+  rooms: Room[];
+  feed: Feed[];
+  eggs: EggRow[];
+  mortality: Mortality[];
+  health: Health[];
+  bagWeightKg: number | null;
+  onBagWeightChange: (v: number | null) => void;
+};
+
+type EffStatus = "EFFICIENT" | "STABLE" | "WATCH" | "DECLINING";
+type MovementLabel = "IMPROVING" | "STABLE" | "WATCH" | "DECLINING";
+
+function FeedEfficiencyMonitor({
+  rooms, feed, eggs, mortality, health, bagWeightKg, onBagWeightChange,
+}: FeedEfficiencyProps) {
+  const analysis = useMemo(
+    () => computeFeedEfficiency(rooms, feed, eggs, mortality, health, bagWeightKg),
+    [rooms, feed, eggs, mortality, health, bagWeightKg],
+  );
+
+  const hasWeight = typeof bagWeightKg === "number" && bagWeightKg > 0;
+
+  return (
+    <Card>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--forest)]">
+            <span className="inline-flex items-center gap-1"><Sparkles className="h-3.5 w-3.5 text-[color:var(--gold)]" /> Predict</span>
+            <span className="text-muted-foreground/60">·</span>
+            <span className="rounded-full bg-[color:var(--gold)]/20 px-2 py-0.5 text-[10px] tracking-[0.16em] text-[color:var(--ink)]">Early Efficiency Model</span>
+          </div>
+          <h2 className="mt-1 font-display text-2xl md:text-3xl font-semibold">Feed Efficiency Monitor</h2>
+          <p className="mt-1 text-sm text-muted-foreground max-w-3xl">
+            Operational efficiency monitoring based on feed usage and egg production patterns.
+          </p>
+          {analysis && (
+            <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              Matched records: {analysis.matched.length} · Latest matched date: {analysis.latestLabel ?? "—"}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Farm configuration */}
+      <div className="mt-5 rounded-2xl border border-border bg-secondary/30 p-4">
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <div className="min-w-0">
+            <label className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              Standard Feed Bag Weight (kg)
+            </label>
+            <input
+              type="number" inputMode="decimal" min={0} step={0.5}
+              value={hasWeight ? String(bagWeightKg) : ""}
+              onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                onBagWeightChange(Number.isFinite(v) && v > 0 ? v : null);
+              }}
+              placeholder="Configure bag weight in kg"
+              className="mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Configurable by the farm administrator. Used to convert bag-based feed records into kilogrammes.
+            </p>
+          </div>
+          <div className="text-[11px] text-muted-foreground">
+            {hasWeight
+              ? `1 bag = ${bagWeightKg} kg`
+              : "Feed weight configuration required for kg-based efficiency calculations."}
+          </div>
+        </div>
+      </div>
+
+      {!analysis && (
+        <div className="mt-4 rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+          Not enough matched feed and production records yet to generate a feed efficiency analysis.
+        </div>
+      )}
+
+      {analysis && (
+        <>
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <ForecastStat
+              label="Current Efficiency Status"
+              value={analysis.status}
+              hint={`Movement score ${analysis.score} (negative = improving)`}
+              valueClassName={effTone(analysis.status)}
+              icon={Gauge}
+            />
+            <ForecastStat
+              label="Feed Used Today"
+              value={`${fmtNum(analysis.latest.bags)} bags`}
+              hint={hasWeight ? `${fmtNum(analysis.latest.bags * (bagWeightKg as number))} kg` : "Configure bag weight for kg"}
+            />
+            <ForecastStat
+              label="Egg Output Today"
+              value={analysis.latest.eggs.toLocaleString()}
+              hint={`Matched date: ${analysis.latest.label}`}
+            />
+            <ForecastStat
+              label="Feed per Egg"
+              value={hasWeight && analysis.latest.feedPerEggG !== undefined ? `${fmtNum(analysis.latest.feedPerEggG)} g` : "—"}
+              hint={hasWeight && analysis.latest.feedPerEggKg !== undefined
+                ? `${fmtNum(analysis.latest.feedPerEggKg, 3)} kg per egg`
+                : "Bag weight required"}
+            />
+          </div>
+
+          {/* Trend chart */}
+          <div className="mt-6">
+            <h3 className="font-display text-lg font-semibold">Feed and Production Trend</h3>
+            <p className="text-xs text-muted-foreground">
+              Only dates where valid matching feed and production records exist are compared. Missing records are not treated as zero.
+            </p>
+            <div className="h-72 mt-3">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={analysis.chartData} margin={{ top: 8, right: 16, left: -12, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0.02 85)" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
+                  <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--border)" }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Line yAxisId="left" type="monotone" dataKey="Eggs" stroke="oklch(0.32 0.06 155)" strokeWidth={2.5} dot={{ r: 2 }} connectNulls={false} />
+                  <Line yAxisId="right" type="monotone" dataKey="Feed (bags)" stroke="oklch(0.55 0.15 60)" strokeWidth={2.5} dot={{ r: 2 }} connectNulls={false} />
+                  {hasWeight && (
+                    <Line yAxisId="right" type="monotone" dataKey="Feed per Egg (g)" stroke="oklch(0.5 0.12 250)" strokeWidth={2} strokeDasharray="4 4" dot={{ r: 2 }} connectNulls={false} />
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Room-level */}
+          <div className="mt-6">
+            <h3 className="font-display text-lg font-semibold">Room-Level Feed Efficiency</h3>
+            <p className="text-xs text-muted-foreground">
+              Rooms with matched feed and production records analysed separately. Unmatched dates are excluded.
+            </p>
+
+            {/* Mobile cards */}
+            <div className="mt-3 grid gap-3 md:hidden">
+              {analysis.roomRows.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+                  No rooms with matched feed and production records in the analysis window.
+                </div>
+              )}
+              {analysis.roomRows.map(r => (
+                <div key={r.id} className="rounded-2xl border border-border bg-secondary/30 p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-medium">{r.name}</div>
+                    <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + movementBadgeClass(r.movement)}>
+                      {r.movement}
+                    </span>
+                  </div>
+                  <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                    <div><dt className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Live Birds</dt><dd>{r.current.toLocaleString()}</dd></div>
+                    <div><dt className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Feed Used</dt><dd>{fmtNum(r.bags)} bags{r.kg !== null ? ` · ${fmtNum(r.kg)} kg` : ""}</dd></div>
+                    <div><dt className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Eggs Produced</dt><dd>{r.eggs.toLocaleString()}</dd></div>
+                    <div><dt className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Feed per Bird</dt><dd>{r.feedPerBirdG !== null ? `${fmtNum(r.feedPerBirdG)} g` : "—"}</dd></div>
+                    <div><dt className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Feed per Egg</dt><dd>{r.feedPerEggG !== null ? `${fmtNum(r.feedPerEggG)} g` : "—"}</dd></div>
+                  </dl>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop table */}
+            <div className="mt-3 hidden md:block overflow-x-auto">
+              <table className="w-full text-sm min-w-[720px]">
+                <thead className="text-muted-foreground">
+                  <tr className="text-left">
+                    <th className="py-2 pr-4 font-medium">Room</th>
+                    <th className="py-2 pr-4 font-medium">Live Birds</th>
+                    <th className="py-2 pr-4 font-medium">Feed Used</th>
+                    <th className="py-2 pr-4 font-medium">Eggs Produced</th>
+                    <th className="py-2 pr-4 font-medium">Feed / Bird</th>
+                    <th className="py-2 pr-4 font-medium">Feed / Egg</th>
+                    <th className="py-2 pr-4 font-medium">Efficiency Movement</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analysis.roomRows.map(r => (
+                    <tr key={r.id} className="border-t border-border">
+                      <td className="py-3 pr-4 font-medium">{r.name}</td>
+                      <td className="py-3 pr-4">{r.current.toLocaleString()}</td>
+                      <td className="py-3 pr-4">{fmtNum(r.bags)} bags{r.kg !== null ? ` · ${fmtNum(r.kg)} kg` : ""}</td>
+                      <td className="py-3 pr-4">{r.eggs.toLocaleString()}</td>
+                      <td className="py-3 pr-4">{r.feedPerBirdG !== null ? `${fmtNum(r.feedPerBirdG)} g` : "—"}</td>
+                      <td className="py-3 pr-4">{r.feedPerEggG !== null ? `${fmtNum(r.feedPerEggG)} g` : "—"}</td>
+                      <td className="py-3 pr-4">
+                        <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + movementBadgeClass(r.movement)}>
+                          {r.movement}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {analysis.roomRows.length === 0 && (
+                    <tr><td colSpan={7} className="py-4 text-muted-foreground">No rooms with matched feed and production records.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Insight */}
+          <div className="mt-6 rounded-2xl border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/8 p-4 md:p-5">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--ink)]">
+              <Sparkles className="h-3.5 w-3.5 text-[color:var(--gold)]" /> PoultryPro Efficiency Insight
+            </div>
+            <div className="mt-2 text-sm leading-relaxed">
+              <div><span className="text-muted-foreground">Observation: </span>{analysis.insight.observation}</div>
+              <div className="mt-1.5"><span className="text-muted-foreground">Efficiency Interpretation: </span>{analysis.insight.interpretation}</div>
+              <div className="mt-1.5"><span className="text-muted-foreground">Suggested Action: </span>{analysis.insight.action}</div>
+            </div>
+          </div>
+
+          {/* Methodology */}
+          <div className="mt-4 rounded-2xl border border-border bg-secondary/30 p-4 text-xs leading-relaxed">
+            <div className="font-medium text-[color:var(--ink)]">Efficiency Methodology (transparent weighted movement)</div>
+            <ul className="mt-1.5 grid gap-1 md:grid-cols-2 text-muted-foreground">
+              <li>Feed-per-Egg Change — 50%</li>
+              <li>Production Movement — 25%</li>
+              <li>Feed Usage Movement — 15%</li>
+              <li>Room-Level Variation — 10%</li>
+            </ul>
+            <div className="mt-2 text-muted-foreground">
+              Latest matched period vs preceding matched baseline:
+              feed-per-egg {fmtSigned(analysis.movements.feedPerEggPct)}% ·
+              production {fmtSigned(analysis.movements.productionPct)}% ·
+              feed usage {fmtSigned(analysis.movements.feedPct)}% ·
+              room variation {fmtNum(analysis.movements.roomVariationPct)}%.
+            </div>
+            <div className="mt-2 text-muted-foreground">
+              Classification: Strong positive improvement → EFFICIENT · Minimal material change → STABLE ·
+              Moderate negative movement → WATCH · Sustained significant negative movement → DECLINING.
+            </div>
+            <div className="mt-2 text-muted-foreground">
+              Feed efficiency monitoring is generated from recorded feed usage and egg production patterns. Results
+              depend on the completeness and accuracy of farm records and provide operational decision support.
+            </div>
+          </div>
+        </>
+      )}
+    </Card>
+  );
+}
+
+function effTone(s: EffStatus): string {
+  switch (s) {
+    case "EFFICIENT": return "text-[color:var(--forest)]";
+    case "STABLE": return "text-muted-foreground";
+    case "WATCH": return "text-[color:var(--gold)]";
+    case "DECLINING": return "text-destructive";
+  }
+}
+
+function movementBadgeClass(m: MovementLabel): string {
+  switch (m) {
+    case "IMPROVING": return "bg-[color:var(--forest)] text-primary-foreground";
+    case "STABLE": return "bg-secondary text-[color:var(--ink)]";
+    case "WATCH": return "bg-[color:var(--gold)]/25 text-[color:var(--ink)]";
+    case "DECLINING": return "bg-destructive text-destructive-foreground";
+  }
+}
+
+function fmtNum(n: number, dp = 2): string {
+  if (!Number.isFinite(n)) return "—";
+  return n.toLocaleString(undefined, { maximumFractionDigits: dp });
+}
+
+function fmtSigned(n: number): string {
+  if (!Number.isFinite(n)) return "—";
+  const s = n >= 0 ? "+" : "";
+  return s + n.toLocaleString(undefined, { maximumFractionDigits: 1 });
+}
+
+type MatchedDay = {
+  date: string; label: string; bags: number; eggs: number;
+  kg?: number; feedPerEggKg?: number; feedPerEggG?: number;
+};
+
+type RoomEffRow = {
+  id: string; name: string; current: number;
+  bags: number; eggs: number;
+  kg: number | null; feedPerBirdG: number | null; feedPerEggG: number | null;
+  movement: MovementLabel;
+};
+
+type FeedEffAnalysis = {
+  matched: MatchedDay[];
+  latest: MatchedDay;
+  latestLabel: string | null;
+  status: EffStatus;
+  score: number;
+  chartData: Array<Record<string, string | number | null>>;
+  roomRows: RoomEffRow[];
+  insight: { observation: string; interpretation: string; action: string };
+  movements: { feedPerEggPct: number; productionPct: number; feedPct: number; roomVariationPct: number };
+};
+
+function computeFeedEfficiency(
+  rooms: Room[], feed: Feed[], eggs: EggRow[], mortality: Mortality[], health: Health[], bagWeightKg: number | null,
+): FeedEffAnalysis | null {
+  if (!eggs || eggs.length === 0 || !feed || feed.length === 0) return null;
+
+  const orderedEggs = [...eggs].sort((a, b) => b.date.localeCompare(a.date));
+  const anchor = new Date(orderedEggs[0].date + "T00:00:00");
+
+  type FeedRow = { room: string; bags: number; when: Date; iso: string };
+  const feedRows: FeedRow[] = feed
+    .map(f => {
+      const d = parseShortDate(f.date, anchor);
+      return d ? { room: f.room, bags: f.bags, when: d, iso: d.toISOString().slice(0, 10) } : null;
+    })
+    .filter((x): x is FeedRow => x !== null);
+
+  if (feedRows.length === 0) return null;
+
+  const eggsByIso = new Map<string, EggRow>();
+  eggs.forEach(e => eggsByIso.set(e.date, e));
+
+  const feedByDate = new Map<string, number>();
+  feedRows.forEach(r => feedByDate.set(r.iso, (feedByDate.get(r.iso) ?? 0) + r.bags));
+
+  const matched: MatchedDay[] = [];
+  Array.from(feedByDate.entries())
+    .filter(([iso]) => eggsByIso.has(iso))
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .forEach(([iso, bags]) => {
+      const e = eggsByIso.get(iso)!;
+      const eggTotal = (e.r2 + e.r3 + e.r4) * 30 + e.extra;
+      const day: MatchedDay = {
+        date: iso,
+        label: new Date(iso + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
+        bags,
+        eggs: eggTotal,
+      };
+      if (typeof bagWeightKg === "number" && bagWeightKg > 0) {
+        day.kg = bags * bagWeightKg;
+        day.feedPerEggKg = eggTotal > 0 ? day.kg / eggTotal : 0;
+        day.feedPerEggG = day.feedPerEggKg * 1000;
+      }
+      matched.push(day);
+    });
+
+  if (matched.length === 0) return null;
+
+  const latest = matched[matched.length - 1];
+
+  const chartData: Array<Record<string, string | number | null>> = matched.map(d => ({
+    name: d.label,
+    Eggs: d.eggs,
+    "Feed (bags)": d.bags,
+    "Feed per Egg (g)": d.feedPerEggG ?? null,
+  }));
+
+  const recentN = Math.min(3, Math.max(1, Math.floor(matched.length / 2)));
+  const recent = matched.slice(-recentN);
+  const prior = matched.slice(-recentN * 2, -recentN);
+  const avg = (xs: number[]) => xs.length ? xs.reduce((s, v) => s + v, 0) / xs.length : 0;
+
+  const recentEggs = avg(recent.map(d => d.eggs));
+  const priorEggs = prior.length ? avg(prior.map(d => d.eggs)) : recentEggs;
+  const recentBags = avg(recent.map(d => d.bags));
+  const priorBags = prior.length ? avg(prior.map(d => d.bags)) : recentBags;
+
+  const productionPct = priorEggs > 0 ? ((recentEggs - priorEggs) / priorEggs) * 100 : 0;
+  const feedPct = priorBags > 0 ? ((recentBags - priorBags) / priorBags) * 100 : 0;
+
+  const recentFpE = recentEggs > 0 ? recentBags / recentEggs : 0;
+  const priorFpE = priorEggs > 0 ? priorBags / priorEggs : 0;
+  const feedPerEggPct = priorFpE > 0 ? ((recentFpE - priorFpE) / priorFpE) * 100 : 0;
+
+  // Room share of eggs (based on crate contribution)
+  const roomShareEggs = computeRoomEggShare(rooms, eggs);
+
+  const feedByRoomDate = new Map<string, Map<string, number>>();
+  feedRows.forEach(r => {
+    const m = feedByRoomDate.get(r.room) ?? new Map<string, number>();
+    m.set(r.iso, (m.get(r.iso) ?? 0) + r.bags);
+    feedByRoomDate.set(r.room, m);
+  });
+
+  const roomRows: RoomEffRow[] = rooms.map(room => {
+    const roomMap = feedByRoomDate.get(room.name) ?? new Map<string, number>();
+    const roomMatched = Array.from(roomMap.entries())
+      .filter(([iso]) => eggsByIso.has(iso))
+      .sort((a, b) => a[0].localeCompare(b[0]));
+    if (roomMatched.length === 0) {
+      return {
+        id: room.id, name: room.name, current: room.current,
+        bags: 0, eggs: 0, kg: null, feedPerBirdG: null, feedPerEggG: null,
+        movement: "STABLE" as MovementLabel,
+      };
+    }
+    const share = roomShareEggs.get(room.id) ?? 0;
+    const roomBagsTotal = roomMatched.reduce((s, [, b]) => s + b, 0);
+    const roomEggsTotal = roomMatched.reduce((s, [iso]) => {
+      const e = eggsByIso.get(iso);
+      if (!e) return s;
+      const dayTotal = (e.r2 + e.r3 + e.r4) * 30 + e.extra;
+      return s + dayTotal * share;
+    }, 0);
+    const kg = typeof bagWeightKg === "number" && bagWeightKg > 0 ? roomBagsTotal * bagWeightKg : null;
+    const feedPerBirdG = kg !== null && room.current > 0 ? (kg * 1000) / room.current : null;
+    const feedPerEggG = kg !== null && roomEggsTotal > 0 ? (kg * 1000) / roomEggsTotal : null;
+
+    const rN = Math.min(3, Math.max(1, Math.floor(roomMatched.length / 2)));
+    const rRecent = roomMatched.slice(-rN);
+    const rPrior = roomMatched.slice(-rN * 2, -rN);
+    const bpe = (rows: Array<[string, number]>) => {
+      const b = avg(rows.map(([, v]) => v));
+      const eg = avg(rows.map(([iso]) => {
+        const e = eggsByIso.get(iso)!;
+        return ((e.r2 + e.r3 + e.r4) * 30 + e.extra) * share;
+      }));
+      return eg > 0 ? b / eg : 0;
+    };
+    const recentBpE = bpe(rRecent);
+    const priorBpE = rPrior.length > 0 ? bpe(rPrior) : recentBpE;
+    const move = priorBpE > 0 ? ((recentBpE - priorBpE) / priorBpE) * 100 : 0;
+    const movement: MovementLabel =
+      move <= -5 ? "IMPROVING"
+      : move >= 15 ? "DECLINING"
+      : move >= 5 ? "WATCH"
+      : "STABLE";
+
+    return {
+      id: room.id, name: room.name, current: room.current,
+      bags: roomBagsTotal, eggs: Math.round(roomEggsTotal),
+      kg, feedPerBirdG, feedPerEggG, movement,
+    };
+  });
+
+  const activeRoomFpE = roomRows.filter(r => r.eggs > 0 && r.bags > 0).map(r => r.bags / r.eggs);
+  let roomVariationPct = 0;
+  if (activeRoomFpE.length >= 2) {
+    const m = activeRoomFpE.reduce((s, v) => s + v, 0) / activeRoomFpE.length;
+    const v = activeRoomFpE.reduce((s, x) => s + (x - m) ** 2, 0) / activeRoomFpE.length;
+    roomVariationPct = m > 0 ? (Math.sqrt(v) / m) * 100 : 0;
+  }
+
+  const score = Math.round(
+    feedPerEggPct * 0.5 + (-productionPct) * 0.25 + feedPct * 0.15 + roomVariationPct * 0.1,
+  );
+
+  const status: EffStatus =
+    score <= -5 ? "EFFICIENT"
+    : score >= 15 ? "DECLINING"
+    : score >= 5 ? "WATCH"
+    : "STABLE";
+
+  const feedDir = describeMove(feedPct, "feed usage");
+  const eggDir = describeMove(productionPct, "egg output");
+  const fpeDir = feedPerEggPct > 1
+    ? "feed consumed per egg has increased, indicating a possible decline in production efficiency"
+    : feedPerEggPct < -1
+      ? "feed consumed per egg has decreased, indicating improving production efficiency"
+      : "feed consumed per egg has remained largely unchanged";
+
+  const observation = `Across the last ${recent.length} matched record${recent.length === 1 ? "" : "s"}, ${feedDir} while ${eggDir}. ${capitalise(fpeDir)}.`;
+
+  const interpretation = `Status ${status} — feed-per-egg movement ${fmtSigned(feedPerEggPct)}%, production movement ${fmtSigned(productionPct)}%, feed usage movement ${fmtSigned(feedPct)}%, room-level variation ${fmtNum(roomVariationPct)}%. Composite movement score ${score} (negative values indicate improving efficiency).`;
+
+  const worstRoom = [...roomRows]
+    .filter(r => r.eggs > 0)
+    .sort((a, b) => movementRank(b.movement) - movementRank(a.movement))[0];
+  const recentMortalityCount = mortality.length;
+  const recentHealth = health.slice(0, 2).map(h => h.name).join(", ");
+  const action = status === "EFFICIENT"
+    ? "Continue capturing daily feed and production records to keep the efficiency baseline current."
+    : `Review recent feed formulation and feed batch changes, feed distribution records${worstRoom ? `, and room-level production movement for ${worstRoom.name}` : ""}, bird population changes${recentMortalityCount > 0 ? " and recent mortality patterns" : ""}, water availability records if available${recentHealth ? `, and recent health observations (${recentHealth})` : ""}.`;
+
+  return {
+    matched, latest, latestLabel: latest.label,
+    status, score, chartData, roomRows,
+    insight: { observation, interpretation, action },
+    movements: { feedPerEggPct, productionPct, feedPct, roomVariationPct },
+  };
+}
+
+function computeRoomEggShare(rooms: Room[], eggs: EggRow[]): Map<string, number> {
+  // Derive each room's share of daily eggs from its crate contribution (r2/r3/r4) over the recorded window.
+  const share = new Map<string, number>();
+  const totals: Record<string, number> = { r2: 0, r3: 0, r4: 0 };
+  let all = 0;
+  eggs.forEach(e => {
+    totals.r2 += e.r2 * 30;
+    totals.r3 += e.r3 * 30;
+    totals.r4 += e.r4 * 30;
+    all += (e.r2 + e.r3 + e.r4) * 30 + e.extra;
+  });
+  rooms.forEach(r => {
+    const trimmed = r.name.replace(/\s+/g, "").toLowerCase();
+    const rk = trimmed.endsWith("2") ? "r2" : trimmed.endsWith("3") ? "r3" : trimmed.endsWith("4") ? "r4" : null;
+    const roomTotal = rk ? totals[rk] : 0;
+    share.set(r.id, all > 0 ? roomTotal / all : 0);
+  });
+  return share;
+}
+
+function describeMove(pct: number, subject: string): string {
+  if (pct > 2) return `${subject} increased by ${fmtNum(pct, 1)}%`;
+  if (pct < -2) return `${subject} decreased by ${fmtNum(Math.abs(pct), 1)}%`;
+  return `${subject} remained stable`;
+}
+
+function capitalise(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function movementRank(m: MovementLabel): number {
+  return m === "DECLINING" ? 3 : m === "WATCH" ? 2 : m === "STABLE" ? 1 : 0;
+}
