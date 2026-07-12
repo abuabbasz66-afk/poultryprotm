@@ -717,6 +717,13 @@ function Dashboard() {
             {mortalityOpen && (
               <MortalityRiskMonitor rooms={rooms} mortality={mortality} eggs={eggs} health={health} />
             )}
+
+            {feedEffOpen && (
+              <FeedEfficiencyMonitor
+                rooms={rooms} feed={feed} eggs={eggs} mortality={mortality} health={health}
+                bagWeightKg={bagWeightKg} onBagWeightChange={setBagWeightKg}
+              />
+            )}
           </div>
         )}
 
