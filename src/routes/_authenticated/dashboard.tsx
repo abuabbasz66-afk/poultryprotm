@@ -8,7 +8,7 @@ import {
   Egg, Bird, TrendingDown, TrendingUp, Wheat, DollarSign,
   Skull, Syringe, Droplets, Plus, Pencil, Trash2, MapPin,
   Sparkles, ArrowLeft, LayoutDashboard, LineChart as LineChartIcon,
-  Brain, Activity, AlertTriangle, Gauge, Radar, Lightbulb, ArrowRight, LogOut,
+  Brain, Activity, AlertTriangle, Gauge, Radar, Lightbulb, ArrowRight, LogOut, Upload,
 } from "lucide-react";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
