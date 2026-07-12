@@ -233,7 +233,76 @@ function Dashboard() {
       </header>
 
       <main className="container-x -mt-6 space-y-6">
-        {/* KPI cards */}
+        {/* Product-area navigation: Capture → Understand → Predict */}
+        <nav aria-label="Dashboard areas" className="rounded-3xl bg-card border border-border p-2 shadow-[var(--shadow-soft)]">
+          <div className="grid grid-cols-3 gap-1.5">
+            <AreaTab
+              active={area === "records"} onClick={() => setArea("records")}
+              num="01" stage="CAPTURE" title="Farm Records" plan="Basic" icon={LayoutDashboard}
+            />
+            <AreaTab
+              active={area === "analytics"} onClick={() => setArea("analytics")}
+              num="02" stage="UNDERSTAND" title="Farm Analytics" plan="Standard" icon={LineChartIcon}
+            />
+            <AreaTab
+              active={area === "ai"} onClick={() => setArea("ai")}
+              num="03" stage="PREDICT" title="AI Intelligence" plan="Premium" icon={Brain} premium
+            />
+          </div>
+        </nav>
+
+        {area === "analytics" && (
+          <div className="space-y-6">
+            <SectionIntro
+              stage="UNDERSTAND" plan="Standard" title="Farm Analytics"
+              body="Turn structured farm records into production, financial and operational intelligence."
+            />
+
+            {/* Operational Intelligence Summary — computed from existing records */}
+            <Card>
+              <CardHeader
+                title={<span className="inline-flex items-center gap-2"><Gauge className="h-5 w-5 text-[color:var(--forest)]" /> Operational Intelligence Summary</span>}
+                subtitle="Executive view calculated from your live farm records"
+              />
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <InsightRow
+                  label="Production vs 80% target"
+                  value={`${productionRate}%`}
+                  detail={productionRate >= 80
+                    ? `${productionRate - 80} pts above target`
+                    : `${80 - productionRate} pts below target`}
+                  positive={productionRate >= 80}
+                />
+                <InsightRow
+                  label="Today vs previous recorded day"
+                  value={`${diffPct >= 0 ? "+" : ""}${diffPct.toFixed(1)}%`}
+                  detail={`${todayEggs.toLocaleString()} eggs today · ${yesterdayEggs.toLocaleString()} prior`}
+                  positive={diffPct >= 0}
+                />
+                <InsightRow
+                  label="Highest producing room today"
+                  value={(() => {
+                    if (!today) return "—";
+                    const arr = [
+                      { name: "ROOM 2", v: today.r2 },
+                      { name: "ROOM 3", v: today.r3 },
+                      { name: "ROOM 4", v: today.r4 },
+                    ].sort((a, b) => b.v - a.v);
+                    return `${arr[0].name} · ${arr[0].v} crates`;
+                  })()}
+                  detail="Based on latest recorded production"
+                  positive
+                />
+                <InsightRow
+                  label="Monthly mortality total"
+                  value={String(monthlyMortality)}
+                  detail={`${feedToday} bags fed today · today's profit ${naira(todayProfit)}`}
+                  positive={monthlyMortality <= 5}
+                />
+              </div>
+            </Card>
+
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <KpiCard tone="mint" icon={Egg} label="Today's Eggs" value={todayEggs.toLocaleString()}
             hint={`${todayCrates} crates + ${todayExtra} extra`}
