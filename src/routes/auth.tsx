@@ -56,7 +56,7 @@ function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-sm">
         <div className="flex items-center gap-3 mb-6">
-          <img src={logoAsset.src} alt="PoultryPro" className="h-9 w-9 rounded" />
+          <img src={logoAsset.url} alt="PoultryPro" className="h-9 w-9 rounded" />
           <div>
             <div className="font-semibold text-foreground">PoultryPro™</div>
             <div className="text-xs text-muted-foreground">Smart Poultry Farm Management</div>
