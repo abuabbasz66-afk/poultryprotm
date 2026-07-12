@@ -1071,9 +1071,9 @@ type ForecastResult = {
   boundaryLabel: string;
 };
 
-function computeForecast(eggs: EggRow[]): ForecastResult | null {
+function computeForecast(eggs: EggRow[], totalBirds: number): ForecastResult | null {
   if (!eggs || eggs.length < 3) return null;
-  // Order chronologically (ascending)
+  // Order chronologically (ascending) — value is total eggs per day
   const ordered = [...eggs].sort((a, b) => a.date.localeCompare(b.date));
   const totals = ordered.map(e => ({
     date: e.date,
@@ -1081,58 +1081,62 @@ function computeForecast(eggs: EggRow[]): ForecastResult | null {
     value: (e.r2 + e.r3 + e.r4) * 30 + e.extra,
   }));
 
+  // Use last up to 7 days for trend detection
   const recent = totals.slice(-Math.min(7, totals.length));
   const values = recent.map(r => r.value);
-  const mean = values.reduce((s, v) => s + v, 0) / values.length;
+  const n = values.length;
+  const mean = values.reduce((s, v) => s + v, 0) / n;
 
   // Linear regression slope on recent values (x = 0..n-1)
-  const n = values.length;
   const xMean = (n - 1) / 2;
   let num = 0, den = 0;
   values.forEach((v, i) => { num += (i - xMean) * (v - mean); den += (i - xMean) ** 2; });
   const slope = den === 0 ? 0 : num / den;
 
-  // Standard deviation for range
-  const variance = values.reduce((s, v) => s + (v - mean) ** 2, 0) / values.length;
+  // Residual standard deviation around the fitted line — drives the range
+  const residuals = values.map((v, i) => v - (mean + slope * (i - xMean)));
+  const variance = residuals.reduce((s, v) => s + v * v, 0) / n;
   const std = Math.sqrt(variance);
 
-  // Direction from slope relative to mean
-  const slopePctPerDay = mean === 0 ? 0 : (slope / mean) * 100;
-  const direction: ForecastResult["direction"] =
-    slopePctPerDay > 0.4 ? "Increasing"
-    : slopePctPerDay < -0.4 ? "Declining"
-    : "Stable";
-
-  // Build forecast for next 7 days: baseline = mean + slope offset from last point
-  const lastIdx = n - 1;
+  // Anchor forecast at the last historical value so the chart continues smoothly
+  const lastVal = values[n - 1];
   const forecastValues: number[] = [];
   for (let k = 1; k <= 7; k++) {
-    const projected = mean + slope * (lastIdx + k - xMean);
-    forecastValues.push(Math.max(0, Math.round(projected)));
+    forecastValues.push(Math.max(0, Math.round(lastVal + slope * k)));
   }
-  const avgForecast = Math.round(forecastValues.reduce((s, v) => s + v, 0) / forecastValues.length);
-  const spread = Math.max(std, mean * 0.03); // at least ±3% for a visible range
-  const low = Math.max(0, Math.round(avgForecast - spread));
-  const high = Math.round(avgForecast + spread);
 
-  // Historical portion of chart: last 14 days
+  // Card metrics derived directly from plotted forecast values
+  const avgForecast = Math.round(forecastValues.reduce((s, v) => s + v, 0) / forecastValues.length);
+  const spread = Math.max(std, Math.max(mean, 1) * 0.02); // at least ±2% for a visible range
+  const forecastMin = Math.min(...forecastValues);
+  const forecastMax = Math.max(...forecastValues);
+  const low = Math.max(0, Math.round(forecastMin - spread));
+  const high = Math.round(forecastMax + spread);
+
+  // Direction from slope; cross-check against first vs last plotted forecast
+  const slopePctPerDay = mean === 0 ? 0 : (slope / mean) * 100;
+  const forecastDelta = forecastValues[forecastValues.length - 1] - forecastValues[0];
+  const direction: ForecastResult["direction"] =
+    slopePctPerDay > 0.4 && forecastDelta > 0 ? "Increasing"
+    : slopePctPerDay < -0.4 && forecastDelta < 0 ? "Declining"
+    : "Stable";
+
+  // Historical portion of chart: last 14 days (total eggs per day, same unit as forecast)
   const historical = totals.slice(-Math.min(14, totals.length));
   const boundaryLabel = historical[historical.length - 1].label;
 
-  // Build chart data
   const chartData: ForecastResult["chartData"] = [];
   historical.forEach((h, i) => {
     chartData.push({
       name: h.label,
       Historical: h.value,
-      // At boundary, seed the forecast line so it visually connects
+      // Seed forecast at the boundary so the dashed line starts from the last historical value
       Forecast: i === historical.length - 1 ? h.value : null,
       Upper: i === historical.length - 1 ? h.value : null,
       Lower: i === historical.length - 1 ? h.value : null,
     });
   });
 
-  // Forecast next 7 days — synthesize labels from last historical date
   const lastDate = new Date(historical[historical.length - 1].date + "T00:00:00");
   for (let k = 1; k <= 7; k++) {
     const d = new Date(lastDate);
@@ -1149,12 +1153,14 @@ function computeForecast(eggs: EggRow[]): ForecastResult | null {
   }
 
   const latest = totals[totals.length - 1];
-  const recentMax = Math.max(...values);
-  const relativePct = recentMax > 0 ? Math.round((latest.value / recentMax) * 100) : 0;
+  // Current production rate = latest total eggs ÷ current live birds × 100
+  const latestPct = totalBirds > 0
+    ? Math.round((latest.value / totalBirds) * 1000) / 10
+    : 0;
 
   return {
     latestTotal: latest.value,
-    latestPct: relativePct,
+    latestPct,
     avgForecast,
     low,
     high,
