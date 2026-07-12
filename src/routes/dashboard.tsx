@@ -1149,11 +1149,6 @@ function computeForecast(eggs: EggRow[]): ForecastResult | null {
   }
 
   const latest = totals[totals.length - 1];
-  const latestPct = latest.value > 0
-    ? Math.round((latest.value / Math.max(1, Math.round(mean / 0.8 || latest.value))) * 100)
-    : 0;
-  // Fallback: production rate is just latest vs a rolling reference — but we don't have birds here.
-  // Compute a simple % relative to recent max to keep it meaningful when birds count unavailable.
   const recentMax = Math.max(...values);
   const relativePct = recentMax > 0 ? Math.round((latest.value / recentMax) * 100) : 0;
 
