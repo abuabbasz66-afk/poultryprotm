@@ -1314,7 +1314,33 @@ function MortalityRiskMonitor({ rooms, mortality, eggs, health }: MortalityRiskP
       <div className="mt-6">
         <h3 className="font-display text-lg font-semibold">Room-Level Risk Analysis</h3>
         <p className="text-xs text-muted-foreground">Each active room analysed separately from stored mortality and bird records.</p>
-        <div className="mt-3 overflow-x-auto">
+
+        {/* Mobile: stacked cards */}
+        <div className="mt-3 grid gap-3 md:hidden">
+          {roomRows.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">No active rooms configured.</div>
+          )}
+          {roomRows.map(r => (
+            <div key={r.id} className="rounded-2xl border border-border bg-secondary/30 p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="font-medium">{r.name}</div>
+                <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + riskBadgeClass(r.levelLabel)}>
+                  {r.levelLabel} · {r.score}
+                </span>
+              </div>
+              <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                <div><dt className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Live Birds</dt><dd>{r.current.toLocaleString()}</dd></div>
+                <div><dt className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Lost (period)</dt><dd>{r.lost}</dd></div>
+                <div><dt className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Mortality %</dt><dd>{r.ratePct.toFixed(2)}%</dd></div>
+                <div><dt className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Events</dt><dd>{r.events}</dd></div>
+                <div className="col-span-2"><dt className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Last Event</dt><dd className="text-muted-foreground">{r.lastEventLabel ?? "—"}</dd></div>
+              </dl>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop: table */}
+        <div className="mt-3 hidden md:block overflow-x-auto">
           <table className="w-full text-sm min-w-[640px]">
             <thead className="text-muted-foreground">
               <tr className="text-left">
