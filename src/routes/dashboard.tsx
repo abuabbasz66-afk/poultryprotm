@@ -2247,3 +2247,444 @@ function capitalise(s: string): string {
 function movementRank(m: MovementLabel): number {
   return m === "DECLINING" ? 3 : m === "WATCH" ? 2 : m === "STABLE" ? 1 : 0;
 }
+
+/* ------------------ Abnormal Farm Activity Detection ------------------ */
+
+type AbnormalProps = {
+  rooms: Room[];
+  eggs: EggRow[];
+  feed: Feed[];
+  mortality: Mortality[];
+  health: Health[];
+  bagWeightKg: number | null;
+};
+
+type ActivityLevel = "NORMAL" | "WATCH" | "ELEVATED" | "HIGH";
+
+type SignalKey = "production" | "mortality" | "feed" | "health";
+
+type RoomActivityRow = {
+  id: string;
+  name: string;
+  score: number;
+  level: ActivityLevel;
+  signals: Record<SignalKey, { score: number | null; label: string; note: string }>;
+  triggered: SignalKey[];
+};
+
+type AbnormalAnalysis = {
+  score: number;
+  level: ActivityLevel;
+  periodLabel: string;
+  signalsAnalysed: string[];
+  roomsMonitored: number;
+  mostAffected: RoomActivityRow | null;
+  rooms: RoomActivityRow[];
+  insight: { observation: string; connection: string; interpretation: string; action: string };
+  limited: boolean;
+};
+
+function classifyActivity(score: number): ActivityLevel {
+  if (score >= 75) return "HIGH";
+  if (score >= 50) return "ELEVATED";
+  if (score >= 25) return "WATCH";
+  return "NORMAL";
+}
+
+function activityBadgeClass(level: ActivityLevel): string {
+  switch (level) {
+    case "HIGH": return "bg-destructive text-destructive-foreground";
+    case "ELEVATED": return "bg-[color:var(--gold)]/30 text-[color:var(--ink)]";
+    case "WATCH": return "bg-[color:var(--gold)]/15 text-[color:var(--ink)]";
+    default: return "bg-[color:var(--forest)] text-primary-foreground";
+  }
+}
+
+function activityTone(level: ActivityLevel): string {
+  switch (level) {
+    case "HIGH": return "text-destructive";
+    case "ELEVATED": return "text-[color:var(--gold)]";
+    case "WATCH": return "text-[color:var(--ink)]";
+    default: return "text-[color:var(--forest)]";
+  }
+}
+
+function AbnormalActivityMonitor({ rooms, eggs, feed, mortality, health, bagWeightKg }: AbnormalProps) {
+  const analysis = useMemo(
+    () => computeAbnormalActivity(rooms, eggs, feed, mortality, health, bagWeightKg),
+    [rooms, eggs, feed, mortality, health, bagWeightKg],
+  );
+
+  if (!analysis) {
+    return (
+      <Card>
+        <CardHeader
+          title="Abnormal Farm Activity Monitor"
+          subtitle="Cross-signal operational monitoring based on production, mortality, feed and health records."
+        />
+        <div className="mt-4 rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+          Not enough farm records yet to run cross-signal activity detection.
+        </div>
+      </Card>
+    );
+  }
+
+  const { score, level, periodLabel, signalsAnalysed, roomsMonitored, mostAffected, rooms: roomRows, insight, limited } = analysis;
+
+  return (
+    <Card>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--forest)]">
+            <span className="inline-flex items-center gap-1"><Sparkles className="h-3.5 w-3.5 text-[color:var(--gold)]" /> Predict</span>
+            <span className="text-muted-foreground/60">·</span>
+            <span className="rounded-full bg-[color:var(--gold)]/20 px-2 py-0.5 text-[10px] tracking-[0.16em] text-[color:var(--ink)]">Early Anomaly Model</span>
+          </div>
+          <h2 className="mt-1 font-display text-2xl md:text-3xl font-semibold">Abnormal Farm Activity Monitor</h2>
+          <p className="mt-1 text-sm text-muted-foreground max-w-3xl">
+            Cross-signal operational monitoring based on production, mortality, feed and health records.
+          </p>
+          <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Analysis window: {periodLabel}</p>
+        </div>
+      </div>
+
+      <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <ForecastStat
+          label="Current Activity Status"
+          value={level}
+          hint={`Abnormal activity score ${score}/100`}
+          valueClassName={activityTone(level)}
+          icon={Radar}
+        />
+        <ForecastStat
+          label="Signals Analysed"
+          value={String(signalsAnalysed.length)}
+          hint={signalsAnalysed.length ? signalsAnalysed.join(" · ") : "No signals with sufficient data"}
+        />
+        <ForecastStat
+          label="Rooms Monitored"
+          value={String(roomsMonitored)}
+          hint="Each active room analysed independently"
+        />
+        <ForecastStat
+          label="Most Affected Room"
+          value={mostAffected ? mostAffected.name : "—"}
+          hint={mostAffected ? `${mostAffected.level} · score ${mostAffected.score}` : "No cross-signal pattern detected"}
+        />
+      </div>
+
+      {limited && (
+        <div className="mt-4 rounded-2xl border border-dashed border-border bg-secondary/30 p-4 text-sm">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Limited Signal Data</div>
+          <div className="mt-1 text-muted-foreground">
+            PoultryPro is monitoring available farm records. Additional matched production, feed, mortality and health records will strengthen cross-signal activity detection.
+          </div>
+        </div>
+      )}
+
+      {score >= 50 && mostAffected && (
+        <div className="mt-4 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
+          <div className="flex items-start gap-2 text-destructive">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+            <div>
+              <div className="font-medium">Cross-signal activity detected in {mostAffected.name}</div>
+              <div className="mt-1 text-destructive/90">
+                {mostAffected.triggered.length >= 2
+                  ? `${mostAffected.triggered.map(s => signalPretty(s)).join(" and ")} signals occurred together within the current analysis window. Review recent ${mostAffected.name} operational and health records.`
+                  : `${signalPretty(mostAffected.triggered[0] ?? "production")} signal is elevated. Review recent ${mostAffected.name} operational and health records.`}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Room-level table */}
+      <div className="mt-6">
+        <h3 className="font-display text-lg font-semibold">Room-Level Anomaly Analysis</h3>
+        <p className="text-xs text-muted-foreground">Each active room analysed independently from its own production, mortality, feed and health records.</p>
+
+        {/* Mobile stacked cards */}
+        <div className="mt-3 grid gap-3 md:hidden">
+          {roomRows.map(r => (
+            <div key={r.id} className="rounded-2xl border border-border bg-secondary/30 p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="font-medium">{r.name}</div>
+                <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + activityBadgeClass(r.level)}>
+                  {r.level} · {r.score}
+                </span>
+              </div>
+              <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                <div><dt className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Production</dt><dd>{r.signals.production.label}</dd></div>
+                <div><dt className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Mortality</dt><dd>{r.signals.mortality.label}</dd></div>
+                <div><dt className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Feed</dt><dd>{r.signals.feed.label}</dd></div>
+                <div><dt className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Health context</dt><dd>{r.signals.health.label}</dd></div>
+              </dl>
+            </div>
+          ))}
+          {roomRows.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">No active rooms configured.</div>
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <div className="mt-3 hidden md:block overflow-x-auto">
+          <table className="w-full text-sm min-w-[720px]">
+            <thead className="text-muted-foreground">
+              <tr className="text-left">
+                <th className="py-2 pr-4 font-medium">Room</th>
+                <th className="py-2 pr-4 font-medium">Production Signal</th>
+                <th className="py-2 pr-4 font-medium">Mortality Signal</th>
+                <th className="py-2 pr-4 font-medium">Feed Signal</th>
+                <th className="py-2 pr-4 font-medium">Health Context</th>
+                <th className="py-2 pr-4 font-medium">Activity Score</th>
+                <th className="py-2 pr-4 font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {roomRows.map(r => (
+                <tr key={r.id} className="border-t border-border">
+                  <td className="py-3 pr-4 font-medium">{r.name}</td>
+                  <td className="py-3 pr-4">{r.signals.production.label}</td>
+                  <td className="py-3 pr-4">{r.signals.mortality.label}</td>
+                  <td className="py-3 pr-4">{r.signals.feed.label}</td>
+                  <td className="py-3 pr-4">{r.signals.health.label}</td>
+                  <td className="py-3 pr-4">{r.score}</td>
+                  <td className="py-3 pr-4">
+                    <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + activityBadgeClass(r.level)}>
+                      {r.level}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {roomRows.length === 0 && (
+                <tr><td colSpan={7} className="py-4 text-muted-foreground">No active rooms configured.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Insight */}
+      <div className="mt-6 rounded-2xl border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/8 p-4 md:p-5">
+        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--ink)]">
+          <Sparkles className="h-3.5 w-3.5 text-[color:var(--gold)]" /> PoultryPro Cross-Signal Insight
+        </div>
+        <div className="mt-2 text-sm leading-relaxed">
+          <div><span className="text-muted-foreground">Observation: </span>{insight.observation}</div>
+          <div className="mt-1.5"><span className="text-muted-foreground">Signal Connection: </span>{insight.connection}</div>
+          <div className="mt-1.5"><span className="text-muted-foreground">Risk Interpretation: </span>{insight.interpretation}</div>
+          <div className="mt-1.5"><span className="text-muted-foreground">Suggested Action: </span>{insight.action}</div>
+        </div>
+      </div>
+
+      {/* Methodology */}
+      <div className="mt-4 rounded-2xl border border-border bg-secondary/30 p-4 text-xs leading-relaxed">
+        <div className="font-medium text-[color:var(--ink)]">Abnormal Activity Detection Methodology (0–100)</div>
+        <ul className="mt-1.5 grid gap-1 md:grid-cols-2 text-muted-foreground">
+          <li>Production Anomaly — 30%</li>
+          <li>Mortality Pattern — 30%</li>
+          <li>Feed Efficiency Anomaly — 25%</li>
+          <li>Health Record Context — 15%</li>
+        </ul>
+        <div className="mt-2 text-muted-foreground">
+          Available weights are re-normalised when a signal has insufficient data. Classification: 0–24 NORMAL · 25–49 WATCH · 50–74 ELEVATED · 75–100 HIGH.
+        </div>
+        <div className="mt-2 text-muted-foreground">
+          PoultryPro Abnormal Farm Activity Detection provides early operational decision support based on recorded farm patterns. It does not constitute veterinary diagnosis or confirm disease.
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function signalPretty(k: SignalKey): string {
+  return k === "production" ? "Production" : k === "mortality" ? "Mortality" : k === "feed" ? "Feed efficiency" : "Health record";
+}
+
+function computeAbnormalActivity(
+  rooms: Room[], eggs: EggRow[], feed: Feed[], mortality: Mortality[], health: Health[], bagWeightKg: number | null,
+): AbnormalAnalysis | null {
+  if (!rooms || rooms.length === 0) return null;
+  if (!eggs || eggs.length === 0) return null;
+
+  const orderedEggs = [...eggs].sort((a, b) => b.date.localeCompare(a.date));
+  const anchor = new Date(orderedEggs[0].date + "T00:00:00");
+  const PERIOD_DAYS = 30;
+  const periodStart = new Date(anchor);
+  periodStart.setDate(periodStart.getDate() - PERIOD_DAYS + 1);
+  const periodLabel = `${periodStart.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${anchor.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`;
+
+  // Reuse existing per-room mortality analysis
+  const mortalityAnalysis = computeMortalityRisk(rooms, mortality, eggs, health);
+  const mortalityByRoom = new Map<string, RoomRisk>();
+  mortalityAnalysis?.rooms.forEach(r => mortalityByRoom.set(r.name, r));
+
+  // Reuse existing feed efficiency (only if feed records exist)
+  const feedAnalysis = feed && feed.length > 0
+    ? computeFeedEfficiency(rooms, feed, eggs, mortality, health, bagWeightKg)
+    : null;
+  const feedByRoom = new Map<string, RoomEffRow>();
+  feedAnalysis?.roomRows.forEach(r => feedByRoom.set(r.name, r));
+
+  // Sort eggs ascending by date for production trend
+  const eggsAsc = [...eggs].sort((a, b) => a.date.localeCompare(b.date));
+  const eggInPeriod = eggsAsc.filter(e => {
+    const t = new Date(e.date + "T00:00:00").getTime();
+    return t >= periodStart.getTime() && t <= anchor.getTime() + 24 * 60 * 60 * 1000;
+  });
+
+  const roomKeyMap: Record<string, "r2" | "r3" | "r4" | null> = {};
+  rooms.forEach(r => {
+    const trimmed = r.name.replace(/\s+/g, "").toLowerCase();
+    roomKeyMap[r.id] = trimmed.endsWith("2") ? "r2" : trimmed.endsWith("3") ? "r3" : trimmed.endsWith("4") ? "r4" : null;
+  });
+
+  const signalKeysAnalysed = new Set<SignalKey>();
+
+  const roomRows: RoomActivityRow[] = rooms.map(room => {
+    const rk = roomKeyMap[room.id];
+    const signals: RoomActivityRow["signals"] = {
+      production: { score: null, label: "Insufficient data", note: "" },
+      mortality:  { score: null, label: "Insufficient data", note: "" },
+      feed:       { score: null, label: "Insufficient data", note: "" },
+      health:     { score: null, label: "Insufficient data", note: "" },
+    };
+
+    // --- Production signal (per room) ---
+    if (rk) {
+      const series = eggInPeriod.map(e => e[rk] * 30);
+      if (series.length >= 8) {
+        const half = Math.floor(series.length / 2);
+        const prior = series.slice(0, half);
+        const recent = series.slice(-half);
+        const avg = (xs: number[]) => xs.reduce((s, v) => s + v, 0) / xs.length;
+        const priorAvg = avg(prior);
+        const recentAvg = avg(recent);
+        const declinePct = priorAvg > 0 ? ((priorAvg - recentAvg) / priorAvg) * 100 : 0;
+        // Only decline counts as anomaly signal
+        const clamped = Math.max(0, declinePct);
+        const score = Math.min(100, clamped * 10); // 10% decline → 100
+        const label = declinePct >= 5
+          ? `Decline ${declinePct.toFixed(1)}%`
+          : declinePct >= 2
+            ? `Mild decline ${declinePct.toFixed(1)}%`
+            : declinePct <= -2
+              ? `Rising ${Math.abs(declinePct).toFixed(1)}%`
+              : "Stable";
+        signals.production = { score, label, note: `Recent ${recent.length}-day avg ${recentAvg.toFixed(0)} eggs/day vs prior ${prior.length}-day avg ${priorAvg.toFixed(0)}.` };
+        signalKeysAnalysed.add("production");
+      }
+    }
+
+    // --- Mortality signal (per room) ---
+    const mr = mortalityByRoom.get(room.name);
+    if (mr) {
+      signals.mortality = {
+        score: mr.score,
+        label: mr.events === 0
+          ? "No events"
+          : `${mr.events} event${mr.events === 1 ? "" : "s"} · ${mr.lost} lost`,
+        note: `Period mortality ${mr.ratePct.toFixed(2)}%.`,
+      };
+      signalKeysAnalysed.add("mortality");
+    }
+
+    // --- Feed signal (per room) ---
+    const fr = feedByRoom.get(room.name);
+    if (fr && fr.movement !== "INSUFFICIENT DATA") {
+      const map: Record<string, number> = { IMPROVING: 0, STABLE: 15, WATCH: 55, DECLINING: 90 };
+      const s = map[fr.movement] ?? 0;
+      signals.feed = { score: s, label: fr.movement, note: "Room-level feed-per-egg movement vs preceding matched records." };
+      signalKeysAnalysed.add("feed");
+    }
+
+    // --- Health record context (per room) ---
+    if (health && health.length > 0) {
+      const parsedHealth = health
+        .map(h => {
+          const d = parseShortDate(h.date, anchor);
+          return d ? { ...h, ts: d.getTime() } : null;
+        })
+        .filter((x): x is Health & { ts: number } => x !== null)
+        .filter(h => h.ts >= periodStart.getTime() && h.ts <= anchor.getTime() + 24 * 60 * 60 * 1000)
+        .filter(h => h.scope === room.name || /all rooms/i.test(h.scope));
+      // Higher activity = more recent context signals; treat presence as contextual weight only
+      const count = parsedHealth.length;
+      const s = Math.min(100, count * 30);
+      signals.health = {
+        score: s,
+        label: count === 0 ? "No recent records" : `${count} recent record${count === 1 ? "" : "s"}`,
+        note: count === 0 ? "" : parsedHealth.slice(0, 2).map(h => `${h.name} (${h.type})`).join(", "),
+      };
+      signalKeysAnalysed.add("health");
+    }
+
+    // --- Weighted score with re-normalisation ---
+    const weights: Record<SignalKey, number> = { production: 0.30, mortality: 0.30, feed: 0.25, health: 0.15 };
+    let total = 0;
+    let weightSum = 0;
+    (Object.keys(weights) as SignalKey[]).forEach(k => {
+      const s = signals[k].score;
+      if (s !== null) {
+        total += s * weights[k];
+        weightSum += weights[k];
+      }
+    });
+    const roomScore = weightSum > 0 ? Math.round(total / weightSum) : 0;
+    const level = classifyActivity(roomScore);
+    const triggered = (Object.keys(signals) as SignalKey[]).filter(k => (signals[k].score ?? 0) >= 50);
+
+    return { id: room.id, name: room.name, score: roomScore, level, signals, triggered };
+  });
+
+  // Farm-level: weighted by current bird count
+  const totalBirds = rooms.reduce((s, r) => s + r.current, 0);
+  const farmScore = totalBirds > 0
+    ? Math.round(roomRows.reduce((s, r) => {
+        const room = rooms.find(rr => rr.id === r.id)!;
+        return s + r.score * (room.current / totalBirds);
+      }, 0))
+    : 0;
+  const farmLevel = classifyActivity(farmScore);
+
+  const mostAffected = [...roomRows].sort((a, b) => b.score - a.score)[0] ?? null;
+
+  const limited = signalKeysAnalysed.size < 3;
+
+  // --- Insight ---
+  const combos = roomRows.filter(r => r.triggered.length >= 2);
+  const observation = combos.length > 0
+    ? `Cross-signal pattern detected in ${combos.map(r => r.name).join(", ")}: ${combos.map(r => `${r.triggered.map(signalPretty).join(" + ")} in ${r.name}`).join("; ")}.`
+    : mostAffected && mostAffected.triggered.length === 1
+      ? `${signalPretty(mostAffected.triggered[0])} signal is elevated in ${mostAffected.name}. No other independent signal is currently elevated in the same room.`
+      : "No abnormal cross-signal pattern has been detected in the current analysis window based on available farm records.";
+
+  const connection = combos.length > 0
+    ? "Two or more independent signals occurred together in the same room within the current analysis window. Combinations of signals are more indicative of an operational pattern warranting review than any single fluctuation."
+    : "PoultryPro cross-references production, mortality, feed and health signals per room. A single normal fluctuation is not treated as a confirmed anomaly.";
+
+  const strongest = mostAffected
+    ? mostAffected.triggered.length > 0
+      ? mostAffected.triggered.map(signalPretty).join(", ")
+      : "no individually elevated signal"
+    : "no active room";
+
+  const interpretation = `Farm activity score ${farmScore}/100 (${farmLevel}) across ${roomRows.length} monitored room${roomRows.length === 1 ? "" : "s"} using ${signalKeysAnalysed.size} of 4 signal categor${signalKeysAnalysed.size === 1 ? "y" : "ies"}${limited ? " (weights re-normalised due to insufficient data on other signals)" : ""}. Strongest contributing signals: ${strongest}.`;
+
+  const targetRoom = mostAffected && mostAffected.score >= 25 ? mostAffected.name : null;
+  const action = targetRoom
+    ? `Review ${targetRoom} production records, recent mortality events, feed formulation and feed batches, water availability, environmental observations, vaccination and medication records, and bird population changes. This may be associated with an operational pattern; the pattern warrants review before drawing further conclusions.`
+    : "Continue capturing daily production, feed, mortality and health records. PoultryPro will strengthen cross-signal activity detection as additional matched records become available.";
+
+  return {
+    score: farmScore,
+    level: farmLevel,
+    periodLabel,
+    signalsAnalysed: Array.from(signalKeysAnalysed).map(signalPretty),
+    roomsMonitored: roomRows.length,
+    mostAffected,
+    rooms: roomRows.sort((a, b) => b.score - a.score),
+    insight: { observation, connection, interpretation, action },
+    limited,
+  };
+}
