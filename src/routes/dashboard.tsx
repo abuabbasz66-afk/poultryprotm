@@ -698,7 +698,11 @@ function Dashboard() {
                   actionLabel={mortalityOpen ? "Hide mortality risk monitor" : "Open mortality risk monitor"}
                   badge="Early Risk Model" />
                 <AiCard icon={Wheat} title="Feed Efficiency Monitoring"
-                  desc="Compare feed usage with production performance to identify possible efficiency changes." />
+                  desc="Compare feed usage with production performance to identify possible efficiency changes."
+                  active={feedEffOpen}
+                  onClick={() => setFeedEffOpen(v => !v)}
+                  actionLabel={feedEffOpen ? "Hide feed efficiency monitor" : "Open feed efficiency monitor"}
+                  badge="Early Efficiency Model" />
                 <AiCard icon={Radar} title="Abnormal Farm Activity Detection"
                   desc="Monitor operational records for unusual production, mortality or feed patterns." />
                 <AiCard icon={Lightbulb} title="AI-Supported Farm Insights"
