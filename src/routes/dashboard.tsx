@@ -109,6 +109,7 @@ function Dashboard() {
   const [feed, setFeed] = useState<Feed[]>(seedFeed);
   const [prices, setPrices] = useState<Price[]>(seedPrices);
   const [feedTab, setFeedTab] = useState<"Usage" | "Formulas">("Usage");
+  const [area, setArea] = useState<"records" | "analytics" | "ai">("records");
 
   // Derived
   const totalBirds = rooms.reduce((s, r) => s + r.current, 0);
