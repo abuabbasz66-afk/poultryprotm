@@ -1941,6 +1941,7 @@ function effTone(s: EffStatus): string {
     case "STABLE": return "text-muted-foreground";
     case "WATCH": return "text-[color:var(--gold)]";
     case "DECLINING": return "text-destructive";
+    case "INSUFFICIENT DATA": return "text-muted-foreground";
   }
 }
 
@@ -1950,6 +1951,7 @@ function movementBadgeClass(m: MovementLabel): string {
     case "STABLE": return "bg-secondary text-[color:var(--ink)]";
     case "WATCH": return "bg-[color:var(--gold)]/25 text-[color:var(--ink)]";
     case "DECLINING": return "bg-destructive text-destructive-foreground";
+    case "INSUFFICIENT DATA": return "bg-secondary text-muted-foreground";
   }
 }
 
