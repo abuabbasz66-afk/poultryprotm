@@ -347,7 +347,44 @@ function Index() {
         </div>
       </section>
 
+      <section id="pricing" className="py-24 bg-secondary/40 border-y border-border">
+        <div className="container-x">
+          <div className="max-w-2xl">
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Subscription Plans</span>
+            <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
+              Grow from records to intelligence.
+            </h2>
+            <p className="mt-5 text-muted-foreground text-lg">
+              Every plan builds on the last — start with structured records, unlock analytics,
+              and progressively adopt PoultryPro AI Intelligence as it rolls out.
+            </p>
+          </div>
+          <div className="mt-14 grid md:grid-cols-3 gap-5">
+            {tiers.map((t) => (
+              <div key={t.name} className={`rounded-3xl border p-7 flex flex-col ${t.highlight ? "bg-[color:var(--forest)] text-primary-foreground border-transparent shadow-[var(--shadow-lift)]" : "bg-card border-border"}`}>
+                <div className={`text-[11px] uppercase tracking-widest font-medium ${t.highlight ? "text-[color:var(--gold)]" : "text-[color:var(--forest)]"}`}>{t.tagline}</div>
+                <h3 className="mt-1 font-display text-3xl font-semibold">{t.name}</h3>
+                <p className={`mt-2 text-sm ${t.highlight ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{t.promise}</p>
+                <ul className="mt-6 space-y-3 text-sm flex-1">
+                  {t.points.map((p) => (
+                    <li key={p} className="flex items-start gap-3">
+                      <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[color:var(--gold)] flex-none" />
+                      <span className={t.highlight ? "text-primary-foreground/90" : "text-muted-foreground"}>{p}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <p className="mt-8 text-xs text-muted-foreground">
+            Farm Records and Farm Analytics are working platform capabilities today. PoultryPro AI
+            Intelligence features are progressively rolling out and are clearly labelled inside the product.
+          </p>
+        </div>
+      </section>
+
       <section id="roadmap" className="py-24">
+
         <div className="container-x">
           <div className="max-w-2xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Future Roadmap</span>
