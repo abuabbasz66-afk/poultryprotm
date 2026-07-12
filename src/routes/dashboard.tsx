@@ -206,10 +206,14 @@ function Dashboard() {
           </div>
         </div>
         <div className="container-x pb-10 pt-4">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[color:var(--gold)]">
-            <Sparkles className="h-3.5 w-3.5" /> Capture · Understand · Predict
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] uppercase tracking-[0.22em] text-[color:var(--gold)]">
+            <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" /> Capture</span>
+            <ArrowRight className="h-3 w-3 opacity-60" />
+            <span>Understand</span>
+            <ArrowRight className="h-3 w-3 opacity-60" />
+            <span>Predict</span>
           </div>
-          <div className="mt-1 text-xs text-primary-foreground/60">
+          <div className="mt-1.5 text-xs text-primary-foreground/70 max-w-2xl">
             Farm Records &amp; Analytics active · PoultryPro AI Intelligence progressively rolling out on Premium
           </div>
           <h1 className="mt-2 font-display text-3xl md:text-4xl font-semibold">ABZ GLOBAL RESOURCE</h1>
