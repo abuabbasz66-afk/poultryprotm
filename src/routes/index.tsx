@@ -186,6 +186,38 @@ function Index() {
         </div>
       </section>
 
+      <section id="architecture" className="py-24">
+        <div className="container-x">
+          <div className="max-w-2xl">
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Product Architecture</span>
+            <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
+              Three progressive levels of farm intelligence.
+            </h2>
+            <p className="mt-5 text-muted-foreground text-lg">
+              PoultryPro is built as a journey: Record Management → Business Intelligence → Predictive Intelligence.
+              Each level unlocks the next.
+            </p>
+          </div>
+          <div className="mt-14 grid md:grid-cols-3 gap-5">
+            {architecture.map((a) => (
+              <div key={a.title} className="relative rounded-3xl border border-border bg-card p-7 overflow-hidden">
+                <div className="absolute top-0 right-0 h-24 w-24 rounded-bl-3xl bg-[color:var(--forest)]/5" />
+                <div className="flex items-center justify-between">
+                  <span className="font-display text-5xl font-semibold text-[color:var(--gold)]">{a.step}</span>
+                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary">
+                    <a.icon className="h-5 w-5" />
+                  </span>
+                </div>
+                <div className="mt-4 text-[11px] uppercase tracking-widest text-[color:var(--forest)] font-medium">{a.tag}</div>
+                <h3 className="mt-1 font-display text-2xl font-semibold">{a.title}</h3>
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{a.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
       <section className="py-24">
         <div className="container-x grid lg:grid-cols-12 gap-14 items-start">
           <div className="lg:col-span-5">
