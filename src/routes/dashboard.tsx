@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   Bar, BarChart, CartesianGrid, Legend, Line, LineChart,
-  ResponsiveContainer, Tooltip, XAxis, YAxis,
+  ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import {
   Egg, Bird, TrendingDown, TrendingUp, Wheat, DollarSign,
@@ -110,6 +110,7 @@ function Dashboard() {
   const [prices, setPrices] = useState<Price[]>(seedPrices);
   const [feedTab, setFeedTab] = useState<"Usage" | "Formulas">("Usage");
   const [area, setArea] = useState<"records" | "analytics" | "ai">("records");
+  const [forecastOpen, setForecastOpen] = useState(false);
 
   // Derived
   const totalBirds = rooms.reduce((s, r) => s + r.current, 0);
@@ -680,7 +681,11 @@ function Dashboard() {
               />
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <AiCard icon={LineChartIcon} title="Production Forecasting"
-                  desc="Analyse historical egg production patterns to support short-term production forecasting." />
+                  desc="Analyse historical egg production patterns to support short-term production forecasting."
+                  active={forecastOpen}
+                  onClick={() => setForecastOpen(v => !v)}
+                  actionLabel={forecastOpen ? "Hide 7-day forecast" : "Open 7-day forecast"}
+                  badge="Early Predictive Model" />
                 <AiCard icon={TrendingDown} title="Production Decline Detection"
                   desc="Monitor production trends and flag unusual declines for earlier investigation." />
                 <AiCard icon={AlertTriangle} title="Mortality Risk Monitoring"
@@ -693,6 +698,10 @@ function Dashboard() {
                   desc="Transform farm data patterns into clear operational observations and decision-support recommendations." />
               </div>
             </Card>
+
+            {forecastOpen && (
+              <ProductionForecast eggs={eggs} totalBirds={totalBirds} />
+            )}
           </div>
         )}
 
@@ -862,19 +871,295 @@ function PreviewInsight({ kicker, metric, metricLabel, observation, action }: {
   );
 }
 
-function AiCard({ icon: Icon, title, desc }: {
+function AiCard({ icon: Icon, title, desc, active, onClick, actionLabel, badge }: {
   icon: React.ComponentType<{ className?: string }>; title: string; desc: string;
+  active?: boolean; onClick?: () => void; actionLabel?: string; badge?: string;
 }) {
+  const interactive = typeof onClick === "function";
+  const Wrap: React.ElementType = interactive ? "button" : "div";
   return (
-    <div className="relative rounded-2xl border border-border bg-secondary/30 p-4">
+    <Wrap
+      {...(interactive ? { onClick, type: "button" } : {})}
+      className={
+        "relative text-left rounded-2xl border p-4 transition w-full " +
+        (interactive
+          ? (active
+              ? "border-[color:var(--gold)]/60 bg-[color:var(--gold)]/10 shadow-[var(--shadow-soft)]"
+              : "border-border bg-secondary/30 hover:border-[color:var(--forest)]/40 hover:bg-secondary/50")
+          : "border-border bg-secondary/30")
+      }
+    >
       <span className="absolute right-3 top-3 rounded-full bg-[color:var(--gold)]/20 px-2 py-0.5 text-[10px] font-medium tracking-[0.14em] uppercase text-[color:var(--ink)]">
-        Progressive Rollout
+        {badge ?? "Progressive Rollout"}
       </span>
       <span className="grid h-9 w-9 place-items-center rounded-lg bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
         <Icon className="h-4 w-4" />
       </span>
-      <div className="mt-3 font-display text-base md:text-lg font-semibold pr-16">{title}</div>
+      <div className="mt-3 font-display text-base md:text-lg font-semibold pr-24">{title}</div>
       <div className="mt-1 text-xs text-muted-foreground leading-relaxed">{desc}</div>
+      {interactive && (
+        <div className={"mt-3 inline-flex items-center gap-1 text-xs font-medium " + (active ? "text-[color:var(--forest)]" : "text-[color:var(--forest)]/80")}>
+          <Sparkles className="h-3 w-3" /> {actionLabel}
+          <ArrowRight className="h-3 w-3" />
+        </div>
+      )}
+    </Wrap>
+  );
+}
+
+/* ------------------ Production Forecast ------------------ */
+
+function ProductionForecast({ eggs, totalBirds }: { eggs: EggRow[]; totalBirds: number }) {
+  const forecast = useMemo(() => computeForecast(eggs), [eggs]);
+
+  if (!forecast) {
+    return (
+      <Card>
+        <CardHeader
+          title="7-Day Production Forecast"
+          subtitle="Short-term production outlook calculated from recent farm production patterns."
+        />
+        <div className="mt-4 rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+          Not enough historical production records yet to generate a forecast. Add a few more daily egg-production entries to unlock the 7-day outlook.
+        </div>
+      </Card>
+    );
+  }
+
+  const {
+    latestTotal, latestPct, avgForecast, low, high, direction, chartData, boundaryLabel,
+  } = forecast;
+
+  const directionTone =
+    direction === "Increasing" ? "text-[color:var(--forest)]"
+    : direction === "Declining" ? "text-destructive"
+    : "text-muted-foreground";
+  const DirectionIcon =
+    direction === "Increasing" ? TrendingUp
+    : direction === "Declining" ? TrendingDown
+    : Activity;
+
+  const observation =
+    direction === "Increasing"
+      ? "Recent production records indicate a gradually improving production pattern."
+      : direction === "Declining"
+        ? "Recent production records indicate a softening production pattern that warrants attention."
+        : "Recent production records indicate a relatively stable production pattern.";
+  const outlook =
+    direction === "Declining"
+      ? `Projected daily production over the next 7 days is around ${avgForecast.toLocaleString()} eggs, within a ${low.toLocaleString()}–${high.toLocaleString()} range if the current downward movement continues.`
+      : `Production is projected to remain within roughly ${low.toLocaleString()}–${high.toLocaleString()} eggs per day (average ~${avgForecast.toLocaleString()}) if current operating conditions remain similar.`;
+  const action =
+    direction === "Declining"
+      ? "Investigate recent feed, health and mortality records for changes that may be driving the decline, and continue monitoring daily production closely."
+      : "Continue monitoring feed usage, mortality and daily egg production for changes that may affect the projected trend.";
+
+  return (
+    <Card>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--forest)]">
+            <span className="inline-flex items-center gap-1"><Sparkles className="h-3.5 w-3.5 text-[color:var(--gold)]" /> Predict</span>
+            <span className="text-muted-foreground/60">·</span>
+            <span className="rounded-full bg-[color:var(--gold)]/20 px-2 py-0.5 text-[10px] tracking-[0.16em] text-[color:var(--ink)]">Early Predictive Model</span>
+          </div>
+          <h2 className="mt-1 font-display text-2xl md:text-3xl font-semibold">7-Day Production Forecast</h2>
+          <p className="mt-1 text-sm text-muted-foreground max-w-3xl">
+            Short-term production outlook calculated from recent farm production patterns.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <ForecastStat
+          label="Current Production"
+          value={latestTotal.toLocaleString()}
+          hint={`${latestPct}% production rate${totalBirds ? ` · ${totalBirds.toLocaleString()} birds` : ""}`}
+        />
+        <ForecastStat
+          label="7-Day Forecast (avg/day)"
+          value={avgForecast.toLocaleString()}
+          hint="Projected average daily eggs"
+        />
+        <ForecastStat
+          label="Expected Range"
+          value={`${low.toLocaleString()}–${high.toLocaleString()}`}
+          hint="Based on recent variation"
+        />
+        <ForecastStat
+          label="Forecast Direction"
+          value={direction}
+          hint="From recent production trend"
+          valueClassName={directionTone}
+          icon={DirectionIcon}
+        />
+      </div>
+
+      <div className="mt-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-display text-lg font-semibold">Production Trend &amp; 7-Day Outlook</h3>
+            <p className="text-xs text-muted-foreground">Historical daily eggs on the left of the marker · forecast on the right.</p>
+          </div>
+        </div>
+        <div className="h-72 mt-3">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 8, right: 16, left: -12, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0.02 85)" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
+              <YAxis tick={{ fontSize: 10 }} />
+              <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--border)" }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <ReferenceLine x={boundaryLabel} stroke="oklch(0.55 0.15 60)" strokeDasharray="4 4"
+                label={{ value: "Forecast starts", position: "top", fill: "oklch(0.45 0.12 60)", fontSize: 10 }} />
+              <Line type="monotone" dataKey="Historical" stroke="oklch(0.32 0.06 155)" strokeWidth={2.5} dot={{ r: 2 }} connectNulls={false} />
+              <Line type="monotone" dataKey="Forecast" stroke="oklch(0.55 0.15 60)" strokeWidth={2.5} strokeDasharray="5 4" dot={{ r: 2 }} connectNulls={false} />
+              <Line type="monotone" dataKey="Upper" stroke="oklch(0.55 0.15 60)" strokeOpacity={0.35} strokeWidth={1} dot={false} connectNulls={false} />
+              <Line type="monotone" dataKey="Lower" stroke="oklch(0.55 0.15 60)" strokeOpacity={0.35} strokeWidth={1} dot={false} connectNulls={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/8 p-4 md:p-5">
+        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--ink)]">
+          <Sparkles className="h-3.5 w-3.5 text-[color:var(--gold)]" /> PoultryPro Insight
+        </div>
+        <div className="mt-2 text-sm leading-relaxed">
+          <div><span className="text-muted-foreground">Observation: </span>{observation}</div>
+          <div className="mt-1.5"><span className="text-muted-foreground">7-Day Outlook: </span>{outlook}</div>
+          <div className="mt-1.5"><span className="text-muted-foreground">Suggested Action: </span>{action}</div>
+        </div>
+        {direction === "Declining" && (
+          <div className="mt-3 inline-flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>Recent production shows a downward movement — flagged for attention. This is a pattern signal only and does not diagnose disease.</span>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 text-[11px] text-muted-foreground leading-relaxed">
+        Forecast generated from historical farm production patterns and recent production trends. Forecasts provide operational decision support and may change as new farm records are added.
+      </div>
+    </Card>
+  );
+}
+
+function ForecastStat({ label, value, hint, valueClassName, icon: Icon }: {
+  label: string; value: string; hint?: string; valueClassName?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-secondary/30 p-4">
+      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
+      <div className={"mt-1.5 font-display text-2xl md:text-3xl font-semibold inline-flex items-center gap-2 " + (valueClassName ?? "")}>
+        {Icon && <Icon className="h-5 w-5" />} {value}
+      </div>
+      {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
     </div>
   );
+}
+
+type ForecastResult = {
+  latestTotal: number;
+  latestPct: number;
+  avgForecast: number;
+  low: number;
+  high: number;
+  direction: "Increasing" | "Stable" | "Declining";
+  chartData: Array<{ name: string; Historical: number | null; Forecast: number | null; Upper: number | null; Lower: number | null }>;
+  boundaryLabel: string;
+};
+
+function computeForecast(eggs: EggRow[]): ForecastResult | null {
+  if (!eggs || eggs.length < 3) return null;
+  // Order chronologically (ascending)
+  const ordered = [...eggs].sort((a, b) => a.date.localeCompare(b.date));
+  const totals = ordered.map(e => ({
+    date: e.date,
+    label: e.label.replace(/^[A-Za-z]{3}, /, ""),
+    value: (e.r2 + e.r3 + e.r4) * 30 + e.extra,
+  }));
+
+  const recent = totals.slice(-Math.min(7, totals.length));
+  const values = recent.map(r => r.value);
+  const mean = values.reduce((s, v) => s + v, 0) / values.length;
+
+  // Linear regression slope on recent values (x = 0..n-1)
+  const n = values.length;
+  const xMean = (n - 1) / 2;
+  let num = 0, den = 0;
+  values.forEach((v, i) => { num += (i - xMean) * (v - mean); den += (i - xMean) ** 2; });
+  const slope = den === 0 ? 0 : num / den;
+
+  // Standard deviation for range
+  const variance = values.reduce((s, v) => s + (v - mean) ** 2, 0) / values.length;
+  const std = Math.sqrt(variance);
+
+  // Direction from slope relative to mean
+  const slopePctPerDay = mean === 0 ? 0 : (slope / mean) * 100;
+  const direction: ForecastResult["direction"] =
+    slopePctPerDay > 0.4 ? "Increasing"
+    : slopePctPerDay < -0.4 ? "Declining"
+    : "Stable";
+
+  // Build forecast for next 7 days: baseline = mean + slope offset from last point
+  const lastIdx = n - 1;
+  const forecastValues: number[] = [];
+  for (let k = 1; k <= 7; k++) {
+    const projected = mean + slope * (lastIdx + k - xMean);
+    forecastValues.push(Math.max(0, Math.round(projected)));
+  }
+  const avgForecast = Math.round(forecastValues.reduce((s, v) => s + v, 0) / forecastValues.length);
+  const spread = Math.max(std, mean * 0.03); // at least ±3% for a visible range
+  const low = Math.max(0, Math.round(avgForecast - spread));
+  const high = Math.round(avgForecast + spread);
+
+  // Historical portion of chart: last 14 days
+  const historical = totals.slice(-Math.min(14, totals.length));
+  const boundaryLabel = historical[historical.length - 1].label;
+
+  // Build chart data
+  const chartData: ForecastResult["chartData"] = [];
+  historical.forEach((h, i) => {
+    chartData.push({
+      name: h.label,
+      Historical: h.value,
+      // At boundary, seed the forecast line so it visually connects
+      Forecast: i === historical.length - 1 ? h.value : null,
+      Upper: i === historical.length - 1 ? h.value : null,
+      Lower: i === historical.length - 1 ? h.value : null,
+    });
+  });
+
+  // Forecast next 7 days — synthesize labels from last historical date
+  const lastDate = new Date(historical[historical.length - 1].date + "T00:00:00");
+  for (let k = 1; k <= 7; k++) {
+    const d = new Date(lastDate);
+    d.setDate(lastDate.getDate() + k);
+    const label = d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    const v = forecastValues[k - 1];
+    chartData.push({
+      name: label,
+      Historical: null,
+      Forecast: v,
+      Upper: Math.round(v + spread),
+      Lower: Math.max(0, Math.round(v - spread)),
+    });
+  }
+
+  const latest = totals[totals.length - 1];
+  const recentMax = Math.max(...values);
+  const relativePct = recentMax > 0 ? Math.round((latest.value / recentMax) * 100) : 0;
+
+  return {
+    latestTotal: latest.value,
+    latestPct: relativePct,
+    avgForecast,
+    low,
+    high,
+    direction,
+    chartData,
+    boundaryLabel,
+  };
 }
