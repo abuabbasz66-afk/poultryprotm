@@ -205,7 +205,10 @@ function Dashboard() {
         </div>
         <div className="container-x pb-10 pt-4">
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[color:var(--gold)]">
-            <Sparkles className="h-3.5 w-3.5" /> Farm Dashboard
+            <Sparkles className="h-3.5 w-3.5" /> Capture · Understand · Predict
+          </div>
+          <div className="mt-1 text-xs text-primary-foreground/60">
+            Farm Records &amp; Analytics active · PoultryPro AI Intelligence progressively rolling out on Premium
           </div>
           <h1 className="mt-2 font-display text-3xl md:text-4xl font-semibold">ABZ GLOBAL RESOURCE</h1>
           <div className="mt-2 flex items-center gap-2 text-sm text-primary-foreground/80">
