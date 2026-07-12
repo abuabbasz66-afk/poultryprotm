@@ -1076,7 +1076,7 @@ type ForecastResult = {
   avgForecast: number;
   low: number;
   high: number;
-  direction: "Increasing" | "Stable" | "Declining";
+  direction: "Increasing" | "Stable with upward movement" | "Stable" | "Stable with downward movement" | "Declining";
   chartData: Array<{ name: string; Historical: number | null; Forecast: number | null; Upper: number | null; Lower: number | null }>;
   boundaryLabel: string;
 };
