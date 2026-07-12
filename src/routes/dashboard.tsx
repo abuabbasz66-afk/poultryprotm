@@ -1988,6 +1988,7 @@ type FeedEffAnalysis = {
   roomRows: RoomEffRow[];
   insight: { observation: string; interpretation: string; action: string };
   movements: { feedPerEggPct: number; productionPct: number; feedPct: number; roomVariationPct: number };
+  hasBaseline: boolean;
 };
 
 function computeFeedEfficiency(
