@@ -259,14 +259,18 @@ function Index() {
           <div className="mt-14 grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {features.map((f) => (
               <div key={f.title} className="group rounded-2xl bg-card border border-border p-7 hover:shadow-[var(--shadow-lift)] hover:-translate-y-0.5 transition-all">
-                <span className="inline-grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition">
-                  <f.icon className="h-5 w-5" />
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="inline-grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition">
+                    <f.icon className="h-5 w-5" />
+                  </span>
+                  <span className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-medium">{f.tier}</span>
+                </div>
                 <h3 className="mt-5 font-display text-xl font-semibold">{f.title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
+
         </div>
       </section>
 
