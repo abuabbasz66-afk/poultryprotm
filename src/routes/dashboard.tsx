@@ -2599,6 +2599,9 @@ function computeAbnormalActivity(
     }
 
     // --- Health record context (per room) ---
+    // Room-specific records may contribute to the room's health signal.
+    // Farm-wide ("All Rooms") records are contextual only and MUST NOT
+    // independently elevate a specific room's anomaly score.
     if (health && health.length > 0) {
       const parsedHealth = health
         .map(h => {
@@ -2606,17 +2609,31 @@ function computeAbnormalActivity(
           return d ? { ...h, ts: d.getTime() } : null;
         })
         .filter((x): x is Health & { ts: number } => x !== null)
-        .filter(h => h.ts >= periodStart.getTime() && h.ts <= anchor.getTime() + 24 * 60 * 60 * 1000)
-        .filter(h => h.scope === room.name || /all rooms/i.test(h.scope));
-      // Higher activity = more recent context signals; treat presence as contextual weight only
-      const count = parsedHealth.length;
-      const s = Math.min(100, count * 30);
-      signals.health = {
-        score: s,
-        label: count === 0 ? "No recent records" : `${count} recent record${count === 1 ? "" : "s"}`,
-        note: count === 0 ? "" : parsedHealth.slice(0, 2).map(h => `${h.name} (${h.type})`).join(", "),
-      };
-      signalKeysAnalysed.add("health");
+        .filter(h => h.ts >= periodStart.getTime() && h.ts <= anchor.getTime() + 24 * 60 * 60 * 1000);
+
+      const roomSpecific = parsedHealth.filter(h => h.scope === room.name);
+      const farmWide = parsedHealth.filter(h => /all rooms/i.test(h.scope));
+
+      if (roomSpecific.length > 0) {
+        const s = Math.min(100, roomSpecific.length * 30);
+        signals.health = {
+          score: s,
+          label: `Room-specific record${roomSpecific.length === 1 ? "" : "s"} (${roomSpecific.length})`,
+          note: roomSpecific.slice(0, 2).map(h => `${h.name} (${h.type})`).join(", "),
+        };
+        signalKeysAnalysed.add("health");
+      } else if (farmWide.length > 0) {
+        // Contextual only — does not contribute to this room's score.
+        signals.health = {
+          score: null,
+          label: "Farm-wide context available",
+          note: farmWide.slice(0, 2).map(h => `${h.name} (${h.type}, All Rooms)`).join(", "),
+        };
+      } else {
+        signals.health = { score: null, label: "No recent health context", note: "" };
+      }
+    } else {
+      signals.health = { score: null, label: "No recent health context", note: "" };
     }
 
     // --- Weighted score with re-normalisation ---
@@ -2671,10 +2688,19 @@ function computeAbnormalActivity(
 
   const interpretation = `Farm activity score ${farmScore}/100 (${farmLevel}) across ${roomRows.length} monitored room${roomRows.length === 1 ? "" : "s"} using ${signalKeysAnalysed.size} of 4 signal categor${signalKeysAnalysed.size === 1 ? "y" : "ies"}${limited ? " (weights re-normalised due to insufficient data on other signals)" : ""}. Strongest contributing signals: ${strongest}.`;
 
+  // Health-context clarification for the most affected room.
+  const healthClarification = mostAffected
+    ? mostAffected.signals.health.label === "Farm-wide context available"
+      ? ` Farm-wide health records are available for contextual review; however, no room-specific health record is currently associated with ${mostAffected.name}. Farm-wide records are not treated as a room-specific health signal and do not increase ${mostAffected.name}'s activity score.`
+      : mostAffected.signals.health.label.startsWith("Room-specific")
+        ? ` A room-specific health record is associated with ${mostAffected.name} within the analysis window; this is presented as context and does not imply that any vaccination, vitamin or medication record caused mortality or production movement.`
+        : ""
+    : "";
+
   const targetRoom = mostAffected && mostAffected.score >= 25 ? mostAffected.name : null;
   const action = targetRoom
-    ? `Review ${targetRoom} production records, recent mortality events, feed formulation and feed batches, water availability, environmental observations, vaccination and medication records, and bird population changes. This may be associated with an operational pattern; the pattern warrants review before drawing further conclusions.`
-    : "Continue capturing daily production, feed, mortality and health records. PoultryPro will strengthen cross-signal activity detection as additional matched records become available.";
+    ? `Review ${targetRoom} production records, recent mortality events, feed formulation and feed batches, water availability, environmental observations, vaccination and medication records, and bird population changes.${healthClarification} This may be associated with an operational pattern; the pattern warrants review before drawing further conclusions.`
+    : `Continue capturing daily production, feed, mortality and health records. PoultryPro will strengthen cross-signal activity detection as additional matched records become available.${healthClarification}`;
 
   return {
     score: farmScore,
