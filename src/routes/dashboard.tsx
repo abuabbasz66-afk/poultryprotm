@@ -1196,3 +1196,453 @@ function computeForecast(eggs: EggRow[], totalBirds: number): ForecastResult | n
     boundaryLabel,
   };
 }
+
+/* ------------------ Mortality Risk Monitor ------------------ */
+
+const MONTHS: Record<string, number> = {
+  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+  jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+};
+
+// Parse dates like "16 Jan", "3 Feb", "Today" — assume year matches the latest egg record's year.
+function parseShortDate(s: string, anchor: Date): Date | null {
+  if (!s) return null;
+  const trimmed = s.trim();
+  if (/^today$/i.test(trimmed)) return new Date(anchor);
+  const m = trimmed.match(/^(\d{1,2})\s+([A-Za-z]{3})/);
+  if (!m) return null;
+  const day = parseInt(m[1], 10);
+  const mon = MONTHS[m[2].toLowerCase()];
+  if (mon === undefined) return null;
+  let year = anchor.getFullYear();
+  const candidate = new Date(year, mon, day);
+  // If the parsed date sits in the future relative to the anchor, roll back one year
+  if (candidate.getTime() > anchor.getTime() + 24 * 60 * 60 * 1000) year -= 1;
+  return new Date(year, mon, day);
+}
+
+type MortalityRiskProps = {
+  rooms: Room[];
+  mortality: Mortality[];
+  eggs: EggRow[];
+  health: Health[];
+};
+
+function MortalityRiskMonitor({ rooms, mortality, eggs, health }: MortalityRiskProps) {
+  const analysis = useMemo(
+    () => computeMortalityRisk(rooms, mortality, eggs, health),
+    [rooms, mortality, eggs, health],
+  );
+
+  if (!analysis) {
+    return (
+      <Card>
+        <CardHeader
+          title="Mortality Risk Monitor"
+          subtitle="Early operational risk monitoring based on mortality patterns and farm records."
+        />
+        <div className="mt-4 rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+          Not enough mortality or room records yet to generate a risk analysis.
+        </div>
+      </Card>
+    );
+  }
+
+  const {
+    levelLabel, levelTone, score, monthlyMortality, mostAffectedRoom,
+    patternLabel, rooms: roomRows, timeline, insight, periodLabel,
+  } = analysis;
+
+  return (
+    <Card>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--forest)]">
+            <span className="inline-flex items-center gap-1"><Sparkles className="h-3.5 w-3.5 text-[color:var(--gold)]" /> Predict</span>
+            <span className="text-muted-foreground/60">·</span>
+            <span className="rounded-full bg-[color:var(--gold)]/20 px-2 py-0.5 text-[10px] tracking-[0.16em] text-[color:var(--ink)]">Early Risk Model</span>
+          </div>
+          <h2 className="mt-1 font-display text-2xl md:text-3xl font-semibold">Mortality Risk Monitor</h2>
+          <p className="mt-1 text-sm text-muted-foreground max-w-3xl">
+            Early operational risk monitoring based on mortality patterns and farm records.
+          </p>
+          <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Analysis window: {periodLabel}</p>
+        </div>
+      </div>
+
+      <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <ForecastStat
+          label="Current Risk Level"
+          value={levelLabel}
+          hint={`Risk score ${score}/100`}
+          valueClassName={levelTone}
+          icon={AlertTriangle}
+        />
+        <ForecastStat
+          label="Mortality This Month"
+          value={String(monthlyMortality)}
+          hint="Total bird losses recorded this month"
+        />
+        <ForecastStat
+          label="Most Affected Room"
+          value={mostAffectedRoom ? mostAffectedRoom.name : "—"}
+          hint={mostAffectedRoom
+            ? `${mostAffectedRoom.lost} lost · ${mostAffectedRoom.events} event${mostAffectedRoom.events === 1 ? "" : "s"}`
+            : "No mortality recorded in period"}
+        />
+        <ForecastStat
+          label="Recent Mortality Pattern"
+          value={patternLabel}
+          hint="Based on frequency and concentration"
+        />
+      </div>
+
+      {/* Room-level risk analysis */}
+      <div className="mt-6">
+        <h3 className="font-display text-lg font-semibold">Room-Level Risk Analysis</h3>
+        <p className="text-xs text-muted-foreground">Each active room analysed separately from stored mortality and bird records.</p>
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
+            <thead className="text-muted-foreground">
+              <tr className="text-left">
+                <th className="py-2 pr-4 font-medium">Room</th>
+                <th className="py-2 pr-4 font-medium">Live Birds</th>
+                <th className="py-2 pr-4 font-medium">Lost (period)</th>
+                <th className="py-2 pr-4 font-medium">Mortality %</th>
+                <th className="py-2 pr-4 font-medium">Events</th>
+                <th className="py-2 pr-4 font-medium">Last Event</th>
+                <th className="py-2 pr-4 font-medium">Risk</th>
+              </tr>
+            </thead>
+            <tbody>
+              {roomRows.map(r => (
+                <tr key={r.id} className="border-t border-border">
+                  <td className="py-3 pr-4 font-medium">{r.name}</td>
+                  <td className="py-3 pr-4">{r.current.toLocaleString()}</td>
+                  <td className="py-3 pr-4">{r.lost}</td>
+                  <td className="py-3 pr-4">{r.ratePct.toFixed(2)}%</td>
+                  <td className="py-3 pr-4">{r.events}</td>
+                  <td className="py-3 pr-4 text-muted-foreground">{r.lastEventLabel ?? "—"}</td>
+                  <td className="py-3 pr-4">
+                    <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + riskBadgeClass(r.levelLabel)}>
+                      {r.levelLabel} · {r.score}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {roomRows.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="py-4 text-muted-foreground">No active rooms configured.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Timeline */}
+      <div className="mt-6">
+        <h3 className="font-display text-lg font-semibold">Mortality Pattern Timeline</h3>
+        <p className="text-xs text-muted-foreground">Bird losses by date and room — repeated events in the same room stack together.</p>
+        <div className="h-64 mt-3">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={timeline.data} margin={{ top: 8, right: 16, left: -12, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0.02 85)" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
+              <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+              <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--border)" }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              {timeline.roomKeys.map((key, idx) => (
+                <Bar key={key} dataKey={key} stackId="m" fill={TIMELINE_COLORS[idx % TIMELINE_COLORS.length]} radius={[4, 4, 0, 0]} />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        {timeline.data.length === 0 && (
+          <div className="mt-2 text-xs text-muted-foreground">No mortality events in the current analysis window.</div>
+        )}
+      </div>
+
+      {/* Insight */}
+      <div className="mt-6 rounded-2xl border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/8 p-4 md:p-5">
+        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--ink)]">
+          <Sparkles className="h-3.5 w-3.5 text-[color:var(--gold)]" /> PoultryPro Risk Insight
+        </div>
+        <div className="mt-2 text-sm leading-relaxed">
+          <div><span className="text-muted-foreground">Observation: </span>{insight.observation}</div>
+          <div className="mt-1.5"><span className="text-muted-foreground">Risk Interpretation: </span>{insight.interpretation}</div>
+          <div className="mt-1.5"><span className="text-muted-foreground">Suggested Action: </span>{insight.action}</div>
+        </div>
+        {insight.repeatedRoom && (
+          <div className="mt-3 inline-flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>
+              Repeated mortality events recorded in {insight.repeatedRoom} within the analysis period.
+              Pattern is concentrated in one production room rather than evenly distributed across the farm.
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Methodology */}
+      <div className="mt-4 rounded-2xl border border-border bg-secondary/30 p-4 text-xs leading-relaxed">
+        <div className="font-medium text-[color:var(--ink)]">Risk Methodology (transparent weighted score, 0–100)</div>
+        <ul className="mt-1.5 grid gap-1 md:grid-cols-2 text-muted-foreground">
+          <li>Mortality Rate — 40%</li>
+          <li>Mortality Event Frequency — 30%</li>
+          <li>Room Concentration — 20%</li>
+          <li>Recent Trend — 10%</li>
+        </ul>
+        <div className="mt-2 text-muted-foreground">
+          Classification: 0–24 LOW · 25–49 MODERATE · 50–74 ELEVATED · 75–100 HIGH.
+        </div>
+        <div className="mt-2 text-muted-foreground">
+          Risk monitoring is generated from recorded farm mortality and operational patterns. It provides early decision
+          support and does not constitute veterinary diagnosis.
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+const TIMELINE_COLORS = [
+  "oklch(0.55 0.15 60)",
+  "oklch(0.45 0.12 155)",
+  "oklch(0.6 0.14 25)",
+  "oklch(0.5 0.12 250)",
+  "oklch(0.6 0.14 320)",
+];
+
+function riskBadgeClass(level: RiskLevel): string {
+  switch (level) {
+    case "HIGH": return "bg-destructive text-destructive-foreground";
+    case "ELEVATED": return "bg-[color:var(--gold)]/30 text-[color:var(--ink)]";
+    case "MODERATE": return "bg-[color:var(--gold)]/15 text-[color:var(--ink)]";
+    default: return "bg-[color:var(--forest)] text-primary-foreground";
+  }
+}
+
+type RiskLevel = "LOW" | "MODERATE" | "ELEVATED" | "HIGH";
+type PatternLabel = "Isolated" | "Stable" | "Increasing" | "Repeated" | "Declining";
+
+type RoomRisk = {
+  id: string;
+  name: string;
+  current: number;
+  lost: number;
+  events: number;
+  ratePct: number;
+  lastEventLabel: string | null;
+  lastEventTime: number | null;
+  score: number;
+  levelLabel: RiskLevel;
+};
+
+type MortalityAnalysis = {
+  levelLabel: RiskLevel;
+  levelTone: string;
+  score: number;
+  monthlyMortality: number;
+  mostAffectedRoom: { name: string; lost: number; events: number } | null;
+  patternLabel: PatternLabel;
+  rooms: RoomRisk[];
+  timeline: { data: Array<Record<string, string | number>>; roomKeys: string[] };
+  insight: { observation: string; interpretation: string; action: string; repeatedRoom: string | null };
+  periodLabel: string;
+};
+
+function classifyRisk(score: number): RiskLevel {
+  if (score >= 75) return "HIGH";
+  if (score >= 50) return "ELEVATED";
+  if (score >= 25) return "MODERATE";
+  return "LOW";
+}
+
+function riskTone(level: RiskLevel): string {
+  switch (level) {
+    case "HIGH": return "text-destructive";
+    case "ELEVATED": return "text-[color:var(--gold)]";
+    case "MODERATE": return "text-[color:var(--ink)]";
+    default: return "text-[color:var(--forest)]";
+  }
+}
+
+function computeMortalityRisk(
+  rooms: Room[], mortality: Mortality[], eggs: EggRow[], health: Health[],
+): MortalityAnalysis | null {
+  if (!rooms || rooms.length === 0) return null;
+
+  // Anchor "today" to the latest recorded egg-production date (falls back to now)
+  const orderedEggs = [...eggs].sort((a, b) => b.date.localeCompare(a.date));
+  const anchor = orderedEggs[0]
+    ? new Date(orderedEggs[0].date + "T00:00:00")
+    : new Date();
+
+  const PERIOD_DAYS = 30;
+  const periodStart = new Date(anchor);
+  periodStart.setDate(periodStart.getDate() - PERIOD_DAYS + 1);
+
+  // Parse mortality entries into dated events within the period
+  const parsed = mortality
+    .map(m => {
+      const d = parseShortDate(m.date, anchor);
+      return d ? { ...m, when: d, ts: d.getTime() } : null;
+    })
+    .filter((x): x is Mortality & { when: Date; ts: number } => x !== null)
+    .filter(e => e.ts >= periodStart.getTime() && e.ts <= anchor.getTime() + 24 * 60 * 60 * 1000);
+
+  // Group per room
+  const perRoom = new Map<string, { lost: number; events: number; lastTs: number | null; lastLabel: string | null }>();
+  rooms.forEach(r => perRoom.set(r.name, { lost: 0, events: 0, lastTs: null, lastLabel: null }));
+  parsed.forEach(e => {
+    const bucket = perRoom.get(e.room) ?? { lost: 0, events: 0, lastTs: null, lastLabel: null };
+    bucket.lost += e.loss;
+    bucket.events += 1;
+    if (bucket.lastTs === null || e.ts > bucket.lastTs) {
+      bucket.lastTs = e.ts;
+      bucket.lastLabel = e.when.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    }
+    perRoom.set(e.room, bucket);
+  });
+
+  const totalLostPeriod = parsed.reduce((s, e) => s + e.loss, 0);
+  const totalEventsPeriod = parsed.length;
+  const totalBirdsBaseline = rooms.reduce((s, r) => s + r.current, 0) + totalLostPeriod;
+
+  // Room risk rows
+  const roomRows: RoomRisk[] = rooms.map(r => {
+    const b = perRoom.get(r.name) ?? { lost: 0, events: 0, lastTs: null, lastLabel: null };
+    const baseline = r.current + b.lost; // birds present at start of period
+    const ratePct = baseline > 0 ? (b.lost / baseline) * 100 : 0;
+    const shareOfFarm = totalLostPeriod > 0 ? b.lost / totalLostPeriod : 0;
+    const rateScore = Math.min(100, (ratePct / 2) * 100); // 2% mortality → 100
+    const freqScore = Math.min(100, (b.events / 5) * 100); // 5 events in 30d → 100
+    const concScore = shareOfFarm * 100;
+    // Room-level trend: last half vs prior half of period
+    const half = periodStart.getTime() + (PERIOD_DAYS / 2) * 24 * 60 * 60 * 1000;
+    const roomEvents = parsed.filter(e => e.room === r.name);
+    const prior = roomEvents.filter(e => e.ts < half).reduce((s, e) => s + e.loss, 0);
+    const recent = roomEvents.filter(e => e.ts >= half).reduce((s, e) => s + e.loss, 0);
+    const trendScore = recent === 0 && prior === 0 ? 0
+      : recent > prior * 1.3 ? 100
+      : recent < prior * 0.7 ? 0
+      : 50;
+    const score = Math.round(rateScore * 0.4 + freqScore * 0.3 + concScore * 0.2 + trendScore * 0.1);
+    const levelLabel = classifyRisk(score);
+    return {
+      id: r.id,
+      name: r.name,
+      current: r.current,
+      lost: b.lost,
+      events: b.events,
+      ratePct,
+      lastEventLabel: b.lastLabel,
+      lastEventTime: b.lastTs,
+      score,
+      levelLabel,
+    };
+  });
+
+  // Farm-level risk score
+  const farmRatePct = totalBirdsBaseline > 0 ? (totalLostPeriod / totalBirdsBaseline) * 100 : 0;
+  const farmRateScore = Math.min(100, (farmRatePct / 2) * 100);
+  const farmFreqScore = Math.min(100, (totalEventsPeriod / 5) * 100);
+  const maxShare = roomRows.reduce((m, r) => {
+    const share = totalLostPeriod > 0 ? r.lost / totalLostPeriod : 0;
+    return Math.max(m, share);
+  }, 0);
+  const farmConcScore = maxShare * 100;
+  const halfTs = periodStart.getTime() + (PERIOD_DAYS / 2) * 24 * 60 * 60 * 1000;
+  const priorTotal = parsed.filter(e => e.ts < halfTs).reduce((s, e) => s + e.loss, 0);
+  const recentTotal = parsed.filter(e => e.ts >= halfTs).reduce((s, e) => s + e.loss, 0);
+  const farmTrendScore = recentTotal === 0 && priorTotal === 0 ? 0
+    : recentTotal > priorTotal * 1.3 ? 100
+    : recentTotal < priorTotal * 0.7 ? 0
+    : 50;
+  const farmScore = Math.round(farmRateScore * 0.4 + farmFreqScore * 0.3 + farmConcScore * 0.2 + farmTrendScore * 0.1);
+  const farmLevel = classifyRisk(farmScore);
+
+  // Monthly mortality — restrict to the anchor's calendar month
+  const monthStart = new Date(anchor.getFullYear(), anchor.getMonth(), 1).getTime();
+  const monthlyMortality = parsed
+    .filter(e => e.ts >= monthStart)
+    .reduce((s, e) => s + e.loss, 0);
+
+  // Most affected room in period
+  const mostAffected = [...roomRows]
+    .filter(r => r.lost > 0 || r.events > 0)
+    .sort((a, b) => b.lost - a.lost || b.events - a.events)[0] ?? null;
+  const mostAffectedRoom = mostAffected
+    ? { name: mostAffected.name, lost: mostAffected.lost, events: mostAffected.events }
+    : null;
+
+  // Pattern label
+  let patternLabel: PatternLabel = "Stable";
+  const repeatedRoomRow = roomRows.find(r => r.events >= 2 && (maxShare >= 0.6 || r.events >= 3));
+  if (totalEventsPeriod === 0) patternLabel = "Stable";
+  else if (totalEventsPeriod === 1) patternLabel = "Isolated";
+  else if (repeatedRoomRow) patternLabel = "Repeated";
+  else if (recentTotal > priorTotal * 1.3) patternLabel = "Increasing";
+  else if (recentTotal < priorTotal * 0.7 && priorTotal > 0) patternLabel = "Declining";
+  else patternLabel = "Stable";
+
+  // Timeline: one row per date with mortality, one bar segment per room
+  const dateMap = new Map<string, Record<string, string | number>>();
+  const activeRoomKeys = rooms.filter(r => parsed.some(e => e.room === r.name)).map(r => r.name);
+  parsed
+    .slice()
+    .sort((a, b) => a.ts - b.ts)
+    .forEach(e => {
+      const key = e.when.toISOString().slice(0, 10);
+      const label = e.when.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+      const row = dateMap.get(key) ?? { name: label };
+      activeRoomKeys.forEach(k => { if (row[k] === undefined) row[k] = 0; });
+      row[e.room] = ((row[e.room] as number) ?? 0) + e.loss;
+      dateMap.set(key, row);
+    });
+  const timelineData = Array.from(dateMap.values());
+
+  // Insight text
+  const periodLabel = `${periodStart.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${anchor.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`;
+
+  const observation = totalEventsPeriod === 0
+    ? "No mortality events have been recorded in the current analysis window."
+    : repeatedRoomRow
+      ? `Repeated mortality events have been recorded in ${repeatedRoomRow.name} within the current analysis period. The pattern is concentrated in one production room rather than evenly distributed across the farm.`
+      : mostAffectedRoom
+        ? `${totalEventsPeriod} mortality event${totalEventsPeriod === 1 ? "" : "s"} totalling ${totalLostPeriod} bird${totalLostPeriod === 1 ? "" : "s"} recorded across ${activeRoomKeys.length} room${activeRoomKeys.length === 1 ? "" : "s"}, with the highest concentration in ${mostAffectedRoom.name}.`
+        : `${totalEventsPeriod} mortality event${totalEventsPeriod === 1 ? "" : "s"} recorded in the current period.`;
+
+  const interpretation = `Risk score ${farmScore}/100 (${farmLevel}) — driven by a ${farmRatePct.toFixed(2)}% period mortality rate, ${totalEventsPeriod} event${totalEventsPeriod === 1 ? "" : "s"} in ${PERIOD_DAYS} days, ${Math.round(maxShare * 100)}% concentration in the most affected room, and a ${farmTrendScore >= 100 ? "rising" : farmTrendScore <= 0 ? "easing" : "steady"} recent trend.`;
+
+  const roomHealth = repeatedRoomRow
+    ? health.filter(h => h.scope === repeatedRoomRow.name || /all rooms/i.test(h.scope))
+    : health;
+  const recentHealthNote = roomHealth.length === 0
+    ? "No recent health records are available for cross-reference."
+    : `Recent health records available for cross-reference: ${roomHealth.slice(0, 3).map(h => h.name).join(", ")}.`;
+
+  const action = repeatedRoomRow
+    ? `Review recent health observations, vaccination and medication records for ${repeatedRoomRow.name}; check feed changes or feed batches, water availability, environmental observations and production movement for that room. ${recentHealthNote}`
+    : totalEventsPeriod === 0
+      ? "Continue capturing daily mortality checks to keep the risk model current."
+      : `Cross-check mortality entries against recent health, feed and production records. ${recentHealthNote}`;
+
+  return {
+    levelLabel: farmLevel,
+    levelTone: riskTone(farmLevel),
+    score: farmScore,
+    monthlyMortality,
+    mostAffectedRoom,
+    patternLabel,
+    rooms: roomRows.sort((a, b) => b.score - a.score),
+    timeline: { data: timelineData, roomKeys: activeRoomKeys },
+    insight: {
+      observation,
+      interpretation,
+      action,
+      repeatedRoom: repeatedRoomRow ? repeatedRoomRow.name : null,
+    },
+    periodLabel,
+  };
+}
