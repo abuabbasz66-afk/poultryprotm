@@ -930,21 +930,29 @@ function ProductionForecast({ eggs, totalBirds }: { eggs: EggRow[]; totalBirds: 
     latestTotal, latestPct, avgForecast, low, high, direction, chartData, boundaryLabel,
   } = forecast;
 
+  const isDeclining = direction === "Declining" || direction === "Stable with downward movement";
+  const isImproving = direction === "Increasing" || direction === "Stable with upward movement";
   const directionTone =
     direction === "Increasing" ? "text-[color:var(--forest)]"
     : direction === "Declining" ? "text-destructive"
+    : direction === "Stable with upward movement" ? "text-[color:var(--forest)]/80"
+    : direction === "Stable with downward movement" ? "text-destructive/80"
     : "text-muted-foreground";
   const DirectionIcon =
-    direction === "Increasing" ? TrendingUp
-    : direction === "Declining" ? TrendingDown
+    isImproving ? TrendingUp
+    : isDeclining ? TrendingDown
     : Activity;
 
   const observation =
     direction === "Increasing"
-      ? "Recent production records indicate a gradually improving production pattern."
-      : direction === "Declining"
-        ? "Recent production records indicate a softening production pattern that warrants attention."
-        : "Recent production records indicate a relatively stable production pattern.";
+      ? "Recent production records indicate a clearly improving production pattern."
+      : direction === "Stable with upward movement"
+        ? "Recent production remains within its normal range but shows a mild upward movement."
+        : direction === "Declining"
+          ? "Recent production records indicate a clearly softening production pattern that warrants attention."
+          : direction === "Stable with downward movement"
+            ? "Recent production remains within its normal range but shows a mild downward movement worth monitoring."
+            : "Recent production records indicate a relatively stable production pattern with minimal movement.";
   const outlook =
     direction === "Declining"
       ? `Projected daily production over the next 7 days is around ${avgForecast.toLocaleString()} eggs, within a ${low.toLocaleString()}–${high.toLocaleString()} range if the current downward movement continues.`
@@ -952,7 +960,9 @@ function ProductionForecast({ eggs, totalBirds }: { eggs: EggRow[]; totalBirds: 
   const action =
     direction === "Declining"
       ? "Investigate recent feed, health and mortality records for changes that may be driving the decline, and continue monitoring daily production closely."
-      : "Continue monitoring feed usage, mortality and daily egg production for changes that may affect the projected trend.";
+      : direction === "Stable with downward movement"
+        ? "Continue monitoring feed, health and daily egg production to confirm whether the mild downward movement remains within normal variation."
+        : "Continue monitoring feed usage, mortality and daily egg production for changes that may affect the projected trend.";
 
   return (
     <Card>
