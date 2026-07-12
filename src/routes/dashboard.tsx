@@ -690,7 +690,11 @@ function Dashboard() {
                 <AiCard icon={TrendingDown} title="Production Decline Detection"
                   desc="Monitor production trends and flag unusual declines for earlier investigation." />
                 <AiCard icon={AlertTriangle} title="Mortality Risk Monitoring"
-                  desc="Analyse mortality patterns across rooms and flocks to identify abnormal changes." />
+                  desc="Analyse mortality patterns across rooms and flocks to identify abnormal changes."
+                  active={mortalityOpen}
+                  onClick={() => setMortalityOpen(v => !v)}
+                  actionLabel={mortalityOpen ? "Hide mortality risk monitor" : "Open mortality risk monitor"}
+                  badge="Early Risk Model" />
                 <AiCard icon={Wheat} title="Feed Efficiency Monitoring"
                   desc="Compare feed usage with production performance to identify possible efficiency changes." />
                 <AiCard icon={Radar} title="Abnormal Farm Activity Detection"
