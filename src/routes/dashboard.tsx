@@ -1123,13 +1123,21 @@ function computeForecast(eggs: EggRow[], totalBirds: number): ForecastResult | n
   const low = Math.max(0, Math.round(forecastMin - spread));
   const high = Math.round(forecastMax + spread);
 
-  // Direction from slope; cross-check against first vs last plotted forecast
+  // Direction from slope strength (as % of mean per day) and projected 7-day movement (as % of mean)
   const slopePctPerDay = mean === 0 ? 0 : (slope / mean) * 100;
   const forecastDelta = forecastValues[forecastValues.length - 1] - forecastValues[0];
-  const direction: ForecastResult["direction"] =
-    slopePctPerDay > 0.4 && forecastDelta > 0 ? "Increasing"
-    : slopePctPerDay < -0.4 && forecastDelta < 0 ? "Declining"
-    : "Stable";
+  const projectedMovePct = mean === 0 ? 0 : (forecastDelta / mean) * 100;
+  // Thresholds: strong ≈ ≥0.6%/day slope AND ≥3% total 7-day move; mild ≈ ≥0.15%/day AND ≥0.8% total move
+  const STRONG_SLOPE = 0.6;
+  const MILD_SLOPE = 0.15;
+  const STRONG_MOVE = 3;
+  const MILD_MOVE = 0.8;
+  let direction: ForecastResult["direction"] = "Stable";
+  if (slopePctPerDay >= STRONG_SLOPE && projectedMovePct >= STRONG_MOVE) direction = "Increasing";
+  else if (slopePctPerDay <= -STRONG_SLOPE && projectedMovePct <= -STRONG_MOVE) direction = "Declining";
+  else if (slopePctPerDay >= MILD_SLOPE && projectedMovePct >= MILD_MOVE) direction = "Stable with upward movement";
+  else if (slopePctPerDay <= -MILD_SLOPE && projectedMovePct <= -MILD_MOVE) direction = "Stable with downward movement";
+
 
   // Historical portion of chart: last 14 days (total eggs per day, same unit as forecast)
   const historical = totals.slice(-Math.min(14, totals.length));
