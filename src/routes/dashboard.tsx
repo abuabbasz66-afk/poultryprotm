@@ -604,6 +604,97 @@ function Dashboard() {
             </table>
           </div>
         </Card>
+          </div>
+        )}
+
+        {area === "ai" && (
+          <div className="space-y-6">
+            <SectionIntro
+              stage="PREDICT" plan="Premium" title="PoultryPro AI Intelligence" premium
+              body="Progressively applying artificial intelligence to detect abnormal farm patterns, forecast production and support earlier evidence-based decisions."
+            />
+
+            {/* AI Intelligence Preview — computed from real records */}
+            <div className="rounded-3xl border border-[color:var(--gold)]/40 bg-gradient-to-br from-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground p-6 md:p-7 shadow-[var(--shadow-lift)]">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--gold)]">
+                <Sparkles className="h-3.5 w-3.5" /> AI Intelligence Preview
+              </div>
+              <h3 className="mt-1 font-display text-2xl md:text-3xl font-semibold">Analytical decision-support preview</h3>
+              <p className="mt-1 text-sm text-primary-foreground/70 max-w-2xl">
+                Rule-based observations generated from your existing farm records while full ML models progressively roll out.
+              </p>
+
+              <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <PreviewInsight
+                  kicker="Production Monitoring"
+                  metric={`${productionRate}%`}
+                  metricLabel={`Farm target: 80%`}
+                  observation={
+                    productionRate >= 80
+                      ? `Current production is ${productionRate - 80} percentage points above the configured farm target.`
+                      : `Current production is ${80 - productionRate} percentage point${80 - productionRate === 1 ? "" : "s"} below the configured farm target.`
+                  }
+                  action="Review recent production, feed and health records for changes that may require investigation."
+                />
+                <PreviewInsight
+                  kicker="Production Trend"
+                  metric={`${diffPct >= 0 ? "+" : ""}${diffPct.toFixed(1)}%`}
+                  metricLabel="vs previous recorded day"
+                  observation={
+                    diffPct >= 0
+                      ? `Today's recorded production is ${diffPct.toFixed(1)}% higher than the previous recorded day.`
+                      : `Today's recorded production is ${Math.abs(diffPct).toFixed(1)}% lower than the previous recorded day.`
+                  }
+                  action="Continue monitoring the next production records to determine whether this movement is temporary or developing into a trend."
+                />
+                <PreviewInsight
+                  kicker="Mortality Watch"
+                  metric={String(monthlyMortality)}
+                  metricLabel="losses this month"
+                  observation={
+                    monthlyMortality === 0
+                      ? "No mortality has been recorded this month across active rooms."
+                      : `${monthlyMortality} bird loss${monthlyMortality === 1 ? "" : "es"} recorded this month across active rooms.`
+                  }
+                  action="Cross-check mortality entries against recent health records and feed batches for any correlated changes."
+                />
+                <PreviewInsight
+                  kicker="Feed vs Production"
+                  metric={`${feedToday} bags`}
+                  metricLabel={`for ${todayEggs.toLocaleString()} eggs today`}
+                  observation={`Today's feed usage is ${feedToday} bags against ${todayEggs.toLocaleString()} eggs produced across ${rooms.length} rooms.`}
+                  action="Watch for feed usage rising while egg output stays flat — an early signal of efficiency change."
+                />
+              </div>
+
+              <div className="mt-5 text-[11px] text-primary-foreground/60 border-t border-white/10 pt-3">
+                PoultryPro AI Intelligence provides operational decision support and does not replace veterinary diagnosis or professional farm management judgement.
+              </div>
+            </div>
+
+            {/* Capability cards — Progressive Rollout */}
+            <Card>
+              <CardHeader
+                title={<span className="inline-flex items-center gap-2"><Brain className="h-5 w-5 text-[color:var(--forest)]" /> Premium AI Capabilities</span>}
+                subtitle="Progressively rolling out on the Premium plan"
+              />
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <AiCard icon={LineChartIcon} title="Production Forecasting"
+                  desc="Analyse historical egg production patterns to support short-term production forecasting." />
+                <AiCard icon={TrendingDown} title="Production Decline Detection"
+                  desc="Monitor production trends and flag unusual declines for earlier investigation." />
+                <AiCard icon={AlertTriangle} title="Mortality Risk Monitoring"
+                  desc="Analyse mortality patterns across rooms and flocks to identify abnormal changes." />
+                <AiCard icon={Wheat} title="Feed Efficiency Monitoring"
+                  desc="Compare feed usage with production performance to identify possible efficiency changes." />
+                <AiCard icon={Radar} title="Abnormal Farm Activity Detection"
+                  desc="Monitor operational records for unusual production, mortality or feed patterns." />
+                <AiCard icon={Lightbulb} title="AI-Supported Farm Insights"
+                  desc="Transform farm data patterns into clear operational observations and decision-support recommendations." />
+              </div>
+            </Card>
+          </div>
+        )}
 
         <div className="pt-6 text-center text-xs text-muted-foreground">
           {new Date().getFullYear()} ABZ GLOBAL RESOURCE — Poultry Farm Management System
