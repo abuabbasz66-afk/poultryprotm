@@ -103,8 +103,9 @@ function Index() {
             </span>
           </a>
           <nav className="hidden md:flex items-center gap-8 text-sm">
+            <a href="#architecture" className="text-muted-foreground hover:text-foreground transition">Architecture</a>
             <a href="#features" className="text-muted-foreground hover:text-foreground transition">Features</a>
-            <a href="#impact" className="text-muted-foreground hover:text-foreground transition">Impact</a>
+            <a href="#pricing" className="text-muted-foreground hover:text-foreground transition">Pricing</a>
             <a href="#founder" className="text-muted-foreground hover:text-foreground transition">Founder</a>
             <a href="#roadmap" className="text-muted-foreground hover:text-foreground transition">Roadmap</a>
           </nav>
@@ -119,15 +120,17 @@ function Index() {
           <div className="lg:col-span-6 space-y-7">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs font-medium text-secondary-foreground">
               <Sparkles className="h-3.5 w-3.5 text-[color:var(--gold)]" />
-              Smart Poultry Farm Management
+              Capture · Understand · Predict
             </span>
             <h1 className="font-display text-5xl md:text-7xl font-semibold leading-[1.02] tracking-tight">
-              Turn poultry data into <em className="italic text-[color:var(--forest)]">daily profit.</em>
+              Smart poultry farm <em className="italic text-[color:var(--forest)]">management &amp; intelligence.</em>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
-              PoultryPro empowers farmers to monitor production, feed, health and finance in real time —
-              transforming everyday operations into intelligent, evidence-based decisions.
+              PoultryPro digitises daily farm activities, converts records into production and financial
+              intelligence, and progressively applies AI to forecast production and flag operational risk —
+              turning everyday operations into evidence-based decisions.
             </p>
+
             <div className="flex flex-wrap gap-3">
               <a href="#features" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition shadow-[var(--shadow-lift)]">
                 Explore the platform <ArrowRight className="h-4 w-4" />
