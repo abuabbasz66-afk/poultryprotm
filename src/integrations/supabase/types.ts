@@ -14,13 +14,261 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      egg_production: {
+        Row: {
+          created_at: string
+          date: string
+          extra: number
+          farm_id: string
+          id: string
+          label: string
+          r2: number
+          r3: number
+          r4: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          extra?: number
+          farm_id: string
+          id?: string
+          label: string
+          r2?: number
+          r3?: number
+          r4?: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          extra?: number
+          farm_id?: string
+          id?: string
+          label?: string
+          r2?: number
+          r3?: number
+          r4?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "egg_production_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      farms: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+        }
+        Relationships: []
+      }
+      feed_usage: {
+        Row: {
+          bags: number
+          created_at: string
+          date: string
+          farm_id: string
+          id: string
+          room: string
+        }
+        Insert: {
+          bags?: number
+          created_at?: string
+          date: string
+          farm_id: string
+          id?: string
+          room: string
+        }
+        Update: {
+          bags?: number
+          created_at?: string
+          date?: string
+          farm_id?: string
+          id?: string
+          room?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_usage_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_records: {
+        Row: {
+          created_at: string
+          date: string
+          farm_id: string
+          id: string
+          name: string
+          scope: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          farm_id: string
+          id?: string
+          name: string
+          scope?: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          farm_id?: string
+          id?: string
+          name?: string
+          scope?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_records_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mortality: {
+        Row: {
+          cause: string
+          created_at: string
+          date: string
+          farm_id: string
+          id: string
+          loss: number
+          room: string
+        }
+        Insert: {
+          cause?: string
+          created_at?: string
+          date: string
+          farm_id: string
+          id?: string
+          loss?: number
+          room: string
+        }
+        Update: {
+          cause?: string
+          created_at?: string
+          date?: string
+          farm_id?: string
+          id?: string
+          loss?: number
+          room?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mortality_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prices: {
+        Row: {
+          created_at: string
+          farm_id: string
+          id: string
+          item: string
+          price: number
+          unit: string
+          updated: string
+        }
+        Insert: {
+          created_at?: string
+          farm_id: string
+          id?: string
+          item: string
+          price?: number
+          unit?: string
+          updated?: string
+        }
+        Update: {
+          created_at?: string
+          farm_id?: string
+          id?: string
+          item?: string
+          price?: number
+          unit?: string
+          updated?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prices_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          created_at: string
+          current: number
+          farm_id: string
+          id: string
+          initial: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          current?: number
+          farm_id: string
+          id?: string
+          initial?: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          current?: number
+          farm_id?: string
+          id?: string
+          initial?: number
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_farm_id: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
