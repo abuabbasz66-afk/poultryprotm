@@ -1926,11 +1926,21 @@ function FeedEfficiencyMonitor({
               <li>Room-Level Variation — 10%</li>
             </ul>
             <div className="mt-2 text-muted-foreground">
-              Latest matched period vs preceding matched baseline:
-              feed-per-egg {fmtSigned(analysis.movements.feedPerEggPct)}% ·
-              production {fmtSigned(analysis.movements.productionPct)}% ·
-              feed usage {fmtSigned(analysis.movements.feedPct)}% ·
-              room variation {fmtNum(analysis.movements.roomVariationPct)}%.
+              {analysis.hasBaseline ? (
+                <>
+                  Latest matched date vs preceding matched baseline:
+                  feed-per-egg {fmtSigned(analysis.movements.feedPerEggPct)}% ·
+                  production {fmtSigned(analysis.movements.productionPct)}% ·
+                  feed usage {fmtSigned(analysis.movements.feedPct)}% ·
+                  room variation {fmtNum(analysis.movements.roomVariationPct)}%.
+                </>
+              ) : (
+                <>
+                  Movement metrics: BASELINE UNAVAILABLE — feed-per-egg, production, feed usage and
+                  room-level variation percentages will appear once at least 3 preceding matched
+                  daily records exist.
+                </>
+              )}
             </div>
             <div className="mt-2 text-muted-foreground">
               Classification: Strong positive improvement → EFFICIENT · Minimal material change → STABLE ·
