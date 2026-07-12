@@ -198,9 +198,18 @@ function Dashboard() {
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-primary-foreground/80 hover:text-primary-foreground">
             <ArrowLeft className="h-4 w-4" /> Back to site
           </Link>
-          <div className="flex items-center gap-2">
-            <img src={logoAsset.url} alt="" width={28} height={28} className="h-7 w-7 object-contain" />
-            <span className="font-display font-semibold">PoultryPro™</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <img src={logoAsset.url} alt="" width={28} height={28} className="h-7 w-7 object-contain" />
+              <span className="font-display font-semibold">PoultryPro™</span>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1 text-xs text-primary-foreground/90 hover:bg-white/10"
+              title="Sign out"
+            >
+              <LogOut className="h-3.5 w-3.5" /> Sign out
+            </button>
           </div>
         </div>
         <div className="container-x pb-10 pt-4">
