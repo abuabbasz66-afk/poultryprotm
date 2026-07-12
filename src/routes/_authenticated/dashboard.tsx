@@ -204,7 +204,7 @@ function Dashboard() {
               <span className="font-display font-semibold">PoultryPro™</span>
             </div>
             <Link
-              to="/_authenticated/import"
+              to="/import"
               className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1 text-xs text-primary-foreground/90 hover:bg-white/10"
               title="Import historical records from CSV"
             >
