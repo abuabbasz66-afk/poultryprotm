@@ -705,7 +705,11 @@ function Dashboard() {
                   actionLabel={feedEffOpen ? "Hide feed efficiency monitor" : "Open feed efficiency monitor"}
                   badge="Early Efficiency Model" />
                 <AiCard icon={Radar} title="Abnormal Farm Activity Detection"
-                  desc="Monitor operational records for unusual production, mortality or feed patterns." />
+                  desc="Cross-analyse production, mortality, feed and health records to detect unusual operational patterns."
+                  active={activityOpen}
+                  onClick={() => setActivityOpen(v => !v)}
+                  actionLabel={activityOpen ? "Hide activity monitor" : "Open activity monitor"}
+                  badge="Early Anomaly Model" />
                 <AiCard icon={Lightbulb} title="AI-Supported Farm Insights"
                   desc="Transform farm data patterns into clear operational observations and decision-support recommendations." />
               </div>
@@ -723,6 +727,13 @@ function Dashboard() {
               <FeedEfficiencyMonitor
                 rooms={rooms} feed={feed} eggs={eggs} mortality={mortality} health={health}
                 bagWeightKg={bagWeightKg} onBagWeightChange={setBagWeightKg}
+              />
+            )}
+
+            {activityOpen && (
+              <AbnormalActivityMonitor
+                rooms={rooms} eggs={eggs} feed={feed} mortality={mortality} health={health}
+                bagWeightKg={bagWeightKg}
               />
             )}
           </div>
