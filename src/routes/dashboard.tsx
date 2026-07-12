@@ -2599,6 +2599,9 @@ function computeAbnormalActivity(
     }
 
     // --- Health record context (per room) ---
+    // Room-specific records may contribute to the room's health signal.
+    // Farm-wide ("All Rooms") records are contextual only and MUST NOT
+    // independently elevate a specific room's anomaly score.
     if (health && health.length > 0) {
       const parsedHealth = health
         .map(h => {
@@ -2606,17 +2609,31 @@ function computeAbnormalActivity(
           return d ? { ...h, ts: d.getTime() } : null;
         })
         .filter((x): x is Health & { ts: number } => x !== null)
-        .filter(h => h.ts >= periodStart.getTime() && h.ts <= anchor.getTime() + 24 * 60 * 60 * 1000)
-        .filter(h => h.scope === room.name || /all rooms/i.test(h.scope));
-      // Higher activity = more recent context signals; treat presence as contextual weight only
-      const count = parsedHealth.length;
-      const s = Math.min(100, count * 30);
-      signals.health = {
-        score: s,
-        label: count === 0 ? "No recent records" : `${count} recent record${count === 1 ? "" : "s"}`,
-        note: count === 0 ? "" : parsedHealth.slice(0, 2).map(h => `${h.name} (${h.type})`).join(", "),
-      };
-      signalKeysAnalysed.add("health");
+        .filter(h => h.ts >= periodStart.getTime() && h.ts <= anchor.getTime() + 24 * 60 * 60 * 1000);
+
+      const roomSpecific = parsedHealth.filter(h => h.scope === room.name);
+      const farmWide = parsedHealth.filter(h => /all rooms/i.test(h.scope));
+
+      if (roomSpecific.length > 0) {
+        const s = Math.min(100, roomSpecific.length * 30);
+        signals.health = {
+          score: s,
+          label: `Room-specific record${roomSpecific.length === 1 ? "" : "s"} (${roomSpecific.length})`,
+          note: roomSpecific.slice(0, 2).map(h => `${h.name} (${h.type})`).join(", "),
+        };
+        signalKeysAnalysed.add("health");
+      } else if (farmWide.length > 0) {
+        // Contextual only — does not contribute to this room's score.
+        signals.health = {
+          score: null,
+          label: "Farm-wide context available",
+          note: farmWide.slice(0, 2).map(h => `${h.name} (${h.type}, All Rooms)`).join(", "),
+        };
+      } else {
+        signals.health = { score: null, label: "No recent health context", note: "" };
+      }
+    } else {
+      signals.health = { score: null, label: "No recent health context", note: "" };
     }
 
     // --- Weighted score with re-normalisation ---
