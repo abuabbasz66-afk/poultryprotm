@@ -2688,10 +2688,19 @@ function computeAbnormalActivity(
 
   const interpretation = `Farm activity score ${farmScore}/100 (${farmLevel}) across ${roomRows.length} monitored room${roomRows.length === 1 ? "" : "s"} using ${signalKeysAnalysed.size} of 4 signal categor${signalKeysAnalysed.size === 1 ? "y" : "ies"}${limited ? " (weights re-normalised due to insufficient data on other signals)" : ""}. Strongest contributing signals: ${strongest}.`;
 
+  // Health-context clarification for the most affected room.
+  const healthClarification = mostAffected
+    ? mostAffected.signals.health.label === "Farm-wide context available"
+      ? ` Farm-wide health records are available for contextual review; however, no room-specific health record is currently associated with ${mostAffected.name}. Farm-wide records are not treated as a room-specific health signal and do not increase ${mostAffected.name}'s activity score.`
+      : mostAffected.signals.health.label.startsWith("Room-specific")
+        ? ` A room-specific health record is associated with ${mostAffected.name} within the analysis window; this is presented as context and does not imply that any vaccination, vitamin or medication record caused mortality or production movement.`
+        : ""
+    : "";
+
   const targetRoom = mostAffected && mostAffected.score >= 25 ? mostAffected.name : null;
   const action = targetRoom
-    ? `Review ${targetRoom} production records, recent mortality events, feed formulation and feed batches, water availability, environmental observations, vaccination and medication records, and bird population changes. This may be associated with an operational pattern; the pattern warrants review before drawing further conclusions.`
-    : "Continue capturing daily production, feed, mortality and health records. PoultryPro will strengthen cross-signal activity detection as additional matched records become available.";
+    ? `Review ${targetRoom} production records, recent mortality events, feed formulation and feed batches, water availability, environmental observations, vaccination and medication records, and bird population changes.${healthClarification} This may be associated with an operational pattern; the pattern warrants review before drawing further conclusions.`
+    : `Continue capturing daily production, feed, mortality and health records. PoultryPro will strengthen cross-signal activity detection as additional matched records become available.${healthClarification}`;
 
   return {
     score: farmScore,
