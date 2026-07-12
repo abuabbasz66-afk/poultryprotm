@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   Bar, BarChart, CartesianGrid, Legend, Line, LineChart,
@@ -8,9 +8,17 @@ import {
   Egg, Bird, TrendingDown, TrendingUp, Wheat, DollarSign,
   Skull, Syringe, Droplets, Plus, Pencil, Trash2, MapPin,
   Sparkles, ArrowLeft, LayoutDashboard, LineChart as LineChartIcon,
-  Brain, Activity, AlertTriangle, Gauge, Radar, Lightbulb, ArrowRight,
+  Brain, Activity, AlertTriangle, Gauge, Radar, Lightbulb, ArrowRight, LogOut,
 } from "lucide-react";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  useRooms, useEggs, useMortality, useHealth, useFeed, usePrices,
+  useAddRoom, useDeleteRoom,
+  useAddEgg, useAddMortality, useAddHealth, useAddFeed,
+  useAddPrice, useDeletePrice,
+  type Room, type EggRow, type Mortality, type Health, type Feed, type Price,
+} from "@/lib/farm-data";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -24,90 +32,41 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
 
-// ---------- Seed data (mirrors screenshots) ----------
-type Room = { id: string; name: string; current: number; initial: number };
-type EggRow = { date: string; label: string; r2: number; r3: number; r4: number; extra: number };
-type Mortality = { id: string; room: string; cause: string; date: string; loss: number };
-type Health = { id: string; name: string; scope: string; type: "Vitamin" | "Vaccination"; date: string };
-type Feed = { id: string; room: string; bags: number; date: string };
-type Price = { id: string; item: string; unit: string; price: number; updated: string };
-
-const seedRooms: Room[] = [
-  { id: "r2", name: "ROOM 2", current: 1413, initial: 1414 },
-  { id: "r3", name: "ROOM 3", current: 1324, initial: 1330 },
-  { id: "r4", name: "ROOM 4", current: 1220, initial: 1222 },
-];
-
-const seedEggs: EggRow[] = [
-  { date: "2026-02-20", label: "Fri, 20 Feb", r2: 39, r3: 34, r4: 31, extra: 9 },
-  { date: "2026-02-19", label: "Thu, 19 Feb", r2: 39, r3: 35, r4: 31, extra: 22 },
-  { date: "2026-02-18", label: "Wed, 18 Feb", r2: 40, r3: 35, r4: 31, extra: 13 },
-  { date: "2026-02-17", label: "Tue, 17 Feb", r2: 39, r3: 34, r4: 31, extra: 13 },
-  { date: "2026-02-16", label: "Mon, 16 Feb", r2: 38, r3: 34, r4: 31, extra: 4 },
-  { date: "2026-02-15", label: "Sun, 15 Feb", r2: 38, r3: 33, r4: 30, extra: 14 },
-  { date: "2026-02-14", label: "Sat, 14 Feb", r2: 40, r3: 33, r4: 31, extra: 7 },
-  { date: "2026-02-13", label: "Fri, 13 Feb", r2: 39, r3: 35, r4: 31, extra: 25 },
-  { date: "2026-02-12", label: "Thu, 12 Feb", r2: 38, r3: 34, r4: 31, extra: 6 },
-  { date: "2026-02-11", label: "Wed, 11 Feb", r2: 39, r3: 33, r4: 31, extra: 9 },
-  { date: "2026-02-10", label: "Tue, 10 Feb", r2: 39, r3: 34, r4: 31, extra: 0 },
-  { date: "2026-02-09", label: "Mon, 9 Feb", r2: 39, r3: 33, r4: 32, extra: 27 },
-  { date: "2026-02-08", label: "Sun, 8 Feb", r2: 39, r3: 33, r4: 30, extra: 28 },
-  { date: "2026-02-07", label: "Sat, 7 Feb", r2: 40, r3: 34, r4: 32, extra: 2 },
-  { date: "2026-02-06", label: "Fri, 6 Feb", r2: 38, r3: 34, r4: 31, extra: 6 },
-  { date: "2026-02-05", label: "Thu, 5 Feb", r2: 38, r3: 33, r4: 31, extra: 24 },
-  { date: "2026-02-04", label: "Wed, 4 Feb", r2: 39, r3: 34, r4: 31, extra: 25 },
-  { date: "2026-02-03", label: "Tue, 3 Feb", r2: 39, r3: 34, r4: 31, extra: 5 },
-  { date: "2026-02-02", label: "Mon, 2 Feb", r2: 38, r3: 33, r4: 31, extra: 27 },
-  { date: "2026-02-01", label: "Sun, 1 Feb", r2: 39, r3: 33, r4: 31, extra: 8 },
-  { date: "2026-01-25", label: "Sun, 25 Jan", r2: 38, r3: 33, r4: 30, extra: 29 },
-  { date: "2026-01-24", label: "Sat, 24 Jan", r2: 38, r3: 34, r4: 30, extra: 25 },
-  { date: "2026-01-23", label: "Fri, 23 Jan", r2: 37, r3: 34, r4: 31, extra: 24 },
-  { date: "2026-01-22", label: "Thu, 22 Jan", r2: 37, r3: 34, r4: 32, extra: 13 },
-  { date: "2026-01-16", label: "Fri, 16 Jan", r2: 36, r3: 33, r4: 30, extra: 3 },
-  { date: "2026-01-10", label: "Sat, 10 Jan", r2: 37, r3: 33, r4: 31, extra: 19 },
-  { date: "2025-12-31", label: "Wed, 31 Dec", r2: 35, r3: 34, r4: 30, extra: 6 },
-  { date: "2025-12-30", label: "Tue, 30 Dec", r2: 36, r3: 33, r4: 29, extra: 21 },
-  { date: "2025-12-29", label: "Mon, 29 Dec", r2: 37, r3: 34, r4: 30, extra: 15 },
-  { date: "2025-12-27", label: "Sat, 27 Dec", r2: 35, r3: 33, r4: 28, extra: 2 },
-];
-
-const seedMortality: Mortality[] = [
-  { id: "m1", room: "ROOM 3", cause: "Unknown", date: "16 Jan", loss: 1 },
-  { id: "m2", room: "ROOM 3", cause: "Unknown", date: "3 Feb", loss: 1 },
-  { id: "m3", room: "ROOM 4", cause: "Unknown", date: "7 Feb", loss: 2 },
-  { id: "m4", room: "ROOM 3", cause: "Unknown", date: "7 Feb", loss: 1 },
-  { id: "m5", room: "ROOM 3", cause: "Unknown", date: "11 Feb", loss: 1 },
-];
-
-const seedHealth: Health[] = [
-  { id: "h1", name: "MIAVIT", scope: "ROOM 2", type: "Vitamin", date: "16 Jan" },
-  { id: "h2", name: "MIAVIT", scope: "All Rooms", type: "Vitamin", date: "9 Feb" },
-  { id: "h3", name: "LASOTA VACCINE", scope: "All Rooms", type: "Vaccination", date: "8 Feb" },
-];
-
-const seedFeed: Feed[] = [
-  { id: "f1", room: "ROOM 4", bags: 5.5, date: "20 Feb" },
-  { id: "f2", room: "ROOM 3", bags: 6.5, date: "20 Feb" },
-  { id: "f3", room: "ROOM 2", bags: 7, date: "20 Feb" },
-  { id: "f4", room: "ROOM 4", bags: 5.5, date: "19 Feb" },
-];
-
-const seedPrices: Price[] = [
-  { id: "p1", item: "Egg", unit: "30", price: 4900, updated: "19 Feb 2026" },
-  { id: "p2", item: "Feed after all Expenses", unit: "1", price: 13600, updated: "20 Feb 2026" },
-];
-
 // ---------- Helpers ----------
 const naira = (n: number) => "₦" + n.toLocaleString("en-NG");
-const uid = () => Math.random().toString(36).slice(2, 9);
+
+function todayLabel() {
+  return new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+}
+function todayShortLabel() {
+  return new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
 
 function Dashboard() {
-  const [rooms, setRooms] = useState<Room[]>(seedRooms);
-  const [eggs, setEggs] = useState<EggRow[]>(seedEggs);
-  const [mortality, setMortality] = useState<Mortality[]>(seedMortality);
-  const [health, setHealth] = useState<Health[]>(seedHealth);
-  const [feed, setFeed] = useState<Feed[]>(seedFeed);
-  const [prices, setPrices] = useState<Price[]>(seedPrices);
+  const navigate = useNavigate();
+  const roomsQ = useRooms();
+  const eggsQ = useEggs();
+  const mortalityQ = useMortality();
+  const healthQ = useHealth();
+  const feedQ = useFeed();
+  const pricesQ = usePrices();
+
+  const rooms: Room[] = roomsQ.data ?? [];
+  const eggs: EggRow[] = eggsQ.data ?? [];
+  const mortality: Mortality[] = mortalityQ.data ?? [];
+  const health: Health[] = healthQ.data ?? [];
+  const feed: Feed[] = feedQ.data ?? [];
+  const prices: Price[] = pricesQ.data ?? [];
+
+  const addRoomM = useAddRoom();
+  const delRoomM = useDeleteRoom();
+  const addEggM = useAddEgg();
+  const addMortalityM = useAddMortality();
+  const addHealthM = useAddHealth();
+  const addFeedM = useAddFeed();
+  const addPriceM = useAddPrice();
+  const delPriceM = useDeletePrice();
+
   const [feedTab, setFeedTab] = useState<"Usage" | "Formulas">("Usage");
   const [area, setArea] = useState<"records" | "analytics" | "ai">("records");
   const [forecastOpen, setForecastOpen] = useState(false);
@@ -128,7 +87,8 @@ function Dashboard() {
   const totalEggs = eggs.reduce((s, r) => s + (r.r2 + r.r3 + r.r4) * 30 + r.extra, 0);
   const totalCrates = eggs.reduce((s, r) => s + r.r2 + r.r3 + r.r4, 0);
   const monthlyMortality = mortality.reduce((s, m) => s + m.loss, 0);
-  const feedToday = feed.filter(f => f.date === "20 Feb").reduce((s, f) => s + f.bags, 0);
+  const latestFeedDate = feed[0]?.date;
+  const feedToday = latestFeedDate ? feed.filter(f => f.date === latestFeedDate).reduce((s, f) => s + f.bags, 0) : 0;
   const productionRate = totalBirds ? Math.round((todayEggs / totalBirds) * 100) : 0;
   const eggPrice = prices.find(p => p.item === "Egg")?.price ?? 4900;
   const feedPrice = prices.find(p => p.item.startsWith("Feed"))?.price ?? 13600;
@@ -153,49 +113,82 @@ function Dashboard() {
     [eggs, eggPrice, feedPrice],
   );
 
-  // Actions
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate({ to: "/auth" });
+  };
+
+  // Actions (persisted to database)
   const addRoom = () => {
     const n = prompt("Room name (e.g. ROOM 5)"); if (!n) return;
     const b = parseInt(prompt("Initial birds") || "0", 10) || 0;
-    setRooms([...rooms, { id: uid(), name: n.toUpperCase(), current: b, initial: b }]);
+    addRoomM.mutate({ name: n, initial: b }, {
+      onError: (e) => alert("Failed to save room: " + (e as Error).message),
+    });
   };
-  const delRoom = (id: string) => setRooms(rooms.filter(r => r.id !== id));
+  const delRoom = (id: string) => {
+    if (!confirm("Delete this room?")) return;
+    delRoomM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) });
+  };
 
   const recordProduction = () => {
-    const label = prompt("Date label (e.g. Sat, 21 Feb)"); if (!label) return;
-    const r2 = +(prompt("ROOM 2 crates") || "0");
-    const r3 = +(prompt("ROOM 3 crates") || "0");
-    const r4 = +(prompt("ROOM 4 crates") || "0");
-    const extra = +(prompt("Extra eggs") || "0");
-    setEggs([{ date: new Date().toISOString().slice(0, 10), label, r2, r3, r4, extra }, ...eggs]);
+    const label = prompt("Date label (e.g. Sat, 21 Feb)", todayLabel()); if (!label) return;
+    const dateInput = prompt("Date (YYYY-MM-DD)", new Date().toISOString().slice(0, 10));
+    if (!dateInput) return;
+    const r2 = +(prompt("ROOM 2 crates", "0") || "0");
+    const r3 = +(prompt("ROOM 3 crates", "0") || "0");
+    const r4 = +(prompt("ROOM 4 crates", "0") || "0");
+    const extra = +(prompt("Extra eggs", "0") || "0");
+    addEggM.mutate({ date: dateInput, label, r2, r3, r4, extra }, {
+      onError: (e) => alert("Failed to save production: " + (e as Error).message),
+    });
   };
 
   const addMortality = () => {
-    const room = prompt("Room") || "ROOM 2";
-    const loss = +(prompt("Loss") || "1");
-    setMortality([{ id: uid(), room: room.toUpperCase(), cause: "Unknown", date: "Today", loss }, ...mortality]);
-    setRooms(rooms.map(r => r.name === room.toUpperCase() ? { ...r, current: r.current - loss } : r));
+    const room = prompt("Room (e.g. ROOM 3)"); if (!room) return;
+    const cause = prompt("Cause", "Unknown") || "Unknown";
+    const dateStr = prompt("Date (e.g. 21 Feb)", todayShortLabel()) || todayShortLabel();
+    const loss = +(prompt("Loss (birds)", "1") || "1");
+    if (!loss) return;
+    addMortalityM.mutate({ room: room.toUpperCase(), cause, date: dateStr, loss }, {
+      onError: (e) => alert("Failed to save mortality: " + (e as Error).message),
+    });
   };
 
   const addHealth = () => {
     const name = prompt("Name (e.g. MIAVIT)"); if (!name) return;
-    const type = (prompt("Type: Vitamin or Vaccination") || "Vitamin") as Health["type"];
-    setHealth([{ id: uid(), name: name.toUpperCase(), scope: "All Rooms", type, date: "Today" }, ...health]);
+    const type = ((prompt("Type: Vitamin or Vaccination", "Vitamin") || "Vitamin") as Health["type"]);
+    const scope = prompt("Scope (All Rooms or ROOM 2 / ROOM 3 / ROOM 4)", "All Rooms") || "All Rooms";
+    const date = prompt("Date (e.g. 21 Feb)", todayShortLabel()) || todayShortLabel();
+    addHealthM.mutate({ name: name.toUpperCase(), scope, type, date }, {
+      onError: (e) => alert("Failed to save health record: " + (e as Error).message),
+    });
   };
 
   const recordFeed = () => {
-    const room = prompt("Room") || "ROOM 2";
-    const bags = +(prompt("Bags") || "1");
-    setFeed([{ id: uid(), room: room.toUpperCase(), bags, date: "Today" }, ...feed]);
+    const room = prompt("Room (e.g. ROOM 3)"); if (!room) return;
+    const bags = +(prompt("Bags", "1") || "1");
+    const date = prompt("Date (e.g. 21 Feb)", todayShortLabel()) || todayShortLabel();
+    if (!bags) return;
+    addFeedM.mutate({ room: room.toUpperCase(), bags, date }, {
+      onError: (e) => alert("Failed to save feed: " + (e as Error).message),
+    });
   };
 
   const addPrice = () => {
     const item = prompt("Item"); if (!item) return;
-    const unit = prompt("Unit") || "1";
-    const price = +(prompt("Price (NGN)") || "0");
-    setPrices([...prices, { id: uid(), item, unit, price, updated: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) }]);
+    const unit = prompt("Unit", "1") || "1";
+    const price = +(prompt("Price (NGN)", "0") || "0");
+    const updated = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    addPriceM.mutate({ item, unit, price, updated }, {
+      onError: (e) => alert("Failed to save price: " + (e as Error).message),
+    });
   };
-  const delPrice = (id: string) => setPrices(prices.filter(p => p.id !== id));
+  const delPrice = (id: string) => {
+    if (!confirm("Delete this price?")) return;
+    delPriceM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) });
+  };
+
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-14">
