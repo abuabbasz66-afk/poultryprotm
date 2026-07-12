@@ -681,7 +681,11 @@ function Dashboard() {
               />
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <AiCard icon={LineChartIcon} title="Production Forecasting"
-                  desc="Analyse historical egg production patterns to support short-term production forecasting." />
+                  desc="Analyse historical egg production patterns to support short-term production forecasting."
+                  active={forecastOpen}
+                  onClick={() => setForecastOpen(v => !v)}
+                  actionLabel={forecastOpen ? "Hide 7-day forecast" : "Open 7-day forecast"}
+                  badge="Early Predictive Model" />
                 <AiCard icon={TrendingDown} title="Production Decline Detection"
                   desc="Monitor production trends and flag unusual declines for earlier investigation." />
                 <AiCard icon={AlertTriangle} title="Mortality Risk Monitoring"
@@ -694,6 +698,10 @@ function Dashboard() {
                   desc="Transform farm data patterns into clear operational observations and decision-support recommendations." />
               </div>
             </Card>
+
+            {forecastOpen && (
+              <ProductionForecast eggs={eggs} totalBirds={totalBirds} />
+            )}
           </div>
         )}
 
