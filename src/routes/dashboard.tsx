@@ -359,6 +359,15 @@ function Dashboard() {
             </ResponsiveContainer>
           </div>
         </Card>
+          </div>
+        )}
+
+        {area === "records" && (
+          <div className="space-y-6">
+            <SectionIntro
+              stage="CAPTURE" plan="Basic" title="Farm Records"
+              body="Digitise daily poultry activities and maintain structured operational records across production, feed, flock health, mortality and farm rooms."
+            />
 
         {/* Daily Egg Production table */}
         <Card>
