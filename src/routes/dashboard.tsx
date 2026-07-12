@@ -767,3 +767,114 @@ function ActionBtn({ onClick, icon: Icon, children }: { onClick: () => void; ico
     </button>
   );
 }
+
+function AreaTab({ active, onClick, num, stage, title, plan, icon: Icon, premium }: {
+  active: boolean; onClick: () => void; num: string; stage: string; title: string; plan: string;
+  icon: React.ComponentType<{ className?: string }>; premium?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={
+        "group text-left rounded-2xl border p-3 md:p-4 transition " +
+        (active
+          ? (premium
+              ? "bg-gradient-to-br from-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground border-[color:var(--gold)]/50 shadow-[var(--shadow-soft)]"
+              : "bg-[color:var(--forest)] text-primary-foreground border-[color:var(--forest)] shadow-[var(--shadow-soft)]")
+          : "bg-card text-foreground border-border hover:border-[color:var(--forest)]/40")
+      }
+    >
+      <div className="flex items-center gap-2">
+        <span className={"grid h-8 w-8 shrink-0 place-items-center rounded-lg " + (active ? "bg-white/10 text-[color:var(--gold)]" : "bg-[color:var(--forest)]/8 text-[color:var(--forest)]")}>
+          <Icon className="h-4 w-4" />
+        </span>
+        <div className="min-w-0">
+          <div className={"text-[10px] uppercase tracking-[0.18em] " + (active ? "text-[color:var(--gold)]" : "text-muted-foreground")}>
+            {num} · {stage}
+          </div>
+          <div className="text-sm md:text-base font-semibold truncate">{title}</div>
+        </div>
+      </div>
+      <div className={"mt-2 hidden md:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium " + (active ? "bg-white/10 text-primary-foreground" : "bg-secondary text-secondary-foreground")}>
+        {plan} plan
+      </div>
+    </button>
+  );
+}
+
+function SectionIntro({ stage, plan, title, body, premium }: {
+  stage: string; plan: string; title: string; body: string; premium?: boolean;
+}) {
+  return (
+    <div className={"rounded-3xl border p-5 md:p-6 " + (premium
+      ? "bg-gradient-to-br from-[color:var(--forest)]/5 to-[color:var(--gold)]/10 border-[color:var(--gold)]/30"
+      : "bg-card border-border")}>
+      <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--forest)]">
+        <span>{stage}</span>
+        <span className="text-muted-foreground/60">·</span>
+        <span className="rounded-full bg-[color:var(--forest)]/8 px-2 py-0.5 text-[10px] tracking-[0.16em] text-[color:var(--forest)]">{plan} plan</span>
+        {premium && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--gold)]/20 px-2 py-0.5 text-[10px] tracking-[0.16em] text-[color:var(--ink)]">
+            <Sparkles className="h-3 w-3" /> Progressive rollout
+          </span>
+        )}
+      </div>
+      <h2 className="mt-1 font-display text-2xl md:text-3xl font-semibold">{title}</h2>
+      <p className="mt-1 text-sm text-muted-foreground max-w-3xl">{body}</p>
+    </div>
+  );
+}
+
+function InsightRow({ label, value, detail, positive }: {
+  label: string; value: string; detail: string; positive: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-secondary/30 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="text-xs uppercase tracking-wider text-muted-foreground min-w-0">{label}</div>
+        <span className={"shrink-0 inline-flex items-center gap-1 text-xs " + (positive ? "text-[color:var(--forest)]" : "text-destructive")}>
+          <Activity className="h-3 w-3" />
+        </span>
+      </div>
+      <div className="mt-2 font-display text-2xl font-semibold">{value}</div>
+      <div className="mt-1 text-xs text-muted-foreground">{detail}</div>
+    </div>
+  );
+}
+
+function PreviewInsight({ kicker, metric, metricLabel, observation, action }: {
+  kicker: string; metric: string; metricLabel: string; observation: string; action: string;
+}) {
+  return (
+    <div className="rounded-2xl bg-white/5 border border-white/10 p-4 backdrop-blur">
+      <div className="text-[10px] uppercase tracking-[0.2em] text-[color:var(--gold)]">{kicker}</div>
+      <div className="mt-1.5 flex items-baseline gap-2">
+        <div className="font-display text-2xl font-semibold text-primary-foreground">{metric}</div>
+        <div className="text-[11px] text-primary-foreground/60">{metricLabel}</div>
+      </div>
+      <div className="mt-2 text-xs text-primary-foreground/85 leading-relaxed">
+        <span className="text-primary-foreground/60">Observation: </span>{observation}
+      </div>
+      <div className="mt-1.5 text-xs text-primary-foreground/85 leading-relaxed">
+        <span className="text-primary-foreground/60">Suggested action: </span>{action}
+      </div>
+    </div>
+  );
+}
+
+function AiCard({ icon: Icon, title, desc }: {
+  icon: React.ComponentType<{ className?: string }>; title: string; desc: string;
+}) {
+  return (
+    <div className="relative rounded-2xl border border-border bg-secondary/30 p-4">
+      <span className="absolute right-3 top-3 rounded-full bg-[color:var(--gold)]/20 px-2 py-0.5 text-[10px] font-medium tracking-[0.14em] uppercase text-[color:var(--ink)]">
+        Progressive Rollout
+      </span>
+      <span className="grid h-9 w-9 place-items-center rounded-lg bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className="mt-3 font-display text-base md:text-lg font-semibold pr-16">{title}</div>
+      <div className="mt-1 text-xs text-muted-foreground leading-relaxed">{desc}</div>
+    </div>
+  );
+}
