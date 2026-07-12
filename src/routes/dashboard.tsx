@@ -7,7 +7,8 @@ import {
 import {
   Egg, Bird, TrendingDown, TrendingUp, Wheat, DollarSign,
   Skull, Syringe, Droplets, Plus, Pencil, Trash2, MapPin,
-  Sparkles, ArrowLeft,
+  Sparkles, ArrowLeft, LayoutDashboard, LineChart as LineChartIcon,
+  Brain, Activity, AlertTriangle, Gauge, Radar, Lightbulb, ArrowRight,
 } from "lucide-react";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 
@@ -108,6 +109,7 @@ function Dashboard() {
   const [feed, setFeed] = useState<Feed[]>(seedFeed);
   const [prices, setPrices] = useState<Price[]>(seedPrices);
   const [feedTab, setFeedTab] = useState<"Usage" | "Formulas">("Usage");
+  const [area, setArea] = useState<"records" | "analytics" | "ai">("records");
 
   // Derived
   const totalBirds = rooms.reduce((s, r) => s + r.current, 0);
@@ -204,10 +206,14 @@ function Dashboard() {
           </div>
         </div>
         <div className="container-x pb-10 pt-4">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[color:var(--gold)]">
-            <Sparkles className="h-3.5 w-3.5" /> Capture · Understand · Predict
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] uppercase tracking-[0.22em] text-[color:var(--gold)]">
+            <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" /> Capture</span>
+            <ArrowRight className="h-3 w-3 opacity-60" />
+            <span>Understand</span>
+            <ArrowRight className="h-3 w-3 opacity-60" />
+            <span>Predict</span>
           </div>
-          <div className="mt-1 text-xs text-primary-foreground/60">
+          <div className="mt-1.5 text-xs text-primary-foreground/70 max-w-2xl">
             Farm Records &amp; Analytics active · PoultryPro AI Intelligence progressively rolling out on Premium
           </div>
           <h1 className="mt-2 font-display text-3xl md:text-4xl font-semibold">ABZ GLOBAL RESOURCE</h1>
@@ -227,7 +233,76 @@ function Dashboard() {
       </header>
 
       <main className="container-x -mt-6 space-y-6">
-        {/* KPI cards */}
+        {/* Product-area navigation: Capture → Understand → Predict */}
+        <nav aria-label="Dashboard areas" className="rounded-3xl bg-card border border-border p-2 shadow-[var(--shadow-soft)]">
+          <div className="grid grid-cols-3 gap-1.5">
+            <AreaTab
+              active={area === "records"} onClick={() => setArea("records")}
+              num="01" stage="CAPTURE" title="Farm Records" plan="Basic" icon={LayoutDashboard}
+            />
+            <AreaTab
+              active={area === "analytics"} onClick={() => setArea("analytics")}
+              num="02" stage="UNDERSTAND" title="Farm Analytics" plan="Standard" icon={LineChartIcon}
+            />
+            <AreaTab
+              active={area === "ai"} onClick={() => setArea("ai")}
+              num="03" stage="PREDICT" title="AI Intelligence" plan="Premium" icon={Brain} premium
+            />
+          </div>
+        </nav>
+
+        {area === "analytics" && (
+          <div className="space-y-6">
+            <SectionIntro
+              stage="UNDERSTAND" plan="Standard" title="Farm Analytics"
+              body="Turn structured farm records into production, financial and operational intelligence."
+            />
+
+            {/* Operational Intelligence Summary — computed from existing records */}
+            <Card>
+              <CardHeader
+                title={<span className="inline-flex items-center gap-2"><Gauge className="h-5 w-5 text-[color:var(--forest)]" /> Operational Intelligence Summary</span>}
+                subtitle="Executive view calculated from your live farm records"
+              />
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <InsightRow
+                  label="Production vs 80% target"
+                  value={`${productionRate}%`}
+                  detail={productionRate >= 80
+                    ? `${productionRate - 80} pts above target`
+                    : `${80 - productionRate} pts below target`}
+                  positive={productionRate >= 80}
+                />
+                <InsightRow
+                  label="Today vs previous recorded day"
+                  value={`${diffPct >= 0 ? "+" : ""}${diffPct.toFixed(1)}%`}
+                  detail={`${todayEggs.toLocaleString()} eggs today · ${yesterdayEggs.toLocaleString()} prior`}
+                  positive={diffPct >= 0}
+                />
+                <InsightRow
+                  label="Highest producing room today"
+                  value={(() => {
+                    if (!today) return "—";
+                    const arr = [
+                      { name: "ROOM 2", v: today.r2 },
+                      { name: "ROOM 3", v: today.r3 },
+                      { name: "ROOM 4", v: today.r4 },
+                    ].sort((a, b) => b.v - a.v);
+                    return `${arr[0].name} · ${arr[0].v} crates`;
+                  })()}
+                  detail="Based on latest recorded production"
+                  positive
+                />
+                <InsightRow
+                  label="Monthly mortality total"
+                  value={String(monthlyMortality)}
+                  detail={`${feedToday} bags fed today · today's profit ${naira(todayProfit)}`}
+                  positive={monthlyMortality <= 5}
+                />
+              </div>
+            </Card>
+
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <KpiCard tone="mint" icon={Egg} label="Today's Eggs" value={todayEggs.toLocaleString()}
             hint={`${todayCrates} crates + ${todayExtra} extra`}
@@ -284,6 +359,15 @@ function Dashboard() {
             </ResponsiveContainer>
           </div>
         </Card>
+          </div>
+        )}
+
+        {area === "records" && (
+          <div className="space-y-6">
+            <SectionIntro
+              stage="CAPTURE" plan="Basic" title="Farm Records"
+              body="Digitise daily poultry activities and maintain structured operational records across production, feed, flock health, mortality and farm rooms."
+            />
 
         {/* Daily Egg Production table */}
         <Card>
@@ -520,6 +604,97 @@ function Dashboard() {
             </table>
           </div>
         </Card>
+          </div>
+        )}
+
+        {area === "ai" && (
+          <div className="space-y-6">
+            <SectionIntro
+              stage="PREDICT" plan="Premium" title="PoultryPro AI Intelligence" premium
+              body="Progressively applying artificial intelligence to detect abnormal farm patterns, forecast production and support earlier evidence-based decisions."
+            />
+
+            {/* AI Intelligence Preview — computed from real records */}
+            <div className="rounded-3xl border border-[color:var(--gold)]/40 bg-gradient-to-br from-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground p-6 md:p-7 shadow-[var(--shadow-lift)]">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--gold)]">
+                <Sparkles className="h-3.5 w-3.5" /> AI Intelligence Preview
+              </div>
+              <h3 className="mt-1 font-display text-2xl md:text-3xl font-semibold">Analytical decision-support preview</h3>
+              <p className="mt-1 text-sm text-primary-foreground/70 max-w-2xl">
+                Rule-based observations generated from your existing farm records while full ML models progressively roll out.
+              </p>
+
+              <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <PreviewInsight
+                  kicker="Production Monitoring"
+                  metric={`${productionRate}%`}
+                  metricLabel={`Farm target: 80%`}
+                  observation={
+                    productionRate >= 80
+                      ? `Current production is ${productionRate - 80} percentage points above the configured farm target.`
+                      : `Current production is ${80 - productionRate} percentage point${80 - productionRate === 1 ? "" : "s"} below the configured farm target.`
+                  }
+                  action="Review recent production, feed and health records for changes that may require investigation."
+                />
+                <PreviewInsight
+                  kicker="Production Trend"
+                  metric={`${diffPct >= 0 ? "+" : ""}${diffPct.toFixed(1)}%`}
+                  metricLabel="vs previous recorded day"
+                  observation={
+                    diffPct >= 0
+                      ? `Today's recorded production is ${diffPct.toFixed(1)}% higher than the previous recorded day.`
+                      : `Today's recorded production is ${Math.abs(diffPct).toFixed(1)}% lower than the previous recorded day.`
+                  }
+                  action="Continue monitoring the next production records to determine whether this movement is temporary or developing into a trend."
+                />
+                <PreviewInsight
+                  kicker="Mortality Watch"
+                  metric={String(monthlyMortality)}
+                  metricLabel="losses this month"
+                  observation={
+                    monthlyMortality === 0
+                      ? "No mortality has been recorded this month across active rooms."
+                      : `${monthlyMortality} bird loss${monthlyMortality === 1 ? "" : "es"} recorded this month across active rooms.`
+                  }
+                  action="Cross-check mortality entries against recent health records and feed batches for any correlated changes."
+                />
+                <PreviewInsight
+                  kicker="Feed vs Production"
+                  metric={`${feedToday} bags`}
+                  metricLabel={`for ${todayEggs.toLocaleString()} eggs today`}
+                  observation={`Today's feed usage is ${feedToday} bags against ${todayEggs.toLocaleString()} eggs produced across ${rooms.length} rooms.`}
+                  action="Watch for feed usage rising while egg output stays flat — an early signal of efficiency change."
+                />
+              </div>
+
+              <div className="mt-5 text-[11px] text-primary-foreground/60 border-t border-white/10 pt-3">
+                PoultryPro AI Intelligence provides operational decision support and does not replace veterinary diagnosis or professional farm management judgement.
+              </div>
+            </div>
+
+            {/* Capability cards — Progressive Rollout */}
+            <Card>
+              <CardHeader
+                title={<span className="inline-flex items-center gap-2"><Brain className="h-5 w-5 text-[color:var(--forest)]" /> Premium AI Capabilities</span>}
+                subtitle="Progressively rolling out on the Premium plan"
+              />
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <AiCard icon={LineChartIcon} title="Production Forecasting"
+                  desc="Analyse historical egg production patterns to support short-term production forecasting." />
+                <AiCard icon={TrendingDown} title="Production Decline Detection"
+                  desc="Monitor production trends and flag unusual declines for earlier investigation." />
+                <AiCard icon={AlertTriangle} title="Mortality Risk Monitoring"
+                  desc="Analyse mortality patterns across rooms and flocks to identify abnormal changes." />
+                <AiCard icon={Wheat} title="Feed Efficiency Monitoring"
+                  desc="Compare feed usage with production performance to identify possible efficiency changes." />
+                <AiCard icon={Radar} title="Abnormal Farm Activity Detection"
+                  desc="Monitor operational records for unusual production, mortality or feed patterns." />
+                <AiCard icon={Lightbulb} title="AI-Supported Farm Insights"
+                  desc="Transform farm data patterns into clear operational observations and decision-support recommendations." />
+              </div>
+            </Card>
+          </div>
+        )}
 
         <div className="pt-6 text-center text-xs text-muted-foreground">
           {new Date().getFullYear()} ABZ GLOBAL RESOURCE — Poultry Farm Management System
@@ -590,5 +765,116 @@ function ActionBtn({ onClick, icon: Icon, children }: { onClick: () => void; ico
     <button onClick={onClick} className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--forest)] text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90 transition">
       <Icon className="h-3.5 w-3.5" /> {children}
     </button>
+  );
+}
+
+function AreaTab({ active, onClick, num, stage, title, plan, icon: Icon, premium }: {
+  active: boolean; onClick: () => void; num: string; stage: string; title: string; plan: string;
+  icon: React.ComponentType<{ className?: string }>; premium?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={
+        "group text-left rounded-2xl border p-3 md:p-4 transition " +
+        (active
+          ? (premium
+              ? "bg-gradient-to-br from-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground border-[color:var(--gold)]/50 shadow-[var(--shadow-soft)]"
+              : "bg-[color:var(--forest)] text-primary-foreground border-[color:var(--forest)] shadow-[var(--shadow-soft)]")
+          : "bg-card text-foreground border-border hover:border-[color:var(--forest)]/40")
+      }
+    >
+      <div className="flex items-center gap-2">
+        <span className={"grid h-8 w-8 shrink-0 place-items-center rounded-lg " + (active ? "bg-white/10 text-[color:var(--gold)]" : "bg-[color:var(--forest)]/8 text-[color:var(--forest)]")}>
+          <Icon className="h-4 w-4" />
+        </span>
+        <div className="min-w-0">
+          <div className={"text-[10px] uppercase tracking-[0.18em] " + (active ? "text-[color:var(--gold)]" : "text-muted-foreground")}>
+            {num} · {stage}
+          </div>
+          <div className="text-sm md:text-base font-semibold truncate">{title}</div>
+        </div>
+      </div>
+      <div className={"mt-2 hidden md:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium " + (active ? "bg-white/10 text-primary-foreground" : "bg-secondary text-secondary-foreground")}>
+        {plan} plan
+      </div>
+    </button>
+  );
+}
+
+function SectionIntro({ stage, plan, title, body, premium }: {
+  stage: string; plan: string; title: string; body: string; premium?: boolean;
+}) {
+  return (
+    <div className={"rounded-3xl border p-5 md:p-6 " + (premium
+      ? "bg-gradient-to-br from-[color:var(--forest)]/5 to-[color:var(--gold)]/10 border-[color:var(--gold)]/30"
+      : "bg-card border-border")}>
+      <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--forest)]">
+        <span>{stage}</span>
+        <span className="text-muted-foreground/60">·</span>
+        <span className="rounded-full bg-[color:var(--forest)]/8 px-2 py-0.5 text-[10px] tracking-[0.16em] text-[color:var(--forest)]">{plan} plan</span>
+        {premium && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--gold)]/20 px-2 py-0.5 text-[10px] tracking-[0.16em] text-[color:var(--ink)]">
+            <Sparkles className="h-3 w-3" /> Progressive rollout
+          </span>
+        )}
+      </div>
+      <h2 className="mt-1 font-display text-2xl md:text-3xl font-semibold">{title}</h2>
+      <p className="mt-1 text-sm text-muted-foreground max-w-3xl">{body}</p>
+    </div>
+  );
+}
+
+function InsightRow({ label, value, detail, positive }: {
+  label: string; value: string; detail: string; positive: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-secondary/30 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="text-xs uppercase tracking-wider text-muted-foreground min-w-0">{label}</div>
+        <span className={"shrink-0 inline-flex items-center gap-1 text-xs " + (positive ? "text-[color:var(--forest)]" : "text-destructive")}>
+          <Activity className="h-3 w-3" />
+        </span>
+      </div>
+      <div className="mt-2 font-display text-2xl font-semibold">{value}</div>
+      <div className="mt-1 text-xs text-muted-foreground">{detail}</div>
+    </div>
+  );
+}
+
+function PreviewInsight({ kicker, metric, metricLabel, observation, action }: {
+  kicker: string; metric: string; metricLabel: string; observation: string; action: string;
+}) {
+  return (
+    <div className="rounded-2xl bg-white/5 border border-white/10 p-4 backdrop-blur">
+      <div className="text-[10px] uppercase tracking-[0.2em] text-[color:var(--gold)]">{kicker}</div>
+      <div className="mt-1.5 flex items-baseline gap-2">
+        <div className="font-display text-2xl font-semibold text-primary-foreground">{metric}</div>
+        <div className="text-[11px] text-primary-foreground/60">{metricLabel}</div>
+      </div>
+      <div className="mt-2 text-xs text-primary-foreground/85 leading-relaxed">
+        <span className="text-primary-foreground/60">Observation: </span>{observation}
+      </div>
+      <div className="mt-1.5 text-xs text-primary-foreground/85 leading-relaxed">
+        <span className="text-primary-foreground/60">Suggested action: </span>{action}
+      </div>
+    </div>
+  );
+}
+
+function AiCard({ icon: Icon, title, desc }: {
+  icon: React.ComponentType<{ className?: string }>; title: string; desc: string;
+}) {
+  return (
+    <div className="relative rounded-2xl border border-border bg-secondary/30 p-4">
+      <span className="absolute right-3 top-3 rounded-full bg-[color:var(--gold)]/20 px-2 py-0.5 text-[10px] font-medium tracking-[0.14em] uppercase text-[color:var(--ink)]">
+        Progressive Rollout
+      </span>
+      <span className="grid h-9 w-9 place-items-center rounded-lg bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className="mt-3 font-display text-base md:text-lg font-semibold pr-16">{title}</div>
+      <div className="mt-1 text-xs text-muted-foreground leading-relaxed">{desc}</div>
+    </div>
   );
 }
