@@ -8,7 +8,7 @@ import {
   Egg, Bird, TrendingDown, TrendingUp, Wheat, DollarSign,
   Skull, Syringe, Droplets, Plus, Pencil, Trash2, MapPin,
   Sparkles, ArrowLeft, LayoutDashboard, LineChart as LineChartIcon,
-  Brain, Activity, AlertTriangle, Gauge, Radar, Lightbulb, ArrowRight, LogOut,
+  Brain, Activity, AlertTriangle, Gauge, Radar, Lightbulb, ArrowRight, LogOut, Upload,
 } from "lucide-react";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
@@ -203,6 +203,13 @@ function Dashboard() {
               <img src={logoAsset.url} alt="" width={28} height={28} className="h-7 w-7 object-contain" />
               <span className="font-display font-semibold">PoultryPro™</span>
             </div>
+            <Link
+              to="/_authenticated/import"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1 text-xs text-primary-foreground/90 hover:bg-white/10"
+              title="Import historical records from CSV"
+            >
+              <Upload className="h-3.5 w-3.5" /> Import CSV
+            </Link>
             <button
               onClick={handleSignOut}
               className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1 text-xs text-primary-foreground/90 hover:bg-white/10"
