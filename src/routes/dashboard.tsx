@@ -707,6 +707,10 @@ function Dashboard() {
             {forecastOpen && (
               <ProductionForecast eggs={eggs} totalBirds={totalBirds} />
             )}
+
+            {mortalityOpen && (
+              <MortalityRiskMonitor rooms={rooms} mortality={mortality} eggs={eggs} health={health} />
+            )}
           </div>
         )}
 
