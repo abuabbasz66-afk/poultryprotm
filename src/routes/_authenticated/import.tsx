@@ -144,16 +144,43 @@ function toCSV(rows: string[][]): string {
   return rows.map(r => r.map(c => /[",\n]/.test(c) ? `"${c.replace(/"/g, '""')}"` : c).join(",")).join("\n");
 }
 
+const FILENAMES: Record<Kind, string> = {
+  egg: "poultrypro_egg_production_template.csv",
+  feed: "poultrypro_feed_usage_template.csv",
+  mortality: "poultrypro_mortality_template.csv",
+  health: "poultrypro_health_records_template.csv",
+  rooms: "poultrypro_room_populations_template.csv",
+};
+
 function downloadTemplate(kind: Kind) {
   const spec = SPECS[kind];
-  const csv = toCSV([spec.columns, ...spec.example]);
+  // Prepend BOM so Excel opens UTF-8 correctly; CRLF for cross-platform.
+  const csv = "\uFEFF" + toCSV([spec.columns, ...spec.example]).replace(/\n/g, "\r\n") + "\r\n";
+  const filename = FILENAMES[kind];
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+
+  // Legacy IE / old Edge
+  const navAny = navigator as any;
+  if (navAny.msSaveOrOpenBlob) {
+    navAny.msSaveOrOpenBlob(blob, filename);
+    return;
+  }
+
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `poultrypro-${kind}-template.csv`;
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
+  a.download = filename;
+  a.rel = "noopener";
+  a.target = "_self";
+  // Some mobile browsers require the anchor to be in the DOM before click().
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  // Delay removal + revoke so mobile Chrome/Safari can start the download.
+  setTimeout(() => {
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, 1000);
 }
 
 // ------------ Component ------------
