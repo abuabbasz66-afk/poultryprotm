@@ -1698,8 +1698,8 @@ type FeedEfficiencyProps = {
   onBagWeightChange: (v: number | null) => void;
 };
 
-type EffStatus = "EFFICIENT" | "STABLE" | "WATCH" | "DECLINING";
-type MovementLabel = "IMPROVING" | "STABLE" | "WATCH" | "DECLINING";
+type EffStatus = "EFFICIENT" | "STABLE" | "WATCH" | "DECLINING" | "INSUFFICIENT DATA";
+type MovementLabel = "IMPROVING" | "STABLE" | "WATCH" | "DECLINING" | "INSUFFICIENT DATA";
 
 function FeedEfficiencyMonitor({
   rooms, feed, eggs, mortality, health, bagWeightKg, onBagWeightChange,
