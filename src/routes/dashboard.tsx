@@ -1698,8 +1698,8 @@ type FeedEfficiencyProps = {
   onBagWeightChange: (v: number | null) => void;
 };
 
-type EffStatus = "EFFICIENT" | "STABLE" | "WATCH" | "DECLINING";
-type MovementLabel = "IMPROVING" | "STABLE" | "WATCH" | "DECLINING";
+type EffStatus = "EFFICIENT" | "STABLE" | "WATCH" | "DECLINING" | "INSUFFICIENT DATA";
+type MovementLabel = "IMPROVING" | "STABLE" | "WATCH" | "DECLINING" | "INSUFFICIENT DATA";
 
 function FeedEfficiencyMonitor({
   rooms, feed, eggs, mortality, health, bagWeightKg, onBagWeightChange,
@@ -1773,28 +1773,40 @@ function FeedEfficiencyMonitor({
             <ForecastStat
               label="Current Efficiency Status"
               value={analysis.status}
-              hint={`Movement score ${analysis.score} (negative = improving)`}
+              hint={analysis.hasBaseline
+                ? `Movement score ${analysis.score} (negative = improving)`
+                : "At least 3 preceding matched records required for a movement score"}
               valueClassName={effTone(analysis.status)}
               icon={Gauge}
             />
             <ForecastStat
-              label="Feed Used Today"
+              label="Feed Used — Latest Matched Date"
               value={`${fmtNum(analysis.latest.bags)} bags`}
               hint={hasWeight ? `${fmtNum(analysis.latest.bags * (bagWeightKg as number))} kg` : "Configure bag weight for kg"}
             />
             <ForecastStat
-              label="Egg Output Today"
+              label="Egg Output — Latest Matched Date"
               value={analysis.latest.eggs.toLocaleString()}
               hint={`Matched date: ${analysis.latest.label}`}
             />
             <ForecastStat
-              label="Feed per Egg"
+              label="Feed per Egg — Latest Matched Date"
               value={hasWeight && analysis.latest.feedPerEggG !== undefined ? `${fmtNum(analysis.latest.feedPerEggG)} g` : "—"}
               hint={hasWeight && analysis.latest.feedPerEggKg !== undefined
                 ? `${fmtNum(analysis.latest.feedPerEggKg, 3)} kg per egg`
                 : "Bag weight required"}
             />
           </div>
+
+          {!analysis.hasBaseline && (
+            <div className="mt-4 rounded-2xl border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 p-4 text-sm">
+              <div className="text-[11px] uppercase tracking-[0.22em] text-[color:var(--ink)]">Baseline Unavailable</div>
+              <p className="mt-1 text-muted-foreground">
+                More matched feed and production records are required to establish a reliable efficiency baseline.
+                Current feed-per-egg values are still shown above.
+              </p>
+            </div>
+          )}
 
           {/* Trend chart */}
           <div className="mt-6">
@@ -1914,11 +1926,21 @@ function FeedEfficiencyMonitor({
               <li>Room-Level Variation — 10%</li>
             </ul>
             <div className="mt-2 text-muted-foreground">
-              Latest matched period vs preceding matched baseline:
-              feed-per-egg {fmtSigned(analysis.movements.feedPerEggPct)}% ·
-              production {fmtSigned(analysis.movements.productionPct)}% ·
-              feed usage {fmtSigned(analysis.movements.feedPct)}% ·
-              room variation {fmtNum(analysis.movements.roomVariationPct)}%.
+              {analysis.hasBaseline ? (
+                <>
+                  Latest matched date vs preceding matched baseline:
+                  feed-per-egg {fmtSigned(analysis.movements.feedPerEggPct)}% ·
+                  production {fmtSigned(analysis.movements.productionPct)}% ·
+                  feed usage {fmtSigned(analysis.movements.feedPct)}% ·
+                  room variation {fmtNum(analysis.movements.roomVariationPct)}%.
+                </>
+              ) : (
+                <>
+                  Movement metrics: BASELINE UNAVAILABLE — feed-per-egg, production, feed usage and
+                  room-level variation percentages will appear once at least 3 preceding matched
+                  daily records exist.
+                </>
+              )}
             </div>
             <div className="mt-2 text-muted-foreground">
               Classification: Strong positive improvement → EFFICIENT · Minimal material change → STABLE ·
@@ -1941,6 +1963,7 @@ function effTone(s: EffStatus): string {
     case "STABLE": return "text-muted-foreground";
     case "WATCH": return "text-[color:var(--gold)]";
     case "DECLINING": return "text-destructive";
+    case "INSUFFICIENT DATA": return "text-muted-foreground";
   }
 }
 
@@ -1950,6 +1973,7 @@ function movementBadgeClass(m: MovementLabel): string {
     case "STABLE": return "bg-secondary text-[color:var(--ink)]";
     case "WATCH": return "bg-[color:var(--gold)]/25 text-[color:var(--ink)]";
     case "DECLINING": return "bg-destructive text-destructive-foreground";
+    case "INSUFFICIENT DATA": return "bg-secondary text-muted-foreground";
   }
 }
 
@@ -1986,6 +2010,7 @@ type FeedEffAnalysis = {
   roomRows: RoomEffRow[];
   insight: { observation: string; interpretation: string; action: string };
   movements: { feedPerEggPct: number; productionPct: number; feedPct: number; roomVariationPct: number };
+  hasBaseline: boolean;
 };
 
 function computeFeedEfficiency(
@@ -2036,6 +2061,8 @@ function computeFeedEfficiency(
   if (matched.length === 0) return null;
 
   const latest = matched[matched.length - 1];
+  const preceding = matched.slice(0, -1);
+  const hasBaseline = preceding.length >= 3;
 
   const chartData: Array<Record<string, string | number | null>> = matched.map(d => ({
     name: d.label,
@@ -2044,24 +2071,19 @@ function computeFeedEfficiency(
     "Feed per Egg (g)": d.feedPerEggG ?? null,
   }));
 
-  const recentN = Math.min(3, Math.max(1, Math.floor(matched.length / 2)));
-  const recent = matched.slice(-recentN);
-  const prior = matched.slice(-recentN * 2, -recentN);
   const avg = (xs: number[]) => xs.length ? xs.reduce((s, v) => s + v, 0) / xs.length : 0;
 
-  const recentEggs = avg(recent.map(d => d.eggs));
-  const priorEggs = prior.length ? avg(prior.map(d => d.eggs)) : recentEggs;
-  const recentBags = avg(recent.map(d => d.bags));
-  const priorBags = prior.length ? avg(prior.map(d => d.bags)) : recentBags;
+  // Movements only when we have a valid baseline (>= 3 preceding matched records)
+  const baseline = hasBaseline ? preceding.slice(-Math.min(preceding.length, 7)) : [];
+  const baselineEggs = avg(baseline.map(d => d.eggs));
+  const baselineBags = avg(baseline.map(d => d.bags));
+  const baselineFpE = baselineEggs > 0 ? baselineBags / baselineEggs : 0;
+  const latestFpE = latest.eggs > 0 ? latest.bags / latest.eggs : 0;
 
-  const productionPct = priorEggs > 0 ? ((recentEggs - priorEggs) / priorEggs) * 100 : 0;
-  const feedPct = priorBags > 0 ? ((recentBags - priorBags) / priorBags) * 100 : 0;
+  const productionPct = hasBaseline && baselineEggs > 0 ? ((latest.eggs - baselineEggs) / baselineEggs) * 100 : NaN;
+  const feedPct = hasBaseline && baselineBags > 0 ? ((latest.bags - baselineBags) / baselineBags) * 100 : NaN;
+  const feedPerEggPct = hasBaseline && baselineFpE > 0 ? ((latestFpE - baselineFpE) / baselineFpE) * 100 : NaN;
 
-  const recentFpE = recentEggs > 0 ? recentBags / recentEggs : 0;
-  const priorFpE = priorEggs > 0 ? priorBags / priorEggs : 0;
-  const feedPerEggPct = priorFpE > 0 ? ((recentFpE - priorFpE) / priorFpE) * 100 : 0;
-
-  // Room share of eggs (based on crate contribution)
   const roomShareEggs = computeRoomEggShare(rooms, eggs);
 
   const feedByRoomDate = new Map<string, Map<string, number>>();
@@ -2080,44 +2102,42 @@ function computeFeedEfficiency(
       return {
         id: room.id, name: room.name, current: room.current,
         bags: 0, eggs: 0, kg: null, feedPerBirdG: null, feedPerEggG: null,
-        movement: "STABLE" as MovementLabel,
+        movement: "INSUFFICIENT DATA" as MovementLabel,
       };
     }
     const share = roomShareEggs.get(room.id) ?? 0;
-    const roomBagsTotal = roomMatched.reduce((s, [, b]) => s + b, 0);
-    const roomEggsTotal = roomMatched.reduce((s, [iso]) => {
-      const e = eggsByIso.get(iso);
-      if (!e) return s;
-      const dayTotal = (e.r2 + e.r3 + e.r4) * 30 + e.extra;
-      return s + dayTotal * share;
-    }, 0);
-    const kg = typeof bagWeightKg === "number" && bagWeightKg > 0 ? roomBagsTotal * bagWeightKg : null;
+    // Use ONLY the latest matched date's feed for this room (do not combine dates)
+    const [latestIso, latestBagsRoom] = roomMatched[roomMatched.length - 1];
+    const eLatest = eggsByIso.get(latestIso)!;
+    const latestEggsRoom = ((eLatest.r2 + eLatest.r3 + eLatest.r4) * 30 + eLatest.extra) * share;
+    const kg = typeof bagWeightKg === "number" && bagWeightKg > 0 ? latestBagsRoom * bagWeightKg : null;
     const feedPerBirdG = kg !== null && room.current > 0 ? (kg * 1000) / room.current : null;
-    const feedPerEggG = kg !== null && roomEggsTotal > 0 ? (kg * 1000) / roomEggsTotal : null;
+    const feedPerEggG = kg !== null && latestEggsRoom > 0 ? (kg * 1000) / latestEggsRoom : null;
 
-    const rN = Math.min(3, Math.max(1, Math.floor(roomMatched.length / 2)));
-    const rRecent = roomMatched.slice(-rN);
-    const rPrior = roomMatched.slice(-rN * 2, -rN);
-    const bpe = (rows: Array<[string, number]>) => {
-      const b = avg(rows.map(([, v]) => v));
-      const eg = avg(rows.map(([iso]) => {
-        const e = eggsByIso.get(iso)!;
-        return ((e.r2 + e.r3 + e.r4) * 30 + e.extra) * share;
-      }));
-      return eg > 0 ? b / eg : 0;
-    };
-    const recentBpE = bpe(rRecent);
-    const priorBpE = rPrior.length > 0 ? bpe(rPrior) : recentBpE;
-    const move = priorBpE > 0 ? ((recentBpE - priorBpE) / priorBpE) * 100 : 0;
-    const movement: MovementLabel =
-      move <= -5 ? "IMPROVING"
-      : move >= 15 ? "DECLINING"
-      : move >= 5 ? "WATCH"
-      : "STABLE";
+    // Room baseline: need at least 3 preceding matched days for this room
+    const roomPreceding = roomMatched.slice(0, -1);
+    let movement: MovementLabel = "INSUFFICIENT DATA";
+    if (roomPreceding.length >= 3) {
+      const bpeOf = (iso: string, bags: number) => {
+        const e = eggsByIso.get(iso);
+        if (!e) return 0;
+        const eg = ((e.r2 + e.r3 + e.r4) * 30 + e.extra) * share;
+        return eg > 0 ? bags / eg : 0;
+      };
+      const latestBpE = bpeOf(latestIso, latestBagsRoom);
+      const priorBpEs = roomPreceding.slice(-7).map(([iso, b]) => bpeOf(iso, b)).filter(v => v > 0);
+      const priorBpE = priorBpEs.length ? priorBpEs.reduce((s, v) => s + v, 0) / priorBpEs.length : 0;
+      const move = priorBpE > 0 ? ((latestBpE - priorBpE) / priorBpE) * 100 : 0;
+      movement =
+        move <= -5 ? "IMPROVING"
+        : move >= 15 ? "DECLINING"
+        : move >= 5 ? "WATCH"
+        : "STABLE";
+    }
 
     return {
       id: room.id, name: room.name, current: room.current,
-      bags: roomBagsTotal, eggs: Math.round(roomEggsTotal),
+      bags: latestBagsRoom, eggs: Math.round(latestEggsRoom),
       kg, feedPerBirdG, feedPerEggG, movement,
     };
   });
@@ -2130,42 +2150,55 @@ function computeFeedEfficiency(
     roomVariationPct = m > 0 ? (Math.sqrt(v) / m) * 100 : 0;
   }
 
-  const score = Math.round(
-    feedPerEggPct * 0.5 + (-productionPct) * 0.25 + feedPct * 0.15 + roomVariationPct * 0.1,
-  );
+  let status: EffStatus;
+  let score = 0;
+  if (!hasBaseline) {
+    status = "INSUFFICIENT DATA";
+  } else {
+    score = Math.round(
+      feedPerEggPct * 0.5 + (-productionPct) * 0.25 + feedPct * 0.15 + roomVariationPct * 0.1,
+    );
+    status =
+      score <= -5 ? "EFFICIENT"
+      : score >= 15 ? "DECLINING"
+      : score >= 5 ? "WATCH"
+      : "STABLE";
+  }
 
-  const status: EffStatus =
-    score <= -5 ? "EFFICIENT"
-    : score >= 15 ? "DECLINING"
-    : score >= 5 ? "WATCH"
-    : "STABLE";
+  let observation: string;
+  let interpretation: string;
+  let action: string;
 
-  const feedDir = describeMove(feedPct, "feed usage");
-  const eggDir = describeMove(productionPct, "egg output");
-  const fpeDir = feedPerEggPct > 1
-    ? "feed consumed per egg has increased, indicating a possible decline in production efficiency"
-    : feedPerEggPct < -1
-      ? "feed consumed per egg has decreased, indicating improving production efficiency"
-      : "feed consumed per egg has remained largely unchanged";
-
-  const observation = `Across the last ${recent.length} matched record${recent.length === 1 ? "" : "s"}, ${feedDir} while ${eggDir}. ${capitalise(fpeDir)}.`;
-
-  const interpretation = `Status ${status} — feed-per-egg movement ${fmtSigned(feedPerEggPct)}%, production movement ${fmtSigned(productionPct)}%, feed usage movement ${fmtSigned(feedPct)}%, room-level variation ${fmtNum(roomVariationPct)}%. Composite movement score ${score} (negative values indicate improving efficiency).`;
-
-  const worstRoom = [...roomRows]
-    .filter(r => r.eggs > 0)
-    .sort((a, b) => movementRank(b.movement) - movementRank(a.movement))[0];
-  const recentMortalityCount = mortality.length;
-  const recentHealth = health.slice(0, 2).map(h => h.name).join(", ");
-  const action = status === "EFFICIENT"
-    ? "Continue capturing daily feed and production records to keep the efficiency baseline current."
-    : `Review recent feed formulation and feed batch changes, feed distribution records${worstRoom ? `, and room-level production movement for ${worstRoom.name}` : ""}, bird population changes${recentMortalityCount > 0 ? " and recent mortality patterns" : ""}, water availability records if available${recentHealth ? `, and recent health observations (${recentHealth})` : ""}.`;
+  if (!hasBaseline) {
+    observation = `${matched.length} valid matched feed and production date${matched.length === 1 ? "" : "s"} ${matched.length === 1 ? "is" : "are"} currently available. Current feed-per-egg efficiency has been calculated, but there is not yet enough historical matched data to determine a reliable efficiency trend.`;
+    interpretation = "INSUFFICIENT DATA — a minimum of three preceding matched daily records is required before PoultryPro assigns an efficiency movement classification.";
+    action = "Continue recording feed usage and egg production daily for each room. PoultryPro will automatically establish an efficiency baseline as additional matched records become available.";
+  } else {
+    const feedDir = describeMove(feedPct, "feed usage");
+    const eggDir = describeMove(productionPct, "egg output");
+    const fpeDir = feedPerEggPct > 1
+      ? "feed consumed per egg has increased, indicating a possible decline in production efficiency"
+      : feedPerEggPct < -1
+        ? "feed consumed per egg has decreased, indicating improving production efficiency"
+        : "feed consumed per egg has remained largely unchanged";
+    observation = `Latest matched date (${latest.label}) compared with the preceding ${baseline.length} matched record${baseline.length === 1 ? "" : "s"}: ${feedDir} while ${eggDir}. ${capitalise(fpeDir)}.`;
+    interpretation = `Status ${status} — feed-per-egg movement ${fmtSigned(feedPerEggPct)}%, production movement ${fmtSigned(productionPct)}%, feed usage movement ${fmtSigned(feedPct)}%, room-level variation ${fmtNum(roomVariationPct)}%. Composite movement score ${score} (negative values indicate improving efficiency).`;
+    const worstRoom = [...roomRows]
+      .filter(r => r.eggs > 0 && r.movement !== "INSUFFICIENT DATA")
+      .sort((a, b) => movementRank(b.movement) - movementRank(a.movement))[0];
+    const recentMortalityCount = mortality.length;
+    const recentHealth = health.slice(0, 2).map(h => h.name).join(", ");
+    action = status === "EFFICIENT"
+      ? "Continue capturing daily feed and production records to keep the efficiency baseline current."
+      : `Review recent feed formulation and feed batch changes, feed distribution records${worstRoom ? `, and room-level production movement for ${worstRoom.name}` : ""}, bird population changes${recentMortalityCount > 0 ? " and recent mortality patterns" : ""}, water availability records if available${recentHealth ? `, and recent health observations (${recentHealth})` : ""}.`;
+  }
 
   return {
     matched, latest, latestLabel: latest.label,
     status, score, chartData, roomRows,
     insight: { observation, interpretation, action },
     movements: { feedPerEggPct, productionPct, feedPct, roomVariationPct },
+    hasBaseline,
   };
 }
 
