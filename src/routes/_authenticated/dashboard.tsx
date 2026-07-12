@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "Farm Dashboard — PoultryPro" },
