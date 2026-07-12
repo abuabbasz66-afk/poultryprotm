@@ -86,9 +86,9 @@ const problems = [
 ];
 
 const timeline = [
-  { phase: "Short-Term", items: ["Mobile app for iOS & Android", "Farmer training & onboarding programs", "Regional pilot deployments"] },
-  { phase: "Mid-Term", items: ["AI-powered predictive analytics", "Smart disease detection", "Farmer marketplace ecosystem"] },
-  { phase: "Long-Term", items: ["Africa's leading AI poultry ecosystem", "Precision poultry farming at scale", "Digitize thousands of farms by 2030"] },
+  { phase: "Available Today", items: ["Farm Records — production, feed, health, mortality", "Farm Analytics — profitability & performance dashboards", "Interactive dashboard across every room and flock"] },
+  { phase: "Rolling Out (Premium AI)", items: ["Abnormal production & mortality pattern detection", "Feed-efficiency and cost-anomaly monitoring", "Production forecasting & decision-support alerts"] },
+  { phase: "Long-Term Vision", items: ["Mobile app for iOS & Android + farmer onboarding", "Farmer marketplace & partner ecosystem", "Africa's leading AI poultry ecosystem by 2030"] },
 ];
 
 function Index() {
