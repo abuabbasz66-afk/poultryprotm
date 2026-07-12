@@ -1773,28 +1773,40 @@ function FeedEfficiencyMonitor({
             <ForecastStat
               label="Current Efficiency Status"
               value={analysis.status}
-              hint={`Movement score ${analysis.score} (negative = improving)`}
+              hint={analysis.hasBaseline
+                ? `Movement score ${analysis.score} (negative = improving)`
+                : "At least 3 preceding matched records required for a movement score"}
               valueClassName={effTone(analysis.status)}
               icon={Gauge}
             />
             <ForecastStat
-              label="Feed Used Today"
+              label="Feed Used — Latest Matched Date"
               value={`${fmtNum(analysis.latest.bags)} bags`}
               hint={hasWeight ? `${fmtNum(analysis.latest.bags * (bagWeightKg as number))} kg` : "Configure bag weight for kg"}
             />
             <ForecastStat
-              label="Egg Output Today"
+              label="Egg Output — Latest Matched Date"
               value={analysis.latest.eggs.toLocaleString()}
               hint={`Matched date: ${analysis.latest.label}`}
             />
             <ForecastStat
-              label="Feed per Egg"
+              label="Feed per Egg — Latest Matched Date"
               value={hasWeight && analysis.latest.feedPerEggG !== undefined ? `${fmtNum(analysis.latest.feedPerEggG)} g` : "—"}
               hint={hasWeight && analysis.latest.feedPerEggKg !== undefined
                 ? `${fmtNum(analysis.latest.feedPerEggKg, 3)} kg per egg`
                 : "Bag weight required"}
             />
           </div>
+
+          {!analysis.hasBaseline && (
+            <div className="mt-4 rounded-2xl border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 p-4 text-sm">
+              <div className="text-[11px] uppercase tracking-[0.22em] text-[color:var(--ink)]">Baseline Unavailable</div>
+              <p className="mt-1 text-muted-foreground">
+                More matched feed and production records are required to establish a reliable efficiency baseline.
+                Current feed-per-egg values are still shown above.
+              </p>
+            </div>
+          )}
 
           {/* Trend chart */}
           <div className="mt-6">
