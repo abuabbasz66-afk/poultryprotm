@@ -113,7 +113,7 @@ function Dashboard() {
   const [forecastOpen, setForecastOpen] = useState(false);
   const [mortalityOpen, setMortalityOpen] = useState(false);
   const [feedEffOpen, setFeedEffOpen] = useState(false);
-  const [bagWeightKg, setBagWeightKg] = useState<number | null>(25);
+  const [bagWeightKg, setBagWeightKg] = useState<number | null>(null);
 
   // Derived
   const totalBirds = rooms.reduce((s, r) => s + r.current, 0);
