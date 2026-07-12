@@ -113,6 +113,7 @@ function Dashboard() {
   const [forecastOpen, setForecastOpen] = useState(false);
   const [mortalityOpen, setMortalityOpen] = useState(false);
   const [feedEffOpen, setFeedEffOpen] = useState(false);
+  const [activityOpen, setActivityOpen] = useState(false);
   const [bagWeightKg, setBagWeightKg] = useState<number | null>(null);
 
   // Derived
