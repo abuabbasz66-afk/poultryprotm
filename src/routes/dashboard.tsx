@@ -7,7 +7,8 @@ import {
 import {
   Egg, Bird, TrendingDown, TrendingUp, Wheat, DollarSign,
   Skull, Syringe, Droplets, Plus, Pencil, Trash2, MapPin,
-  Sparkles, ArrowLeft,
+  Sparkles, ArrowLeft, LayoutDashboard, LineChart as LineChartIcon,
+  Brain, Activity, AlertTriangle, Gauge, Radar, Lightbulb, ArrowRight,
 } from "lucide-react";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 
