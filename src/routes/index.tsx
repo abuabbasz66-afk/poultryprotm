@@ -19,14 +19,63 @@ const stats = [
   { icon: Wallet, label: "Revenue Tracked", value: "₦15M+" },
 ];
 
-const features = [
-  { icon: LayoutDashboard, title: "Interactive Dashboard", desc: "Real-time visibility into birds, eggs, feed, mortality, revenue and profitability." },
-  { icon: Egg, title: "Production Management", desc: "Track daily egg production, crates and extras across every room and flock." },
-  { icon: Wheat, title: "Feed Management", desc: "Monitor daily feed usage, cost tracking and efficiency formulas." },
-  { icon: HeartPulse, title: "Health Records", desc: "Log vaccinations, medications, vitamin schedules and health observations." },
-  { icon: LineChart, title: "Financial Analytics", desc: "Daily and monthly profitability, revenue trends and production economics." },
-  { icon: ShieldCheck, title: "Mortality Tracking", desc: "Room-based mortality logging, loss analysis and historical records." },
+const architecture = [
+  {
+    step: "01",
+    title: "Capture",
+    tag: "Farm Records",
+    desc: "Digitise daily poultry activities and convert scattered notebooks into structured operational data — production, feed, health, mortality and prices.",
+    icon: LayoutDashboard,
+  },
+  {
+    step: "02",
+    title: "Understand",
+    tag: "Farm Analytics",
+    desc: "Turn captured records into production analytics, financial intelligence, performance trends and management insights that explain what happened.",
+    icon: LineChart,
+  },
+  {
+    step: "03",
+    title: "Predict",
+    tag: "PoultryPro AI Intelligence",
+    desc: "Progressively apply AI to spot abnormal patterns, forecast production, monitor operational risk and support earlier, evidence-based decisions.",
+    icon: Sparkles,
+  },
 ];
+
+const features = [
+  { icon: LayoutDashboard, title: "Interactive Dashboard", desc: "Real-time visibility into birds, eggs, feed, mortality, revenue and profitability.", tier: "Capture + Understand" },
+  { icon: Egg, title: "Production Management", desc: "Track daily egg production, crates and extras across every room and flock.", tier: "Capture" },
+  { icon: Wheat, title: "Feed Management", desc: "Monitor daily feed usage, cost tracking and efficiency formulas.", tier: "Capture + Understand" },
+  { icon: HeartPulse, title: "Health Records", desc: "Log vaccinations, medications, vitamin schedules and health observations.", tier: "Capture" },
+  { icon: LineChart, title: "Financial Analytics", desc: "Daily and monthly profitability, revenue trends and production economics.", tier: "Understand" },
+  { icon: ShieldCheck, title: "Mortality Tracking", desc: "Room-based mortality logging, loss analysis and historical records.", tier: "Capture + Understand" },
+];
+
+const tiers = [
+  {
+    name: "Basic",
+    tagline: "Farm Records",
+    promise: "Capture what happened.",
+    points: ["Daily production, feed, health & mortality records", "Room and flock management", "Current prices & simple revenue tracking"],
+    highlight: false,
+  },
+  {
+    name: "Standard",
+    tagline: "Farm Analytics",
+    promise: "Understand what happened.",
+    points: ["Everything in Basic", "Production & financial analytics", "Performance trends and management insights", "Profitability & feed-efficiency dashboards"],
+    highlight: true,
+  },
+  {
+    name: "Premium",
+    tagline: "PoultryPro AI Intelligence",
+    promise: "Predict what may happen next.",
+    points: ["Everything in Standard", "AI-assisted abnormal pattern detection", "Production forecasting & risk monitoring", "Decision-support intelligence (progressively rolling out)"],
+    highlight: false,
+  },
+];
+
 
 const problems = [
   "Critical farm data lost in notebooks and scattered records",
