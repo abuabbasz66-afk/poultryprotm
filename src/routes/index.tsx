@@ -56,25 +56,76 @@ const tiers = [
   {
     name: "Basic",
     tagline: "Farm Records",
-    promise: "Capture what happened.",
-    points: ["Daily production, feed, health & mortality records", "Room and flock management", "Current prices & simple revenue tracking"],
+    stage: "Capture",
+    stageNum: "01",
+    promise: "Capture what happens on your farm.",
+    subtitle: "For farmers moving from notebooks and scattered records to structured digital farm management.",
+    points: [
+      "Daily egg production recording",
+      "Room-based egg records",
+      "Feed usage recording",
+      "Mortality records",
+      "Health, vaccination, medication & vitamin records",
+      "Farm observations",
+      "Bird and flock records",
+      "Room management",
+      "Historical operational records",
+    ],
+    cta: "Join the Pilot",
+    ctaHref: "mailto:contact@poultrypro.africa?subject=PoultryPro%20Basic%20Pilot",
+    badge: null as string | null,
     highlight: false,
   },
   {
     name: "Standard",
     tagline: "Farm Analytics",
-    promise: "Understand what happened.",
-    points: ["Everything in Basic", "Production & financial analytics", "Performance trends and management insights", "Profitability & feed-efficiency dashboards"],
+    stage: "Understand",
+    stageNum: "02",
+    promise: "Understand what your farm data means.",
+    subtitle: "Turn structured records into production analytics, financial intelligence and management insight.",
+    points: [
+      "Everything in Basic",
+      "Production percentage calculations",
+      "Revenue tracking & feed cost monitoring",
+      "Daily & monthly profit analysis",
+      "Egg production trend analysis",
+      "Historical performance comparisons",
+      "Financial analytics — revenue & cost analysis",
+      "Price management",
+      "Farm performance reports",
+      "Business intelligence dashboards",
+    ],
+    cta: "Request Standard Access",
+    ctaHref: "mailto:contact@poultrypro.africa?subject=PoultryPro%20Standard%20Access",
+    badge: "Most Popular",
     highlight: true,
   },
   {
     name: "Premium",
     tagline: "PoultryPro AI Intelligence",
-    promise: "Predict what may happen next.",
-    points: ["Everything in Standard", "AI-assisted abnormal pattern detection", "Production forecasting & risk monitoring", "Decision-support intelligence (progressively rolling out)"],
+    stage: "Predict",
+    stageNum: "03",
+    promise: "Predict what may happen next and act earlier.",
+    subtitle: "Progressively adopt AI-powered forecasting, risk monitoring and decision-support intelligence.",
+    points: [
+      "Everything in Basic & Standard",
+      "AI-powered egg production forecasting",
+      "Predictive production analysis",
+      "Production decline detection",
+      "Mortality risk monitoring",
+      "Feed efficiency monitoring",
+      "Abnormal farm activity detection",
+      "Intelligent farm monitoring & early risk alerts",
+      "AI-supported farm insights & recommendations",
+      "PoultryPro Intelligence Dashboard",
+    ],
+    cta: "Coming Soon — Join Waitlist",
+    ctaHref: "mailto:contact@poultrypro.africa?subject=PoultryPro%20AI%20Intelligence%20Waitlist",
+    badge: "Progressive Rollout",
     highlight: false,
   },
 ];
+
 
 
 const problems = [
@@ -349,39 +400,109 @@ function Index() {
 
       <section id="pricing" className="py-24 bg-secondary/40 border-y border-border">
         <div className="container-x">
-          <div className="max-w-2xl">
-            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Subscription Plans</span>
+          <div className="max-w-3xl">
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Plans &amp; Subscriptions</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Grow from records to intelligence.
+              Three levels of farm digital maturity.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              Every plan builds on the last — start with structured records, unlock analytics,
-              and progressively adopt PoultryPro AI Intelligence as it rolls out.
+              PoultryPro grows with your farm — from structured records, to business intelligence,
+              to AI-powered predictive management.
             </p>
           </div>
-          <div className="mt-14 grid md:grid-cols-3 gap-5">
+
+          {/* Capture → Understand → Predict rail */}
+          <div className="mt-10 hidden md:flex items-center gap-4 text-xs uppercase tracking-[0.2em] font-medium">
+            <span className="flex items-center gap-2 text-[color:var(--forest)]">
+              <span className="h-2 w-2 rounded-full bg-[color:var(--forest)]" /> Capture
+            </span>
+            <span className="flex-1 h-px bg-gradient-to-r from-[color:var(--forest)] via-[color:var(--gold)] to-[color:var(--forest)]" />
+            <span className="flex items-center gap-2 text-[color:var(--gold)]">
+              <span className="h-2 w-2 rounded-full bg-[color:var(--gold)]" /> Understand
+            </span>
+            <span className="flex-1 h-px bg-gradient-to-r from-[color:var(--gold)] via-[color:var(--forest)] to-[color:var(--forest)]" />
+            <span className="flex items-center gap-2 text-[color:var(--forest)]">
+              <span className="h-2 w-2 rounded-full bg-[color:var(--forest)]" /> Predict
+            </span>
+          </div>
+
+          <div className="mt-8 grid md:grid-cols-3 gap-6 items-stretch">
             {tiers.map((t) => (
-              <div key={t.name} className={`rounded-3xl border p-7 flex flex-col ${t.highlight ? "bg-[color:var(--forest)] text-primary-foreground border-transparent shadow-[var(--shadow-lift)]" : "bg-card border-border"}`}>
-                <div className={`text-[11px] uppercase tracking-widest font-medium ${t.highlight ? "text-[color:var(--gold)]" : "text-[color:var(--forest)]"}`}>{t.tagline}</div>
+              <div
+                key={t.name}
+                className={`relative rounded-3xl border p-8 flex flex-col ${
+                  t.highlight
+                    ? "bg-[color:var(--forest)] text-primary-foreground border-transparent shadow-[var(--shadow-lift)] md:-translate-y-3"
+                    : "bg-card border-border"
+                }`}
+              >
+                {t.badge && (
+                  <span className={`absolute -top-3 right-6 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest ${
+                    t.highlight ? "bg-[color:var(--gold)] text-[color:var(--ink)]" : "bg-secondary text-secondary-foreground border border-border"
+                  }`}>
+                    {t.badge}
+                  </span>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className={`font-display text-4xl font-semibold ${t.highlight ? "text-[color:var(--gold)]" : "text-[color:var(--gold)]"}`}>
+                    {t.stageNum}
+                  </span>
+                  <span className={`text-[10px] uppercase tracking-widest font-semibold ${t.highlight ? "text-[color:var(--gold)]" : "text-[color:var(--forest)]"}`}>
+                    {t.stage}
+                  </span>
+                </div>
+                <div className={`mt-5 text-[11px] uppercase tracking-widest font-medium ${t.highlight ? "text-[color:var(--gold)]" : "text-[color:var(--forest)]"}`}>
+                  {t.tagline}
+                </div>
                 <h3 className="mt-1 font-display text-3xl font-semibold">{t.name}</h3>
-                <p className={`mt-2 text-sm ${t.highlight ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{t.promise}</p>
-                <ul className="mt-6 space-y-3 text-sm flex-1">
-                  {t.points.map((p) => (
-                    <li key={p} className="flex items-start gap-3">
-                      <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[color:var(--gold)] flex-none" />
-                      <span className={t.highlight ? "text-primary-foreground/90" : "text-muted-foreground"}>{p}</span>
-                    </li>
-                  ))}
-                </ul>
+                <p className={`mt-3 text-sm italic ${t.highlight ? "text-primary-foreground/90" : "text-foreground"}`}>
+                  "{t.promise}"
+                </p>
+                <p className={`mt-2 text-sm ${t.highlight ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                  {t.subtitle}
+                </p>
+
+                <div className={`mt-6 pt-5 border-t ${t.highlight ? "border-white/15" : "border-border"}`}>
+                  <div className={`text-[10px] uppercase tracking-widest font-semibold mb-4 ${t.highlight ? "text-[color:var(--gold)]" : "text-muted-foreground"}`}>
+                    What's included
+                  </div>
+                  <ul className="space-y-2.5 text-sm flex-1">
+                    {t.points.map((p) => (
+                      <li key={p} className="flex items-start gap-3">
+                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[color:var(--gold)] flex-none" />
+                        <span className={t.highlight ? "text-primary-foreground/90" : "text-muted-foreground"}>{p}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className={`mt-8 pt-6 border-t border-dashed ${t.highlight ? "border-white/15" : "border-border"}`}>
+                  <div className={`text-xs mb-3 ${t.highlight ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                    Pricing to be announced
+                  </div>
+                  <a
+                    href={t.ctaHref}
+                    className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition ${
+                      t.highlight
+                        ? "bg-[color:var(--gold)] text-[color:var(--ink)] hover:brightness-95"
+                        : "bg-primary text-primary-foreground hover:bg-primary/90"
+                    }`}
+                  >
+                    {t.cta} <ArrowRight className="h-4 w-4" />
+                  </a>
+                </div>
               </div>
             ))}
           </div>
-          <p className="mt-8 text-xs text-muted-foreground">
-            Farm Records and Farm Analytics are working platform capabilities today. PoultryPro AI
-            Intelligence features are progressively rolling out and are clearly labelled inside the product.
+
+          <p className="mt-10 text-xs text-muted-foreground max-w-3xl">
+            Basic (Farm Records) and Standard (Farm Analytics) are working platform capabilities today.
+            Premium (PoultryPro AI Intelligence) capabilities are progressively rolling out and are
+            clearly labelled inside the product — we do not present unfinished AI features as fully deployed.
           </p>
         </div>
       </section>
+
 
       <section id="roadmap" className="py-24">
 
