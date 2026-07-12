@@ -476,7 +476,7 @@ function Index() {
                   </ul>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-dashed ${t.highlight ? 'border-white/15' : 'border-border'}">
+                <div className={`mt-8 pt-6 border-t border-dashed ${t.highlight ? "border-white/15" : "border-border"}`}>
                   <div className={`text-xs mb-3 ${t.highlight ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                     Pricing to be announced
                   </div>
