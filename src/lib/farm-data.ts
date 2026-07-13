@@ -4,7 +4,21 @@ import { supabase } from "@/integrations/supabase/client";
 export type Room = { id: string; name: string; current: number; initial: number };
 export type EggRow = { id: string; date: string; label: string; r2: number; r3: number; r4: number; extra: number };
 export type Mortality = { id: string; room: string; cause: string; date: string; loss: number };
-export type Health = { id: string; name: string; scope: string; type: "Vitamin" | "Vaccination"; date: string };
+export const HEALTH_TYPES = ["Vaccination", "Vitamin", "Medication", "Treatment", "Observation"] as const;
+export type HealthType = typeof HEALTH_TYPES[number];
+export function normalizeHealthType(raw: string): HealthType | null {
+  const v = (raw ?? "").trim().toLowerCase();
+  if (!v) return null;
+  const map: Record<string, HealthType> = {
+    vaccination: "Vaccination", vaccine: "Vaccination", vax: "Vaccination",
+    vitamin: "Vitamin", vitamins: "Vitamin", multivitamin: "Vitamin",
+    medication: "Medication", medicine: "Medication", med: "Medication", meds: "Medication", antibiotic: "Medication", antibiotics: "Medication",
+    treatment: "Treatment", treat: "Treatment", therapy: "Treatment",
+    observation: "Observation", observe: "Observation", note: "Observation", notes: "Observation",
+  };
+  return map[v] ?? null;
+}
+export type Health = { id: string; name: string; scope: string; type: HealthType; date: string };
 export type Feed = { id: string; room: string; bags: number; date: string };
 export type Price = { id: string; item: string; unit: string; price: number; updated: string };
 
