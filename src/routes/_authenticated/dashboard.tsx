@@ -102,6 +102,7 @@ function Dashboard() {
   const [expandedMortDate, setExpandedMortDate] = useState<string | null>(null);
   const [expandedFeedDate, setExpandedFeedDate] = useState<string | null>(null);
   const [eggShowAll, setEggShowAll] = useState(false);
+  const [healthShowAll, setHealthShowAll] = useState(false);
   const [confirmState, setConfirmState] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
   const askDelete = (title: string, message: string, onConfirm: () => void) => setConfirmState({ title, message, onConfirm });
 
@@ -320,8 +321,13 @@ function Dashboard() {
       if (!g.causes.includes(m.cause)) g.causes.push(m.cause);
       g.items.push(m);
     }
-    return Array.from(map.values());
+  return Array.from(map.values());
   }, [mortality]);
+
+  // --- Health sorted by date newest → oldest ---
+  const healthByDate = useMemo<Health[]>(() => {
+    return [...health].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [health]);
 
   const totalInitialBirds = rooms.reduce((s, r) => s + r.initial, 0);
   const mortalityRatePct = totalInitialBirds ? (monthlyMortality / totalInitialBirds) * 100 : 0;
@@ -719,7 +725,7 @@ function Dashboard() {
         <Card>
           <CardHeader title="Health Records" subtitle="Vaccinations, vitamins & observations" right={<ActionBtn onClick={addHealth} icon={Plus}>Add</ActionBtn>} />
           <div className="mt-4 space-y-2">
-            {health.map(h => {
+            {(healthShowAll ? healthByDate : healthByDate.slice(0, 5)).map(h => {
               const style = healthTypeStyle(h.type);
               const Icon = style.icon;
               return (
@@ -743,7 +749,17 @@ function Dashboard() {
               </div>
               );
             })}
+            {healthByDate.length === 0 && (
+              <div className="text-xs text-muted-foreground text-center py-4">No health records yet.</div>
+            )}
           </div>
+          {healthByDate.length > 5 && (
+            <div className="mt-3 text-center">
+              <button onClick={() => setHealthShowAll(v => !v)} className="text-xs font-medium text-[color:var(--forest)] hover:underline">
+                {healthShowAll ? "Show recent records" : `View all health records (${healthByDate.length})`}
+              </button>
+            </div>
+          )}
         </Card>
 
         {/* Room Management */}
