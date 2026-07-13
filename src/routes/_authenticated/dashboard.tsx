@@ -946,6 +946,8 @@ function Dashboard() {
               stage="PREDICT" plan="Premium" title="PoultryPro AI Intelligence" premium
               body="Progressively applying artificial intelligence to detect abnormal farm patterns, forecast production and support earlier evidence-based decisions."
             />
+            {/* Production Decline Detection — real-time from farm records */}
+            <ProductionDeclineIntelligence eggs={eggs} rooms={rooms} mortality={mortality} feed={feed} health={health} />
 
             {/* AI Intelligence Preview — computed from real records */}
             <div className="rounded-3xl border border-[color:var(--gold)]/40 bg-gradient-to-br from-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground p-6 md:p-7 shadow-[var(--shadow-lift)]">
