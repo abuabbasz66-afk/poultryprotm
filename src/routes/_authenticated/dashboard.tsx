@@ -20,7 +20,8 @@ import {
   useAddPrice, useDeletePrice, useDeleteMortality, useDeleteFeed,
   useDeleteEgg, useUpdateEgg, useUpdateMortality, useUpdateHealth, useUpdateFeed,
   useDeleteHealth,
-  type Room, type EggRow, type Mortality, type Health, type Feed, type Price,
+  HEALTH_TYPES, normalizeHealthType,
+  type Room, type EggRow, type Mortality, type Health, type HealthType, type Feed, type Price,
 } from "@/lib/farm-data";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
