@@ -196,6 +196,66 @@ function Dashboard() {
     delPriceM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) });
   };
 
+  const delMortalityRow = (id: string) => {
+    if (!confirm("Delete this mortality record?")) return;
+    delMortalityM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) });
+  };
+  const delFeedRow = (id: string) => {
+    if (!confirm("Delete this feed record?")) return;
+    delFeedM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) });
+  };
+
+  // --- Mortality aggregation (grouped by date, preserving arrival order) ---
+  type MortGroup = { date: string; total: number; byRoom: Record<string, number>; causes: string[]; items: Mortality[] };
+  const mortalityByDate = useMemo<MortGroup[]>(() => {
+    const map = new Map<string, MortGroup>();
+    for (const m of mortality) {
+      let g = map.get(m.date);
+      if (!g) { g = { date: m.date, total: 0, byRoom: {}, causes: [], items: [] }; map.set(m.date, g); }
+      g.total += m.loss;
+      g.byRoom[m.room] = (g.byRoom[m.room] ?? 0) + m.loss;
+      if (!g.causes.includes(m.cause)) g.causes.push(m.cause);
+      g.items.push(m);
+    }
+    return Array.from(map.values());
+  }, [mortality]);
+
+  const totalInitialBirds = rooms.reduce((s, r) => s + r.initial, 0);
+  const mortalityRatePct = totalInitialBirds ? (monthlyMortality / totalInitialBirds) * 100 : 0;
+  const leadingCause = useMemo(() => {
+    const c: Record<string, number> = {};
+    for (const m of mortality) c[m.cause] = (c[m.cause] ?? 0) + m.loss;
+    const top = Object.entries(c).sort((a, b) => b[1] - a[1])[0];
+    return top?.[0] ?? "—";
+  }, [mortality]);
+
+  // --- Feed aggregation (grouped by date, dynamic rooms) ---
+  type FeedGroup = { date: string; byRoom: Record<string, number>; total: number; items: Feed[] };
+  const feedByDate = useMemo<FeedGroup[]>(() => {
+    const map = new Map<string, FeedGroup>();
+    for (const f of feed) {
+      let g = map.get(f.date);
+      if (!g) { g = { date: f.date, byRoom: {}, total: 0, items: [] }; map.set(f.date, g); }
+      g.byRoom[f.room] = (g.byRoom[f.room] ?? 0) + f.bags;
+      g.total += f.bags;
+      g.items.push(f);
+    }
+    return Array.from(map.values());
+  }, [feed]);
+
+  const feedRoomNames = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of rooms) set.add(r.name);
+    for (const f of feed) set.add(f.room);
+    return Array.from(set).sort();
+  }, [rooms, feed]);
+
+  const feed7 = feedByDate.slice(0, 7);
+  const feed30 = feedByDate.slice(0, 30);
+  const feed7Avg = feed7.length ? feed7.reduce((s, g) => s + g.total, 0) / feed7.length : 0;
+  const feed30Total = feed30.reduce((s, g) => s + g.total, 0);
+  const bagKg = bagWeightKg ?? 25;
+  const feedPerBirdG = totalBirds ? (feedToday * bagKg * 1000) / totalBirds : 0;
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-14">
