@@ -39,6 +39,17 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 // ---------- Helpers ----------
 const naira = (n: number) => "₦" + n.toLocaleString("en-NG");
 
+const HEALTH_TYPE_STYLES: Record<HealthType, { icon: typeof Syringe; wrap: string; badge: string }> = {
+  Vaccination: { icon: Syringe,     wrap: "bg-blue-500/10 text-blue-600",                                       badge: "bg-blue-500/10 text-blue-700" },
+  Vitamin:     { icon: Droplets,    wrap: "bg-[color:var(--forest)]/10 text-[color:var(--forest)]",             badge: "bg-[color:var(--forest)]/10 text-[color:var(--forest)]" },
+  Medication:  { icon: Pill,        wrap: "bg-purple-500/10 text-purple-600",                                   badge: "bg-purple-500/10 text-purple-700" },
+  Treatment:   { icon: Stethoscope, wrap: "bg-amber-500/10 text-amber-600",                                     badge: "bg-amber-500/10 text-amber-700" },
+  Observation: { icon: Eye,         wrap: "bg-slate-500/10 text-slate-600",                                     badge: "bg-slate-500/10 text-slate-700" },
+};
+function healthTypeStyle(t: string) {
+  return HEALTH_TYPE_STYLES[(t as HealthType)] ?? HEALTH_TYPE_STYLES.Observation;
+}
+
 function todayLabel() {
   return new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 }
