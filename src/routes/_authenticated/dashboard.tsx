@@ -321,8 +321,13 @@ function Dashboard() {
       if (!g.causes.includes(m.cause)) g.causes.push(m.cause);
       g.items.push(m);
     }
-    return Array.from(map.values());
+  return Array.from(map.values());
   }, [mortality]);
+
+  // --- Health sorted by date newest → oldest ---
+  const healthByDate = useMemo<Health[]>(() => {
+    return [...health].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [health]);
 
   const totalInitialBirds = rooms.reduce((s, r) => s + r.initial, 0);
   const mortalityRatePct = totalInitialBirds ? (monthlyMortality / totalInitialBirds) * 100 : 0;
