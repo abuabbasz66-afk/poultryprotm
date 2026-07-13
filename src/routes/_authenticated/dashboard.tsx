@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import {
   Egg, Bird, TrendingDown, TrendingUp, Wheat, DollarSign,
-  Skull, Syringe, Droplets, Plus, Pencil, Trash2, MapPin,
+  Skull, Syringe, Droplets, Pill, Stethoscope, Eye, Plus, Pencil, Trash2, MapPin,
   Sparkles, ArrowLeft, LayoutDashboard, LineChart as LineChartIcon,
   Brain, Activity, AlertTriangle, Gauge, Radar, Lightbulb, ArrowRight, LogOut, Upload,
   ChevronDown, MoreVertical,
