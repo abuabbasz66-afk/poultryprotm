@@ -241,6 +241,18 @@ export function useDeleteMortality() {
   });
 }
 
+export function useUpdateMortality() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: Partial<Mortality> & { id: string }) => {
+      const { id, ...patch } = input;
+      const { error } = await supabase.from("mortality").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateAll(qc),
+  });
+}
+
 export function useAddHealth() {
   const qc = useQueryClient();
   return useMutation({
