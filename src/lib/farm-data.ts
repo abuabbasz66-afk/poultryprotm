@@ -276,6 +276,18 @@ export function useDeleteHealth() {
   });
 }
 
+export function useUpdateHealth() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: Partial<Health> & { id: string }) => {
+      const { id, ...patch } = input;
+      const { error } = await supabase.from("health_records").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateAll(qc),
+  });
+}
+
 export function useAddFeed() {
   const qc = useQueryClient();
   return useMutation({
