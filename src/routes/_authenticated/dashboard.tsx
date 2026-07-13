@@ -950,6 +950,10 @@ function Dashboard() {
             {/* Production Decline Detection — real-time from farm records */}
             <ProductionDeclineIntelligence eggs={eggs} rooms={rooms} mortality={mortality} feed={feed} health={health} />
 
+            {/* Mortality Pattern Detection — real-time from farm records */}
+            <MortalityPatternIntelligence eggs={eggs} rooms={rooms} mortality={mortality} feed={feed} health={health} />
+
+
             {/* AI Intelligence Preview — computed from real records */}
             <div className="rounded-3xl border border-[color:var(--gold)]/40 bg-gradient-to-br from-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground p-6 md:p-7 shadow-[var(--shadow-lift)]">
               <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--gold)]">
