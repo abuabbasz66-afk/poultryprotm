@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Download, Upload, FileText, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useRooms } from "@/lib/farm-data";
+import { useRooms, normalizeHealthType } from "@/lib/farm-data";
 
 export const Route = createFileRoute("/_authenticated/import")({
   head: () => ({ meta: [{ title: "Import Farm Records — PoultryPro" }] }),
