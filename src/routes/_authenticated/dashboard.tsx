@@ -98,6 +98,11 @@ function Dashboard() {
   const latestFeedDate = feed[0]?.date;
   const feedToday = latestFeedDate ? feed.filter(f => f.date === latestFeedDate).reduce((s, f) => s + f.bags, 0) : 0;
   const productionRate = totalBirds ? Math.round((todayEggs / totalBirds) * 100) : 0;
+  const last7Eggs = eggs.slice(0, 7);
+  const sevenDayAvgEggs = last7Eggs.length
+    ? Math.round(last7Eggs.reduce((s, r) => s + (r.r2 + r.r3 + r.r4) * 30 + r.extra, 0) / last7Eggs.length)
+    : 0;
+  const currentLayRate = totalBirds ? (totalEggs / totalBirds) * 100 : 0;
   const eggPrice = prices.find(p => p.item === "Egg")?.price ?? 4900;
   const feedPrice = prices.find(p => p.item.startsWith("Feed"))?.price ?? 13600;
   const todayRevenue = Math.round((todayEggs / 30) * eggPrice);
