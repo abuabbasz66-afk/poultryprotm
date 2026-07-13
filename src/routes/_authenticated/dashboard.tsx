@@ -720,7 +720,7 @@ function Dashboard() {
         <Card>
           <CardHeader title="Health Records" subtitle="Vaccinations, vitamins & observations" right={<ActionBtn onClick={addHealth} icon={Plus}>Add</ActionBtn>} />
           <div className="mt-4 space-y-2">
-            {health.map(h => {
+            {(healthShowAll ? health : health.slice(0, 5)).map(h => {
               const style = healthTypeStyle(h.type);
               const Icon = style.icon;
               return (
@@ -744,7 +744,17 @@ function Dashboard() {
               </div>
               );
             })}
+            {health.length === 0 && (
+              <div className="text-xs text-muted-foreground text-center py-4">No health records yet.</div>
+            )}
           </div>
+          {health.length > 5 && (
+            <div className="mt-3 text-center">
+              <button onClick={() => setHealthShowAll(v => !v)} className="text-xs font-medium text-[color:var(--forest)] hover:underline">
+                {healthShowAll ? "Show recent records" : `View all health records (${health.length})`}
+              </button>
+            </div>
+          )}
         </Card>
 
         {/* Room Management */}
