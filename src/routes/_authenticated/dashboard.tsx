@@ -67,6 +67,8 @@ function Dashboard() {
   const addFeedM = useAddFeed();
   const addPriceM = useAddPrice();
   const delPriceM = useDeletePrice();
+  const delMortalityM = useDeleteMortality();
+  const delFeedM = useDeleteFeed();
 
   const [feedTab, setFeedTab] = useState<"Usage" | "Formulas">("Usage");
   const [area, setArea] = useState<"records" | "analytics" | "ai">("records");
@@ -75,6 +77,10 @@ function Dashboard() {
   const [feedEffOpen, setFeedEffOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [bagWeightKg, setBagWeightKg] = useState<number | null>(null);
+  const [mortShowAll, setMortShowAll] = useState(false);
+  const [feedShowAll, setFeedShowAll] = useState(false);
+  const [expandedMortDate, setExpandedMortDate] = useState<string | null>(null);
+  const [expandedFeedDate, setExpandedFeedDate] = useState<string | null>(null);
 
   // Derived
   const totalBirds = rooms.reduce((s, r) => s + r.current, 0);
