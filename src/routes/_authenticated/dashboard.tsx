@@ -18,6 +18,8 @@ import {
   useAddRoom, useDeleteRoom,
   useAddEgg, useAddMortality, useAddHealth, useAddFeed,
   useAddPrice, useDeletePrice, useDeleteMortality, useDeleteFeed,
+  useDeleteEgg, useUpdateEgg, useUpdateMortality, useUpdateHealth, useUpdateFeed,
+  useDeleteHealth,
   type Room, type EggRow, type Mortality, type Health, type Feed, type Price,
 } from "@/lib/farm-data";
 
