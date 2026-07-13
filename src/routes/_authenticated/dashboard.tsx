@@ -675,7 +675,7 @@ function Dashboard() {
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                               <span className="text-destructive font-semibold">-{m.loss}</span>
-                              <button onClick={() => delMortalityRow(m.id)} className="text-destructive/70 hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                              <RowActions onEdit={() => editMortality(m)} onDelete={() => delMortalityRow(m)} />
                             </div>
                           </div>
                         ))}
