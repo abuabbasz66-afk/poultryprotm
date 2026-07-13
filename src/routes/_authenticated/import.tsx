@@ -541,8 +541,9 @@ function validateRow(
       return { data: {}, error: `Scope must be "All Rooms" or an existing room name (got "${scope}")` };
     }
     const scopeNorm = scope.toLowerCase() === "all rooms" ? "All Rooms" : scope.toUpperCase();
-    const type = get("type");
-    if (type !== "Vaccination" && type !== "Vitamin") return { data: {}, error: "Type must be 'Vaccination' or 'Vitamin'" };
+    const rawType = get("type");
+    const type = normalizeHealthType(rawType);
+    if (!type) return { data: {}, error: "Invalid health record type. Accepted types: Vaccination, Vitamin, Medication, Treatment, or Observation." };
     return { data: { date, name, scope: scopeNorm, type } };
   }
   if (kind === "rooms") {
