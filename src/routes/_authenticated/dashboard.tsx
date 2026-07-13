@@ -708,11 +708,14 @@ function Dashboard() {
         <Card>
           <CardHeader title="Health Records" subtitle="Vaccinations, vitamins & observations" right={<ActionBtn onClick={addHealth} icon={Plus}>Add</ActionBtn>} />
           <div className="mt-4 space-y-2">
-            {health.map(h => (
+            {health.map(h => {
+              const style = healthTypeStyle(h.type);
+              const Icon = style.icon;
+              return (
               <div key={h.id} className="flex items-center justify-between rounded-xl bg-secondary/40 px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <span className={"grid h-9 w-9 place-items-center rounded-lg " + (h.type === "Vaccination" ? "bg-blue-500/10 text-blue-600" : "bg-[color:var(--forest)]/10 text-[color:var(--forest)]")}>
-                    {h.type === "Vaccination" ? <Syringe className="h-4 w-4" /> : <Droplets className="h-4 w-4" />}
+                  <span className={"grid h-9 w-9 place-items-center rounded-lg " + style.wrap}>
+                    <Icon className="h-4 w-4" />
                   </span>
                   <div>
                     <div className="text-sm font-semibold">{h.name}</div>
@@ -721,13 +724,14 @@ function Dashboard() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-right">
-                    <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + (h.type === "Vaccination" ? "bg-blue-500/10 text-blue-700" : "bg-[color:var(--forest)]/10 text-[color:var(--forest)]")}>{h.type}</span>
+                    <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + style.badge}>{h.type}</span>
                     <div className="text-xs text-muted-foreground mt-1">{h.date}</div>
                   </div>
                   <RowActions onEdit={() => editHealth(h)} onDelete={() => delHealthRow(h)} />
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
 
