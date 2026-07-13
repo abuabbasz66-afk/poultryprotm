@@ -826,7 +826,7 @@ function Dashboard() {
                                       <span className="font-medium">{f.room}</span>
                                       <div className="flex items-center gap-3">
                                         <span className="tabular-nums">{f.bags} bags</span>
-                                        <button onClick={(e) => { e.stopPropagation(); delFeedRow(f.id); }} className="text-destructive/70 hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                                        <RowActions onEdit={() => editFeed(f)} onDelete={() => delFeedRow(f)} />
                                       </div>
                                     </div>
                                   ))}
