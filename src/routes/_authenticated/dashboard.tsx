@@ -523,24 +523,64 @@ function Dashboard() {
 
           {/* Mortality */}
           <Card>
-            <CardHeader title="Mortality Log" subtitle="Recent bird losses" right={<ActionBtn onClick={addMortality} icon={Plus}>Add</ActionBtn>} />
-            <div className="mt-4 space-y-2">
-              {mortality.map(m => (
-                <div key={m.id} className="flex items-center justify-between rounded-xl bg-destructive/5 border border-destructive/10 px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-8 w-8 place-items-center rounded-full bg-destructive/10 text-destructive"><Skull className="h-4 w-4" /></span>
-                    <div>
-                      <div className="text-sm font-semibold">{m.room}</div>
-                      <div className="text-xs text-muted-foreground">{m.cause}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-destructive font-semibold text-sm">-{m.loss}</div>
-                    <div className="text-xs text-muted-foreground">{m.date}</div>
-                  </div>
-                </div>
-              ))}
+            <CardHeader title="Mortality Log" subtitle="Grouped by date" right={<ActionBtn onClick={addMortality} icon={Plus}>Add</ActionBtn>} />
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              <MiniStat label="Total Loss" value={String(monthlyMortality)} tone="peach" />
+              <MiniStat label="Mortality Rate" value={mortalityRatePct.toFixed(2) + "%"} tone="plain" />
+              <MiniStat label="Leading Cause" value={leadingCause} tone="mint" />
             </div>
+            <div className="mt-4 space-y-2">
+              {(mortShowAll ? mortalityByDate : mortalityByDate.slice(0, 7)).map(g => {
+                const isOpen = expandedMortDate === g.date;
+                const cause = g.causes.length > 1 ? "Mixed" : (g.causes[0] ?? "—");
+                const breakdown = Object.entries(g.byRoom)
+                  .map(([r, n]) => `${r.replace(/^ROOM\s*/i, "R")}: ${n}`)
+                  .join(" · ");
+                return (
+                  <div key={g.date} className="rounded-xl bg-destructive/5 border border-destructive/10 overflow-hidden">
+                    <button
+                      onClick={() => setExpandedMortDate(isOpen ? null : g.date)}
+                      className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-left"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-destructive/10 text-destructive"><Skull className="h-3.5 w-3.5" /></span>
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold truncate">{g.date} <span className="text-destructive">· -{g.total} birds</span></div>
+                          <div className="text-xs text-muted-foreground truncate">{breakdown || "—"} <span className="opacity-70">| {cause}</span></div>
+                        </div>
+                      </div>
+                      <ChevronDown className={"h-4 w-4 shrink-0 text-muted-foreground transition-transform " + (isOpen ? "rotate-180" : "")} />
+                    </button>
+                    {isOpen && (
+                      <div className="border-t border-destructive/10 bg-background/60 px-3 py-2 space-y-1.5">
+                        {g.items.map(m => (
+                          <div key={m.id} className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="font-medium">{m.room}</span>
+                              <span className="text-muted-foreground truncate">· {m.cause}</span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-destructive font-semibold">-{m.loss}</span>
+                              <button onClick={() => delMortalityRow(m.id)} className="text-destructive/70 hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {mortalityByDate.length === 0 && (
+                <div className="text-xs text-muted-foreground text-center py-4">No mortality records yet.</div>
+              )}
+            </div>
+            {mortalityByDate.length > 7 && (
+              <div className="mt-3 text-center">
+                <button onClick={() => setMortShowAll(v => !v)} className="text-xs font-medium text-[color:var(--forest)] hover:underline">
+                  {mortShowAll ? "Show latest 7 only" : `View all mortality records (${mortalityByDate.length})`}
+                </button>
+              </div>
+            )}
           </Card>
         </div>
 
