@@ -199,7 +199,7 @@ function analyseSignals(args: {
     const heat = [...causes].some((c) => c.includes("heat"));
     const disease = [...causes].some((c) => c.includes("disease") || c.includes("infect") || c.includes("newcastle") || c.includes("flu"));
     signals.push({
-      label: `Mortality +${totalLoss} bird${totalLoss === 1 ? "" : "s"}`,
+      label: `${totalLoss} bird ${totalLoss === 1 ? "loss" : "losses"} recorded`,
       detail: heat ? "including heat-stress losses" : disease ? "including disease-linked losses" : "during decline period",
     });
     factors.add("Flock health");

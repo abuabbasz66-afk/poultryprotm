@@ -112,32 +112,30 @@ function DeclineEventCard({ event }: { event: DeclineEvent }) {
   const isRecovered = event.status === "Recovered";
 
   return (
-    <div className={`rounded-2xl border ${style.ring} ${isRecovered ? "bg-emerald-500/5" : "bg-white/5"} p-4 backdrop-blur`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${style.badge}`}>
-              {isRecovered ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
-              {isRecovered ? `${event.severity} · Recovered` : `${event.severity} Production Decline`}
-            </span>
-            <span className="text-[11px] uppercase tracking-[0.18em] text-primary-foreground/60">
-              {event.scopeLabel}
-            </span>
-          </div>
-          <div className="mt-2 font-display text-xl md:text-2xl font-semibold">
-            {fmt(event.declinePct)}% {isRecovered ? "peak dip vs" : "below"} 7-day baseline
-          </div>
+    <div className={`rounded-2xl border ${style.ring} ${isRecovered ? "bg-emerald-500/5" : "bg-white/5"} p-3 md:p-4 backdrop-blur`}>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${style.badge}`}>
+            {isRecovered ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+            {isRecovered ? `${event.severity} · Recovered` : `${event.severity} Production Decline`}
+          </span>
+          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] ${
+            event.confidence === "High" ? "bg-emerald-500/20 text-emerald-200" :
+            event.confidence === "Moderate" ? "bg-amber-500/20 text-amber-100" :
+            "bg-slate-500/20 text-slate-100"
+          }`}>
+            {event.confidence} confidence
+          </span>
         </div>
-        <span className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] ${
-          event.confidence === "High" ? "bg-emerald-500/20 text-emerald-200" :
-          event.confidence === "Moderate" ? "bg-amber-500/20 text-amber-100" :
-          "bg-slate-500/20 text-slate-100"
-        }`}>
-          {event.confidence} confidence
-        </span>
+        <div className="mt-1.5 text-[11px] uppercase tracking-[0.18em] text-primary-foreground/60">
+          {event.scopeLabel}
+        </div>
+        <div className="mt-0.5 font-display text-lg md:text-2xl font-semibold leading-tight">
+          {fmt(event.declinePct)}% {isRecovered ? "peak dip vs" : "below"} 7-day baseline
+        </div>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+      <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
         <Metric label="Baseline" value={`${fmt(event.baseline)} crates/day`} />
         <Metric label={isRecovered ? "Recovery" : "Current"} value={`${fmt(event.current)} crates/day`} />
         <Metric label="Duration" value={`${event.durationDays} rec. day${event.durationDays === 1 ? "" : "s"}`} />
@@ -145,11 +143,10 @@ function DeclineEventCard({ event }: { event: DeclineEvent }) {
       </div>
 
       {event.signals.length > 0 && (
-        <div className="mt-3 text-xs text-primary-foreground/85">
-          <span className="text-primary-foreground/60">Related farm signals: </span>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] text-primary-foreground/60">Signals:</span>
           {event.signals.map((s, i) => (
-            <span key={i}>
-              {i > 0 ? " · " : ""}
+            <span key={i} className="inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[11px] text-primary-foreground/90">
               {s.label}
             </span>
           ))}
@@ -159,13 +156,13 @@ function DeclineEventCard({ event }: { event: DeclineEvent }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="mt-3 inline-flex items-center gap-1 rounded-full bg-white/10 hover:bg-white/15 px-3 py-1 text-[11px] uppercase tracking-[0.14em] text-primary-foreground/90"
+        className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/10 hover:bg-white/15 px-3 py-1 text-[11px] uppercase tracking-[0.14em] text-primary-foreground/90"
       >
         {open ? <>Hide analysis <ChevronUp className="h-3 w-3" /></> : <>View analysis <ChevronDown className="h-3 w-3" /></>}
       </button>
 
       {open && (
-        <div className="mt-3 rounded-xl bg-black/25 border border-white/10 p-3 text-xs text-primary-foreground/85 space-y-2">
+        <div className="mt-2 rounded-xl bg-black/25 border border-white/10 p-3 text-xs text-primary-foreground/85 space-y-2">
           <div>
             <div className="text-primary-foreground/60 uppercase tracking-[0.14em] text-[10px]">Detection window</div>
             <div>
@@ -202,9 +199,9 @@ function DeclineEventCard({ event }: { event: DeclineEvent }) {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-black/20 border border-white/10 px-2.5 py-2">
+    <div className="rounded-lg bg-black/20 border border-white/10 px-2 py-1.5">
       <div className="text-[10px] uppercase tracking-[0.14em] text-primary-foreground/60">{label}</div>
-      <div className="mt-0.5 text-sm font-semibold text-primary-foreground">{value}</div>
+      <div className="text-sm font-semibold text-primary-foreground">{value}</div>
     </div>
   );
 }
