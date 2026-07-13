@@ -671,20 +671,72 @@ function Dashboard() {
             <ActionBtn onClick={recordFeed} icon={Plus}>Record Feed</ActionBtn>
           </div>
           {feedTab === "Usage" ? (
-            <div className="mt-4 space-y-2">
-              {feed.map(f => (
-                <div key={f.id} className="flex items-center justify-between rounded-xl bg-[color:var(--gold)]/10 px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-[color:var(--gold)]/20 text-[color:var(--gold)]"><Wheat className="h-4 w-4" /></span>
-                    <div className="text-sm font-semibold">{f.room}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-sm">{f.bags} bags</div>
-                    <div className="text-xs text-muted-foreground">{f.date}</div>
-                  </div>
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                <MiniStat label="Today's Feed" value={`${feedToday} bags`} tone="sky" />
+                <MiniStat label="7-Day Avg" value={`${feed7Avg.toFixed(1)} bags`} tone="mint" />
+                <MiniStat label="Feed / Bird" value={`${feedPerBirdG.toFixed(0)} g`} tone="plain" />
+                <MiniStat label="30-Day Usage" value={`${feed30Total.toFixed(1)} bags`} tone="peach" />
+              </div>
+              <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+                <table className="w-full text-xs sm:text-sm">
+                  <thead>
+                    <tr className="text-left text-muted-foreground bg-[color:var(--gold)]/10">
+                      <th className="py-2 px-3 font-medium">Date</th>
+                      {feedRoomNames.map(rn => (
+                        <th key={rn} className="py-2 px-3 font-medium text-right whitespace-nowrap">{rn.replace(/^ROOM\s*/i, "R")}</th>
+                      ))}
+                      <th className="py-2 px-3 font-medium text-right whitespace-nowrap">Total</th>
+                      <th className="py-2 px-2 w-6"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(feedShowAll ? feedByDate : feedByDate.slice(0, 7)).map(g => {
+                      const isOpen = expandedFeedDate === g.date;
+                      return (
+                        <>
+                          <tr key={g.date} className="border-t border-border/60 hover:bg-[color:var(--gold)]/5 cursor-pointer" onClick={() => setExpandedFeedDate(isOpen ? null : g.date)}>
+                            <td className="py-2 px-3 font-medium whitespace-nowrap">{g.date}</td>
+                            {feedRoomNames.map(rn => (
+                              <td key={rn} className="py-2 px-3 text-right tabular-nums">{g.byRoom[rn] ? g.byRoom[rn] : <span className="text-muted-foreground/50">—</span>}</td>
+                            ))}
+                            <td className="py-2 px-3 text-right font-semibold tabular-nums whitespace-nowrap">{g.total} bags</td>
+                            <td className="py-2 px-2 text-muted-foreground"><ChevronDown className={"h-3.5 w-3.5 transition-transform " + (isOpen ? "rotate-180" : "")} /></td>
+                          </tr>
+                          {isOpen && (
+                            <tr className="bg-background/60">
+                              <td colSpan={feedRoomNames.length + 3} className="px-3 py-2">
+                                <div className="space-y-1">
+                                  {g.items.map(f => (
+                                    <div key={f.id} className="flex items-center justify-between text-xs">
+                                      <span className="font-medium">{f.room}</span>
+                                      <div className="flex items-center gap-3">
+                                        <span className="tabular-nums">{f.bags} bags</span>
+                                        <button onClick={(e) => { e.stopPropagation(); delFeedRow(f.id); }} className="text-destructive/70 hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      );
+                    })}
+                    {feedByDate.length === 0 && (
+                      <tr><td colSpan={feedRoomNames.length + 3} className="py-4 text-center text-muted-foreground">No feed records yet.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {feedByDate.length > 7 && (
+                <div className="mt-3 text-center">
+                  <button onClick={() => setFeedShowAll(v => !v)} className="text-xs font-medium text-[color:var(--forest)] hover:underline">
+                    {feedShowAll ? "Show latest 7 only" : `View all feed records (${feedByDate.length})`}
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           ) : (
             <div className="mt-4 p-6 text-center text-muted-foreground text-sm bg-secondary/40 rounded-xl">No custom formulas yet.</div>
           )}
