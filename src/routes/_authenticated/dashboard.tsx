@@ -715,9 +715,12 @@ function Dashboard() {
                     <div className="text-xs text-muted-foreground">{h.scope}</div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + (h.type === "Vaccination" ? "bg-blue-500/10 text-blue-700" : "bg-[color:var(--forest)]/10 text-[color:var(--forest)]")}>{h.type}</span>
-                  <div className="text-xs text-muted-foreground mt-1">{h.date}</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + (h.type === "Vaccination" ? "bg-blue-500/10 text-blue-700" : "bg-[color:var(--forest)]/10 text-[color:var(--forest)]")}>{h.type}</span>
+                    <div className="text-xs text-muted-foreground mt-1">{h.date}</div>
+                  </div>
+                  <RowActions onEdit={() => editHealth(h)} onDelete={() => delHealthRow(h)} />
                 </div>
               </div>
             ))}
