@@ -1093,6 +1093,62 @@ function ActionBtn({ onClick, icon: Icon, children }: { onClick: () => void; ico
   );
 }
 
+function RowActions({ onEdit, onDelete, extra }: { onEdit: () => void; onDelete: () => void; extra?: { label: string; onClick: () => void } }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        aria-label="Row actions"
+        onClick={() => setOpen(v => !v)}
+        className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground transition"
+      >
+        <MoreVertical className="h-4 w-4" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-8 z-30 min-w-[160px] rounded-xl border border-border bg-background shadow-lg overflow-hidden">
+            {extra && (
+              <button onClick={() => { setOpen(false); extra.onClick(); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs text-left hover:bg-secondary">
+                <Pencil className="h-3.5 w-3.5" /> {extra.label}
+              </button>
+            )}
+            <button onClick={() => { setOpen(false); onEdit(); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs text-left hover:bg-secondary">
+              <Pencil className="h-3.5 w-3.5" /> Edit
+            </button>
+            <button onClick={() => { setOpen(false); onDelete(); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs text-left text-destructive hover:bg-destructive/10">
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ConfirmDialog({ state, onClose }: { state: { title: string; message: string; onConfirm: () => void } | null; onClose: () => void }) {
+  if (!state) return null;
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4" onClick={onClose}>
+      <div className="w-full max-w-sm rounded-2xl bg-background p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="text-base font-semibold">{state.title}</div>
+        <p className="mt-2 text-sm text-muted-foreground">{state.message}</p>
+        <div className="mt-5 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-full px-4 py-2 text-sm font-medium bg-secondary hover:opacity-90">Cancel</button>
+          <button
+            onClick={() => { state.onConfirm(); onClose(); }}
+            className="rounded-full bg-destructive text-destructive-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+          >
+            Delete Record
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 function AreaTab({ active, onClick, num, stage, title, plan, icon: Icon, premium }: {
   active: boolean; onClick: () => void; num: string; stage: string; title: string; plan: string;
   icon: React.ComponentType<{ className?: string }>; premium?: boolean;
