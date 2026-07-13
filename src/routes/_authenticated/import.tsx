@@ -121,11 +121,14 @@ const SPECS: Record<Kind, {
   },
   health: {
     label: "Health Records",
-    description: "Vaccination/vitamin/observation records. Scope is a room name or 'All Rooms'.",
+    description: "Health records. Type: Vaccination, Vitamin, Medication, Treatment, or Observation. Scope is a room name or 'All Rooms'.",
     columns: ["date", "name", "scope", "type"],
     example: [
       ["2026-02-15", "Newcastle Vaccine", "All Rooms", "Vaccination"],
       ["2026-02-18", "Multivitamin", "ROOM 2", "Vitamin"],
+      ["2026-02-20", "Amoxicillin", "ROOM 3", "Medication"],
+      ["2026-02-22", "Deworming", "All Rooms", "Treatment"],
+      ["2026-02-23", "Reduced activity", "ROOM 4", "Observation"],
     ],
   },
   rooms: {
