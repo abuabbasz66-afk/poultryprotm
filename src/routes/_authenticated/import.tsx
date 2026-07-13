@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Download, Upload, FileText, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useRooms } from "@/lib/farm-data";
+import { useRooms, normalizeHealthType } from "@/lib/farm-data";
 
 export const Route = createFileRoute("/_authenticated/import")({
   head: () => ({ meta: [{ title: "Import Farm Records — PoultryPro" }] }),
@@ -121,11 +121,14 @@ const SPECS: Record<Kind, {
   },
   health: {
     label: "Health Records",
-    description: "Vaccination/vitamin/observation records. Scope is a room name or 'All Rooms'.",
+    description: "Health records. Type: Vaccination, Vitamin, Medication, Treatment, or Observation. Scope is a room name or 'All Rooms'.",
     columns: ["date", "name", "scope", "type"],
     example: [
       ["2026-02-15", "Newcastle Vaccine", "All Rooms", "Vaccination"],
       ["2026-02-18", "Multivitamin", "ROOM 2", "Vitamin"],
+      ["2026-02-20", "Amoxicillin", "ROOM 3", "Medication"],
+      ["2026-02-22", "Deworming", "All Rooms", "Treatment"],
+      ["2026-02-23", "Reduced activity", "ROOM 4", "Observation"],
     ],
   },
   rooms: {
@@ -538,8 +541,9 @@ function validateRow(
       return { data: {}, error: `Scope must be "All Rooms" or an existing room name (got "${scope}")` };
     }
     const scopeNorm = scope.toLowerCase() === "all rooms" ? "All Rooms" : scope.toUpperCase();
-    const type = get("type");
-    if (type !== "Vaccination" && type !== "Vitamin") return { data: {}, error: "Type must be 'Vaccination' or 'Vitamin'" };
+    const rawType = get("type");
+    const type = normalizeHealthType(rawType);
+    if (!type) return { data: {}, error: "Invalid health record type. Accepted types: Vaccination, Vitamin, Medication, Treatment, or Observation." };
     return { data: { date, name, scope: scopeNorm, type } };
   }
   if (kind === "rooms") {

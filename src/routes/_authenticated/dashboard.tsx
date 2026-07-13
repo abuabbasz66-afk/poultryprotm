@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import {
   Egg, Bird, TrendingDown, TrendingUp, Wheat, DollarSign,
-  Skull, Syringe, Droplets, Plus, Pencil, Trash2, MapPin,
+  Skull, Syringe, Droplets, Pill, Stethoscope, Eye, Plus, Pencil, Trash2, MapPin,
   Sparkles, ArrowLeft, LayoutDashboard, LineChart as LineChartIcon,
   Brain, Activity, AlertTriangle, Gauge, Radar, Lightbulb, ArrowRight, LogOut, Upload,
   ChevronDown, MoreVertical,
@@ -20,7 +20,8 @@ import {
   useAddPrice, useDeletePrice, useDeleteMortality, useDeleteFeed,
   useDeleteEgg, useUpdateEgg, useUpdateMortality, useUpdateHealth, useUpdateFeed,
   useDeleteHealth,
-  type Room, type EggRow, type Mortality, type Health, type Feed, type Price,
+  HEALTH_TYPES, normalizeHealthType,
+  type Room, type EggRow, type Mortality, type Health, type HealthType, type Feed, type Price,
 } from "@/lib/farm-data";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -37,6 +38,17 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 // ---------- Helpers ----------
 const naira = (n: number) => "₦" + n.toLocaleString("en-NG");
+
+const HEALTH_TYPE_STYLES: Record<HealthType, { icon: typeof Syringe; wrap: string; badge: string }> = {
+  Vaccination: { icon: Syringe,     wrap: "bg-blue-500/10 text-blue-600",                                       badge: "bg-blue-500/10 text-blue-700" },
+  Vitamin:     { icon: Droplets,    wrap: "bg-[color:var(--forest)]/10 text-[color:var(--forest)]",             badge: "bg-[color:var(--forest)]/10 text-[color:var(--forest)]" },
+  Medication:  { icon: Pill,        wrap: "bg-purple-500/10 text-purple-600",                                   badge: "bg-purple-500/10 text-purple-700" },
+  Treatment:   { icon: Stethoscope, wrap: "bg-amber-500/10 text-amber-600",                                     badge: "bg-amber-500/10 text-amber-700" },
+  Observation: { icon: Eye,         wrap: "bg-slate-500/10 text-slate-600",                                     badge: "bg-slate-500/10 text-slate-700" },
+};
+function healthTypeStyle(t: string) {
+  return HEALTH_TYPE_STYLES[(t as HealthType)] ?? HEALTH_TYPE_STYLES.Observation;
+}
 
 function todayLabel() {
   return new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
@@ -217,7 +229,9 @@ function Dashboard() {
 
   const addHealth = () => {
     const name = prompt("Name (e.g. MIAVIT)"); if (!name) return;
-    const type = ((prompt("Type: Vitamin or Vaccination", "Vitamin") || "Vitamin") as Health["type"]);
+    const typeRaw = prompt(`Type: ${HEALTH_TYPES.join(", ")}`, "Vitamin") || "Vitamin";
+    const type = normalizeHealthType(typeRaw);
+    if (!type) { alert("Invalid health record type. Accepted types: Vaccination, Vitamin, Medication, Treatment, or Observation."); return; }
     const scope = prompt("Scope (All Rooms or ROOM 2 / ROOM 3 / ROOM 4)", "All Rooms") || "All Rooms";
     const date = prompt("Date (e.g. 21 Feb)", todayShortLabel()) || todayShortLabel();
     addHealthM.mutate({ name: name.toUpperCase(), scope, type, date }, {
@@ -226,7 +240,8 @@ function Dashboard() {
   };
   const editHealth = (h: Health) => {
     const name = prompt("Name", h.name); if (name === null) return;
-    const type = (prompt("Type: Vitamin or Vaccination", h.type) ?? h.type) as Health["type"];
+    const typeRaw = prompt(`Type: ${HEALTH_TYPES.join(", ")}`, h.type); if (typeRaw === null) return;
+    const type = normalizeHealthType(typeRaw) ?? h.type;
     const scope = prompt("Scope", h.scope); if (scope === null) return;
     const date = prompt("Date", h.date); if (date === null) return;
     updHealthM.mutate({ id: h.id, name: name.toUpperCase(), type, scope, date }, {
@@ -704,11 +719,14 @@ function Dashboard() {
         <Card>
           <CardHeader title="Health Records" subtitle="Vaccinations, vitamins & observations" right={<ActionBtn onClick={addHealth} icon={Plus}>Add</ActionBtn>} />
           <div className="mt-4 space-y-2">
-            {health.map(h => (
+            {health.map(h => {
+              const style = healthTypeStyle(h.type);
+              const Icon = style.icon;
+              return (
               <div key={h.id} className="flex items-center justify-between rounded-xl bg-secondary/40 px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <span className={"grid h-9 w-9 place-items-center rounded-lg " + (h.type === "Vaccination" ? "bg-blue-500/10 text-blue-600" : "bg-[color:var(--forest)]/10 text-[color:var(--forest)]")}>
-                    {h.type === "Vaccination" ? <Syringe className="h-4 w-4" /> : <Droplets className="h-4 w-4" />}
+                  <span className={"grid h-9 w-9 place-items-center rounded-lg " + style.wrap}>
+                    <Icon className="h-4 w-4" />
                   </span>
                   <div>
                     <div className="text-sm font-semibold">{h.name}</div>
@@ -717,13 +735,14 @@ function Dashboard() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-right">
-                    <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + (h.type === "Vaccination" ? "bg-blue-500/10 text-blue-700" : "bg-[color:var(--forest)]/10 text-[color:var(--forest)]")}>{h.type}</span>
+                    <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + style.badge}>{h.type}</span>
                     <div className="text-xs text-muted-foreground mt-1">{h.date}</div>
                   </div>
                   <RowActions onEdit={() => editHealth(h)} onDelete={() => delHealthRow(h)} />
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
 
