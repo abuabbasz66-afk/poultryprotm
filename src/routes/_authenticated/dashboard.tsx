@@ -17,7 +17,7 @@ import {
   useRooms, useEggs, useMortality, useHealth, useFeed, usePrices,
   useAddRoom, useDeleteRoom,
   useAddEgg, useAddMortality, useAddHealth, useAddFeed,
-  useAddPrice, useDeletePrice,
+  useAddPrice, useDeletePrice, useDeleteMortality, useDeleteFeed,
   type Room, type EggRow, type Mortality, type Health, type Feed, type Price,
 } from "@/lib/farm-data";
 
