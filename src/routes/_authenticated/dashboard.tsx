@@ -720,7 +720,7 @@ function Dashboard() {
                               </td>
                             </tr>
                           )}
-                        </>
+                        </Fragment>
                       );
                     })}
                     {feedByDate.length === 0 && (
