@@ -560,6 +560,7 @@ function Dashboard() {
                   ))}
                   <th className="py-2 pr-4 font-medium">Total</th>
                   <th className="py-2 pr-4 font-medium">Extra</th>
+                  <th className="py-2 pr-2 font-medium w-6"></th>
                 </tr>
               </thead>
               <tbody>
