@@ -825,6 +825,11 @@ function Dashboard() {
                           {isOpen && (
                             <tr className="bg-background/60">
                               <td colSpan={feedRoomNames.length + 3} className="px-3 py-2">
+                                <div className="mb-2 flex justify-end">
+                                  <button onClick={(e) => { e.stopPropagation(); editFeedDay(g.items); }} className="inline-flex items-center gap-1 text-[11px] font-medium text-[color:var(--forest)] hover:underline">
+                                    <Pencil className="h-3 w-3" /> Edit daily feed usage
+                                  </button>
+                                </div>
                                 <div className="space-y-1">
                                   {g.items.map(f => (
                                     <div key={f.id} className="flex items-center justify-between text-xs">
