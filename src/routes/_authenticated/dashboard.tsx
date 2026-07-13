@@ -694,7 +694,7 @@ function Dashboard() {
                     {(feedShowAll ? feedByDate : feedByDate.slice(0, 7)).map(g => {
                       const isOpen = expandedFeedDate === g.date;
                       return (
-                        <>
+                        <Fragment key={g.date}>
                           <tr key={g.date} className="border-t border-border/60 hover:bg-[color:var(--gold)]/5 cursor-pointer" onClick={() => setExpandedFeedDate(isOpen ? null : g.date)}>
                             <td className="py-2 px-3 font-medium whitespace-nowrap">{g.date}</td>
                             {feedRoomNames.map(rn => (
