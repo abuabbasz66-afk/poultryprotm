@@ -81,6 +81,7 @@ function Dashboard() {
   const [feedShowAll, setFeedShowAll] = useState(false);
   const [expandedMortDate, setExpandedMortDate] = useState<string | null>(null);
   const [expandedFeedDate, setExpandedFeedDate] = useState<string | null>(null);
+  const [eggShowAll, setEggShowAll] = useState(false);
 
   // Derived
   const totalBirds = rooms.reduce((s, r) => s + r.current, 0);
