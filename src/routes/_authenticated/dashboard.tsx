@@ -23,6 +23,7 @@ import {
   HEALTH_TYPES, normalizeHealthType,
   type Room, type EggRow, type Mortality, type Health, type HealthType, type Feed, type Price,
 } from "@/lib/farm-data";
+import { ProductionDeclineIntelligence } from "@/components/production-decline-card";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
