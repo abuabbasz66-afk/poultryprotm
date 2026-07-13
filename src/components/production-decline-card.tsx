@@ -199,9 +199,9 @@ function DeclineEventCard({ event }: { event: DeclineEvent }) {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-black/20 border border-white/10 px-2.5 py-2">
+    <div className="rounded-lg bg-black/20 border border-white/10 px-2 py-1.5">
       <div className="text-[10px] uppercase tracking-[0.14em] text-primary-foreground/60">{label}</div>
-      <div className="mt-0.5 text-sm font-semibold text-primary-foreground">{value}</div>
+      <div className="text-sm font-semibold text-primary-foreground">{value}</div>
     </div>
   );
 }
