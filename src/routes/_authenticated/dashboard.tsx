@@ -150,8 +150,10 @@ function Dashboard() {
     });
   };
   const delRoom = (id: string) => {
-    if (!confirm("Delete this room?")) return;
-    delRoomM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) });
+    const r = rooms.find(x => x.id === id);
+    askDelete("Delete room?", `This will permanently remove ${r?.name ?? "this room"} and cannot be undone.`, () =>
+      delRoomM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) }),
+    );
   };
 
   const recordProduction = () => {
@@ -167,6 +169,25 @@ function Dashboard() {
     });
   };
 
+  const editEgg = (e: EggRow) => {
+    const label = prompt("Date label", e.label); if (label === null) return;
+    const dateInput = prompt("Date (YYYY-MM-DD)", e.date); if (dateInput === null) return;
+    const r2 = +(prompt("ROOM 2 crates", String(e.r2)) ?? e.r2);
+    const r3 = +(prompt("ROOM 3 crates", String(e.r3)) ?? e.r3);
+    const r4 = +(prompt("ROOM 4 crates", String(e.r4)) ?? e.r4);
+    const extra = +(prompt("Extra eggs", String(e.extra)) ?? e.extra);
+    updEggM.mutate({ id: e.id, label, date: dateInput, r2, r3, r4, extra }, {
+      onError: (err) => alert("Failed to update: " + (err as Error).message),
+    });
+  };
+  const delEgg = (e: EggRow) => {
+    askDelete(
+      `Delete production record for ${e.label}?`,
+      "This will permanently remove this production record.",
+      () => delEggM.mutate(e.id, { onError: (err) => alert("Failed to delete: " + (err as Error).message) }),
+    );
+  };
+
   const addMortality = () => {
     const room = prompt("Room (e.g. ROOM 3)"); if (!room) return;
     const cause = prompt("Cause", "Unknown") || "Unknown";
@@ -176,6 +197,22 @@ function Dashboard() {
     addMortalityM.mutate({ room: room.toUpperCase(), cause, date: dateStr, loss }, {
       onError: (e) => alert("Failed to save mortality: " + (e as Error).message),
     });
+  };
+  const editMortality = (m: Mortality) => {
+    const room = prompt("Room", m.room); if (room === null) return;
+    const cause = prompt("Cause", m.cause); if (cause === null) return;
+    const date = prompt("Date", m.date); if (date === null) return;
+    const loss = +(prompt("Loss (birds)", String(m.loss)) ?? m.loss);
+    updMortalityM.mutate({ id: m.id, room: room.toUpperCase(), cause, date, loss }, {
+      onError: (e) => alert("Failed to update: " + (e as Error).message),
+    });
+  };
+  const delMortalityRow = (m: Mortality) => {
+    askDelete(
+      `Delete mortality record for ${m.room} on ${m.date}?`,
+      `This will permanently remove this ${m.loss}-bird loss record (${m.cause}).`,
+      () => delMortalityM.mutate(m.id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) }),
+    );
   };
 
   const addHealth = () => {
@@ -187,6 +224,22 @@ function Dashboard() {
       onError: (e) => alert("Failed to save health record: " + (e as Error).message),
     });
   };
+  const editHealth = (h: Health) => {
+    const name = prompt("Name", h.name); if (name === null) return;
+    const type = (prompt("Type: Vitamin or Vaccination", h.type) ?? h.type) as Health["type"];
+    const scope = prompt("Scope", h.scope); if (scope === null) return;
+    const date = prompt("Date", h.date); if (date === null) return;
+    updHealthM.mutate({ id: h.id, name: name.toUpperCase(), type, scope, date }, {
+      onError: (e) => alert("Failed to update: " + (e as Error).message),
+    });
+  };
+  const delHealthRow = (h: Health) => {
+    askDelete(
+      `Delete health record "${h.name}"?`,
+      `This will permanently remove this ${h.type.toLowerCase()} record from ${h.date}.`,
+      () => delHealthM.mutate(h.id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) }),
+    );
+  };
 
   const recordFeed = () => {
     const room = prompt("Room (e.g. ROOM 3)"); if (!room) return;
@@ -196,6 +249,32 @@ function Dashboard() {
     addFeedM.mutate({ room: room.toUpperCase(), bags, date }, {
       onError: (e) => alert("Failed to save feed: " + (e as Error).message),
     });
+  };
+  const editFeed = (f: Feed) => {
+    const room = prompt("Room", f.room); if (room === null) return;
+    const bags = +(prompt("Bags", String(f.bags)) ?? f.bags);
+    const date = prompt("Date", f.date); if (date === null) return;
+    updFeedM.mutate({ id: f.id, room: room.toUpperCase(), bags, date }, {
+      onError: (e) => alert("Failed to update: " + (e as Error).message),
+    });
+  };
+  const delFeedRow = (f: Feed) => {
+    askDelete(
+      `Delete feed record for ${f.room} on ${f.date}?`,
+      `This will permanently remove this ${f.bags}-bag feed record.`,
+      () => delFeedM.mutate(f.id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) }),
+    );
+  };
+  const editFeedDay = (items: Feed[]) => {
+    for (const f of items) {
+      const val = prompt(`Bags for ${f.room} on ${f.date}`, String(f.bags));
+      if (val === null) continue;
+      const bags = +val;
+      if (!Number.isFinite(bags) || bags === f.bags) continue;
+      updFeedM.mutate({ id: f.id, bags }, {
+        onError: (e) => alert("Failed to update: " + (e as Error).message),
+      });
+    }
   };
 
   const addPrice = () => {
@@ -208,17 +287,10 @@ function Dashboard() {
     });
   };
   const delPrice = (id: string) => {
-    if (!confirm("Delete this price?")) return;
-    delPriceM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) });
-  };
-
-  const delMortalityRow = (id: string) => {
-    if (!confirm("Delete this mortality record?")) return;
-    delMortalityM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) });
-  };
-  const delFeedRow = (id: string) => {
-    if (!confirm("Delete this feed record?")) return;
-    delFeedM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) });
+    const p = prices.find(x => x.id === id);
+    askDelete("Delete this price?", `This will permanently remove ${p?.item ?? "the item"} from the price list.`, () =>
+      delPriceM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) }),
+    );
   };
 
   // --- Mortality aggregation (grouped by date, preserving arrival order) ---
