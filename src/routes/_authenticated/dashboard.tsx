@@ -102,6 +102,7 @@ function Dashboard() {
   const [expandedMortDate, setExpandedMortDate] = useState<string | null>(null);
   const [expandedFeedDate, setExpandedFeedDate] = useState<string | null>(null);
   const [eggShowAll, setEggShowAll] = useState(false);
+  const [healthShowAll, setHealthShowAll] = useState(false);
   const [confirmState, setConfirmState] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
   const askDelete = (title: string, message: string, onConfirm: () => void) => setConfirmState({ title, message, onConfirm });
 
