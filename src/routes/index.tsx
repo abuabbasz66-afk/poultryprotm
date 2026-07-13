@@ -565,7 +565,7 @@ function Index() {
             <span className="font-display font-semibold text-foreground">PoultryPro™</span>
             <span>· Katsina State, Nigeria</span>
           </div>
-          <div>© {new Date().getFullYear()} Abubakar Sadiq Abbas · ABZ Global Resource</div>
+          <div>© {new Date().getFullYear()} Abubakar Sadiq Abbas · GREENFIELD CONTRACTS & AGRO LIMITED</div>
         </div>
       </footer>
     </div>
