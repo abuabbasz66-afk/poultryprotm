@@ -594,7 +594,7 @@ function Dashboard() {
                   );
                 })}
                 {eggs.length === 0 && (
-                  <tr><td colSpan={rooms.length + 3} className="py-4 text-center text-muted-foreground text-xs">
+                  <tr><td colSpan={rooms.length + 4} className="py-4 text-center text-muted-foreground text-xs">
                     <span className="font-medium">Pending entry</span> — no production records yet.
                   </td></tr>
                 )}
