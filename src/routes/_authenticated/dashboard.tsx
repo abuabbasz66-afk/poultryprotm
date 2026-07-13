@@ -218,7 +218,9 @@ function Dashboard() {
 
   const addHealth = () => {
     const name = prompt("Name (e.g. MIAVIT)"); if (!name) return;
-    const type = ((prompt("Type: Vitamin or Vaccination", "Vitamin") || "Vitamin") as Health["type"]);
+    const typeRaw = prompt(`Type: ${HEALTH_TYPES.join(", ")}`, "Vitamin") || "Vitamin";
+    const type = normalizeHealthType(typeRaw);
+    if (!type) { alert("Invalid health record type. Accepted types: Vaccination, Vitamin, Medication, Treatment, or Observation."); return; }
     const scope = prompt("Scope (All Rooms or ROOM 2 / ROOM 3 / ROOM 4)", "All Rooms") || "All Rooms";
     const date = prompt("Date (e.g. 21 Feb)", todayShortLabel()) || todayShortLabel();
     addHealthM.mutate({ name: name.toUpperCase(), scope, type, date }, {
@@ -227,7 +229,8 @@ function Dashboard() {
   };
   const editHealth = (h: Health) => {
     const name = prompt("Name", h.name); if (name === null) return;
-    const type = (prompt("Type: Vitamin or Vaccination", h.type) ?? h.type) as Health["type"];
+    const typeRaw = prompt(`Type: ${HEALTH_TYPES.join(", ")}`, h.type); if (typeRaw === null) return;
+    const type = normalizeHealthType(typeRaw) ?? h.type;
     const scope = prompt("Scope", h.scope); if (scope === null) return;
     const date = prompt("Date", h.date); if (date === null) return;
     updHealthM.mutate({ id: h.id, name: name.toUpperCase(), type, scope, date }, {
