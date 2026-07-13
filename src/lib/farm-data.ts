@@ -241,6 +241,18 @@ export function useDeleteMortality() {
   });
 }
 
+export function useUpdateMortality() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: Partial<Mortality> & { id: string }) => {
+      const { id, ...patch } = input;
+      const { error } = await supabase.from("mortality").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateAll(qc),
+  });
+}
+
 export function useAddHealth() {
   const qc = useQueryClient();
   return useMutation({
@@ -264,12 +276,36 @@ export function useDeleteHealth() {
   });
 }
 
+export function useUpdateHealth() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: Partial<Health> & { id: string }) => {
+      const { id, ...patch } = input;
+      const { error } = await supabase.from("health_records").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateAll(qc),
+  });
+}
+
 export function useAddFeed() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: Omit<Feed, "id">) => {
       const farm_id = await requireFarmId();
       const { error } = await supabase.from("feed_usage").insert({ farm_id, ...input });
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateAll(qc),
+  });
+}
+
+export function useUpdateFeed() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: Partial<Feed> & { id: string }) => {
+      const { id, ...patch } = input;
+      const { error } = await supabase.from("feed_usage").update(patch).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => invalidateAll(qc),

@@ -9,7 +9,7 @@ import {
   Skull, Syringe, Droplets, Plus, Pencil, Trash2, MapPin,
   Sparkles, ArrowLeft, LayoutDashboard, LineChart as LineChartIcon,
   Brain, Activity, AlertTriangle, Gauge, Radar, Lightbulb, ArrowRight, LogOut, Upload,
-  ChevronDown,
+  ChevronDown, MoreVertical,
 } from "lucide-react";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,8 @@ import {
   useAddRoom, useDeleteRoom,
   useAddEgg, useAddMortality, useAddHealth, useAddFeed,
   useAddPrice, useDeletePrice, useDeleteMortality, useDeleteFeed,
+  useDeleteEgg, useUpdateEgg, useUpdateMortality, useUpdateHealth, useUpdateFeed,
+  useDeleteHealth,
   type Room, type EggRow, type Mortality, type Health, type Feed, type Price,
 } from "@/lib/farm-data";
 
@@ -69,6 +71,12 @@ function Dashboard() {
   const delPriceM = useDeletePrice();
   const delMortalityM = useDeleteMortality();
   const delFeedM = useDeleteFeed();
+  const delEggM = useDeleteEgg();
+  const delHealthM = useDeleteHealth();
+  const updEggM = useUpdateEgg();
+  const updMortalityM = useUpdateMortality();
+  const updHealthM = useUpdateHealth();
+  const updFeedM = useUpdateFeed();
 
   const [feedTab, setFeedTab] = useState<"Usage" | "Formulas">("Usage");
   const [area, setArea] = useState<"records" | "analytics" | "ai">("records");
@@ -82,6 +90,8 @@ function Dashboard() {
   const [expandedMortDate, setExpandedMortDate] = useState<string | null>(null);
   const [expandedFeedDate, setExpandedFeedDate] = useState<string | null>(null);
   const [eggShowAll, setEggShowAll] = useState(false);
+  const [confirmState, setConfirmState] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
+  const askDelete = (title: string, message: string, onConfirm: () => void) => setConfirmState({ title, message, onConfirm });
 
   // Derived
   const totalBirds = rooms.reduce((s, r) => s + r.current, 0);
@@ -140,8 +150,10 @@ function Dashboard() {
     });
   };
   const delRoom = (id: string) => {
-    if (!confirm("Delete this room?")) return;
-    delRoomM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) });
+    const r = rooms.find(x => x.id === id);
+    askDelete("Delete room?", `This will permanently remove ${r?.name ?? "this room"} and cannot be undone.`, () =>
+      delRoomM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) }),
+    );
   };
 
   const recordProduction = () => {
@@ -157,6 +169,25 @@ function Dashboard() {
     });
   };
 
+  const editEgg = (e: EggRow) => {
+    const label = prompt("Date label", e.label); if (label === null) return;
+    const dateInput = prompt("Date (YYYY-MM-DD)", e.date); if (dateInput === null) return;
+    const r2 = +(prompt("ROOM 2 crates", String(e.r2)) ?? e.r2);
+    const r3 = +(prompt("ROOM 3 crates", String(e.r3)) ?? e.r3);
+    const r4 = +(prompt("ROOM 4 crates", String(e.r4)) ?? e.r4);
+    const extra = +(prompt("Extra eggs", String(e.extra)) ?? e.extra);
+    updEggM.mutate({ id: e.id, label, date: dateInput, r2, r3, r4, extra }, {
+      onError: (err) => alert("Failed to update: " + (err as Error).message),
+    });
+  };
+  const delEgg = (e: EggRow) => {
+    askDelete(
+      `Delete production record for ${e.label}?`,
+      "This will permanently remove this production record.",
+      () => delEggM.mutate(e.id, { onError: (err) => alert("Failed to delete: " + (err as Error).message) }),
+    );
+  };
+
   const addMortality = () => {
     const room = prompt("Room (e.g. ROOM 3)"); if (!room) return;
     const cause = prompt("Cause", "Unknown") || "Unknown";
@@ -166,6 +197,22 @@ function Dashboard() {
     addMortalityM.mutate({ room: room.toUpperCase(), cause, date: dateStr, loss }, {
       onError: (e) => alert("Failed to save mortality: " + (e as Error).message),
     });
+  };
+  const editMortality = (m: Mortality) => {
+    const room = prompt("Room", m.room); if (room === null) return;
+    const cause = prompt("Cause", m.cause); if (cause === null) return;
+    const date = prompt("Date", m.date); if (date === null) return;
+    const loss = +(prompt("Loss (birds)", String(m.loss)) ?? m.loss);
+    updMortalityM.mutate({ id: m.id, room: room.toUpperCase(), cause, date, loss }, {
+      onError: (e) => alert("Failed to update: " + (e as Error).message),
+    });
+  };
+  const delMortalityRow = (m: Mortality) => {
+    askDelete(
+      `Delete mortality record for ${m.room} on ${m.date}?`,
+      `This will permanently remove this ${m.loss}-bird loss record (${m.cause}).`,
+      () => delMortalityM.mutate(m.id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) }),
+    );
   };
 
   const addHealth = () => {
@@ -177,6 +224,22 @@ function Dashboard() {
       onError: (e) => alert("Failed to save health record: " + (e as Error).message),
     });
   };
+  const editHealth = (h: Health) => {
+    const name = prompt("Name", h.name); if (name === null) return;
+    const type = (prompt("Type: Vitamin or Vaccination", h.type) ?? h.type) as Health["type"];
+    const scope = prompt("Scope", h.scope); if (scope === null) return;
+    const date = prompt("Date", h.date); if (date === null) return;
+    updHealthM.mutate({ id: h.id, name: name.toUpperCase(), type, scope, date }, {
+      onError: (e) => alert("Failed to update: " + (e as Error).message),
+    });
+  };
+  const delHealthRow = (h: Health) => {
+    askDelete(
+      `Delete health record "${h.name}"?`,
+      `This will permanently remove this ${h.type.toLowerCase()} record from ${h.date}.`,
+      () => delHealthM.mutate(h.id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) }),
+    );
+  };
 
   const recordFeed = () => {
     const room = prompt("Room (e.g. ROOM 3)"); if (!room) return;
@@ -186,6 +249,32 @@ function Dashboard() {
     addFeedM.mutate({ room: room.toUpperCase(), bags, date }, {
       onError: (e) => alert("Failed to save feed: " + (e as Error).message),
     });
+  };
+  const editFeed = (f: Feed) => {
+    const room = prompt("Room", f.room); if (room === null) return;
+    const bags = +(prompt("Bags", String(f.bags)) ?? f.bags);
+    const date = prompt("Date", f.date); if (date === null) return;
+    updFeedM.mutate({ id: f.id, room: room.toUpperCase(), bags, date }, {
+      onError: (e) => alert("Failed to update: " + (e as Error).message),
+    });
+  };
+  const delFeedRow = (f: Feed) => {
+    askDelete(
+      `Delete feed record for ${f.room} on ${f.date}?`,
+      `This will permanently remove this ${f.bags}-bag feed record.`,
+      () => delFeedM.mutate(f.id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) }),
+    );
+  };
+  const editFeedDay = (items: Feed[]) => {
+    for (const f of items) {
+      const val = prompt(`Bags for ${f.room} on ${f.date}`, String(f.bags));
+      if (val === null) continue;
+      const bags = +val;
+      if (!Number.isFinite(bags) || bags === f.bags) continue;
+      updFeedM.mutate({ id: f.id, bags }, {
+        onError: (e) => alert("Failed to update: " + (e as Error).message),
+      });
+    }
   };
 
   const addPrice = () => {
@@ -198,17 +287,10 @@ function Dashboard() {
     });
   };
   const delPrice = (id: string) => {
-    if (!confirm("Delete this price?")) return;
-    delPriceM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) });
-  };
-
-  const delMortalityRow = (id: string) => {
-    if (!confirm("Delete this mortality record?")) return;
-    delMortalityM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) });
-  };
-  const delFeedRow = (id: string) => {
-    if (!confirm("Delete this feed record?")) return;
-    delFeedM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) });
+    const p = prices.find(x => x.id === id);
+    askDelete("Delete this price?", `This will permanently remove ${p?.item ?? "the item"} from the price list.`, () =>
+      delPriceM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) }),
+    );
   };
 
   // --- Mortality aggregation (grouped by date, preserving arrival order) ---
@@ -478,6 +560,7 @@ function Dashboard() {
                   ))}
                   <th className="py-2 pr-4 font-medium">Total</th>
                   <th className="py-2 pr-4 font-medium">Extra</th>
+                  <th className="py-2 pr-2 font-medium w-6"></th>
                 </tr>
               </thead>
               <tbody>
@@ -506,11 +589,12 @@ function Dashboard() {
                         </span>
                       </td>
                       <td className="py-2.5 pr-4 text-muted-foreground">{e.extra ? `+${e.extra}` : "—"}</td>
+                      <td className="py-2.5 pr-2 text-right"><RowActions onEdit={() => editEgg(e)} onDelete={() => delEgg(e)} /></td>
                     </tr>
                   );
                 })}
                 {eggs.length === 0 && (
-                  <tr><td colSpan={rooms.length + 3} className="py-4 text-center text-muted-foreground text-xs">
+                  <tr><td colSpan={rooms.length + 4} className="py-4 text-center text-muted-foreground text-xs">
                     <span className="font-medium">Pending entry</span> — no production records yet.
                   </td></tr>
                 )}
@@ -593,7 +677,7 @@ function Dashboard() {
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                               <span className="text-destructive font-semibold">-{m.loss}</span>
-                              <button onClick={() => delMortalityRow(m.id)} className="text-destructive/70 hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                              <RowActions onEdit={() => editMortality(m)} onDelete={() => delMortalityRow(m)} />
                             </div>
                           </div>
                         ))}
@@ -631,9 +715,12 @@ function Dashboard() {
                     <div className="text-xs text-muted-foreground">{h.scope}</div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + (h.type === "Vaccination" ? "bg-blue-500/10 text-blue-700" : "bg-[color:var(--forest)]/10 text-[color:var(--forest)]")}>{h.type}</span>
-                  <div className="text-xs text-muted-foreground mt-1">{h.date}</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + (h.type === "Vaccination" ? "bg-blue-500/10 text-blue-700" : "bg-[color:var(--forest)]/10 text-[color:var(--forest)]")}>{h.type}</span>
+                    <div className="text-xs text-muted-foreground mt-1">{h.date}</div>
+                  </div>
+                  <RowActions onEdit={() => editHealth(h)} onDelete={() => delHealthRow(h)} />
                 </div>
               </div>
             ))}
@@ -738,13 +825,18 @@ function Dashboard() {
                           {isOpen && (
                             <tr className="bg-background/60">
                               <td colSpan={feedRoomNames.length + 3} className="px-3 py-2">
+                                <div className="mb-2 flex justify-end">
+                                  <button onClick={(e) => { e.stopPropagation(); editFeedDay(g.items); }} className="inline-flex items-center gap-1 text-[11px] font-medium text-[color:var(--forest)] hover:underline">
+                                    <Pencil className="h-3 w-3" /> Edit daily feed usage
+                                  </button>
+                                </div>
                                 <div className="space-y-1">
                                   {g.items.map(f => (
                                     <div key={f.id} className="flex items-center justify-between text-xs">
                                       <span className="font-medium">{f.room}</span>
                                       <div className="flex items-center gap-3">
                                         <span className="tabular-nums">{f.bags} bags</span>
-                                        <button onClick={(e) => { e.stopPropagation(); delFeedRow(f.id); }} className="text-destructive/70 hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                                        <RowActions onEdit={() => editFeed(f)} onDelete={() => delFeedRow(f)} />
                                       </div>
                                     </div>
                                   ))}
@@ -943,6 +1035,7 @@ function Dashboard() {
           {new Date().getFullYear()} ABZ GLOBAL RESOURCE — Poultry Farm Management System
         </div>
       </main>
+      <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
     </div>
   );
 }
@@ -1010,6 +1103,62 @@ function ActionBtn({ onClick, icon: Icon, children }: { onClick: () => void; ico
     </button>
   );
 }
+
+function RowActions({ onEdit, onDelete, extra }: { onEdit: () => void; onDelete: () => void; extra?: { label: string; onClick: () => void } }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        aria-label="Row actions"
+        onClick={() => setOpen(v => !v)}
+        className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground transition"
+      >
+        <MoreVertical className="h-4 w-4" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-8 z-30 min-w-[160px] rounded-xl border border-border bg-background shadow-lg overflow-hidden">
+            {extra && (
+              <button onClick={() => { setOpen(false); extra.onClick(); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs text-left hover:bg-secondary">
+                <Pencil className="h-3.5 w-3.5" /> {extra.label}
+              </button>
+            )}
+            <button onClick={() => { setOpen(false); onEdit(); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs text-left hover:bg-secondary">
+              <Pencil className="h-3.5 w-3.5" /> Edit
+            </button>
+            <button onClick={() => { setOpen(false); onDelete(); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs text-left text-destructive hover:bg-destructive/10">
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ConfirmDialog({ state, onClose }: { state: { title: string; message: string; onConfirm: () => void } | null; onClose: () => void }) {
+  if (!state) return null;
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4" onClick={onClose}>
+      <div className="w-full max-w-sm rounded-2xl bg-background p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="text-base font-semibold">{state.title}</div>
+        <p className="mt-2 text-sm text-muted-foreground">{state.message}</p>
+        <div className="mt-5 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-full px-4 py-2 text-sm font-medium bg-secondary hover:opacity-90">Cancel</button>
+          <button
+            onClick={() => { state.onConfirm(); onClose(); }}
+            className="rounded-full bg-destructive text-destructive-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+          >
+            Delete Record
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 function AreaTab({ active, onClick, num, stage, title, plan, icon: Icon, premium }: {
   active: boolean; onClick: () => void; num: string; stage: string; title: string; plan: string;
