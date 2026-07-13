@@ -588,6 +588,7 @@ function Dashboard() {
                         </span>
                       </td>
                       <td className="py-2.5 pr-4 text-muted-foreground">{e.extra ? `+${e.extra}` : "—"}</td>
+                      <td className="py-2.5 pr-2 text-right"><RowActions onEdit={() => editEgg(e)} onDelete={() => delEgg(e)} /></td>
                     </tr>
                   );
                 })}
