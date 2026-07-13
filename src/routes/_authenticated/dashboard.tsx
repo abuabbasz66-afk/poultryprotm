@@ -81,6 +81,7 @@ function Dashboard() {
   const [feedShowAll, setFeedShowAll] = useState(false);
   const [expandedMortDate, setExpandedMortDate] = useState<string | null>(null);
   const [expandedFeedDate, setExpandedFeedDate] = useState<string | null>(null);
+  const [eggShowAll, setEggShowAll] = useState(false);
 
   // Derived
   const totalBirds = rooms.reduce((s, r) => s + r.current, 0);
@@ -97,6 +98,11 @@ function Dashboard() {
   const latestFeedDate = feed[0]?.date;
   const feedToday = latestFeedDate ? feed.filter(f => f.date === latestFeedDate).reduce((s, f) => s + f.bags, 0) : 0;
   const productionRate = totalBirds ? Math.round((todayEggs / totalBirds) * 100) : 0;
+  const last7Eggs = eggs.slice(0, 7);
+  const sevenDayAvgEggs = last7Eggs.length
+    ? Math.round(last7Eggs.reduce((s, r) => s + (r.r2 + r.r3 + r.r4) * 30 + r.extra, 0) / last7Eggs.length)
+    : 0;
+  const currentLayRate = totalBirds ? (totalEggs / totalBirds) * 100 : 0;
   const eggPrice = prices.find(p => p.item === "Egg")?.price ?? 4900;
   const feedPrice = prices.find(p => p.item.startsWith("Feed"))?.price ?? 13600;
   const todayRevenue = Math.round((todayEggs / 30) * eggPrice);
@@ -458,40 +464,66 @@ function Dashboard() {
             right={<ActionBtn onClick={recordProduction} icon={Plus}>Record Production</ActionBtn>}
           />
           <div className="grid grid-cols-3 gap-3 mt-4">
-            <MiniStat label="Total Crates" value={totalCrates.toLocaleString()} tone="mint" />
-            <MiniStat label="Total Eggs" value={totalEggs.toLocaleString()} tone="plain" />
-            <MiniStat label="Days Recorded" value={String(eggs.length)} tone="sky" />
+            <MiniStat label="Today's Production" value={`${todayCrates} cr`} tone="mint" />
+            <MiniStat label="7-Day Avg" value={`${sevenDayAvgEggs.toLocaleString()} eggs`} tone="sky" />
+            <MiniStat label="Current Lay Rate" value={`${currentLayRate.toFixed(1)}%`} tone="plain" />
           </div>
           <div className="mt-5 overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs sm:text-sm">
               <thead>
                 <tr className="text-left text-muted-foreground border-b border-border">
                   <th className="py-2 pr-4 font-medium">Date</th>
-                  <th className="py-2 pr-4 font-medium">ROOM 2</th>
-                  <th className="py-2 pr-4 font-medium">ROOM 3</th>
-                  <th className="py-2 pr-4 font-medium">ROOM 4</th>
+                  {rooms.map(r => (
+                    <th key={r.id} className="py-2 pr-4 font-medium whitespace-nowrap">{r.name.replace(/^ROOM\s*/i, "R")}</th>
+                  ))}
                   <th className="py-2 pr-4 font-medium">Total</th>
                   <th className="py-2 pr-4 font-medium">Extra</th>
                 </tr>
               </thead>
               <tbody>
-                {eggs.map(e => (
-                  <tr key={e.date + e.label} className="border-b border-border/50">
-                    <td className="py-2.5 pr-4">{e.label}</td>
-                    <td className="py-2.5 pr-4">{e.r2}</td>
-                    <td className="py-2.5 pr-4">{e.r3}</td>
-                    <td className="py-2.5 pr-4">{e.r4}</td>
-                    <td className="py-2.5 pr-4">
-                      <span className="inline-flex items-center rounded-full bg-[color:var(--forest)] text-primary-foreground px-2.5 py-0.5 text-xs font-medium">
-                        {e.r2 + e.r3 + e.r4}
-                      </span>
-                    </td>
-                    <td className="py-2.5 pr-4 text-muted-foreground">{e.extra ? `+${e.extra}` : "—"}</td>
-                  </tr>
-                ))}
+                {(eggShowAll ? eggs : eggs.slice(0, 7)).map(e => {
+                  const roomVal = (name: string): number | null => {
+                    const n = name.toUpperCase();
+                    if (n === "ROOM 2") return e.r2;
+                    if (n === "ROOM 3") return e.r3;
+                    if (n === "ROOM 4") return e.r4;
+                    return null;
+                  };
+                  return (
+                    <tr key={e.id ?? e.date + e.label} className="border-b border-border/50">
+                      <td className="py-2.5 pr-4 whitespace-nowrap">{e.label}</td>
+                      {rooms.map(r => {
+                        const v = roomVal(r.name);
+                        return (
+                          <td key={r.id} className="py-2.5 pr-4 tabular-nums">
+                            {v === null ? <span className="text-muted-foreground/50" title="Not recorded">—</span> : v}
+                          </td>
+                        );
+                      })}
+                      <td className="py-2.5 pr-4">
+                        <span className="inline-flex items-center rounded-full bg-[color:var(--forest)] text-primary-foreground px-2.5 py-0.5 text-xs font-medium">
+                          {e.r2 + e.r3 + e.r4}
+                        </span>
+                      </td>
+                      <td className="py-2.5 pr-4 text-muted-foreground">{e.extra ? `+${e.extra}` : "—"}</td>
+                    </tr>
+                  );
+                })}
+                {eggs.length === 0 && (
+                  <tr><td colSpan={rooms.length + 3} className="py-4 text-center text-muted-foreground text-xs">
+                    <span className="font-medium">Pending entry</span> — no production records yet.
+                  </td></tr>
+                )}
               </tbody>
             </table>
           </div>
+          {eggs.length > 7 && (
+            <div className="mt-3 text-center">
+              <button onClick={() => setEggShowAll(v => !v)} className="text-xs font-medium text-[color:var(--forest)] hover:underline">
+                {eggShowAll ? "Show latest 7 only" : `View all ${eggs.length} production records`}
+              </button>
+            </div>
+          )}
         </Card>
 
         <div className="grid lg:grid-cols-2 gap-6">
