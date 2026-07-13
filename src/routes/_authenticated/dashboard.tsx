@@ -71,6 +71,12 @@ function Dashboard() {
   const delPriceM = useDeletePrice();
   const delMortalityM = useDeleteMortality();
   const delFeedM = useDeleteFeed();
+  const delEggM = useDeleteEgg();
+  const delHealthM = useDeleteHealth();
+  const updEggM = useUpdateEgg();
+  const updMortalityM = useUpdateMortality();
+  const updHealthM = useUpdateHealth();
+  const updFeedM = useUpdateFeed();
 
   const [feedTab, setFeedTab] = useState<"Usage" | "Formulas">("Usage");
   const [area, setArea] = useState<"records" | "analytics" | "ai">("records");
