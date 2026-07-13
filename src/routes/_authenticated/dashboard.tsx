@@ -1035,6 +1035,7 @@ function Dashboard() {
           {new Date().getFullYear()} ABZ GLOBAL RESOURCE — Poultry Farm Management System
         </div>
       </main>
+      <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
     </div>
   );
 }
