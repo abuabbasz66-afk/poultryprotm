@@ -300,6 +300,18 @@ export function useAddFeed() {
   });
 }
 
+export function useUpdateFeed() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: Partial<Feed> & { id: string }) => {
+      const { id, ...patch } = input;
+      const { error } = await supabase.from("feed_usage").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateAll(qc),
+  });
+}
+
 export function useDeleteFeed() {
   const qc = useQueryClient();
   return useMutation({
