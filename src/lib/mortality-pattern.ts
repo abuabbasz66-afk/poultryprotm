@@ -125,10 +125,12 @@ function analyseForRoom(args: {
   }
   const firstEventDate = addDays(latestDate, -(cluster - 1));
 
-  // Alert gating: need meaningful signal
-  const meaningfulPct = aboveBaselinePct !== null && aboveBaselinePct >= 50;
+  // Alert gating: only when recent losses exceed expected, or a strong independent
+  // cluster/no-baseline signal exists. Never alert when recent <= expected.
+  const exceedsExpected = recentLoss > expectedLoss;
+  const meaningfulPct = aboveBaselinePct !== null && aboveBaselinePct >= 50 && exceedsExpected;
   const meaningfulNoBaseline = baselinePerDay === 0 && (recentLoss >= 2 || cluster >= 2);
-  const meaningfulCluster = cluster >= 2 && recentLoss >= 2;
+  const meaningfulCluster = cluster >= 3 && recentLoss >= 3 && exceedsExpected;
   if (!(meaningfulPct || meaningfulNoBaseline || meaningfulCluster)) return null;
 
   const severity = severityFor(aboveBaselinePct, magnitudeAbove, cluster);
