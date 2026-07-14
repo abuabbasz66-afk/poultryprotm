@@ -192,9 +192,18 @@ function MortalityEventCard({ event }: { event: MortalityEvent }) {
           <div>
             <div className="text-primary-foreground/60 uppercase tracking-[0.14em] text-[10px]">Magnitude</div>
             <div>
-              {event.aboveBaselinePct === null
-                ? `No prior mortality was recorded in the baseline window, so a percentage comparison is not available. Absolute recent loss: ${fmtInt(event.recentLoss)} bird${event.recentLoss === 1 ? "" : "s"}.`
-                : `Recent losses are ${fmt(event.aboveBaselinePct)}% above the baseline daily rate (${fmt(Math.max(0, event.magnitudeAbove))} bird${Math.round(Math.max(0, event.magnitudeAbove)) === 1 ? "" : "s"} above expected).`}
+              {(() => {
+                if (event.aboveBaselinePct === null) {
+                  return `No prior mortality was recorded in the baseline window, so a percentage comparison is not available. Absolute recent loss: ${fmtInt(event.recentLoss)} bird${event.recentLoss === 1 ? "" : "s"}.`;
+                }
+                const diff = event.magnitudeAbove;
+                if (diff > 0) {
+                  const n = Math.max(0, diff);
+                  return `Recent losses are ${fmt(event.aboveBaselinePct)}% above the baseline daily rate (${fmt(n)} bird${Math.round(n) === 1 ? "" : "s"} above expected).`;
+                }
+                const n = Math.abs(diff);
+                return `Recent losses are ${fmt(Math.abs(event.aboveBaselinePct))}% below the baseline daily rate (${fmt(n)} fewer bird loss${Math.round(n) === 1 ? "" : "es"} than expected).`;
+              })()}
             </div>
           </div>
           {event.causes.length > 0 && (
