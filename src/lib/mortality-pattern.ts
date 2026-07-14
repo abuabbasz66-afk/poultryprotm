@@ -38,6 +38,33 @@ const BASELINE_DAYS = 21; // 21 days preceding the recent window
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
+// Robust date parser: accepts ISO (YYYY-MM-DD), DD/MM/YYYY, DD-MM-YYYY. Returns
+// a canonical ISO YYYY-MM-DD string, or null when the input cannot be parsed.
+// Uses Date.UTC() to avoid timezone drift.
+function parseDate(input: string | null | undefined): string | null {
+  if (!input) return null;
+  const s = String(input).trim();
+  if (!s) return null;
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (iso) {
+    const y = +iso[1], m = +iso[2], d = +iso[3];
+    const t = Date.UTC(y, m - 1, d);
+    if (!Number.isFinite(t)) return null;
+    const dt = new Date(t);
+    if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return null;
+    return dt.toISOString().slice(0, 10);
+  }
+  const dmy = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/.exec(s);
+  if (dmy) {
+    const d = +dmy[1], m = +dmy[2], y = +dmy[3];
+    const t = Date.UTC(y, m - 1, d);
+    if (!Number.isFinite(t)) return null;
+    const dt = new Date(t);
+    if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return null;
+    return dt.toISOString().slice(0, 10);
+  }
+  return null;
+}
 function addDays(iso: string, n: number): string {
   const d = new Date(iso + "T00:00:00Z");
   d.setUTCDate(d.getUTCDate() + n);
@@ -51,6 +78,7 @@ function daysBetween(a: string, b: string): number {
     (new Date(a + "T00:00:00Z").getTime() - new Date(b + "T00:00:00Z").getTime()) / 86400000,
   );
 }
+
 
 function severityFor(pct: number | null, magnitude: number, cluster: number): MortSeverity {
   if (pct === null) {
