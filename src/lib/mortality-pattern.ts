@@ -38,6 +38,33 @@ const BASELINE_DAYS = 21; // 21 days preceding the recent window
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
+// Robust date parser: accepts ISO (YYYY-MM-DD), DD/MM/YYYY, DD-MM-YYYY. Returns
+// a canonical ISO YYYY-MM-DD string, or null when the input cannot be parsed.
+// Uses Date.UTC() to avoid timezone drift.
+function parseDate(input: string | null | undefined): string | null {
+  if (!input) return null;
+  const s = String(input).trim();
+  if (!s) return null;
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (iso) {
+    const y = +iso[1], m = +iso[2], d = +iso[3];
+    const t = Date.UTC(y, m - 1, d);
+    if (!Number.isFinite(t)) return null;
+    const dt = new Date(t);
+    if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return null;
+    return dt.toISOString().slice(0, 10);
+  }
+  const dmy = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/.exec(s);
+  if (dmy) {
+    const d = +dmy[1], m = +dmy[2], y = +dmy[3];
+    const t = Date.UTC(y, m - 1, d);
+    if (!Number.isFinite(t)) return null;
+    const dt = new Date(t);
+    if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return null;
+    return dt.toISOString().slice(0, 10);
+  }
+  return null;
+}
 function addDays(iso: string, n: number): string {
   const d = new Date(iso + "T00:00:00Z");
   d.setUTCDate(d.getUTCDate() + n);
@@ -51,6 +78,7 @@ function daysBetween(a: string, b: string): number {
     (new Date(a + "T00:00:00Z").getTime() - new Date(b + "T00:00:00Z").getTime()) / 86400000,
   );
 }
+
 
 function severityFor(pct: number | null, magnitude: number, cluster: number): MortSeverity {
   if (pct === null) {
@@ -229,7 +257,23 @@ export function detectMortalityPatterns(input: {
   feed: Feed[];
   health: Health[];
 }): MortalityReport {
-  const { eggs, rooms, mortality, feed, health } = input;
+  const { rooms } = input;
+
+  // Normalize inputs — drop rows with unparseable dates so one bad CSV cell
+  // (e.g. "6 aPR") cannot poison sort/anchor/day-math downstream.
+  const mortality = input.mortality
+    .map((m) => ({ ...m, date: parseDate(m.date) as string }))
+    .filter((m) => !!m.date);
+  const eggs = input.eggs
+    .map((e) => ({ ...e, date: parseDate(e.date) as string }))
+    .filter((e) => !!e.date);
+  const feed = input.feed
+    .map((f) => ({ ...f, date: parseDate(f.date) as string }))
+    .filter((f) => !!f.date);
+  const health = input.health
+    .map((h) => ({ ...h, date: parseDate(h.date) as string }))
+    .filter((h) => !!h.date);
+
   const total = mortality.length;
 
   if (total === 0) {
@@ -241,20 +285,35 @@ export function detectMortalityPatterns(input: {
     };
   }
 
-  // Anchor "now" to latest mortality date so historical CSV imports still surface patterns.
+  // Anchor "now" to latest valid mortality date (ISO sorts lexicographically).
   const anchorDate = [...mortality].map((m) => m.date).sort().reverse()[0];
 
-  // Need at least a small baseline window of history behind the recent window
-  const earliestDate = [...mortality].map((m) => m.date).sort()[0];
-  const historySpan = daysBetween(anchorDate, earliestDate) + 1;
-  if (historySpan < RECENT_DAYS + 7) {
+  // Distinct-calendar-day history: count unique dates within the 21-day baseline
+  // window that either have a mortality record OR evidence of farm activity
+  // (egg production / feed usage). Days with no evidence are treated as
+  // "missing" — mortality data is sparse event data, not a daily log.
+  const recentEndISO = anchorDate;
+  const recentStartISO = addDays(recentEndISO, -(RECENT_DAYS - 1));
+  const baselineEndISO = addDays(recentStartISO, -1);
+  const baselineStartISO = addDays(baselineEndISO, -(BASELINE_DAYS - 1));
+
+  const inBaseline = (d: string) => d >= baselineStartISO && d <= baselineEndISO;
+  const knownDays = new Set<string>();
+  for (const m of mortality) if (inBaseline(m.date)) knownDays.add(m.date);
+  for (const e of eggs) if (inBaseline(e.date)) knownDays.add(e.date);
+  for (const f of feed) if (inBaseline(f.date)) knownDays.add(f.date);
+  const historyDays = knownDays.size;
+
+  if (historyDays < BASELINE_DAYS) {
+    const remaining = Math.max(0, BASELINE_DAYS - historyDays);
     return {
       status: "learning",
       totalRecords: total,
       events: [],
-      message: `Learning farm mortality pattern — ${Math.max(0, RECENT_DAYS + 7 - historySpan)} more day${RECENT_DAYS + 7 - historySpan === 1 ? "" : "s"} of history required to establish a baseline.`,
+      message: `${remaining} more recorded day${remaining === 1 ? "" : "s"} of mortality history required to establish a ${BASELINE_DAYS}-day baseline.`,
     };
   }
+
 
   const events: MortalityEvent[] = [];
 
