@@ -114,7 +114,9 @@ function MortalityEventCard({ event }: { event: MortalityEvent }) {
   const style = mortSeverityStyle(event.severity);
   const pctLabel = event.aboveBaselinePct === null
     ? `${fmtInt(event.recentLoss)} bird ${event.recentLoss === 1 ? "loss" : "losses"} vs no prior baseline`
-    : `${fmt(event.aboveBaselinePct)}% above 21-day baseline`;
+    : event.aboveBaselinePct >= 0
+      ? `${fmt(event.aboveBaselinePct)}% above baseline`
+      : `${fmt(Math.abs(event.aboveBaselinePct))}% below baseline`;
 
   return (
     <div className={`rounded-2xl border ${style.ring} bg-white/5 p-3 md:p-4 backdrop-blur`}>
