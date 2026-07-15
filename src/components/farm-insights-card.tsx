@@ -55,8 +55,9 @@ export function FarmInsightsIntelligence(props: Props) {
       )}
 
       <div className="mt-5 text-[11px] text-muted-foreground border-t border-[color:var(--forest)]/10 pt-3">
-        PoultryPro noticed these things by looking at your recent farm records. This is not a veterinary diagnosis.
+        PoultryPro provides operational decision support and does not replace veterinary diagnosis or professional farm management judgement.
       </div>
+
     </section>
   );
 }
