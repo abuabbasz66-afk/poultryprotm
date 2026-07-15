@@ -577,11 +577,11 @@ function Index() {
           <div className="max-w-3xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Plans &amp; Subscriptions</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Three levels of farm digital maturity.
+              Three plans that grow with your farm.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              PoultryPro grows with your farm — from structured records, to business intelligence,
-              to AI-powered predictive management.
+              Start with simple farm records, then unlock clearer farm performance views and, later,
+              early alerts for unusual changes.
             </p>
           </div>
 
