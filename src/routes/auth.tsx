@@ -7,6 +7,14 @@ import { toast } from "sonner";
 
 type AuthMode = "signin" | "signup" | "forgot";
 
+function getPasswordResetRedirectUrl() {
+  const { origin, hostname } = window.location;
+  const baseUrl = hostname === "poultrypro.life" || hostname === "www.poultrypro.life"
+    ? "https://poultrypro.life"
+    : origin;
+  return `${baseUrl}/reset-password`;
+}
+
 export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>): { mode?: AuthMode } => {
     const m = search.mode;
@@ -69,7 +77,7 @@ function AuthPage() {
         const trimmed = email.trim().toLowerCase();
         if (!trimmed) throw new Error("Please enter your email address.");
         const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
-          redirectTo: window.location.origin + "/reset-password",
+          redirectTo: getPasswordResetRedirectUrl(),
         });
         if (error) {
           // Safe dev-only log; never expose to end users.

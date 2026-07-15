@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { createAuthEmailHandler } from '@lovable.dev/email-js'
+import { createAuthEmailHandler, type AuthEmailHookData } from '@lovable.dev/email-js'
 import { createFileRoute } from '@tanstack/react-router'
 import { SignupEmail } from '@/lib/email-templates/signup'
 import { InviteEmail } from '@/lib/email-templates/invite'
@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "poultryprotm"
+const SITE_NAME = "PoultryPro™"
 const SENDER_DOMAIN = "notify.poultrypro.life"
 const ROOT_DOMAIN = "poultrypro.life"
 const FROM_DOMAIN = "notify.poultrypro.life"
@@ -25,7 +25,7 @@ const handler = createAuthEmailHandler({
   emails: {
     signup: {
       subject: 'Confirm your email',
-      render: (data) =>
+      render: (data: AuthEmailHookData) =>
         React.createElement(SignupEmail, {
           siteName: SITE_NAME,
           siteUrl: SITE_URL,
@@ -35,7 +35,7 @@ const handler = createAuthEmailHandler({
     },
     invite: {
       subject: "You've been invited",
-      render: (data) =>
+      render: (data: AuthEmailHookData) =>
         React.createElement(InviteEmail, {
           siteName: SITE_NAME,
           siteUrl: SITE_URL,
@@ -44,7 +44,7 @@ const handler = createAuthEmailHandler({
     },
     magiclink: {
       subject: 'Your login link',
-      render: (data) =>
+      render: (data: AuthEmailHookData) =>
         React.createElement(MagicLinkEmail, {
           siteName: SITE_NAME,
           confirmationUrl: data.url,
@@ -52,7 +52,7 @@ const handler = createAuthEmailHandler({
     },
     recovery: {
       subject: 'Reset your password',
-      render: (data) =>
+      render: (data: AuthEmailHookData) =>
         React.createElement(RecoveryEmail, {
           siteName: SITE_NAME,
           confirmationUrl: data.url,
@@ -60,7 +60,7 @@ const handler = createAuthEmailHandler({
     },
     email_change: {
       subject: 'Confirm your new email',
-      render: (data) =>
+      render: (data: AuthEmailHookData) =>
         React.createElement(EmailChangeEmail, {
           siteName: SITE_NAME,
           oldEmail: data.old_email ?? '',
@@ -71,7 +71,7 @@ const handler = createAuthEmailHandler({
     },
     reauthentication: {
       subject: 'Your verification code',
-      render: (data) =>
+      render: (data: AuthEmailHookData) =>
         React.createElement(ReauthenticationEmail, { token: data.token ?? '' }),
     },
   },
