@@ -269,20 +269,20 @@ function Index() {
               <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--forest)]/40 via-transparent to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 flex gap-3">
                 <div className="flex-1 rounded-2xl bg-background/95 backdrop-blur px-4 py-3">
-                  <div className="text-xs text-muted-foreground">Today's Eggs</div>
-                  <div className="font-display text-2xl font-semibold">3,159</div>
-                  <div className="text-[11px] text-[color:var(--forest)]">104 crates · +0.4%</div>
+                  <div className="text-xs text-muted-foreground">Daily Records</div>
+                  <div className="font-display text-lg font-semibold leading-tight">Eggs · Feed · Health</div>
+                  <div className="text-[11px] text-[color:var(--forest)]">All in one place</div>
                 </div>
                 <div className="flex-1 rounded-2xl bg-background/95 backdrop-blur px-4 py-3">
-                  <div className="text-xs text-muted-foreground">Active Rooms</div>
-                  <div className="font-display text-2xl font-semibold">3</div>
-                  <div className="text-[11px] text-muted-foreground">3,957 birds</div>
+                  <div className="text-xs text-muted-foreground">Farm View</div>
+                  <div className="font-display text-lg font-semibold leading-tight">Every room</div>
+                  <div className="text-[11px] text-muted-foreground">See how birds are doing</div>
                 </div>
               </div>
             </div>
             <div className="absolute -top-6 -right-6 hidden md:block rounded-2xl bg-[color:var(--gold)] text-[color:var(--ink)] px-5 py-4 shadow-[var(--shadow-lift)] rotate-3">
-              <div className="text-xs font-medium uppercase tracking-wider">Profit Analysed</div>
-              <div className="font-display text-2xl font-bold">₦8.01M+</div>
+              <div className="text-xs font-medium uppercase tracking-wider">Simple &amp; Clear</div>
+              <div className="font-display text-lg font-bold">Built for farmers</div>
             </div>
           </div>
         </div>
