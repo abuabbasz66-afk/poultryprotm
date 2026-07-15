@@ -154,7 +154,7 @@ const tiers = [
     stage: "Predict",
     stageNum: "03",
     promise: "Predict what may happen next and act earlier.",
-    subtitle: "Progressively adopt AI-powered forecasting, risk monitoring and decision-support intelligence.",
+    subtitle: "Let PoultryPro study your farm records, spot unusual changes and alert you to possible risks earlier.",
     points: [
       "Everything in Basic & Standard",
       "AI-powered egg production forecasting",
