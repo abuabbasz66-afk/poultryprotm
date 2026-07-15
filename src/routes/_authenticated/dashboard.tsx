@@ -30,6 +30,18 @@ import { MortalityPatternIntelligence } from "@/components/mortality-pattern-car
 import { FarmInsightsIntelligence } from "@/components/farm-insights-card";
 import { RecordDialogs, RecordConfirmDialog, type RecordDialogState } from "@/components/record-dialogs";
 import { toast } from "sonner";
+import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
+import { format as formatDate, parseISO, isValid as isValidDate } from "date-fns";
+
+function formatDayLabel(iso: string): string {
+  if (!iso) return "—";
+  const d = parseISO(iso);
+  return isValidDate(d) ? formatDate(d, "d MMM yyyy") : iso;
+}
+function birdsLabel(n: number): string {
+  const abs = Math.abs(Number(n) || 0);
+  return `${abs} ${abs === 1 ? "bird" : "birds"}`;
+}
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
