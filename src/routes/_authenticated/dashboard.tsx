@@ -1103,26 +1103,6 @@ function RowActions({ onEdit, onDelete, extra }: { onEdit: () => void; onDelete:
   );
 }
 
-function ConfirmDialog({ state, onClose }: { state: { title: string; message: string; onConfirm: () => void } | null; onClose: () => void }) {
-  if (!state) return null;
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4" onClick={onClose}>
-      <div className="w-full max-w-sm rounded-2xl bg-background p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="text-base font-semibold">{state.title}</div>
-        <p className="mt-2 text-sm text-muted-foreground">{state.message}</p>
-        <div className="mt-5 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-full px-4 py-2 text-sm font-medium bg-secondary hover:opacity-90">Cancel</button>
-          <button
-            onClick={() => { state.onConfirm(); onClose(); }}
-            className="rounded-full bg-destructive text-destructive-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
-          >
-            Delete Record
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 
 function AreaTab({ active, onClick, num, stage, title, plan, icon: Icon, premium }: {
