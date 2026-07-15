@@ -1,7 +1,22 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle, Brain, CheckCircle2, ChevronDown, ChevronUp, Sparkles, TrendingDown } from "lucide-react";
+import { AlertTriangle, Brain, CalendarDays, CheckCircle2, ChevronDown, ChevronUp, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import type { EggRow, Room, Mortality, Feed, Health } from "@/lib/farm-data";
 import { detectProductionDecline, riskStyle, type DeclineEvent } from "@/lib/production-decline";
+
+const CRATE = 30;
+function farmEggs(e: EggRow) { return (e.r2 + e.r3 + e.r4) * CRATE + e.extra; }
+function computeNormalSummary(eggs: EggRow[], rooms: Room[]) {
+  const sorted = [...eggs].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  const birds = rooms.reduce((s, r) => s + r.current, 0);
+  if (!sorted.length || birds <= 0) return null;
+  const today = (farmEggs(sorted[0]) / birds) * 100;
+  const window = sorted.slice(1, 8);
+  const avg7 = window.length
+    ? window.reduce((s, e) => s + (farmEggs(e) / birds) * 100, 0) / window.length
+    : today;
+  const change = avg7 > 0 ? ((today - avg7) / avg7) * 100 : 0;
+  return { today, avg7, change, hasWindow: window.length > 0 };
+}
 
 function fmtDate(iso: string) {
   try {
