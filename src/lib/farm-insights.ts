@@ -295,8 +295,8 @@ export function buildFarmIntelligenceContext(input: {
         status: "Detected",
         declinePercentage: round1(declineTop.changePct),
         affectedRoom: declineTop.scope === "Room" ? declineTop.scopeLabel : null,
-        comparisonPeriod: `${declineTop.baselineStartDate ?? "?"} – ${declineTop.baselineEndDate ?? "?"} vs ${declineTop.firstDeclineDate ?? declineTop.latestDate ?? "?"}`,
-        recordCount: decline.recordCount ?? eggs.length,
+        comparisonPeriod: declineTop.firstDeclineDate ?? declineTop.latestDate ?? null,
+        recordCount: eggs.length,
       }
     : { status: "None", declinePercentage: null, affectedRoom: null, comparisonPeriod: null, recordCount: eggs.length };
 
