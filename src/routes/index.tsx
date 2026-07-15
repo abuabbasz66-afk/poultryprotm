@@ -30,12 +30,42 @@ function useAuthed() {
 }
 
 
-const stats = [
-  { icon: Bird, label: "Birds Managed", value: "3,957" },
-  { icon: Egg, label: "Eggs Recorded", value: "93,521+" },
-  { icon: Wheat, label: "Crates Tracked", value: "3,074+" },
-  { icon: Wallet, label: "Revenue Tracked", value: "₦15M+" },
-];
+function formatCount(n: number): string {
+  if (!n || n <= 0) return "0";
+  if (n >= 1000) return `${n.toLocaleString("en-US")}+`;
+  return n.toLocaleString("en-US");
+}
+
+function formatNaira(n: number): string {
+  if (!n || n <= 0) return "₦0";
+  if (n >= 1_000_000) {
+    const m = n / 1_000_000;
+    return `₦${m >= 10 ? Math.round(m) : m.toFixed(1)}M+`;
+  }
+  if (n >= 1_000) return `₦${Math.round(n / 1_000)}K+`;
+  return `₦${Math.round(n).toLocaleString("en-US")}`;
+}
+
+function usePlatformStats() {
+  const [s, setS] = useState<{ birds: number; eggs: number; crates: number; revenue: number }>({
+    birds: 0, eggs: 0, crates: 0, revenue: 0,
+  });
+  useEffect(() => {
+    let mounted = true;
+    supabase.rpc("platform_stats").then(({ data, error }) => {
+      if (!mounted || error || !data || !(data as unknown[])[0]) return;
+      const row = (data as Array<{ birds: number | string; eggs: number | string; crates: number | string; revenue: number | string }>)[0];
+      setS({
+        birds: Number(row.birds) || 0,
+        eggs: Number(row.eggs) || 0,
+        crates: Number(row.crates) || 0,
+        revenue: Number(row.revenue) || 0,
+      });
+    });
+    return () => { mounted = false; };
+  }, []);
+  return s;
+}
 
 const architecture = [
   {
@@ -162,6 +192,7 @@ const timeline = [
 
 function Index() {
   const authed = useAuthed();
+  const platform = usePlatformStats();
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/60">
@@ -260,7 +291,12 @@ function Index() {
 
       <section className="bg-primary text-primary-foreground">
         <div className="container-x py-10 grid grid-cols-2 md:grid-cols-4 gap-6">
-          {stats.map((s) => (
+          {[
+            { icon: Bird, label: "Birds Managed", value: formatCount(platform.birds) },
+            { icon: Egg, label: "Eggs Recorded", value: formatCount(platform.eggs) },
+            { icon: Wheat, label: "Crates Tracked", value: formatCount(platform.crates) },
+            { icon: Wallet, label: "Revenue Tracked", value: formatNaira(platform.revenue) },
+          ].map((s) => (
             <div key={s.label} className="flex items-center gap-3">
               <span className="grid h-11 w-11 place-items-center rounded-full bg-[color:var(--gold)] text-[color:var(--ink)]">
                 <s.icon className="h-5 w-5" />

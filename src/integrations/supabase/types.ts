@@ -296,6 +296,15 @@ export type Database = {
     }
     Functions: {
       current_farm_id: { Args: never; Returns: string }
+      platform_stats: {
+        Args: never
+        Returns: {
+          birds: number
+          crates: number
+          eggs: number
+          revenue: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
