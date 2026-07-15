@@ -267,11 +267,13 @@ function Dashboard() {
     for (const m of mortality) {
       let g = map.get(m.date);
       if (!g) { g = { date: m.date, total: 0, byRoom: {}, causes: [], items: [] }; map.set(m.date, g); }
-      g.total += m.loss;
-      g.byRoom[m.room] = (g.byRoom[m.room] ?? 0) + m.loss;
+      const loss = Math.abs(m.loss);
+      g.total += loss;
+      g.byRoom[m.room] = (g.byRoom[m.room] ?? 0) + loss;
       if (!g.causes.includes(m.cause)) g.causes.push(m.cause);
       g.items.push(m);
     }
+
   return Array.from(map.values());
   }, [mortality]);
 
