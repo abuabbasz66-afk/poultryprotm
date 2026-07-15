@@ -177,6 +177,9 @@ export type FarmIntelligenceContext = {
     roomLevelSignals: Array<{ room: string; level: AbnormalAnalysis["level"]; score: number; triggered: string[] }>;
   };
 };
+
+export function buildFarmIntelligenceContext(input: {
+  eggs: EggRow[];
   rooms: Room[];
   mortality: Mortality[];
   feed: Feed[];
