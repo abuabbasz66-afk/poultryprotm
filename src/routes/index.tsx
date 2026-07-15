@@ -235,12 +235,11 @@ function Index() {
               Capture · Understand · Predict
             </span>
             <h1 className="font-display text-5xl md:text-7xl font-semibold leading-[1.02] tracking-tight">
-              Smart poultry farm <em className="italic text-[color:var(--forest)]">management &amp; intelligence.</em>
+              Know your farm. <em className="italic text-[color:var(--forest)]">Spot problems early. Make better decisions.</em>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
-              PoultryPro digitises daily farm activities, converts records into production and financial
-              intelligence, and progressively applies AI to forecast production and flag operational risk —
-              turning everyday operations into evidence-based decisions.
+              PoultryPro helps poultry farmers record daily farm activities, track production and costs,
+              and understand what is happening on their farm.
             </p>
 
             <div className="flex flex-wrap gap-3">
