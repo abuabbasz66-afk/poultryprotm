@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { Fragment, useMemo, useState } from "react";
 import {
   Bar, BarChart, CartesianGrid, Legend, Line, LineChart,
