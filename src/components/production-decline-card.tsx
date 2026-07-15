@@ -164,6 +164,17 @@ function NoDeclineNotice({ total, summary }: { total: number; summary: ReturnTyp
   );
 }
 
+function SummaryTile({ icon, label, value, tone = "ok" }: { icon: React.ReactNode; label: string; value: string; tone?: "ok" | "warn" }) {
+  return (
+    <div className={`rounded-xl border border-white/10 bg-black/20 px-2 py-2 ${tone === "warn" ? "text-amber-200" : "text-primary-foreground"}`}>
+      <div className="flex items-center gap-1 text-[10px] uppercase tracking-[0.14em] text-primary-foreground/60">
+        {icon} <span className="truncate">{label}</span>
+      </div>
+      <div className="mt-0.5 font-semibold text-sm md:text-base tabular-nums">{value}</div>
+    </div>
+  );
+}
+
 function DeclineEventCard({ event }: { event: DeclineEvent }) {
   const [open, setOpen] = useState(false);
   const [tech, setTech] = useState(false);
