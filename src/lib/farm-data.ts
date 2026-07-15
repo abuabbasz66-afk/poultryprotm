@@ -45,9 +45,12 @@ function invalidateAll(qc: QueryClient) {
 export type Farm = {
   id: string;
   name: string;
+  location: string | null;
   state: string | null;
   country: string;
   farm_type: string | null;
+  bird_type: string | null;
+  rooms_count: number | null;
   owner_name: string | null;
   phone: string | null;
   bird_count: number | null;
@@ -59,7 +62,7 @@ export function useFarm() {
     queryFn: async (): Promise<Farm | null> => {
       const { data, error } = await supabase
         .from("farms")
-        .select("id, name, state, country, farm_type, owner_name, phone, bird_count")
+        .select("id, name, location, state, country, farm_type, bird_type, rooms_count, owner_name, phone, bird_count")
         .limit(1)
         .maybeSingle();
       if (error) throw error;
@@ -68,6 +71,7 @@ export function useFarm() {
     staleTime: 60_000,
   });
 }
+
 
 export function useFarmId() {
   return useQuery({

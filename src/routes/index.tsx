@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import heroAsset from "@/assets/hero-layer-birds.jpg.asset.json";
 import founderAsset from "@/assets/founder-abubakar.jpg.asset.json";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
@@ -11,6 +13,22 @@ import {
 export const Route = createFileRoute("/")({
   component: Index,
 });
+
+function useAuthed() {
+  const [authed, setAuthed] = useState<boolean | null>(null);
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (mounted) setAuthed(!!data.session);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setAuthed(!!session);
+    });
+    return () => { mounted = false; sub.subscription.unsubscribe(); };
+  }, []);
+  return authed;
+}
+
 
 const stats = [
   { icon: Bird, label: "Birds Managed", value: "3,957" },
@@ -143,6 +161,7 @@ const timeline = [
 ];
 
 function Index() {
+  const authed = useAuthed();
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/60">
@@ -160,9 +179,20 @@ function Index() {
             <a href="#founder" className="text-muted-foreground hover:text-foreground transition">Founder</a>
             <a href="#roadmap" className="text-muted-foreground hover:text-foreground transition">Roadmap</a>
           </nav>
-          <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition">
-            View Dashboard <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+          {authed ? (
+            <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition">
+              Open Dashboard <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link to="/auth" search={{ mode: "signin" }} className="hidden sm:inline-flex items-center rounded-full border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-secondary transition">
+                Sign In
+              </Link>
+              <Link to="/auth" search={{ mode: "signup" }} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition">
+                Create Farm Account <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          )}
         </div>
       </header>
 
@@ -183,13 +213,20 @@ function Index() {
             </p>
 
             <div className="flex flex-wrap gap-3">
-              <a href="#features" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition shadow-[var(--shadow-lift)]">
-                Explore the platform <ArrowRight className="h-4 w-4" />
-              </a>
+              {authed ? (
+                <Link to="/dashboard" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition shadow-[var(--shadow-lift)]">
+                  Explore the platform <ArrowRight className="h-4 w-4" />
+                </Link>
+              ) : (
+                <Link to="/auth" search={{ mode: "signin" }} className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition shadow-[var(--shadow-lift)]">
+                  Explore the platform <ArrowRight className="h-4 w-4" />
+                </Link>
+              )}
               <a href="#founder" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-medium hover:bg-secondary transition">
                 Meet the founder
               </a>
             </div>
+
             <div className="flex items-center gap-3 pt-2 text-sm text-muted-foreground">
               <Trophy className="h-4 w-4 text-[color:var(--gold)]" />
               Winner — Airtel-sponsored 3MTT × NextGen Knowledge Showcase
