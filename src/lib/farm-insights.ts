@@ -185,6 +185,7 @@ export function buildFarmIntelligenceContext(input: {
   feed: Feed[];
   health: Health[];
   prices: Price[];
+  bagWeightKg?: number | null;
 }): FarmIntelligenceContext {
   const { eggs, rooms, mortality, feed, health, prices } = input;
   const activeBirds = rooms.reduce((s, r) => s + Math.max(0, r.current), 0);
