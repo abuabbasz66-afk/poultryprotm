@@ -268,51 +268,174 @@ function profitInsight(prices: Price[], eggs: EggRow[], feed: Feed[]): FarmInsig
   };
 }
 
-// ---------------- Positive insight ----------------
-function positiveInsight(eggs: EggRow[], birds: number, totalRecords: number): FarmInsight {
+// ---------------- Positive / stable insights ----------------
+// Each stable insight is only produced when the underlying real records
+// exist and actually show a stable pattern. Evidence in the card matches
+// exactly the claim in the title.
+
+function diffLabel(diff: number, unit: "pp" | "bags" | "%"): string {
+  const abs = Math.abs(diff);
+  if (abs < 0.05) return `No change (${unit === "pp" ? "0 percentage points" : unit === "bags" ? "0 bags" : "0%"})`;
+  const dir = diff < 0 ? "lower" : "higher";
+  if (unit === "pp") return `${round1(abs)} percentage points ${dir}`;
+  if (unit === "bags") return `${round1(abs)} bag${abs === 1 ? "" : "s"} ${dir}`;
+  return `${round1(abs)}% ${dir}`;
+}
+
+function stableProductionInsight(eggs: EggRow[], birds: number, totalRecords: number): FarmInsight | null {
+  if (birds <= 0) return null;
   const sorted = sortNewestFirst(eggs);
+  if (sorted.length < 3) return null;
   const today = sorted[0];
-  const recent7 = sorted.slice(0, Math.min(7, sorted.length));
-  const pctToday = today && birds > 0 ? (farmEggsTotal(today) / birds) * 100 : 0;
-  const pctAvg = birds > 0 ? mean(recent7.map(e => (farmEggsTotal(e) / birds) * 100)) : 0;
+  const rest = sorted.slice(1, 8);
+  if (rest.length < 2) return null;
+  const pctToday = (farmEggsTotal(today) / birds) * 100;
+  const pctAvg = mean(rest.map(e => (farmEggsTotal(e) / birds) * 100));
+  const diff = pctToday - pctAvg; // pp
 
   return {
-    id: "positive",
+    id: "stable-production",
     status: "Looking good",
     category: "positive",
-    priority: 10,
-    title: "Your farm looks stable",
-    whatWeFound: "Egg production, feed use and bird losses are close to your farm's recent pattern.",
-    whyItMatters: "There is nothing unusual to attend to right now.",
+    priority: 20,
+    title: "Egg production is close to normal",
+    whatWeFound: `Today's production is ${round1(pctToday)}%. Your recent 7-day average is ${round1(pctAvg)}%.`,
+    whyItMatters: "Production is staying close to your farm's recent level.",
     whatToCheck: [
-      "Keep recording production, feed and mortality daily.",
-      "Continue watching room performance.",
+      "Keep recording egg production daily.",
+      "Watch for a continuous drop over several days.",
     ],
     evidence: [
-      `Today's production: ${round1(pctToday)}%.`,
-      `7-day average: ${round1(pctAvg)}%.`,
-      `Based on ${totalRecords} egg record${totalRecords === 1 ? "" : "s"}.`,
+      `Today: ${round1(pctToday)}%`,
+      `7-day average: ${round1(pctAvg)}%`,
+      `Difference: ${diffLabel(diff, "pp")}`,
+      `Based on ${totalRecords} egg record${totalRecords === 1 ? "" : "s"}`,
+    ],
+    scopeLabel: "Whole farm",
+  };
+}
+
+function stableFeedInsight(eggs: EggRow[], feed: Feed[]): FarmInsight | null {
+  const eSorted = sortNewestFirst(eggs);
+  if (eSorted.length < 8) return null;
+  const dates = eSorted.map(e => e.date);
+  const recentDates = new Set(dates.slice(0, 7));
+  const prevDates = new Set(dates.slice(7, 14));
+  const recentFeed = feed.filter(f => recentDates.has(f.date)).reduce((s, f) => s + f.bags, 0);
+  const prevFeed = feed.filter(f => prevDates.has(f.date)).reduce((s, f) => s + f.bags, 0);
+  if (recentFeed <= 0 || prevFeed <= 0) return null;
+  const changePct = ((recentFeed - prevFeed) / prevFeed) * 100;
+  if (Math.abs(changePct) > 10) return null; // not stable
+
+  return {
+    id: "stable-feed",
+    status: "Looking good",
+    category: "feed",
+    priority: 18,
+    title: "Feed use looks stable",
+    whatWeFound: `Feed use this week is about ${round1(recentFeed)} bags. The previous 7 days averaged ${round1(prevFeed)} bags.`,
+    whyItMatters: "Steady feed use usually means normal appetite and no sudden waste.",
+    whatToCheck: [
+      "Keep recording feed use every day.",
+      "Compare feed use with egg production weekly.",
+    ],
+    evidence: [
+      `Feed last 7 days: ${round1(recentFeed)} bags`,
+      `Previous 7 days: ${round1(prevFeed)} bags`,
+      `Feed use is close to usual (${diffLabel(recentFeed - prevFeed, "bags")})`,
+    ],
+    scopeLabel: "Whole farm",
+  };
+}
+
+function stableMortalityInsight(mortality: Mortality[], birds: number): FarmInsight | null {
+  if (mortality.length === 0 || birds <= 0) return null;
+  const now = new Date();
+  const cutoff = new Date(now.getTime() - 30 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+  const monthLoss = mortality.filter(m => m.date >= cutoff).reduce((s, m) => s + m.count, 0);
+  const monthPct = (monthLoss / birds) * 100;
+  // Only surface as "Looking good" when losses are within a normal range.
+  if (monthPct > 2) return null;
+
+  return {
+    id: "stable-mortality",
+    status: monthPct >= 1 ? "Keep watching" : "Looking good",
+    category: "mortality",
+    priority: monthPct >= 1 ? 30 : 15,
+    title: monthPct >= 1 ? "Keep watching bird losses" : "Bird losses remain low",
+    whatWeFound: `Bird losses in the last 30 days: ${monthLoss}. That is about ${round1(monthPct)}% of your current flock.`,
+    whyItMatters: monthPct >= 1
+      ? "Losses are within normal range but worth watching."
+      : "Low losses usually mean the flock is comfortable.",
+    whatToCheck: [
+      "Keep recording every bird loss with a reason.",
+      "Watch daily counts by room for sudden changes.",
+    ],
+    evidence: [
+      `Bird losses (last 30 days): ${monthLoss}`,
+      `Current flock: ${birds} bird${birds === 1 ? "" : "s"}`,
+      `Loss rate: ${round1(monthPct)}%`,
     ],
     scopeLabel: "Whole farm",
   };
 }
 
 // ---------------- Briefing ----------------
-function buildBriefing(insights: FarmInsight[]): string {
-  if (!insights.length) return "Your farm looks stable today. Keep recording production, feed and mortality every day.";
+function briefingForAttention(insights: FarmInsight[]): string {
   const attention = insights.filter(i => i.status === "Needs attention");
   const watch = insights.filter(i => i.status === "Keep watching");
   const parts: string[] = [];
-  if (attention.length) {
-    parts.push(`${attention.length} thing${attention.length === 1 ? "" : "s"} on your farm need${attention.length === 1 ? "s" : ""} attention today.`);
+  if (attention.length === 1) {
+    parts.push(`One thing on your farm needs attention today: ${lower(attention[0].title)}.`);
     parts.push(attention[0].whatWeFound);
-  } else if (watch.length) {
-    parts.push("Your farm is close to normal, but a few things are worth watching.");
-    parts.push(watch[0].whatWeFound);
   } else {
-    parts.push("Your farm looks stable today. Nothing unusual was found in your recent records.");
+    parts.push(`${attention.length} things on your farm need attention today.`);
+    parts.push(`Top concern: ${lower(attention[0].title)}. ${attention[0].whatWeFound}`);
   }
+  if (watch.length) parts.push(`Also worth watching: ${lower(watch[0].title)}.`);
   return parts.slice(0, 3).join(" ");
+}
+
+function briefingForWatch(insights: FarmInsight[]): string {
+  const watch = insights.filter(i => i.status === "Keep watching");
+  const parts: string[] = [
+    "Your farm is close to normal, but a few things are worth watching.",
+    `${watch[0].title}: ${watch[0].whatWeFound}`,
+  ];
+  if (watch.length > 1) parts.push(`Also keep an eye on: ${lower(watch[1].title)}.`);
+  return parts.slice(0, 3).join(" ");
+}
+
+function briefingForStable(insights: FarmInsight[]): string {
+  const titles = insights.map(i => lower(i.title));
+  const parts: string[] = ["Your farm looks stable today."];
+  if (titles.length === 1) {
+    parts.push(`${titles[0].charAt(0).toUpperCase() + titles[0].slice(1)}.`);
+  } else if (titles.length >= 2) {
+    // Combine specific stable signals into one natural sentence
+    const first = insights[0];
+    parts.push(`${first.whatWeFound}`);
+    const others = titles.slice(1);
+    if (others.length) parts.push(`${cap(others.join(" and "))}.`);
+  }
+  parts.push("Keep recording production, feed and mortality every day so PoultryPro can keep watching your farm.");
+  return parts.slice(0, 3).join(" ");
+}
+
+function briefingForNoInsights(): string {
+  return "Your farm looks stable today. Keep recording production, feed and mortality every day so PoultryPro can keep watching your farm.";
+}
+
+function lower(s: string): string { return s.charAt(0).toLowerCase() + s.slice(1); }
+function cap(s: string): string { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function buildBriefing(insights: FarmInsight[]): string {
+  if (!insights.length) return briefingForNoInsights();
+  if (insights.some(i => i.status === "Needs attention")) return briefingForAttention(insights);
+  if (insights.some(i => i.status === "Keep watching") && insights.every(i => i.status !== "Looking good")) {
+    return briefingForWatch(insights);
+  }
+  return briefingForStable(insights);
 }
 
 // ---------------- Main ----------------
@@ -371,9 +494,18 @@ export function buildFarmInsights(input: {
   unique.sort((a, b) => b.priority - a.priority);
   let top = unique.slice(0, 3);
 
-  // If nothing was flagged, show a single positive summary
+  // If nothing was flagged, show up to 3 specific stable insights,
+  // each backed by its own real evidence. Never show a generic
+  // "Your farm looks stable" card — the briefing already says that.
   if (top.length === 0) {
-    top = [positiveInsight(eggs, totalBirds, eggs.length)];
+    const stable: FarmInsight[] = [];
+    const prodStable = stableProductionInsight(eggs, totalBirds, eggs.length);
+    if (prodStable) stable.push(prodStable);
+    const feedStable = stableFeedInsight(eggs, feed);
+    if (feedStable) stable.push(feedStable);
+    const mortStable = stableMortalityInsight(mortality, totalBirds);
+    if (mortStable) stable.push(mortStable);
+    top = stable.slice(0, 3);
   }
 
   return {
