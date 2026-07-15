@@ -287,7 +287,8 @@ function MortalityForm({ item, onClose, rooms }: { item?: Mortality; onClose: ()
   const isEdit = !!item;
   const [room, setRoom] = useState(item?.room ?? (rooms[0]?.name ?? ""));
   const [cause, setCause] = useState(item?.cause ?? "Unknown");
-  const [date, setDate] = useState(todayIso());
+  const [date, setDate] = useState(item?.date ?? todayIso());
+
   const [loss, setLoss] = useState<number | "">(item?.loss ?? 1);
   const add = useAddMortality();
   const upd = useUpdateMortality();
