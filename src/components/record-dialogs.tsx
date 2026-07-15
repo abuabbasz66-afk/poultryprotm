@@ -8,9 +8,9 @@ import {
   useAddMortality, useUpdateMortality,
   useAddHealth, useUpdateHealth,
   useAddFeed, useUpdateFeed,
-  useAddPrice,
+  useAddPrice, useUpdatePrice,
   HEALTH_TYPES, normalizeHealthType,
-  type Room, type EggRow, type Mortality, type Health, type HealthType, type Feed,
+  type Room, type EggRow, type Mortality, type Health, type HealthType, type Feed, type Price,
 } from "@/lib/farm-data";
 
 export type RecordDialogState =
@@ -24,7 +24,8 @@ export type RecordDialogState =
   | { kind: "feed-add" }
   | { kind: "feed-edit"; item: Feed }
   | { kind: "feed-day-edit"; items: Feed[] }
-  | { kind: "price-add" };
+  | { kind: "price-add" }
+  | { kind: "price-edit"; item: Price };
 
 /* ---------- Presentational primitives ---------- */
 
@@ -538,6 +539,57 @@ function PriceAddForm({ onClose }: { onClose: () => void }) {
   );
 }
 
+function PriceEditForm({ item, onClose }: { item: Price; onClose: () => void }) {
+  const [name, setName] = useState(item.item);
+  const [unit, setUnit] = useState(item.unit);
+  const [price, setPrice] = useState<number | "">(item.price);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const m = useUpdatePrice();
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (m.isPending || !name.trim()) return;
+    setErrorMsg(null);
+    const updated = format(new Date(), "d MMM yyyy");
+    m.mutate(
+      { id: item.id, item: name.trim(), unit: unit.trim() || "1", price: Number(price) || 0, updated },
+      {
+        onSuccess: () => { toast.success("Price updated"); onClose(); },
+        onError: (err) => {
+          const msg = (err as Error).message || "Could not update price. Please try again.";
+          setErrorMsg(msg);
+          toast.error("Failed to update price", { description: msg });
+        },
+      },
+    );
+  };
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      <Field label="Item">
+        <TextInput value={name} onChange={(e) => setName(e.target.value)} autoFocus required />
+      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Unit" hint="e.g. crate, bag, kg.">
+          <TextInput value={unit} onChange={(e) => setUnit(e.target.value)} />
+        </Field>
+        <Field label="Price (₦)">
+          <NumberInput
+            step="any"
+            value={price}
+            onChange={(e) => setPrice(e.target.value === "" ? "" : Number(e.target.value))}
+            required
+          />
+        </Field>
+      </div>
+      {errorMsg && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 text-destructive text-sm px-3 py-2">
+          {errorMsg}
+        </div>
+      )}
+      <Actions onCancel={onClose} submitting={m.isPending} submitLabel="Save Changes" disabled={!name.trim()} />
+    </form>
+  );
+}
+
 /* ---------- Confirm dialog (delete) ---------- */
 
 export function RecordConfirmDialog({
@@ -613,5 +665,7 @@ export function RecordDialogs({
       return <Modal {...common} title="Edit Feed Day" subtitle={`Update bag counts for ${state.items[0]?.date ?? "this day"}.`}><FeedDayEditForm items={state.items} onClose={onClose} /></Modal>;
     case "price-add":
       return <Modal {...common} title="Add Price Item" subtitle="Track a new item on your price list."><PriceAddForm onClose={onClose} /></Modal>;
+    case "price-edit":
+      return <Modal {...common} title="Edit Price Item" subtitle={`Update ${state.item.item} on your price list.`}><PriceEditForm item={state.item} onClose={onClose} /></Modal>;
   }
 }
