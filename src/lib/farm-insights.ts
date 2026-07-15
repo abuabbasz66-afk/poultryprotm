@@ -2,6 +2,10 @@ import type { EggRow, Room, Mortality, Feed, Health, Price } from "@/lib/farm-da
 import { detectProductionDecline, type DeclineEvent } from "@/lib/production-decline";
 import { detectMortalityPatterns, type MortalityEvent } from "@/lib/mortality-pattern";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
+import {
+  computeForecast, computeMortalityRisk, computeFeedEfficiency, computeAbnormalActivity,
+  type ForecastResult, type MortalityAnalysis, type FeedEffAnalysis, type AbnormalAnalysis,
+} from "@/lib/intelligence-modules";
 
 // -----------------------------------------------------------------------------
 // AI-Supported Farm Insights — cross-module farm intelligence & decision support
