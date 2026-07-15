@@ -289,23 +289,33 @@ function Index() {
       </section>
 
       <section className="bg-primary text-primary-foreground">
-        <div className="container-x py-10 grid grid-cols-2 md:grid-cols-4 gap-6">
-          {[
-            { icon: Bird, label: "Birds Managed", value: formatCount(platform.birds) },
-            { icon: Egg, label: "Eggs Recorded", value: formatCount(platform.eggs) },
-            { icon: Wheat, label: "Crates Tracked", value: formatCount(platform.crates) },
-            { icon: Wallet, label: "Revenue Tracked", value: formatNaira(platform.revenue) },
-          ].map((s) => (
-            <div key={s.label} className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-full bg-[color:var(--gold)] text-[color:var(--ink)]">
-                <s.icon className="h-5 w-5" />
-              </span>
-              <div>
-                <div className="font-display text-2xl md:text-3xl font-semibold leading-none">{s.value}</div>
-                <div className="text-xs uppercase tracking-wider opacity-70 mt-1">{s.label}</div>
+        <div className="container-x py-10">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--gold)] font-medium">Pilot Farm Results</div>
+              <div className="mt-1 text-sm text-primary-foreground/80 max-w-2xl">
+                Based on real records analysed during PoultryPro's pilot deployment on a working poultry farm.
               </div>
             </div>
-          ))}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { icon: Bird, label: "Birds monitored", value: formatCount(platform.birds) },
+              { icon: Egg, label: "Eggs recorded", value: formatCount(platform.eggs) },
+              { icon: Wheat, label: "Crates recorded", value: formatCount(platform.crates) },
+              { icon: Wallet, label: "Revenue recorded", value: formatNaira(platform.revenue) },
+            ].map((s) => (
+              <div key={s.label} className="flex items-center gap-3">
+                <span className="grid h-11 w-11 place-items-center rounded-full bg-[color:var(--gold)] text-[color:var(--ink)]">
+                  <s.icon className="h-5 w-5" />
+                </span>
+                <div>
+                  <div className="font-display text-2xl md:text-3xl font-semibold leading-none">{s.value}</div>
+                  <div className="text-xs uppercase tracking-wider opacity-70 mt-1">{s.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
