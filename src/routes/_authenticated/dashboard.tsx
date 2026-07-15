@@ -31,6 +31,7 @@ import { FarmInsightsIntelligence } from "@/components/farm-insights-card";
 import { RecordDialogs, RecordConfirmDialog, type RecordDialogState } from "@/components/record-dialogs";
 import { toast } from "sonner";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
+import { toDateKey, toLocalDate } from "@/lib/date-key";
 import { format as formatDate, parseISO, isValid as isValidDate } from "date-fns";
 
 function formatDayLabel(iso: string): string {
@@ -1616,20 +1617,11 @@ const MONTHS: Record<string, number> = {
 };
 
 // Parse dates like "16 Jan", "3 Feb", "Today" — assume year matches the latest egg record's year.
+// Delegates to the shared farm date normaliser so ISO dates from the
+// database ("2026-04-04", "2026-04-04T17:15:00") and legacy short-form
+// records ("4 Apr", "Today") all resolve to the same local calendar day.
 function parseShortDate(s: string, anchor: Date): Date | null {
-  if (!s) return null;
-  const trimmed = s.trim();
-  if (/^today$/i.test(trimmed)) return new Date(anchor);
-  const m = trimmed.match(/^(\d{1,2})\s+([A-Za-z]{3})/);
-  if (!m) return null;
-  const day = parseInt(m[1], 10);
-  const mon = MONTHS[m[2].toLowerCase()];
-  if (mon === undefined) return null;
-  let year = anchor.getFullYear();
-  const candidate = new Date(year, mon, day);
-  // If the parsed date sits in the future relative to the anchor, roll back one year
-  if (candidate.getTime() > anchor.getTime() + 24 * 60 * 60 * 1000) year -= 1;
-  return new Date(year, mon, day);
+  return toLocalDate(s, anchor);
 }
 
 type MortalityRiskProps = {
@@ -2159,11 +2151,25 @@ function FeedEfficiencyMonitor({
         </div>
       </div>
 
-      {!analysis && (
-        <div className="mt-4 rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-          Not enough matched feed and production records yet to generate a feed efficiency analysis.
-        </div>
-      )}
+      {!analysis && (() => {
+        const prodKeys = new Set(eggs.map(e => toDateKey(e.date)).filter((k): k is string => !!k));
+        const feedKeys = new Set(feed.map(f => toDateKey(f.date)).filter((k): k is string => !!k));
+        const matchedCount = [...feedKeys].filter(k => prodKeys.has(k)).length;
+        const reason =
+          prodKeys.size === 0
+            ? "No production records available yet. Record daily egg production to begin feed efficiency analysis."
+            : feedKeys.size === 0
+              ? "No feed records available yet. Record daily feed usage to begin feed efficiency analysis."
+              : `${matchedCount} matched feed and production day${matchedCount === 1 ? "" : "s"} found. At least 7 matched days are required for feed efficiency analysis.`;
+        return (
+          <div className="mt-4 rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+            <div>{reason}</div>
+            <div className="mt-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground/80">
+              Production days recorded: {prodKeys.size} · Feed days recorded: {feedKeys.size} · Matched: {matchedCount}
+            </div>
+          </div>
+        );
+      })()}
 
       {analysis && (
         <>
@@ -2456,7 +2462,7 @@ function computeFeedEfficiency(
       matched.push(day);
     });
 
-  if (matched.length === 0) return null;
+  if (matched.length < 7) return null;
 
   const latest = matched[matched.length - 1];
   const preceding = matched.slice(0, -1);
