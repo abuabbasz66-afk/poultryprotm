@@ -25,6 +25,8 @@ import {
 } from "@/lib/farm-data";
 import { ProductionDeclineIntelligence } from "@/components/production-decline-card";
 import { MortalityPatternIntelligence } from "@/components/mortality-pattern-card";
+import { RecordDialogs, RecordConfirmDialog, type RecordDialogState } from "@/components/record-dialogs";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -107,8 +109,11 @@ function Dashboard() {
   const [expandedFeedDate, setExpandedFeedDate] = useState<string | null>(null);
   const [eggShowAll, setEggShowAll] = useState(false);
   const [healthShowAll, setHealthShowAll] = useState(false);
-  const [confirmState, setConfirmState] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
-  const askDelete = (title: string, message: string, onConfirm: () => void) => setConfirmState({ title, message, onConfirm });
+  const [confirmState, setConfirmState] = useState<{ title: string; message: string; confirmLabel?: string; onConfirm: () => void | Promise<void> } | null>(null);
+  const askDelete = (title: string, message: string, onConfirm: () => void | Promise<void>) =>
+    setConfirmState({ title, message, onConfirm });
+  const [dialog, setDialog] = useState<RecordDialogState | null>(null);
+  const openDialog = (s: RecordDialogState) => setDialog(s);
 
   // Derived
   const totalBirds = rooms.reduce((s, r) => s + r.current, 0);
@@ -158,160 +163,71 @@ function Dashboard() {
     navigate({ to: "/auth" });
   };
 
-  // Actions (persisted to database)
-  const addRoom = () => {
-    const n = prompt("Room name (e.g. ROOM 5)"); if (!n) return;
-    const b = parseInt(prompt("Initial birds") || "0", 10) || 0;
-    addRoomM.mutate({ name: n, initial: b }, {
-      onError: (e) => alert("Failed to save room: " + (e as Error).message),
-    });
-  };
-  const delRoom = (id: string) => {
-    const r = rooms.find(x => x.id === id);
-    askDelete("Delete room?", `This will permanently remove ${r?.name ?? "this room"} and cannot be undone.`, () =>
-      delRoomM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) }),
-    );
-  };
-
-  const recordProduction = () => {
-    const label = prompt("Date label (e.g. Sat, 21 Feb)", todayLabel()); if (!label) return;
-    const dateInput = prompt("Date (YYYY-MM-DD)", new Date().toISOString().slice(0, 10));
-    if (!dateInput) return;
-    const r2 = +(prompt("ROOM 2 crates", "0") || "0");
-    const r3 = +(prompt("ROOM 3 crates", "0") || "0");
-    const r4 = +(prompt("ROOM 4 crates", "0") || "0");
-    const extra = +(prompt("Extra eggs", "0") || "0");
-    addEggM.mutate({ date: dateInput, label, r2, r3, r4, extra }, {
-      onError: (e) => alert("Failed to save production: " + (e as Error).message),
-    });
-  };
-
-  const editEgg = (e: EggRow) => {
-    const label = prompt("Date label", e.label); if (label === null) return;
-    const dateInput = prompt("Date (YYYY-MM-DD)", e.date); if (dateInput === null) return;
-    const r2 = +(prompt("ROOM 2 crates", String(e.r2)) ?? e.r2);
-    const r3 = +(prompt("ROOM 3 crates", String(e.r3)) ?? e.r3);
-    const r4 = +(prompt("ROOM 4 crates", String(e.r4)) ?? e.r4);
-    const extra = +(prompt("Extra eggs", String(e.extra)) ?? e.extra);
-    updEggM.mutate({ id: e.id, label, date: dateInput, r2, r3, r4, extra }, {
-      onError: (err) => alert("Failed to update: " + (err as Error).message),
-    });
-  };
-  const delEgg = (e: EggRow) => {
-    askDelete(
-      `Delete production record for ${e.label}?`,
-      "This will permanently remove this production record.",
-      () => delEggM.mutate(e.id, { onError: (err) => alert("Failed to delete: " + (err as Error).message) }),
-    );
-  };
-
-  const addMortality = () => {
-    const room = prompt("Room (e.g. ROOM 3)"); if (!room) return;
-    const cause = prompt("Cause", "Unknown") || "Unknown";
-    const dateStr = prompt("Date (e.g. 21 Feb)", todayShortLabel()) || todayShortLabel();
-    const loss = +(prompt("Loss (birds)", "1") || "1");
-    if (!loss) return;
-    addMortalityM.mutate({ room: room.toUpperCase(), cause, date: dateStr, loss }, {
-      onError: (e) => alert("Failed to save mortality: " + (e as Error).message),
-    });
-  };
-  const editMortality = (m: Mortality) => {
-    const room = prompt("Room", m.room); if (room === null) return;
-    const cause = prompt("Cause", m.cause); if (cause === null) return;
-    const date = prompt("Date", m.date); if (date === null) return;
-    const loss = +(prompt("Loss (birds)", String(m.loss)) ?? m.loss);
-    updMortalityM.mutate({ id: m.id, room: room.toUpperCase(), cause, date, loss }, {
-      onError: (e) => alert("Failed to update: " + (e as Error).message),
-    });
-  };
-  const delMortalityRow = (m: Mortality) => {
-    askDelete(
-      `Delete mortality record for ${m.room} on ${m.date}?`,
-      `This will permanently remove this ${m.loss}-bird loss record (${m.cause}).`,
-      () => delMortalityM.mutate(m.id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) }),
-    );
-  };
-
-  const addHealth = () => {
-    const name = prompt("Name (e.g. MIAVIT)"); if (!name) return;
-    const typeRaw = prompt(`Type: ${HEALTH_TYPES.join(", ")}`, "Vitamin") || "Vitamin";
-    const type = normalizeHealthType(typeRaw);
-    if (!type) { alert("Invalid health record type. Accepted types: Vaccination, Vitamin, Medication, Treatment, or Observation."); return; }
-    const scope = prompt("Scope (All Rooms or ROOM 2 / ROOM 3 / ROOM 4)", "All Rooms") || "All Rooms";
-    const date = prompt("Date (e.g. 21 Feb)", todayShortLabel()) || todayShortLabel();
-    addHealthM.mutate({ name: name.toUpperCase(), scope, type, date }, {
-      onError: (e) => alert("Failed to save health record: " + (e as Error).message),
-    });
-  };
-  const editHealth = (h: Health) => {
-    const name = prompt("Name", h.name); if (name === null) return;
-    const typeRaw = prompt(`Type: ${HEALTH_TYPES.join(", ")}`, h.type); if (typeRaw === null) return;
-    const type = normalizeHealthType(typeRaw) ?? h.type;
-    const scope = prompt("Scope", h.scope); if (scope === null) return;
-    const date = prompt("Date", h.date); if (date === null) return;
-    updHealthM.mutate({ id: h.id, name: name.toUpperCase(), type, scope, date }, {
-      onError: (e) => alert("Failed to update: " + (e as Error).message),
-    });
-  };
-  const delHealthRow = (h: Health) => {
-    askDelete(
-      `Delete health record "${h.name}"?`,
-      `This will permanently remove this ${h.type.toLowerCase()} record from ${h.date}.`,
-      () => delHealthM.mutate(h.id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) }),
-    );
-  };
-
-  const recordFeed = () => {
-    const room = prompt("Room (e.g. ROOM 3)"); if (!room) return;
-    const bags = +(prompt("Bags", "1") || "1");
-    const date = prompt("Date (e.g. 21 Feb)", todayShortLabel()) || todayShortLabel();
-    if (!bags) return;
-    addFeedM.mutate({ room: room.toUpperCase(), bags, date }, {
-      onError: (e) => alert("Failed to save feed: " + (e as Error).message),
-    });
-  };
-  const editFeed = (f: Feed) => {
-    const room = prompt("Room", f.room); if (room === null) return;
-    const bags = +(prompt("Bags", String(f.bags)) ?? f.bags);
-    const date = prompt("Date", f.date); if (date === null) return;
-    updFeedM.mutate({ id: f.id, room: room.toUpperCase(), bags, date }, {
-      onError: (e) => alert("Failed to update: " + (e as Error).message),
-    });
-  };
-  const delFeedRow = (f: Feed) => {
-    askDelete(
-      `Delete feed record for ${f.room} on ${f.date}?`,
-      `This will permanently remove this ${f.bags}-bag feed record.`,
-      () => delFeedM.mutate(f.id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) }),
-    );
-  };
-  const editFeedDay = (items: Feed[]) => {
-    for (const f of items) {
-      const val = prompt(`Bags for ${f.room} on ${f.date}`, String(f.bags));
-      if (val === null) continue;
-      const bags = +val;
-      if (!Number.isFinite(bags) || bags === f.bags) continue;
-      updFeedM.mutate({ id: f.id, bags }, {
-        onError: (e) => alert("Failed to update: " + (e as Error).message),
-      });
+  const runDelete = <T,>(mutateAsync: (v: T) => Promise<unknown>, value: T, label: string) => async () => {
+    try {
+      await mutateAsync(value);
+      toast.success(`${label} deleted`);
+    } catch (e) {
+      toast.error(`Failed to delete ${label.toLowerCase()}`, { description: (e as Error).message });
     }
   };
 
-  const addPrice = () => {
-    const item = prompt("Item"); if (!item) return;
-    const unit = prompt("Unit", "1") || "1";
-    const price = +(prompt("Price (NGN)", "0") || "0");
-    const updated = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-    addPriceM.mutate({ item, unit, price, updated }, {
-      onError: (e) => alert("Failed to save price: " + (e as Error).message),
-    });
+  // Actions (modal dialogs)
+  const addRoom = () => openDialog({ kind: "room-add" });
+  const delRoom = (id: string) => {
+    const r = rooms.find(x => x.id === id);
+    askDelete("Delete room?", `This will permanently remove ${r?.name ?? "this room"} and cannot be undone.`,
+      runDelete((v: string) => delRoomM.mutateAsync(v), id, "Room"));
   };
-  const delPrice = (id: string) => {
-    const p = prices.find(x => x.id === id);
-    askDelete("Delete this price?", `This will permanently remove ${p?.item ?? "the item"} from the price list.`, () =>
-      delPriceM.mutate(id, { onError: (e) => alert("Failed to delete: " + (e as Error).message) }),
+
+  const recordProduction = () => openDialog({ kind: "egg-add" });
+  const editEgg = (e: EggRow) => openDialog({ kind: "egg-edit", item: e });
+  const delEgg = (e: EggRow) => {
+    askDelete(
+      `Delete production record?`,
+      `This will permanently remove the production record for ${e.label}. This action cannot be undone.`,
+      runDelete((v: string) => delEggM.mutateAsync(v), e.id, "Production record"),
     );
   };
+
+  const addMortality = () => openDialog({ kind: "mortality-add" });
+  const editMortality = (m: Mortality) => openDialog({ kind: "mortality-edit", item: m });
+  const delMortalityRow = (m: Mortality) => {
+    askDelete(
+      `Delete mortality record?`,
+      `This will permanently remove the ${m.loss}-bird loss record for ${m.room} on ${m.date} (${m.cause}).`,
+      runDelete((v: string) => delMortalityM.mutateAsync(v), m.id, "Mortality record"),
+    );
+  };
+
+  const addHealth = () => openDialog({ kind: "health-add" });
+  const editHealth = (h: Health) => openDialog({ kind: "health-edit", item: h });
+  const delHealthRow = (h: Health) => {
+    askDelete(
+      `Delete health record?`,
+      `This will permanently remove "${h.name}" (${h.type.toLowerCase()}) from ${h.date}.`,
+      runDelete((v: string) => delHealthM.mutateAsync(v), h.id, "Health record"),
+    );
+  };
+
+  const recordFeed = () => openDialog({ kind: "feed-add" });
+  const editFeed = (f: Feed) => openDialog({ kind: "feed-edit", item: f });
+  const delFeedRow = (f: Feed) => {
+    askDelete(
+      `Delete feed record?`,
+      `This will permanently remove the ${f.bags}-bag feed record for ${f.room} on ${f.date}.`,
+      runDelete((v: string) => delFeedM.mutateAsync(v), f.id, "Feed record"),
+    );
+  };
+  const editFeedDay = (items: Feed[]) => openDialog({ kind: "feed-day-edit", items });
+
+  const addPrice = () => openDialog({ kind: "price-add" });
+  const delPrice = (id: string) => {
+    const p = prices.find(x => x.id === id);
+    askDelete("Delete price item?", `This will permanently remove ${p?.item ?? "the item"} from the price list.`,
+      runDelete((v: string) => delPriceM.mutateAsync(v), id, "Price item"));
+  };
+
 
   // --- Mortality aggregation (grouped by date, preserving arrival order) ---
   type MortGroup = { date: string; total: number; byRoom: Record<string, number>; causes: string[]; items: Mortality[] };
@@ -1082,7 +998,9 @@ function Dashboard() {
           {new Date().getFullYear()} {farm?.name ?? "Your Farm"} — Poultry Farm Management System
         </div>
       </main>
-      <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
+      <RecordDialogs state={dialog} onClose={() => setDialog(null)} rooms={rooms} />
+      <RecordConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
+
     </div>
   );
 }
@@ -1185,26 +1103,6 @@ function RowActions({ onEdit, onDelete, extra }: { onEdit: () => void; onDelete:
   );
 }
 
-function ConfirmDialog({ state, onClose }: { state: { title: string; message: string; onConfirm: () => void } | null; onClose: () => void }) {
-  if (!state) return null;
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4" onClick={onClose}>
-      <div className="w-full max-w-sm rounded-2xl bg-background p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="text-base font-semibold">{state.title}</div>
-        <p className="mt-2 text-sm text-muted-foreground">{state.message}</p>
-        <div className="mt-5 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-full px-4 py-2 text-sm font-medium bg-secondary hover:opacity-90">Cancel</button>
-          <button
-            onClick={() => { state.onConfirm(); onClose(); }}
-            className="rounded-full bg-destructive text-destructive-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
-          >
-            Delete Record
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 
 function AreaTab({ active, onClick, num, stage, title, plan, icon: Icon, premium }: {
