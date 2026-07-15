@@ -160,8 +160,13 @@ function Dashboard() {
   );
 
   const handleSignOut = async () => {
+    // Stop in-flight protected queries so cleared-session 401s don't storm the UI,
+    // drop cached farm data so Back can't restore the previous farm's dashboard,
+    // then sign out and REPLACE history so /dashboard is off the back stack.
+    await qc.cancelQueries();
+    qc.clear();
     await supabase.auth.signOut();
-    navigate({ to: "/auth" });
+    navigate({ to: "/auth", replace: true });
   };
 
   const runDelete = <T,>(mutateAsync: (v: T) => Promise<unknown>, value: T, label: string) => async () => {
