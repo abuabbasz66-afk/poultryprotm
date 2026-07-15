@@ -1616,20 +1616,11 @@ const MONTHS: Record<string, number> = {
 };
 
 // Parse dates like "16 Jan", "3 Feb", "Today" — assume year matches the latest egg record's year.
+// Delegates to the shared farm date normaliser so ISO dates from the
+// database ("2026-04-04", "2026-04-04T17:15:00") and legacy short-form
+// records ("4 Apr", "Today") all resolve to the same local calendar day.
 function parseShortDate(s: string, anchor: Date): Date | null {
-  if (!s) return null;
-  const trimmed = s.trim();
-  if (/^today$/i.test(trimmed)) return new Date(anchor);
-  const m = trimmed.match(/^(\d{1,2})\s+([A-Za-z]{3})/);
-  if (!m) return null;
-  const day = parseInt(m[1], 10);
-  const mon = MONTHS[m[2].toLowerCase()];
-  if (mon === undefined) return null;
-  let year = anchor.getFullYear();
-  const candidate = new Date(year, mon, day);
-  // If the parsed date sits in the future relative to the anchor, roll back one year
-  if (candidate.getTime() > anchor.getTime() + 24 * 60 * 60 * 1000) year -= 1;
-  return new Date(year, mon, day);
+  return toLocalDate(s, anchor);
 }
 
 type MortalityRiskProps = {
