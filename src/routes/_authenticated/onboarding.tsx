@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
@@ -15,24 +16,24 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
   component: OnboardingPage,
 });
 
-const FARM_TYPES = ["Layers", "Broilers", "Breeders", "Mixed Poultry"] as const;
+const BIRD_TYPES = ["Layers", "Broilers", "Breeders", "Mixed", "Other"] as const;
 
 function OnboardingPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
 
   const [name, setName] = useState("");
+  const [location, setLocation] = useState("");
   const [state, setState] = useState("");
   const [country, setCountry] = useState("Nigeria");
-  const [farmType, setFarmType] = useState<string>("Layers");
-  const [ownerName, setOwnerName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [farmType, setFarmType] = useState<string>("Poultry");
+  const [birdType, setBirdType] = useState<string>("Layers");
   const [birdCount, setBirdCount] = useState<string>("");
+  const [roomsCount, setRoomsCount] = useState<string>("");
   const [checking, setChecking] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // If a farm already exists for this user, skip onboarding.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -54,18 +55,35 @@ function OnboardingPage() {
       const { data: userRes, error: userErr } = await supabase.auth.getUser();
       if (userErr || !userRes.user) throw userErr ?? new Error("Not signed in");
       const parsedBirds = birdCount.trim() ? Math.max(0, parseInt(birdCount, 10) || 0) : null;
-      const { error: insErr } = await supabase.from("farms").insert({
+      const parsedRooms = roomsCount.trim() ? Math.max(0, parseInt(roomsCount, 10) || 0) : null;
+
+      const { data: farm, error: insErr } = await supabase.from("farms").insert({
         owner_id: userRes.user.id,
         name: name.trim(),
+        location: location.trim() || null,
         state: state.trim() || null,
         country: country.trim() || "Nigeria",
         farm_type: farmType,
-        owner_name: ownerName.trim() || null,
-        phone: phone.trim() || null,
+        bird_type: birdType,
         bird_count: parsedBirds,
-      });
+        rooms_count: parsedRooms,
+      }).select("id").single();
       if (insErr) throw insErr;
+
+      // Auto-create rooms based on the entered count so the dashboard has structure.
+      if (farm?.id && parsedRooms && parsedRooms > 0) {
+        const perRoom = parsedBirds && parsedRooms > 0 ? Math.floor(parsedBirds / parsedRooms) : 0;
+        const rows = Array.from({ length: Math.min(parsedRooms, 50) }, (_, i) => ({
+          farm_id: farm.id,
+          name: `ROOM ${i + 1}`,
+          initial: perRoom,
+          current: perRoom,
+        }));
+        await supabase.from("rooms").insert(rows);
+      }
+
       await qc.invalidateQueries();
+      toast.success("Farm profile created.");
       navigate({ to: "/dashboard", replace: true });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to create farm");
@@ -97,7 +115,7 @@ function OnboardingPage() {
         </div>
         <h1 className="text-xl font-semibold text-foreground mb-1">Create your farm profile</h1>
         <p className="text-sm text-muted-foreground mb-6">
-          Your farm's records, analytics and AI Intelligence are private to you.
+          Your farm's records, analytics and AI Intelligence stay private to your account.
         </p>
 
         <form onSubmit={submit} className="space-y-4">
@@ -106,8 +124,14 @@ function OnboardingPage() {
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
           </Field>
 
+          <Field label="Farm Location">
+            <input value={location} onChange={e => setLocation(e.target.value)}
+              placeholder="e.g. Kofar Sauri, Katsina"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+          </Field>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="State / Location">
+            <Field label="State">
               <input value={state} onChange={e => setState(e.target.value)}
                 placeholder="e.g. Katsina State"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
@@ -118,27 +142,28 @@ function OnboardingPage() {
             </Field>
           </div>
 
-          <Field label="Farm Type">
-            <select value={farmType} onChange={e => setFarmType(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-              {FARM_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </Field>
-
-          <Field label="Owner / Manager Name">
-            <input value={ownerName} onChange={e => setOwnerName(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-          </Field>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Phone Number">
-              <input value={phone} onChange={e => setPhone(e.target.value)}
-                inputMode="tel"
+            <Field label="Farm Type">
+              <input value={farmType} onChange={e => setFarmType(e.target.value)}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
             </Field>
-            <Field label="Number of Birds">
+            <Field label="Bird Type">
+              <select value={birdType} onChange={e => setBirdType(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                {BIRD_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Total Birds">
               <input value={birdCount} onChange={e => setBirdCount(e.target.value)}
-                inputMode="numeric" pattern="[0-9]*"
+                inputMode="numeric" pattern="[0-9]*" placeholder="e.g. 4000"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            </Field>
+            <Field label="Number of Rooms / Houses">
+              <input value={roomsCount} onChange={e => setRoomsCount(e.target.value)}
+                inputMode="numeric" pattern="[0-9]*" placeholder="e.g. 3"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
             </Field>
           </div>
