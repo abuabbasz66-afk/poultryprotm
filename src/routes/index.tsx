@@ -381,11 +381,11 @@ function Index() {
           <div className="max-w-2xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">The Solution</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              One intelligent platform. Every farm decision.
+              Your farm records. One clear picture.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              From feed to finance, PoultryPro brings the operating discipline of a modern
-              enterprise to poultry farms of every size.
+              PoultryPro brings your production, feed, health, mortality and financial records together
+              so you can understand your farm and make better decisions.
             </p>
           </div>
 
