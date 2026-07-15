@@ -90,6 +90,7 @@ function todayShortLabel() {
 function Dashboard() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const farmIdQ = useFarmId();
   const farmQ = useFarm();
   const farm = farmQ.data;
   const roomsQ = useRooms();
