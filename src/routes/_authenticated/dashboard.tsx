@@ -30,6 +30,18 @@ import { MortalityPatternIntelligence } from "@/components/mortality-pattern-car
 import { FarmInsightsIntelligence } from "@/components/farm-insights-card";
 import { RecordDialogs, RecordConfirmDialog, type RecordDialogState } from "@/components/record-dialogs";
 import { toast } from "sonner";
+import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
+import { format as formatDate, parseISO, isValid as isValidDate } from "date-fns";
+
+function formatDayLabel(iso: string): string {
+  if (!iso) return "—";
+  const d = parseISO(iso);
+  return isValidDate(d) ? formatDate(d, "d MMM yyyy") : iso;
+}
+function birdsLabel(n: number): string {
+  const abs = Math.abs(Number(n) || 0);
+  return `${abs} ${abs === 1 ? "bird" : "birds"}`;
+}
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -123,27 +135,37 @@ function Dashboard() {
   const totalBirds = rooms.reduce((s, r) => s + r.current, 0);
   const totalLoss = rooms.reduce((s, r) => s + (r.initial - r.current), 0);
   const today = eggs[0];
-  const todayCrates = today ? today.r2 + today.r3 + today.r4 : 0;
-  const todayExtra = today?.extra ?? 0;
-  const todayEggs = todayCrates * 30 + todayExtra;
-  const yesterdayEggs = eggs[1] ? (eggs[1].r2 + eggs[1].r3 + eggs[1].r4) * 30 + eggs[1].extra : todayEggs;
+  const todayNorm = today ? normaliseEggRow(today) : { crates: 0, extra: 0, totalEggs: 0 };
+  const todayCrates = todayNorm.crates;
+  const todayExtra = todayNorm.extra;
+  const todayEggs = todayNorm.totalEggs;
+  const yesterdayEggs = eggs[1] ? totalEggsFromRow(eggs[1]) : todayEggs;
   const diffPct = yesterdayEggs ? ((todayEggs - yesterdayEggs) / yesterdayEggs) * 100 : 0;
-  const totalEggs = eggs.reduce((s, r) => s + (r.r2 + r.r3 + r.r4) * 30 + r.extra, 0);
-  const totalCrates = eggs.reduce((s, r) => s + r.r2 + r.r3 + r.r4, 0);
-  const monthlyMortality = mortality.reduce((s, m) => s + m.loss, 0);
+  const totalEggs = eggs.reduce((s, r) => s + totalEggsFromRow(r), 0);
+  const totalCrates = Math.floor(totalEggs / 30);
+  const monthlyMortality = mortality.reduce((s, m) => s + Math.abs(m.loss), 0);
   const latestFeedDate = feed[0]?.date;
   const feedToday = latestFeedDate ? feed.filter(f => f.date === latestFeedDate).reduce((s, f) => s + f.bags, 0) : 0;
   const productionRate = totalBirds ? Math.round((todayEggs / totalBirds) * 100) : 0;
   const last7Eggs = eggs.slice(0, 7);
   const sevenDayAvgEggs = last7Eggs.length
-    ? Math.round(last7Eggs.reduce((s, r) => s + (r.r2 + r.r3 + r.r4) * 30 + r.extra, 0) / last7Eggs.length)
+    ? Math.round(last7Eggs.reduce((s, r) => s + totalEggsFromRow(r), 0) / last7Eggs.length)
     : 0;
-  const currentLayRate = totalBirds ? (totalEggs / totalBirds) * 100 : 0;
+  // Current Lay Rate: today's total eggs vs active birds. Guard against 0/missing birds
+  // and impossible >100% results so the dashboard never shows Infinity or NaN.
+  const rawLayRate = totalBirds > 0 && todayEggs > 0 ? (todayEggs / totalBirds) * 100 : null;
+  const layRateValid = rawLayRate !== null && Number.isFinite(rawLayRate) && rawLayRate <= 100;
+  const currentLayRateDisplay = rawLayRate === null
+    ? "—"
+    : layRateValid
+      ? `${rawLayRate.toFixed(1)}%`
+      : "—";
   const eggPrice = prices.find(p => p.item === "Egg")?.price ?? 4900;
   const feedPrice = prices.find(p => p.item.startsWith("Feed"))?.price ?? 13600;
   const todayRevenue = Math.round((todayEggs / 30) * eggPrice);
   const todayCost = Math.round(feedToday * feedPrice);
   const todayProfit = todayRevenue - todayCost;
+  void totalCrates;
 
   const chartData = useMemo(
     () => [...eggs].reverse().map(e => ({
@@ -203,10 +225,11 @@ function Dashboard() {
   const editMortality = (m: Mortality) => openDialog({ kind: "mortality-edit", item: m });
   const delMortalityRow = (m: Mortality) => {
     askDelete(
-      `Delete mortality record?`,
-      `This will permanently remove the ${m.loss}-bird loss record for ${m.room} on ${m.date} (${m.cause}).`,
+      `Delete this mortality record?`,
+      `This will update mortality analytics and farm intelligence. Removing the ${birdsLabel(Math.abs(m.loss))} loss for ${m.room} on ${formatDayLabel(m.date)} (${m.cause}).`,
       runDelete((v: string) => delMortalityM.mutateAsync(v), m.id, "Mortality record"),
     );
+
   };
 
   const addHealth = () => openDialog({ kind: "health-add" });
@@ -245,11 +268,13 @@ function Dashboard() {
     for (const m of mortality) {
       let g = map.get(m.date);
       if (!g) { g = { date: m.date, total: 0, byRoom: {}, causes: [], items: [] }; map.set(m.date, g); }
-      g.total += m.loss;
-      g.byRoom[m.room] = (g.byRoom[m.room] ?? 0) + m.loss;
+      const loss = Math.abs(m.loss);
+      g.total += loss;
+      g.byRoom[m.room] = (g.byRoom[m.room] ?? 0) + loss;
       if (!g.causes.includes(m.cause)) g.causes.push(m.cause);
       g.items.push(m);
     }
+
   return Array.from(map.values());
   }, [mortality]);
 
@@ -262,7 +287,7 @@ function Dashboard() {
   const mortalityRatePct = totalInitialBirds ? (monthlyMortality / totalInitialBirds) * 100 : 0;
   const leadingCause = useMemo(() => {
     const c: Record<string, number> = {};
-    for (const m of mortality) c[m.cause] = (c[m.cause] ?? 0) + m.loss;
+    for (const m of mortality) c[m.cause] = (c[m.cause] ?? 0) + Math.abs(m.loss);
     const top = Object.entries(c).sort((a, b) => b[1] - a[1])[0];
     return top?.[0] ?? "—";
   }, [mortality]);
@@ -510,7 +535,7 @@ function Dashboard() {
           <div className="grid grid-cols-3 gap-3 mt-4">
             <MiniStat label="Today's Production" value={`${todayCrates} cr`} tone="mint" />
             <MiniStat label="7-Day Avg" value={`${sevenDayAvgEggs.toLocaleString()} eggs`} tone="sky" />
-            <MiniStat label="Current Lay Rate" value={`${currentLayRate.toFixed(1)}%`} tone="plain" />
+            <MiniStat label="Current Lay Rate" value={currentLayRateDisplay} tone="plain" />
           </div>
           <div className="mt-5 overflow-x-auto">
             <table className="w-full text-xs sm:text-sm">
@@ -534,6 +559,7 @@ function Dashboard() {
                     if (n === "ROOM 4") return e.r4;
                     return null;
                   };
+                  const norm = normaliseEggRow(e);
                   return (
                     <tr key={e.id ?? e.date + e.label} className="border-b border-border/50">
                       <td className="py-2.5 pr-4 whitespace-nowrap">{e.label}</td>
@@ -547,14 +573,15 @@ function Dashboard() {
                       })}
                       <td className="py-2.5 pr-4">
                         <span className="inline-flex items-center rounded-full bg-[color:var(--forest)] text-primary-foreground px-2.5 py-0.5 text-xs font-medium">
-                          {e.r2 + e.r3 + e.r4}
+                          {norm.crates}
                         </span>
                       </td>
-                      <td className="py-2.5 pr-4 text-muted-foreground">{e.extra ? `+${e.extra}` : "—"}</td>
+                      <td className="py-2.5 pr-4 text-muted-foreground">{norm.extra ? `+${norm.extra}` : "—"}</td>
                       <td className="py-2.5 pr-2 text-right"><RowActions onEdit={() => editEgg(e)} onDelete={() => delEgg(e)} /></td>
                     </tr>
                   );
                 })}
+
                 {eggs.length === 0 && (
                   <tr><td colSpan={rooms.length + 4} className="py-4 text-center text-muted-foreground text-xs">
                     <span className="font-medium">Pending entry</span> — no production records yet.
@@ -623,7 +650,7 @@ function Dashboard() {
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-destructive/10 text-destructive"><Skull className="h-3.5 w-3.5" /></span>
                         <div className="min-w-0">
-                          <div className="text-sm font-semibold truncate">{g.date} <span className="text-destructive">· -{g.total} birds</span></div>
+                          <div className="text-sm font-semibold truncate">{formatDayLabel(g.date)} <span className="text-destructive">· {birdsLabel(g.total)}</span></div>
                           <div className="text-xs text-muted-foreground truncate">{breakdown || "—"} <span className="opacity-70">| {cause}</span></div>
                         </div>
                       </div>
@@ -638,7 +665,7 @@ function Dashboard() {
                               <span className="text-muted-foreground truncate">· {m.cause}</span>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-destructive font-semibold">-{m.loss}</span>
+                              <span className="text-destructive font-semibold">{Math.abs(m.loss)}</span>
                               <RowActions onEdit={() => editMortality(m)} onDelete={() => delMortalityRow(m)} />
                             </div>
                           </div>
