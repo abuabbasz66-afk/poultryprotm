@@ -177,17 +177,17 @@ const tiers = [
 
 
 const problems = [
-  "Critical farm data lost in notebooks and scattered records",
-  "Decisions made without real-time operational visibility",
-  "Feed — the largest cost — poorly monitored",
-  "Profitability and performance trends invisible",
-  "Health and mortality events under-documented",
+  "Farm records are easily lost or scattered.",
+  "Farmers cannot quickly see how the farm is performing.",
+  "Feed, the biggest farm cost, is difficult to monitor.",
+  "Profit and production changes are easy to miss.",
+  "Health and mortality records are often incomplete.",
 ];
 
 const timeline = [
-  { phase: "Available Today", items: ["Farm Records — production, feed, health, mortality", "Farm Analytics — profitability & performance dashboards", "Interactive dashboard across every room and flock"] },
-  { phase: "Rolling Out (Premium AI)", items: ["Abnormal production & mortality pattern detection", "Feed-efficiency and cost-anomaly monitoring", "Production forecasting & decision-support alerts"] },
-  { phase: "Long-Term Vision", items: ["Mobile app for iOS & Android + farmer onboarding", "Farmer marketplace & partner ecosystem", "Africa's leading AI poultry ecosystem by 2030"] },
+  { phase: "Available Today", items: ["Farm Records — eggs, feed, health, mortality", "Farm Analytics — performance and profit views", "Simple dashboard for every room and flock"] },
+  { phase: "Rolling Out (Premium AI)", items: ["Alerts when egg production drops unusually", "Alerts when bird losses rise above normal", "Simple feed and cost pattern checks"] },
+  { phase: "Long-Term Vision", items: ["Mobile app for iOS & Android", "Farmer marketplace & partner network", "Africa's leading smart poultry platform by 2030"] },
 ];
 
 function Index() {
