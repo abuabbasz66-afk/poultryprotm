@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
+  const qc = useQueryClient();
   const [mode, setMode] = useState<AuthMode>(search.mode ?? "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,11 +53,17 @@ function AuthPage() {
           options: { emailRedirectTo: window.location.origin + "/onboarding" },
         });
         if (error) throw error;
+        // Wipe any farm/dashboard cache from a previous account on this device
+        // before landing on onboarding/dashboard so no stale farm name flashes.
+        await qc.cancelQueries();
+        qc.clear();
         toast.success("Account created. Let's set up your farm.");
         navigate({ to: "/onboarding" });
       } else if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        await qc.cancelQueries();
+        qc.clear();
         navigate({ to: "/dashboard" });
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {

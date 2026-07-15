@@ -120,6 +120,32 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    let lastUserId: string | null | undefined = undefined;
+    let unsub: (() => void) | undefined;
+    // Load supabase client lazily on the client to avoid SSR touching localStorage.
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.auth.getSession().then(({ data }) => {
+        lastUserId = data.session?.user?.id ?? null;
+      });
+      const { data } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+        const nextUserId = session?.user?.id ?? null;
+        // On any identity change (including sign-out), wipe all cached farm data
+        // so the previous user's farm/company name never leaks into the new session.
+        if (nextUserId !== lastUserId) {
+          queryClient.cancelQueries();
+          queryClient.clear();
+        }
+        lastUserId = nextUserId;
+        router.invalidate();
+      });
+      unsub = () => data.subscription.unsubscribe();
+    });
+    return () => { unsub?.(); };
+  }, [queryClient, router]);
 
   return (
     <QueryClientProvider client={queryClient}>
