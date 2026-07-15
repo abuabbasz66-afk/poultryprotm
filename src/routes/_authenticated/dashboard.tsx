@@ -135,27 +135,37 @@ function Dashboard() {
   const totalBirds = rooms.reduce((s, r) => s + r.current, 0);
   const totalLoss = rooms.reduce((s, r) => s + (r.initial - r.current), 0);
   const today = eggs[0];
-  const todayCrates = today ? today.r2 + today.r3 + today.r4 : 0;
-  const todayExtra = today?.extra ?? 0;
-  const todayEggs = todayCrates * 30 + todayExtra;
-  const yesterdayEggs = eggs[1] ? (eggs[1].r2 + eggs[1].r3 + eggs[1].r4) * 30 + eggs[1].extra : todayEggs;
+  const todayNorm = today ? normaliseEggRow(today) : { crates: 0, extra: 0, totalEggs: 0 };
+  const todayCrates = todayNorm.crates;
+  const todayExtra = todayNorm.extra;
+  const todayEggs = todayNorm.totalEggs;
+  const yesterdayEggs = eggs[1] ? totalEggsFromRow(eggs[1]) : todayEggs;
   const diffPct = yesterdayEggs ? ((todayEggs - yesterdayEggs) / yesterdayEggs) * 100 : 0;
-  const totalEggs = eggs.reduce((s, r) => s + (r.r2 + r.r3 + r.r4) * 30 + r.extra, 0);
-  const totalCrates = eggs.reduce((s, r) => s + r.r2 + r.r3 + r.r4, 0);
-  const monthlyMortality = mortality.reduce((s, m) => s + m.loss, 0);
+  const totalEggs = eggs.reduce((s, r) => s + totalEggsFromRow(r), 0);
+  const totalCrates = Math.floor(totalEggs / 30);
+  const monthlyMortality = mortality.reduce((s, m) => s + Math.abs(m.loss), 0);
   const latestFeedDate = feed[0]?.date;
   const feedToday = latestFeedDate ? feed.filter(f => f.date === latestFeedDate).reduce((s, f) => s + f.bags, 0) : 0;
   const productionRate = totalBirds ? Math.round((todayEggs / totalBirds) * 100) : 0;
   const last7Eggs = eggs.slice(0, 7);
   const sevenDayAvgEggs = last7Eggs.length
-    ? Math.round(last7Eggs.reduce((s, r) => s + (r.r2 + r.r3 + r.r4) * 30 + r.extra, 0) / last7Eggs.length)
+    ? Math.round(last7Eggs.reduce((s, r) => s + totalEggsFromRow(r), 0) / last7Eggs.length)
     : 0;
-  const currentLayRate = totalBirds ? (totalEggs / totalBirds) * 100 : 0;
+  // Current Lay Rate: today's total eggs vs active birds. Guard against 0/missing birds
+  // and impossible >100% results so the dashboard never shows Infinity or NaN.
+  const rawLayRate = totalBirds > 0 && todayEggs > 0 ? (todayEggs / totalBirds) * 100 : null;
+  const layRateValid = rawLayRate !== null && Number.isFinite(rawLayRate) && rawLayRate <= 100;
+  const currentLayRateDisplay = rawLayRate === null
+    ? "—"
+    : layRateValid
+      ? `${rawLayRate.toFixed(1)}%`
+      : "—";
   const eggPrice = prices.find(p => p.item === "Egg")?.price ?? 4900;
   const feedPrice = prices.find(p => p.item.startsWith("Feed"))?.price ?? 13600;
   const todayRevenue = Math.round((todayEggs / 30) * eggPrice);
   const todayCost = Math.round(feedToday * feedPrice);
   const todayProfit = todayRevenue - todayCost;
+  void totalCrates;
 
   const chartData = useMemo(
     () => [...eggs].reverse().map(e => ({
