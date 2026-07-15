@@ -17,21 +17,39 @@ export const Route = createFileRoute("/reset-password")({
 function ResetPasswordPage() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
+  const [checkingLink, setCheckingLink] = useState(true);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    // Supabase automatically parses the recovery token from the URL hash
-    // and emits PASSWORD_RECOVERY when the client is ready to update password.
+    let recoveryEventReceived = false;
+    const hasRecoveryParams = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("type") === "recovery"
+      || new URLSearchParams(window.location.search).get("type") === "recovery";
+
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
+      if (event === "PASSWORD_RECOVERY") {
+        recoveryEventReceived = true;
+        setReady(true);
+        setCheckingLink(false);
+      }
     });
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true);
-    });
-    return () => sub.subscription.unsubscribe();
+
+    const timer = window.setTimeout(() => {
+      if (!recoveryEventReceived) {
+        setReady(false);
+        setCheckingLink(false);
+        if (!hasRecoveryParams) {
+          setMsg("Open this page from the password reset email link.");
+        }
+      }
+    }, 1200);
+
+    return () => {
+      window.clearTimeout(timer);
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const submit = async (e: React.FormEvent) => {
@@ -66,7 +84,8 @@ function ResetPasswordPage() {
         <h1 className="text-xl font-semibold text-foreground mb-1">Set a new password</h1>
         <p className="text-sm text-muted-foreground mb-6">
           {ready ? "Enter and confirm your new password below."
-            : "Waiting for your reset link session… Open this page from the email link."}
+            : checkingLink ? "Checking your reset link session…"
+            : "Open this page from the password reset email link."}
         </p>
         <form onSubmit={submit} className="space-y-4">
           <div>
