@@ -107,7 +107,7 @@ const tiers = [
     stage: "Capture",
     stageNum: "01",
     promise: "Capture what happens on your farm.",
-    subtitle: "For farmers moving from notebooks and scattered records to structured digital farm management.",
+    subtitle: "For farmers moving from notebooks and scattered records to a simple, organised farm record system.",
     points: [
       "Daily egg production recording",
       "Room-based egg records",
