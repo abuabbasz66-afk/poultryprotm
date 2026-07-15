@@ -25,6 +25,8 @@ import {
 } from "@/lib/farm-data";
 import { ProductionDeclineIntelligence } from "@/components/production-decline-card";
 import { MortalityPatternIntelligence } from "@/components/mortality-pattern-card";
+import { RecordDialogs, RecordConfirmDialog, type RecordDialogState } from "@/components/record-dialogs";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
