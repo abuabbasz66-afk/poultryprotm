@@ -9,9 +9,8 @@ type AuthMode = "signin" | "signup" | "forgot";
 
 function getPasswordResetRedirectUrl() {
   const { origin, hostname } = window.location;
-  const baseUrl = hostname === "poultrypro.life" || hostname === "www.poultrypro.life"
-    ? "https://poultrypro.life"
-    : origin;
+  const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
+  const baseUrl = isLocal ? origin : "https://poultrypro.life";
   return `${baseUrl}/reset-password`;
 }
 
