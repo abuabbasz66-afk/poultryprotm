@@ -998,7 +998,9 @@ function Dashboard() {
           {new Date().getFullYear()} {farm?.name ?? "Your Farm"} — Poultry Farm Management System
         </div>
       </main>
-      <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
+      <RecordDialogs state={dialog} onClose={() => setDialog(null)} rooms={rooms} />
+      <RecordConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
+
     </div>
   );
 }
