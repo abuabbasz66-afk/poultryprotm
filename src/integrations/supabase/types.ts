@@ -61,38 +61,47 @@ export type Database = {
       farms: {
         Row: {
           bird_count: number | null
+          bird_type: string | null
           country: string
           created_at: string
           farm_type: string | null
           id: string
+          location: string | null
           name: string
           owner_id: string
           owner_name: string | null
           phone: string | null
+          rooms_count: number | null
           state: string | null
         }
         Insert: {
           bird_count?: number | null
+          bird_type?: string | null
           country?: string
           created_at?: string
           farm_type?: string | null
           id?: string
+          location?: string | null
           name?: string
           owner_id: string
           owner_name?: string | null
           phone?: string | null
+          rooms_count?: number | null
           state?: string | null
         }
         Update: {
           bird_count?: number | null
+          bird_type?: string | null
           country?: string
           created_at?: string
           farm_type?: string | null
           id?: string
+          location?: string | null
           name?: string
           owner_id?: string
           owner_name?: string | null
           phone?: string | null
+          rooms_count?: number | null
           state?: string | null
         }
         Relationships: []
