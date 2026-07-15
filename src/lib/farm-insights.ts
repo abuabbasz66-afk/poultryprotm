@@ -952,6 +952,7 @@ export function buildFarmInsights(input: {
   feed: Feed[];
   health: Health[];
   prices: Price[];
+  bagWeightKg?: number | null;
 }): FarmInsightsReport {
   const context = buildFarmIntelligenceContext(input);
 
