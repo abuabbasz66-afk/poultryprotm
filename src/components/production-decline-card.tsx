@@ -1,11 +1,8 @@
 import { useMemo, useState } from "react";
 import { AlertTriangle, Brain, CheckCircle2, ChevronDown, ChevronUp, Sparkles, TrendingDown } from "lucide-react";
 import type { EggRow, Room, Mortality, Feed, Health } from "@/lib/farm-data";
-import { detectProductionDecline, severityStyle, type DeclineEvent } from "@/lib/production-decline";
+import { detectProductionDecline, riskStyle, type DeclineEvent } from "@/lib/production-decline";
 
-function fmt(n: number, digits = 1) {
-  return n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
-}
 function fmtDate(iso: string) {
   try {
     return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
@@ -41,9 +38,9 @@ export function ProductionDeclineIntelligence({
           <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[color:var(--gold)]">
             <Brain className="h-3.5 w-3.5" /> Egg Production Watch
           </div>
-          <h3 className="mt-1 font-display text-2xl md:text-3xl font-semibold">AI Intelligence · Egg production</h3>
+          <h3 className="mt-1 font-display text-2xl md:text-3xl font-semibold">Production Decline Detection</h3>
           <p className="mt-1 text-sm text-primary-foreground/70 max-w-2xl">
-            Compares your latest egg production with what your farm usually produces, so you know if things are dropping.
+            We look at your farm's own egg records to spot when production is dropping and tell you what to check.
           </p>
         </div>
         <span className="hidden md:inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-primary-foreground/80">
@@ -53,7 +50,7 @@ export function ProductionDeclineIntelligence({
 
       <div className="mt-5">
         {report.status === "learning" && (
-          <LearningNotice message={report.message ?? "Still learning your farm's production pattern — add more daily records."} total={report.totalRecords} />
+          <LearningNotice message={report.message ?? "Still learning your farm's egg production pattern."} total={report.totalRecords} />
         )}
 
         {report.status === "ok" && report.events.length === 0 && (
@@ -87,7 +84,7 @@ function LearningNotice({ message, total }: { message: string; total: number }) 
           <div className="font-display text-lg font-semibold">Getting to know your farm</div>
           <div className="mt-1 text-sm text-primary-foreground/80">{message}</div>
           <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-primary-foreground/60">
-            {total} production record{total === 1 ? "" : "s"} saved
+            {total} egg record{total === 1 ? "" : "s"} saved
           </div>
         </div>
       </div>
@@ -108,7 +105,7 @@ function NoDeclineNotice({ total }: { total: number }) {
             Your farm is producing about the same number of eggs as usual. Keep up your daily records.
           </div>
           <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-primary-foreground/60">
-            Learned from {total} production records
+            Learned from {total} egg records
           </div>
         </div>
       </div>
@@ -119,80 +116,55 @@ function NoDeclineNotice({ total }: { total: number }) {
 function DeclineEventCard({ event }: { event: DeclineEvent }) {
   const [open, setOpen] = useState(false);
   const [tech, setTech] = useState(false);
-  const style = severityStyle(event.severity);
-  const isRecovered = event.status === "Recovered";
-
-  const cratesDiff = Math.max(0, event.baseline - event.current);
-  const cratesDiffRounded = Math.round(cratesDiff * 10) / 10;
-  const cratesWord = cratesDiffRounded === 1 ? "crate" : "crates";
-
-  const headline = isRecovered
-    ? "Egg production has recovered"
-    : "Egg production is dropping";
-
-  const explanation = isRecovered
-    ? `${event.scopeLabel} is producing about ${fmt(event.current)} ${event.current === 1 ? "crate" : "crates"} per day again.`
-    : `${event.scopeLabel} is producing about ${fmt(cratesDiffRounded)} ${cratesWord} fewer per day than usual.`;
+  const style = riskStyle(event.risk);
 
   return (
-    <div className={`rounded-2xl border ${style.ring} ${isRecovered ? "bg-emerald-500/5" : "bg-white/5"} p-3 md:p-4 backdrop-blur`}>
+    <div className={`rounded-2xl border ${style.ring} bg-white/5 p-3 md:p-4 backdrop-blur`}>
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${style.badge}`}>
-            {isRecovered ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
-            {isRecovered ? "Recovered" : "Needs attention"}
+            <AlertTriangle className="h-3 w-3" /> {event.riskLabel}
           </span>
         </div>
         <div className="mt-1.5 text-[11px] uppercase tracking-[0.18em] text-primary-foreground/60">
           {event.scopeLabel}
         </div>
         <div className="mt-0.5 font-display text-lg md:text-2xl font-semibold leading-tight flex items-center gap-2">
-          <TrendingDown className="h-5 w-5 text-[color:var(--gold)]" /> {headline}
+          <TrendingDown className="h-5 w-5 text-[color:var(--gold)]" /> {event.title}
         </div>
-        <p className="mt-1 text-sm text-primary-foreground/85">{explanation}</p>
+        <p className="mt-1 text-sm text-primary-foreground/85">{event.whatWeNoticed}</p>
         <p className="mt-1 text-[13px] text-primary-foreground/70">{whenLabel(event.firstDeclineDate)}</p>
       </div>
-
-      {event.signals.length > 0 && (
-        <div className="mt-3">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-primary-foreground/60">
-            What may be affecting production
-          </div>
-          <div className="mt-1 flex flex-wrap gap-1.5">
-            {event.signals.map((s, i) => (
-              <span key={i} className="inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[11px] text-primary-foreground/90">
-                {s.label}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
 
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="mt-3 inline-flex items-center gap-1 rounded-full bg-white/10 hover:bg-white/15 px-3 py-1 text-[11px] uppercase tracking-[0.14em] text-primary-foreground/90"
       >
-        {open ? <>Hide details <ChevronUp className="h-3 w-3" /></> : <>See why <ChevronDown className="h-3 w-3" /></>}
+        {open ? <>Hide details <ChevronUp className="h-3 w-3" /></> : <>See details <ChevronDown className="h-3 w-3" /></>}
       </button>
 
       {open && (
         <div className="mt-2 rounded-xl bg-black/25 border border-white/10 p-3 text-xs text-primary-foreground/85 space-y-3">
           <div>
-            <div className="text-primary-foreground/60 uppercase tracking-[0.14em] text-[10px]">What is happening</div>
-            <div>{explanation}</div>
+            <div className="text-primary-foreground/60 uppercase tracking-[0.14em] text-[10px]">What we noticed</div>
+            <div>{event.whatWeNoticed}</div>
           </div>
           <div>
             <div className="text-primary-foreground/60 uppercase tracking-[0.14em] text-[10px]">Where</div>
             <div>{event.scopeLabel}</div>
           </div>
           <div>
+            <div className="text-primary-foreground/60 uppercase tracking-[0.14em] text-[10px]">Farm data</div>
+            <ul className="mt-0.5 space-y-0.5 list-disc list-inside">
+              {event.farmData.map((d, i) => <li key={i}>{d}</li>)}
+            </ul>
+          </div>
+          <div>
             <div className="text-primary-foreground/60 uppercase tracking-[0.14em] text-[10px]">What to check</div>
-            <div>
-              {event.factors.length > 0
-                ? event.factors.join(" · ")
-                : "Check feed intake, water supply, heat and flock health."}
-            </div>
+            <ul className="mt-0.5 space-y-0.5 list-disc list-inside">
+              {event.whatToCheck.map((d, i) => <li key={i}>{d}</li>)}
+            </ul>
           </div>
 
           <button
@@ -205,10 +177,11 @@ function DeclineEventCard({ event }: { event: DeclineEvent }) {
 
           {tech && (
             <div className="rounded-lg bg-black/30 border border-white/10 p-2 space-y-1 text-[11px] text-primary-foreground/75">
-              <div>Usual daily production: {fmt(event.baseline)} crates/day (built from {event.baselineWindow} prior recorded day{event.baselineWindow === 1 ? "" : "s"}).</div>
-              <div>Recent daily production: {fmt(event.current)} crates/day.</div>
-              <div>Change: {fmt(event.declinePct)}% below usual, observed from {fmtDate(event.firstDeclineDate)} to {fmtDate(event.latestDate)} over {event.durationDays} recorded day{event.durationDays === 1 ? "" : "s"}.</div>
-              <div>Confidence: {event.confidence}.</div>
+              <div>Current production: {event.currentPct.toFixed(1)}% (eggs per bird).</div>
+              <div>Baseline production: {event.baselinePct.toFixed(1)}% (recent 7-day average).</div>
+              <div>Change: {event.changePct.toFixed(1)}% below baseline.</div>
+              <div>Patterns triggered: {event.reasons.join("; ")}.</div>
+              <div>Window: {fmtDate(event.firstDeclineDate)} → {fmtDate(event.latestDate)}.</div>
             </div>
           )}
         </div>
