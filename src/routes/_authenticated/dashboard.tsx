@@ -27,6 +27,7 @@ import {
 } from "@/lib/farm-data";
 import { ProductionDeclineIntelligence } from "@/components/production-decline-card";
 import { MortalityPatternIntelligence } from "@/components/mortality-pattern-card";
+import { FarmInsightsIntelligence } from "@/components/farm-insights-card";
 import { RecordDialogs, RecordConfirmDialog, type RecordDialogState } from "@/components/record-dialogs";
 import { toast } from "sonner";
 
@@ -885,6 +886,12 @@ function Dashboard() {
               stage="PREDICT" plan="Premium" title="PoultryPro AI Intelligence" premium
               body="Progressively applying artificial intelligence to detect abnormal farm patterns, forecast production and support earlier evidence-based decisions."
             />
+            {/* AI-Supported Farm Insights — final summary layer combining PoultryPro modules */}
+            <FarmInsightsIntelligence
+              eggs={eggs} rooms={rooms} mortality={mortality} feed={feed} health={health} prices={prices}
+              loading={eggsQ.isLoading || roomsQ.isLoading || mortalityQ.isLoading || feedQ.isLoading || healthQ.isLoading || pricesQ.isLoading}
+            />
+
             {/* Production Decline Detection — real-time from farm records */}
             <ProductionDeclineIntelligence eggs={eggs} rooms={rooms} mortality={mortality} feed={feed} health={health} />
 
