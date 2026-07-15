@@ -8,9 +8,9 @@ import {
   useAddMortality, useUpdateMortality,
   useAddHealth, useUpdateHealth,
   useAddFeed, useUpdateFeed,
-  useAddPrice,
+  useAddPrice, useUpdatePrice,
   HEALTH_TYPES, normalizeHealthType,
-  type Room, type EggRow, type Mortality, type Health, type HealthType, type Feed,
+  type Room, type EggRow, type Mortality, type Health, type HealthType, type Feed, type Price,
 } from "@/lib/farm-data";
 
 export type RecordDialogState =
