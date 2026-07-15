@@ -556,6 +556,7 @@ function Dashboard() {
                     if (n === "ROOM 4") return e.r4;
                     return null;
                   };
+                  const norm = normaliseEggRow(e);
                   return (
                     <tr key={e.id ?? e.date + e.label} className="border-b border-border/50">
                       <td className="py-2.5 pr-4 whitespace-nowrap">{e.label}</td>
@@ -569,14 +570,15 @@ function Dashboard() {
                       })}
                       <td className="py-2.5 pr-4">
                         <span className="inline-flex items-center rounded-full bg-[color:var(--forest)] text-primary-foreground px-2.5 py-0.5 text-xs font-medium">
-                          {e.r2 + e.r3 + e.r4}
+                          {norm.crates}
                         </span>
                       </td>
-                      <td className="py-2.5 pr-4 text-muted-foreground">{e.extra ? `+${e.extra}` : "—"}</td>
+                      <td className="py-2.5 pr-4 text-muted-foreground">{norm.extra ? `+${norm.extra}` : "—"}</td>
                       <td className="py-2.5 pr-2 text-right"><RowActions onEdit={() => editEgg(e)} onDelete={() => delEgg(e)} /></td>
                     </tr>
                   );
                 })}
+
                 {eggs.length === 0 && (
                   <tr><td colSpan={rooms.length + 4} className="py-4 text-center text-muted-foreground text-xs">
                     <span className="font-medium">Pending entry</span> — no production records yet.
