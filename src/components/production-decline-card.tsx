@@ -1,7 +1,22 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle, Brain, CheckCircle2, ChevronDown, ChevronUp, Sparkles, TrendingDown } from "lucide-react";
+import { AlertTriangle, Brain, CalendarDays, CheckCircle2, ChevronDown, ChevronUp, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import type { EggRow, Room, Mortality, Feed, Health } from "@/lib/farm-data";
 import { detectProductionDecline, riskStyle, type DeclineEvent } from "@/lib/production-decline";
+
+const CRATE = 30;
+function farmEggs(e: EggRow) { return (e.r2 + e.r3 + e.r4) * CRATE + e.extra; }
+function computeNormalSummary(eggs: EggRow[], rooms: Room[]) {
+  const sorted = [...eggs].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  const birds = rooms.reduce((s, r) => s + r.current, 0);
+  if (!sorted.length || birds <= 0) return null;
+  const today = (farmEggs(sorted[0]) / birds) * 100;
+  const window = sorted.slice(1, 8);
+  const avg7 = window.length
+    ? window.reduce((s, e) => s + (farmEggs(e) / birds) * 100, 0) / window.length
+    : today;
+  const change = avg7 > 0 ? ((today - avg7) / avg7) * 100 : 0;
+  return { today, avg7, change, hasWindow: window.length > 0 };
+}
 
 function fmtDate(iso: string) {
   try {
@@ -54,7 +69,7 @@ export function ProductionDeclineIntelligence({
         )}
 
         {report.status === "ok" && report.events.length === 0 && (
-          <NoDeclineNotice total={report.totalRecords} />
+          <NoDeclineNotice total={report.totalRecords} summary={computeNormalSummary(eggs, rooms)} />
         )}
 
         {report.status === "ok" && report.events.length > 0 && (
@@ -92,23 +107,70 @@ function LearningNotice({ message, total }: { message: string; total: number }) 
   );
 }
 
-function NoDeclineNotice({ total }: { total: number }) {
+function NoDeclineNotice({ total, summary }: { total: number; summary: ReturnType<typeof computeNormalSummary> }) {
+  const changeAbs = summary ? Math.abs(summary.change) : 0;
+  const closeToUsual = !summary || changeAbs < 5;
+  const explanation = !summary
+    ? "Your farm is producing about the same number of eggs as usual. Keep up your daily records."
+    : closeToUsual
+      ? "Today's egg production is close to your recent average. No unusual production drop was found."
+      : summary.change > 0
+        ? "Production has stayed above your farm's usual level over the last 7 days."
+        : "Production has remained close to your farm's usual level over the last 7 days.";
+
   return (
     <div className="rounded-2xl bg-white/5 border border-white/10 p-4 backdrop-blur">
       <div className="flex items-start gap-3">
         <span className="grid h-9 w-9 place-items-center rounded-full bg-emerald-500/20 text-emerald-300">
           <CheckCircle2 className="h-4 w-4" />
         </span>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="font-display text-lg font-semibold">Egg production looks normal</div>
           <div className="mt-1 text-sm text-primary-foreground/80">
-            Your farm is producing about the same number of eggs as usual. Keep up your daily records.
+            Production is normal. {explanation}
           </div>
           <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-primary-foreground/60">
-            Learned from {total} egg records
+            Based on {total} egg record{total === 1 ? "" : "s"}
           </div>
+
+          {summary && (
+            <div className="mt-4">
+              <div className="text-[11px] uppercase tracking-[0.18em] text-primary-foreground/60">
+                Why we say this
+              </div>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                <SummaryTile
+                  icon={<CalendarDays className="h-3.5 w-3.5" />}
+                  label="Today"
+                  value={`${summary.today.toFixed(1)}%`}
+                />
+                <SummaryTile
+                  icon={<Sparkles className="h-3.5 w-3.5" />}
+                  label="7-day average"
+                  value={summary.hasWindow ? `${summary.avg7.toFixed(1)}%` : "—"}
+                />
+                <SummaryTile
+                  icon={summary.change >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+                  label="Change"
+                  value={summary.hasWindow ? `${summary.change >= 0 ? "+" : ""}${summary.change.toFixed(1)}%` : "—"}
+                  tone={summary.hasWindow && summary.change <= -5 ? "warn" : "ok"}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function SummaryTile({ icon, label, value, tone = "ok" }: { icon: React.ReactNode; label: string; value: string; tone?: "ok" | "warn" }) {
+  return (
+    <div className={`rounded-xl border border-white/10 bg-black/20 px-2 py-2 ${tone === "warn" ? "text-amber-200" : "text-primary-foreground"}`}>
+      <div className="flex items-center gap-1 text-[10px] uppercase tracking-[0.14em] text-primary-foreground/60">
+        {icon} <span className="truncate">{label}</span>
+      </div>
+      <div className="mt-0.5 font-semibold text-sm md:text-base tabular-nums">{value}</div>
     </div>
   );
 }
