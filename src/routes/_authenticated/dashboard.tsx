@@ -662,7 +662,7 @@ function Dashboard() {
                               <span className="text-muted-foreground truncate">· {m.cause}</span>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-destructive font-semibold">-{m.loss}</span>
+                              <span className="text-destructive font-semibold">{Math.abs(m.loss)}</span>
                               <RowActions onEdit={() => editMortality(m)} onDelete={() => delMortalityRow(m)} />
                             </div>
                           </div>
