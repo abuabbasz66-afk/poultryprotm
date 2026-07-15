@@ -927,6 +927,7 @@ function Dashboard() {
             {/* AI-Supported Farm Insights — final summary layer combining PoultryPro modules */}
             <FarmInsightsIntelligence
               eggs={eggs} rooms={rooms} mortality={mortality} feed={feed} health={health} prices={prices}
+              bagWeightKg={bagWeightKg}
               loading={eggsQ.isLoading || roomsQ.isLoading || mortalityQ.isLoading || feedQ.isLoading || healthQ.isLoading || pricesQ.isLoading}
             />
 
