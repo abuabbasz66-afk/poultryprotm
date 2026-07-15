@@ -66,11 +66,23 @@ function AuthPage() {
         qc.clear();
         navigate({ to: "/dashboard" });
       } else {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        const trimmed = email.trim().toLowerCase();
+        if (!trimmed) throw new Error("Please enter your email address.");
+        const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
           redirectTo: window.location.origin + "/reset-password",
         });
-        if (error) throw error;
-        toast.success("Password reset link sent. Check your email.");
+        if (error) {
+          // Safe dev-only log; never expose to end users.
+          if (import.meta.env.DEV) console.error("[password-recovery]", error.message);
+          // Rate-limit is the only case we surface distinctly, without revealing account existence.
+          if (/rate|too many/i.test(error.message)) {
+            throw new Error("Too many requests. Please wait a minute and try again.");
+          }
+          throw new Error("We couldn't process that request right now. Please try again shortly.");
+        }
+        toast.success(
+          "If an account exists for this email, password reset instructions have been sent. Please check your inbox and spam folder.",
+        );
         setMode("signin");
       }
     } catch (err: unknown) {
