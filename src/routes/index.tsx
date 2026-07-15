@@ -437,6 +437,99 @@ function Index() {
         </div>
       </section>
 
+      <section id="product" className="py-24 bg-secondary/40 border-y border-border">
+        <div className="container-x">
+          <div className="max-w-2xl">
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">The Product</span>
+            <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
+              See PoultryPro in action.
+            </h2>
+            <p className="mt-5 text-muted-foreground text-lg">
+              From daily farm records to clear farm decisions.
+            </p>
+          </div>
+
+          <div className="mt-14 grid md:grid-cols-3 gap-5">
+            {[
+              {
+                icon: LayoutDashboard,
+                title: "Daily Farm Records",
+                desc: "Record egg production, feed use, mortality and farm activities in one place.",
+                preview: (
+                  <div className="space-y-2">
+                    {[
+                      { l: "Egg production", v: "Today", tag: "Recorded" },
+                      { l: "Feed usage", v: "3 bags", tag: "Recorded" },
+                      { l: "Mortality", v: "0 birds", tag: "Recorded" },
+                      { l: "Health check", v: "Vitamin", tag: "Logged" },
+                    ].map((r) => (
+                      <div key={r.l} className="flex items-center justify-between rounded-lg bg-background/70 border border-border px-3 py-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--forest)]" />
+                          <span className="font-medium">{r.l}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <span>{r.v}</span>
+                          <span className="text-[10px] uppercase tracking-widest text-[color:var(--forest)]">{r.tag}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ),
+              },
+              {
+                icon: LineChart,
+                title: "Farm Performance",
+                desc: "See production trends, costs and farm performance without calculating everything manually.",
+                preview: (
+                  <div>
+                    <div className="flex items-end gap-1.5 h-24">
+                      {[38, 52, 46, 60, 55, 68, 72, 66, 74, 80, 76, 82].map((h, i) => (
+                        <div key={i} className="flex-1 rounded-t bg-[color:var(--forest)]/80" style={{ height: `${h}%` }} />
+                      ))}
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+                      <span>Egg production</span>
+                      <span className="text-[color:var(--forest)] font-medium">Trending up</span>
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                icon: Sparkles,
+                title: "PoultryPro Prediction",
+                desc: "PoultryPro studies your farm records, spots unusual changes and explains what may need your attention.",
+                preview: (
+                  <div className="space-y-2.5">
+                    <div className="rounded-lg border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 px-3 py-2.5">
+                      <div className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-medium">Possible attention</div>
+                      <div className="text-xs mt-1">Room 3 egg production dropped compared to usual.</div>
+                    </div>
+                    <div className="rounded-lg border border-border bg-background/70 px-3 py-2.5">
+                      <div className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-medium">What to check</div>
+                      <div className="text-xs mt-1">Feed intake, water supply and any recent changes.</div>
+                    </div>
+                  </div>
+                ),
+              },
+            ].map((c) => (
+              <div key={c.title} className="rounded-3xl border border-border bg-card p-6 md:p-7 flex flex-col">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary">
+                    <c.icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="font-display text-xl font-semibold">{c.title}</h3>
+                </div>
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{c.desc}</p>
+                <div className="mt-5 rounded-2xl bg-secondary/60 border border-border p-4">
+                  {c.preview}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section id="founder" className="py-24 bg-[color:var(--forest)] text-primary-foreground">
         <div className="container-x grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-4">
