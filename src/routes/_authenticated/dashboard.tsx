@@ -61,6 +61,8 @@ function todayShortLabel() {
 
 function Dashboard() {
   const navigate = useNavigate();
+  const farmQ = useFarm();
+  const farm = farmQ.data;
   const roomsQ = useRooms();
   const eggsQ = useEggs();
   const mortalityQ = useMortality();
