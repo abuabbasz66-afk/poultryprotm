@@ -1079,7 +1079,7 @@ function Dashboard() {
         )}
 
         <div className="pt-6 text-center text-xs text-muted-foreground">
-          {new Date().getFullYear()} ABZ GLOBAL RESOURCE — Poultry Farm Management System
+          {new Date().getFullYear()} {farm?.name ?? "Your Farm"} — Poultry Farm Management System
         </div>
       </main>
       <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
