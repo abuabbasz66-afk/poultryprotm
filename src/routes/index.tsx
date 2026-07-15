@@ -72,21 +72,21 @@ const architecture = [
     step: "01",
     title: "Capture",
     tag: "Farm Records",
-    desc: "Digitise daily poultry activities and convert scattered notebooks into structured operational data — production, feed, health, mortality and prices.",
+    desc: "Record what happens on your farm — eggs, feed, health, mortality and prices — in one simple place.",
     icon: LayoutDashboard,
   },
   {
     step: "02",
     title: "Understand",
     tag: "Farm Analytics",
-    desc: "Turn captured records into production analytics, financial intelligence, performance trends and management insights that explain what happened.",
+    desc: "See what your farm records are telling you: how birds are performing, how much feed costs, and where your money goes.",
     icon: LineChart,
   },
   {
     step: "03",
     title: "Predict",
-    tag: "PoultryPro AI Intelligence",
-    desc: "Progressively apply AI to spot abnormal patterns, forecast production, monitor operational risk and support earlier, evidence-based decisions.",
+    tag: "PoultryPro AI",
+    desc: "Spot unusual changes and possible problems early, based on the records you already keep.",
     icon: Sparkles,
   },
 ];
@@ -107,7 +107,7 @@ const tiers = [
     stage: "Capture",
     stageNum: "01",
     promise: "Capture what happens on your farm.",
-    subtitle: "For farmers moving from notebooks and scattered records to structured digital farm management.",
+    subtitle: "For farmers moving from notebooks and scattered records to a simple, organised farm record system.",
     points: [
       "Daily egg production recording",
       "Room-based egg records",
@@ -130,7 +130,7 @@ const tiers = [
     stage: "Understand",
     stageNum: "02",
     promise: "Understand what your farm data means.",
-    subtitle: "Turn structured records into production analytics, financial intelligence and management insight.",
+    subtitle: "Turn your daily records into clear production, cost and profit views so you can see how the farm is really doing.",
     points: [
       "Everything in Basic",
       "Production percentage calculations",
@@ -154,7 +154,7 @@ const tiers = [
     stage: "Predict",
     stageNum: "03",
     promise: "Predict what may happen next and act earlier.",
-    subtitle: "Progressively adopt AI-powered forecasting, risk monitoring and decision-support intelligence.",
+    subtitle: "Let PoultryPro study your farm records, spot unusual changes and alert you to possible risks earlier.",
     points: [
       "Everything in Basic & Standard",
       "AI-powered egg production forecasting",
@@ -177,17 +177,17 @@ const tiers = [
 
 
 const problems = [
-  "Critical farm data lost in notebooks and scattered records",
-  "Decisions made without real-time operational visibility",
-  "Feed — the largest cost — poorly monitored",
-  "Profitability and performance trends invisible",
-  "Health and mortality events under-documented",
+  "Farm records are easily lost or scattered.",
+  "Farmers cannot quickly see how the farm is performing.",
+  "Feed, the biggest farm cost, is difficult to monitor.",
+  "Profit and production changes are easy to miss.",
+  "Health and mortality records are often incomplete.",
 ];
 
 const timeline = [
-  { phase: "Available Today", items: ["Farm Records — production, feed, health, mortality", "Farm Analytics — profitability & performance dashboards", "Interactive dashboard across every room and flock"] },
-  { phase: "Rolling Out (Premium AI)", items: ["Abnormal production & mortality pattern detection", "Feed-efficiency and cost-anomaly monitoring", "Production forecasting & decision-support alerts"] },
-  { phase: "Long-Term Vision", items: ["Mobile app for iOS & Android + farmer onboarding", "Farmer marketplace & partner ecosystem", "Africa's leading AI poultry ecosystem by 2030"] },
+  { phase: "Available Today", items: ["Farm Records — eggs, feed, health, mortality", "Farm Analytics — performance and profit views", "Simple dashboard for every room and flock"] },
+  { phase: "Rolling Out (Premium AI)", items: ["Alerts when egg production drops unusually", "Alerts when bird losses rise above normal", "Simple feed and cost pattern checks"] },
+  { phase: "Long-Term Vision", items: ["Mobile app for iOS & Android", "Farmer marketplace & partner network", "Africa's leading smart poultry platform by 2030"] },
 ];
 
 function Index() {
@@ -235,12 +235,11 @@ function Index() {
               Capture · Understand · Predict
             </span>
             <h1 className="font-display text-5xl md:text-7xl font-semibold leading-[1.02] tracking-tight">
-              Smart poultry farm <em className="italic text-[color:var(--forest)]">management &amp; intelligence.</em>
+              Know your farm. <em className="italic text-[color:var(--forest)]">Spot problems early. Make better decisions.</em>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
-              PoultryPro digitises daily farm activities, converts records into production and financial
-              intelligence, and progressively applies AI to forecast production and flag operational risk —
-              turning everyday operations into evidence-based decisions.
+              PoultryPro helps poultry farmers record daily farm activities, track production and costs,
+              and understand what is happening on their farm.
             </p>
 
             <div className="flex flex-wrap gap-3">
@@ -270,56 +269,66 @@ function Index() {
               <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--forest)]/40 via-transparent to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 flex gap-3">
                 <div className="flex-1 rounded-2xl bg-background/95 backdrop-blur px-4 py-3">
-                  <div className="text-xs text-muted-foreground">Today's Eggs</div>
-                  <div className="font-display text-2xl font-semibold">3,159</div>
-                  <div className="text-[11px] text-[color:var(--forest)]">104 crates · +0.4%</div>
+                  <div className="text-xs text-muted-foreground">Daily Records</div>
+                  <div className="font-display text-lg font-semibold leading-tight">Eggs · Feed · Health</div>
+                  <div className="text-[11px] text-[color:var(--forest)]">All in one place</div>
                 </div>
                 <div className="flex-1 rounded-2xl bg-background/95 backdrop-blur px-4 py-3">
-                  <div className="text-xs text-muted-foreground">Active Rooms</div>
-                  <div className="font-display text-2xl font-semibold">3</div>
-                  <div className="text-[11px] text-muted-foreground">3,957 birds</div>
+                  <div className="text-xs text-muted-foreground">Farm View</div>
+                  <div className="font-display text-lg font-semibold leading-tight">Every room</div>
+                  <div className="text-[11px] text-muted-foreground">See how birds are doing</div>
                 </div>
               </div>
             </div>
             <div className="absolute -top-6 -right-6 hidden md:block rounded-2xl bg-[color:var(--gold)] text-[color:var(--ink)] px-5 py-4 shadow-[var(--shadow-lift)] rotate-3">
-              <div className="text-xs font-medium uppercase tracking-wider">Profit Analysed</div>
-              <div className="font-display text-2xl font-bold">₦8.01M+</div>
+              <div className="text-xs font-medium uppercase tracking-wider">Simple &amp; Clear</div>
+              <div className="font-display text-lg font-bold">Built for farmers</div>
             </div>
           </div>
         </div>
       </section>
 
       <section className="bg-primary text-primary-foreground">
-        <div className="container-x py-10 grid grid-cols-2 md:grid-cols-4 gap-6">
-          {[
-            { icon: Bird, label: "Birds Managed", value: formatCount(platform.birds) },
-            { icon: Egg, label: "Eggs Recorded", value: formatCount(platform.eggs) },
-            { icon: Wheat, label: "Crates Tracked", value: formatCount(platform.crates) },
-            { icon: Wallet, label: "Revenue Tracked", value: formatNaira(platform.revenue) },
-          ].map((s) => (
-            <div key={s.label} className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-full bg-[color:var(--gold)] text-[color:var(--ink)]">
-                <s.icon className="h-5 w-5" />
-              </span>
-              <div>
-                <div className="font-display text-2xl md:text-3xl font-semibold leading-none">{s.value}</div>
-                <div className="text-xs uppercase tracking-wider opacity-70 mt-1">{s.label}</div>
+        <div className="container-x py-10">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--gold)] font-medium">Pilot Farm Results</div>
+              <div className="mt-1 text-sm text-primary-foreground/80 max-w-2xl">
+                Based on real records analysed during PoultryPro's pilot deployment on a working poultry farm.
               </div>
             </div>
-          ))}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { icon: Bird, label: "Birds monitored", value: formatCount(platform.birds) },
+              { icon: Egg, label: "Eggs recorded", value: formatCount(platform.eggs) },
+              { icon: Wheat, label: "Crates recorded", value: formatCount(platform.crates) },
+              { icon: Wallet, label: "Revenue recorded", value: formatNaira(platform.revenue) },
+            ].map((s) => (
+              <div key={s.label} className="flex items-center gap-3">
+                <span className="grid h-11 w-11 place-items-center rounded-full bg-[color:var(--gold)] text-[color:var(--ink)]">
+                  <s.icon className="h-5 w-5" />
+                </span>
+                <div>
+                  <div className="font-display text-2xl md:text-3xl font-semibold leading-none">{s.value}</div>
+                  <div className="text-xs uppercase tracking-wider opacity-70 mt-1">{s.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       <section id="architecture" className="py-24">
         <div className="container-x">
           <div className="max-w-2xl">
-            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Product Architecture</span>
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">How PoultryPro Works</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Three progressive levels of farm intelligence.
+              Three simple steps: Capture, Understand, Predict.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              PoultryPro is built as a journey: Record Management → Business Intelligence → Predictive Intelligence.
-              Each level unlocks the next.
+              Record what happens on your farm, see what your records are telling you, and get alerted
+              when something looks unusual.
             </p>
           </div>
           <div className="mt-14 grid md:grid-cols-3 gap-5">
@@ -350,8 +359,8 @@ function Index() {
               Africa's poultry industry runs on notebooks.
             </h2>
             <p className="mt-5 text-muted-foreground leading-relaxed">
-              Poultry contributes 6–8% of Nigeria's GDP and over 25% of agricultural GDP — yet most farms
-              still operate manually, losing profit to invisible inefficiencies every single day.
+              Many poultry farms still keep important records in notebooks or scattered files. This makes
+              it difficult to track production, feed costs, bird losses and farm profit.
             </p>
           </div>
           <div className="lg:col-span-7 space-y-3">
@@ -372,11 +381,11 @@ function Index() {
           <div className="max-w-2xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">The Solution</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              One intelligent platform. Every farm decision.
+              Your farm records. One clear picture.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              From feed to finance, PoultryPro brings the operating discipline of a modern
-              enterprise to poultry farms of every size.
+              PoultryPro brings your production, feed, health, mortality and financial records together
+              so you can understand your farm and make better decisions.
             </p>
           </div>
 
@@ -404,20 +413,19 @@ function Index() {
             <img src={eggsImg} alt="Fresh eggs" width={1200} height={900} loading="lazy" className="rounded-3xl object-cover w-full h-[480px] shadow-[var(--shadow-lift)]" />
           </div>
           <div className="lg:col-span-6 order-1 lg:order-2 space-y-6">
-            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Validated Impact</span>
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Pilot Farm Results</span>
             <h2 className="font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Proven with real operational data.
+              Tested with real farm records.
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Tested across a working commercial farm — PoultryPro has tracked thousands of birds,
-              analysed tens of thousands of eggs, and turned everyday activity into measurable profit.
+              Based on real records analysed during PoultryPro's pilot deployment on a working poultry farm.
             </p>
             <div className="grid grid-cols-2 gap-4 pt-2">
               {[
                 { k: "3", v: "Active production rooms" },
-                { k: "19", v: "Bags of feed monitored daily" },
-                { k: "₦15M+", v: "Revenue tracked" },
-                { k: "₦8M+", v: "Profit analysed" },
+                { k: "19", v: "Bags of feed tracked daily" },
+                { k: "₦15M+", v: "Revenue recorded" },
+                { k: "₦8M+", v: "Farm profit analysed" },
               ].map((x) => (
                 <div key={x.v} className="rounded-2xl border border-border bg-card p-5">
                   <div className="font-display text-3xl font-semibold text-[color:var(--forest)]">{x.k}</div>
@@ -425,6 +433,99 @@ function Index() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="product" className="py-24 bg-secondary/40 border-y border-border">
+        <div className="container-x">
+          <div className="max-w-2xl">
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">The Product</span>
+            <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
+              See PoultryPro in action.
+            </h2>
+            <p className="mt-5 text-muted-foreground text-lg">
+              From daily farm records to clear farm decisions.
+            </p>
+          </div>
+
+          <div className="mt-14 grid md:grid-cols-3 gap-5">
+            {[
+              {
+                icon: LayoutDashboard,
+                title: "Daily Farm Records",
+                desc: "Record egg production, feed use, mortality and farm activities in one place.",
+                preview: (
+                  <div className="space-y-2">
+                    {[
+                      { l: "Egg production", v: "Today", tag: "Recorded" },
+                      { l: "Feed usage", v: "3 bags", tag: "Recorded" },
+                      { l: "Mortality", v: "0 birds", tag: "Recorded" },
+                      { l: "Health check", v: "Vitamin", tag: "Logged" },
+                    ].map((r) => (
+                      <div key={r.l} className="flex items-center justify-between rounded-lg bg-background/70 border border-border px-3 py-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--forest)]" />
+                          <span className="font-medium">{r.l}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <span>{r.v}</span>
+                          <span className="text-[10px] uppercase tracking-widest text-[color:var(--forest)]">{r.tag}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ),
+              },
+              {
+                icon: LineChart,
+                title: "Farm Performance",
+                desc: "See production trends, costs and farm performance without calculating everything manually.",
+                preview: (
+                  <div>
+                    <div className="flex items-end gap-1.5 h-24">
+                      {[38, 52, 46, 60, 55, 68, 72, 66, 74, 80, 76, 82].map((h, i) => (
+                        <div key={i} className="flex-1 rounded-t bg-[color:var(--forest)]/80" style={{ height: `${h}%` }} />
+                      ))}
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+                      <span>Egg production</span>
+                      <span className="text-[color:var(--forest)] font-medium">Trending up</span>
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                icon: Sparkles,
+                title: "PoultryPro Prediction",
+                desc: "PoultryPro studies your farm records, spots unusual changes and explains what may need your attention.",
+                preview: (
+                  <div className="space-y-2.5">
+                    <div className="rounded-lg border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 px-3 py-2.5">
+                      <div className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-medium">Possible attention</div>
+                      <div className="text-xs mt-1">Room 3 egg production dropped compared to usual.</div>
+                    </div>
+                    <div className="rounded-lg border border-border bg-background/70 px-3 py-2.5">
+                      <div className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-medium">What to check</div>
+                      <div className="text-xs mt-1">Feed intake, water supply and any recent changes.</div>
+                    </div>
+                  </div>
+                ),
+              },
+            ].map((c) => (
+              <div key={c.title} className="rounded-3xl border border-border bg-card p-6 md:p-7 flex flex-col">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary">
+                    <c.icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="font-display text-xl font-semibold">{c.title}</h3>
+                </div>
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{c.desc}</p>
+                <div className="mt-5 rounded-2xl bg-secondary/60 border border-border p-4">
+                  {c.preview}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -476,11 +577,11 @@ function Index() {
           <div className="max-w-3xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Plans &amp; Subscriptions</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Three levels of farm digital maturity.
+              Three plans that grow with your farm.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              PoultryPro grows with your farm — from structured records, to business intelligence,
-              to AI-powered predictive management.
+              Start with simple farm records, then unlock clearer farm performance views and, later,
+              early alerts for unusual changes.
             </p>
           </div>
 
