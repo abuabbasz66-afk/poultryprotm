@@ -860,7 +860,7 @@ function Dashboard() {
                     <td className="py-3 pr-4 font-semibold">{naira(p.price)}</td>
                     <td className="py-3 pr-4 text-muted-foreground">{p.updated}</td>
                     <td className="py-3 pr-4 text-right space-x-3">
-                      <button className="text-muted-foreground hover:text-foreground"><Pencil className="h-4 w-4 inline" /></button>
+                      <button onClick={() => openDialog({ kind: "price-edit", item: p })} className="text-muted-foreground hover:text-foreground" aria-label={`Edit ${p.item}`}><Pencil className="h-4 w-4 inline" /></button>
                       <button onClick={() => delPrice(p.id)} className="text-destructive hover:opacity-70"><Trash2 className="h-4 w-4 inline" /></button>
                     </td>
                   </tr>
