@@ -24,7 +24,8 @@ export type RecordDialogState =
   | { kind: "feed-add" }
   | { kind: "feed-edit"; item: Feed }
   | { kind: "feed-day-edit"; items: Feed[] }
-  | { kind: "price-add" };
+  | { kind: "price-add" }
+  | { kind: "price-edit"; item: Price };
 
 /* ---------- Presentational primitives ---------- */
 
