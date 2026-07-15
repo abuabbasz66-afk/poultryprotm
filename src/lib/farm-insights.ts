@@ -1,52 +1,65 @@
 import type { EggRow, Room, Mortality, Feed, Health, Price } from "@/lib/farm-data";
 import { detectProductionDecline, type DeclineEvent } from "@/lib/production-decline";
 import { detectMortalityPatterns, type MortalityEvent } from "@/lib/mortality-pattern";
+import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
 
-// AI-Supported Farm Insights
-// -------------------------------------------------------------
-// This module does NOT run another detection engine. It reads the
-// results of the existing PoultryPro intelligence modules (production
-// decline + mortality pattern) together with the farm's own raw
-// records and turns them into a small, farmer-friendly summary.
-// -------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// AI-Supported Farm Insights — cross-module farm intelligence & decision support
+//
+// Architecture (kept deterministic — no LLM required):
+//
+//   buildFarmIntelligenceContext(input)  → FarmIntelligenceContext
+//   detectFarmPatterns(context)          → DetectedFarmPattern[]
+//   rankFarmInsights(patterns)           → FarmInsight[] (deduped, capped)
+//   buildFarmInsights(input)             → FarmInsightsReport
+//
+// The context + patterns layers are structured, privacy-conscious summaries
+// of what the farm's own records actually say. A future LLM/AI explanation
+// layer can consume `context` + `patterns` without needing raw DB access.
+// -----------------------------------------------------------------------------
 
-export type InsightStatus = "Needs attention" | "Keep watching" | "Looking good";
+const CRATE = 30;
+
+// ---------- types ----------
+
+export type InsightPriority = "Looking good" | "Watch" | "Attention" | "High priority";
 export type InsightCategory =
-  | "mortality"
-  | "production"
-  | "activity"
-  | "feed"
-  | "health"
-  | "forecast"
-  | "profit"
-  | "positive";
+  | "Whole Farm"
+  | "Production"
+  | "Feed"
+  | "Mortality"
+  | "Health"
+  | "Room Performance"
+  | "Financial Performance";
+
+/** Kept for backwards-compatibility with the existing card. */
+export type InsightStatus = InsightPriority;
 
 export type FarmInsight = {
   id: string;
-  status: InsightStatus;
+  status: InsightPriority;          // priority badge (renamed but same field)
   category: InsightCategory;
-  priority: number;                 // internal only, higher = more important
-  title: string;                    // simple farmer language
-  whatWeFound: string;              // one plain-English sentence
-  whyItMatters: string;             // one short sentence
-  whatToCheck: string[];            // up to 3 practical checks
-  evidence: string[];               // simple bullet lines for "Why am I seeing this?"
-  scopeLabel?: string;              // "Room 3" | "Whole farm"
+  priority: number;                 // internal ranking weight
+  title: string;
+  whatWeFound: string;
+  whyItMatters: string;
+  whatToCheck: string[];
+  evidence: string[];               // shown in "Why am I seeing this?"
+  scopeLabel?: string;              // e.g. "Room 3", "Whole farm"
 };
 
 export type FarmInsightsReport = {
   ready: boolean;
   briefing: string;
-  insights: FarmInsight[];          // already prioritised, max 3
-  message?: string;                 // shown when ready === false
+  insights: FarmInsight[];
+  message?: string;
   totalEggRecords: number;
+  context: FarmIntelligenceContext;
+  patterns: DetectedFarmPattern[];
 };
 
-const CRATE = 30;
+// ---------- helpers ----------
 
-function farmEggsTotal(e: EggRow): number {
-  return (e.r2 + e.r3 + e.r4) * CRATE + e.extra;
-}
 function sortNewestFirst<T extends { date: string }>(arr: T[]): T[] {
   return [...arr].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
@@ -54,391 +67,758 @@ function mean(xs: number[]): number {
   return xs.length ? xs.reduce((s, v) => s + v, 0) / xs.length : 0;
 }
 function round1(n: number): number { return Math.round(n * 10) / 10; }
-
-function statusFromRisk(r: "Low" | "Medium" | "High"): InsightStatus {
-  if (r === "High") return "Needs attention";
-  if (r === "Medium") return "Needs attention";
-  return "Keep watching";
+function daysBetweenIso(a: string, b: string): number {
+  const t1 = new Date(a + "T00:00:00Z").getTime();
+  const t2 = new Date(b + "T00:00:00Z").getTime();
+  return Math.round((t1 - t2) / 86_400_000);
 }
-function statusFromSeverity(s: "Monitoring" | "Watch" | "Warning" | "Critical"): InsightStatus {
-  if (s === "Critical" || s === "Warning") return "Needs attention";
-  if (s === "Watch") return "Keep watching";
-  return "Keep watching";
-}
-
-function scopeLabel(scope: "Farm" | "Room", label: string): string {
-  return scope === "Farm" ? "Whole farm" : label;
-}
-
-// ---------------- Mortality insight ----------------
-function mortalityInsight(ev: MortalityEvent): FarmInsight {
-  const isFarm = ev.scope === "Farm";
-  const title = isFarm ? "Bird losses are higher" : `${ev.scopeLabel} — more bird losses`;
-  const whatWeFound = `In the last ${ev.recentDays} days, ${ev.recentLoss} bird${ev.recentLoss === 1 ? "" : "s"} were recorded lost${isFarm ? "" : ` in ${ev.scopeLabel}`}. That is more than your farm usually records.`;
-  const check: string[] = [
-    "Check the affected room for sick or weak birds.",
-    "Check water and feed supply.",
-    ev.signals.some(s => /health|vaccin|medic|observation/i.test(s.label))
-      ? "Review the recent health records around this period."
-      : "Look for anything unusual (heat, draft, predators, stress).",
-  ];
-  if (ev.severity === "Critical" || ev.severity === "Warning") {
-    check.push("Consider speaking with a poultry health professional.");
-  }
-  const evidence = [
-    `Recent losses (${ev.recentDays} days): ${ev.recentLoss} bird${ev.recentLoss === 1 ? "" : "s"}.`,
-    `Usual losses over ${ev.recentDays} days: about ${round1(ev.expectedLoss)}.`,
-  ];
-  if (ev.clusterDays >= 2) evidence.push(`Losses recorded on ${ev.clusterDays} days in a row.`);
-  if (ev.causes.length) evidence.push(`Causes noted: ${ev.causes.join(", ")}.`);
-
-  const priority = ev.severity === "Critical" ? 100 : ev.severity === "Warning" ? 90 : 70;
-  return {
-    id: `mort-${ev.scope}-${ev.scopeLabel}`,
-    status: statusFromSeverity(ev.severity),
-    category: "mortality",
-    priority,
-    title,
-    whatWeFound,
-    whyItMatters: "Higher bird losses can reduce your farm's production and profit.",
-    whatToCheck: check.slice(0, 3),
-    evidence,
-    scopeLabel: scopeLabel(ev.scope, ev.scopeLabel),
-  };
-}
-
-// ---------------- Production decline insight ----------------
-function productionInsight(ev: DeclineEvent): FarmInsight {
-  const isFarm = ev.scope === "Farm";
-  const title = isFarm ? "Egg production is dropping" : `${ev.scopeLabel} — egg production is dropping`;
-  const whatWeFound = isFarm
-    ? `Egg production has been lower than your farm's recent average.`
-    : `Egg production in ${ev.scopeLabel} has been lower than its recent average.`;
-  const check = ev.whatToCheck.slice(0, 3);
-  const evidence = [
-    `Current production: ${round1(ev.currentPct)}%.`,
-    `Usual production: about ${round1(ev.baselinePct)}%.`,
-    `That is about ${round1(Math.max(0, ev.changePct))}% lower than usual.`,
-  ];
-  const priority = ev.risk === "High" ? 85 : ev.risk === "Medium" ? 75 : 60;
-  return {
-    id: `prod-${ev.scope}-${ev.scopeLabel}`,
-    status: statusFromRisk(ev.risk),
-    category: "production",
-    priority,
-    title,
-    whatWeFound,
-    whyItMatters: "If this continues, you may produce fewer crates this week.",
-    whatToCheck: check,
-    evidence,
-    scopeLabel: scopeLabel(ev.scope, ev.scopeLabel),
-  };
-}
-
-// ---------------- Feed vs production combined insight ----------------
-type FeedProdSignal = {
-  recentFeed: number;
-  usualFeed: number;
-  feedChangePct: number;    // positive = using more feed
-  recentPct: number;
-  usualPct: number;
-  prodChangePct: number;    // positive = producing less
-};
-function feedProductionSignal(eggs: EggRow[], feed: Feed[], birds: number): FeedProdSignal | null {
-  if (birds <= 0) return null;
-  const eSorted = sortNewestFirst(eggs);
-  if (eSorted.length < 8) return null;
-  const recent7 = eSorted.slice(0, 7);
-  const prev7 = eSorted.slice(7, 14);
-  if (prev7.length < 3) return null;
-
-  const recentPct = mean(recent7.map(e => (farmEggsTotal(e) / birds) * 100));
-  const usualPct = mean(prev7.map(e => (farmEggsTotal(e) / birds) * 100));
-  const prodChangePct = usualPct > 0 ? ((usualPct - recentPct) / usualPct) * 100 : 0;
-
-  // Feed: sum bags per day, compare recent 7 days vs previous 7 days
-  const dates = eSorted.map(e => e.date);
-  const recentDates = new Set(dates.slice(0, 7));
-  const prevDates = new Set(dates.slice(7, 14));
-  const recentFeed = feed.filter(f => recentDates.has(f.date)).reduce((s, f) => s + f.bags, 0);
-  const prevFeed = feed.filter(f => prevDates.has(f.date)).reduce((s, f) => s + f.bags, 0);
-  if (prevFeed <= 0) return null;
-  const feedChangePct = ((recentFeed - prevFeed) / prevFeed) * 100;
-
-  return {
-    recentFeed, usualFeed: prevFeed, feedChangePct,
-    recentPct, usualPct, prodChangePct,
-  };
-}
-
-function feedProductionInsight(sig: FeedProdSignal): FarmInsight | null {
-  // Trigger: feed rising OR flat while production dropping meaningfully
-  if (sig.prodChangePct < 5) return null;
-  if (sig.feedChangePct < -3) return null; // feed also dropped significantly → not this pattern
-  return {
-    id: "feed-vs-prod",
-    status: "Needs attention",
-    category: "feed",
-    priority: 80,
-    title: sig.feedChangePct >= 3
-      ? "Feed use is rising while egg production is falling"
-      : "The farm is using more feed for the eggs being produced",
-    whatWeFound: `In the last week, egg production has been about ${round1(sig.prodChangePct)}% lower than the previous week, while feed use has ${sig.feedChangePct >= 0 ? "stayed the same or increased" : "stayed similar"}.`,
-    whyItMatters: "This raises your feed cost per crate and lowers farm profit.",
-    whatToCheck: [
-      "Check feed wastage in the pens and feeders.",
-      "Check water availability and cleanliness.",
-      "Check the rooms with the biggest production drop.",
-    ],
-    evidence: [
-      `Feed last week: ${round1(sig.recentFeed)} bags.`,
-      `Feed the previous week: ${round1(sig.usualFeed)} bags.`,
-      `Production last week: ${round1(sig.recentPct)}% (usual ${round1(sig.usualPct)}%).`,
-    ],
-    scopeLabel: "Whole farm",
-  };
-}
-
-// ---------------- Health + mortality cross-signal ----------------
-function healthMortalityInsight(mortEvents: MortalityEvent[]): FarmInsight | null {
-  const ev = mortEvents.find(e => e.signals.some(s => /health|vaccin|medic|observation/i.test(s.label)));
-  if (!ev) return null;
-  return {
-    id: `health-mort-${ev.scopeLabel}`,
-    status: "Needs attention",
-    category: "health",
-    priority: 82,
-    title: "Bird losses and health records need attention",
-    whatWeFound: `More bird losses were recorded${ev.scope === "Room" ? ` in ${ev.scopeLabel}` : ""} around the same period as recent health records.`,
-    whyItMatters: "These changes together may be worth checking early.",
-    whatToCheck: [
-      "Review the recent health records (vaccines, medicine or observations).",
-      "Check the affected rooms for weak or sick birds.",
-      "Consider speaking with a poultry health professional.",
-    ],
-    evidence: [
-      `Recent losses (${ev.recentDays} days): ${ev.recentLoss}.`,
-      `Recorded around the same time: ${ev.signals.map(s => s.label).slice(0, 3).join("; ")}.`,
-    ],
-    scopeLabel: scopeLabel(ev.scope, ev.scopeLabel),
-  };
-}
-
-// ---------------- Profit / cost insight ----------------
-function profitInsight(prices: Price[], eggs: EggRow[], feed: Feed[]): FarmInsight | null {
-  if (eggs.length < 3) return null;
-  const eggPrice = prices.find(p => /egg/i.test(p.item))?.price ?? 0;
-  const feedPrice = prices.find(p => /feed/i.test(p.item))?.price ?? 0;
-  if (eggPrice <= 0 || feedPrice <= 0) return null;
-
-  const sorted = sortNewestFirst(eggs);
-  const recent = sorted.slice(0, Math.min(7, sorted.length));
-  const dateSet = new Set(recent.map(e => e.date));
-  const cratesRecent = recent.reduce((s, e) => s + farmEggsTotal(e) / CRATE, 0);
-  const feedRecent = feed.filter(f => dateSet.has(f.date)).reduce((s, f) => s + f.bags, 0);
-  if (cratesRecent <= 0 || feedRecent <= 0) return null;
-
-  const feedCostPerCrate = (feedRecent * feedPrice) / cratesRecent;
-  const marginPerCrate = eggPrice - feedCostPerCrate;
-  // Only surface when margin per crate turns thin (< 20% of egg price) — else stays quiet.
-  if (marginPerCrate >= eggPrice * 0.2) return null;
-
-  const status: InsightStatus = marginPerCrate <= 0 ? "Needs attention" : "Keep watching";
-  return {
-    id: "profit-margin",
-    status,
-    category: "profit",
-    priority: marginPerCrate <= 0 ? 78 : 55,
-    title: marginPerCrate <= 0
-      ? "Feed cost is higher than egg income"
-      : "Feed cost is eating most of your egg income",
-    whatWeFound: `Over the last ${recent.length} record${recent.length === 1 ? "" : "s"}, the feed cost for each crate of eggs is about ₦${Math.round(feedCostPerCrate).toLocaleString("en-NG")}, while a crate sells for about ₦${Math.round(eggPrice).toLocaleString("en-NG")}.`,
-    whyItMatters: "Your profit on each crate is very small right now.",
-    whatToCheck: [
-      "Check if egg selling price is up to date.",
-      "Check if feed price or feed usage has increased.",
-      "Look for feed wastage in the pens.",
-    ],
-    evidence: [
-      `Crates in this period: ${round1(cratesRecent)}.`,
-      `Feed used: ${round1(feedRecent)} bag${feedRecent === 1 ? "" : "s"} at ₦${Math.round(feedPrice).toLocaleString("en-NG")}/bag.`,
-      `Egg selling price: ₦${Math.round(eggPrice).toLocaleString("en-NG")} per crate.`,
-    ],
-    scopeLabel: "Whole farm",
-  };
-}
-
-// ---------------- Positive / stable insights ----------------
-// Each stable insight is only produced when the underlying real records
-// exist and actually show a stable pattern. Evidence in the card matches
-// exactly the claim in the title.
-
-function diffLabel(diff: number, unit: "pp" | "bags" | "%"): string {
-  const abs = Math.abs(diff);
-  if (abs < 0.05) return `No change (${unit === "pp" ? "0 percentage points" : unit === "bags" ? "0 bags" : "0%"})`;
-  const dir = diff < 0 ? "lower" : "higher";
-  if (unit === "pp") return `${round1(abs)} percentage points ${dir}`;
-  if (unit === "bags") return `${round1(abs)} bag${abs === 1 ? "" : "s"} ${dir}`;
-  return `${round1(abs)}% ${dir}`;
-}
-
-function stableProductionInsight(eggs: EggRow[], birds: number, totalRecords: number): FarmInsight | null {
-  if (birds <= 0) return null;
-  const sorted = sortNewestFirst(eggs);
-  if (sorted.length < 3) return null;
-  const today = sorted[0];
-  const rest = sorted.slice(1, 8);
-  if (rest.length < 2) return null;
-  const pctToday = (farmEggsTotal(today) / birds) * 100;
-  const pctAvg = mean(rest.map(e => (farmEggsTotal(e) / birds) * 100));
-  const diff = pctToday - pctAvg; // pp
-
-  return {
-    id: "stable-production",
-    status: "Looking good",
-    category: "positive",
-    priority: 20,
-    title: "Egg production is close to normal",
-    whatWeFound: `Today's production is ${round1(pctToday)}%. Your recent 7-day average is ${round1(pctAvg)}%.`,
-    whyItMatters: "Production is staying close to your farm's recent level.",
-    whatToCheck: [
-      "Keep recording egg production daily.",
-      "Watch for a continuous drop over several days.",
-    ],
-    evidence: [
-      `Today: ${round1(pctToday)}%`,
-      `7-day average: ${round1(pctAvg)}%`,
-      `Difference: ${diffLabel(diff, "pp")}`,
-      `Based on ${totalRecords} egg record${totalRecords === 1 ? "" : "s"}`,
-    ],
-    scopeLabel: "Whole farm",
-  };
-}
-
-function stableFeedInsight(eggs: EggRow[], feed: Feed[]): FarmInsight | null {
-  const eSorted = sortNewestFirst(eggs);
-  if (eSorted.length < 8) return null;
-  const dates = eSorted.map(e => e.date);
-  const recentDates = new Set(dates.slice(0, 7));
-  const prevDates = new Set(dates.slice(7, 14));
-  const recentFeed = feed.filter(f => recentDates.has(f.date)).reduce((s, f) => s + f.bags, 0);
-  const prevFeed = feed.filter(f => prevDates.has(f.date)).reduce((s, f) => s + f.bags, 0);
-  if (recentFeed <= 0 || prevFeed <= 0) return null;
-  const changePct = ((recentFeed - prevFeed) / prevFeed) * 100;
-  if (Math.abs(changePct) > 10) return null; // not stable
-
-  return {
-    id: "stable-feed",
-    status: "Looking good",
-    category: "feed",
-    priority: 18,
-    title: "Feed use looks stable",
-    whatWeFound: `Feed use this week is about ${round1(recentFeed)} bags. The previous 7 days averaged ${round1(prevFeed)} bags.`,
-    whyItMatters: "Steady feed use usually means normal appetite and no sudden waste.",
-    whatToCheck: [
-      "Keep recording feed use every day.",
-      "Compare feed use with egg production weekly.",
-    ],
-    evidence: [
-      `Feed last 7 days: ${round1(recentFeed)} bags`,
-      `Previous 7 days: ${round1(prevFeed)} bags`,
-      `Feed use is close to usual (${diffLabel(recentFeed - prevFeed, "bags")})`,
-    ],
-    scopeLabel: "Whole farm",
-  };
-}
-
-function stableMortalityInsight(mortality: Mortality[], birds: number): FarmInsight | null {
-  if (mortality.length === 0 || birds <= 0) return null;
-  const now = new Date();
-  const cutoff = new Date(now.getTime() - 30 * 24 * 3600 * 1000).toISOString().slice(0, 10);
-  const monthLoss = mortality.filter(m => m.date >= cutoff).reduce((s, m) => s + m.loss, 0);
-  const monthPct = (monthLoss / birds) * 100;
-  // Only surface as "Looking good" when losses are within a normal range.
-  if (monthPct > 2) return null;
-
-  return {
-    id: "stable-mortality",
-    status: monthPct >= 1 ? "Keep watching" : "Looking good",
-    category: "mortality",
-    priority: monthPct >= 1 ? 30 : 15,
-    title: monthPct >= 1 ? "Keep watching bird losses" : "Bird losses remain low",
-    whatWeFound: `Bird losses in the last 30 days: ${monthLoss}. That is about ${round1(monthPct)}% of your current flock.`,
-    whyItMatters: monthPct >= 1
-      ? "Losses are within normal range but worth watching."
-      : "Low losses usually mean the flock is comfortable.",
-    whatToCheck: [
-      "Keep recording every bird loss with a reason.",
-      "Watch daily counts by room for sudden changes.",
-    ],
-    evidence: [
-      `Bird losses (last 30 days): ${monthLoss}`,
-      `Current flock: ${birds} bird${birds === 1 ? "" : "s"}`,
-      `Loss rate: ${round1(monthPct)}%`,
-    ],
-    scopeLabel: "Whole farm",
-  };
-}
-
-// ---------------- Briefing ----------------
-function briefingForAttention(insights: FarmInsight[]): string {
-  const attention = insights.filter(i => i.status === "Needs attention");
-  const watch = insights.filter(i => i.status === "Keep watching");
-  const parts: string[] = [];
-  if (attention.length === 1) {
-    parts.push(`One thing on your farm needs attention today: ${lower(attention[0].title)}.`);
-    parts.push(attention[0].whatWeFound);
-  } else {
-    parts.push(`${attention.length} things on your farm need attention today.`);
-    parts.push(`Top concern: ${lower(attention[0].title)}. ${attention[0].whatWeFound}`);
-  }
-  if (watch.length) parts.push(`Also worth watching: ${lower(watch[0].title)}.`);
-  return parts.slice(0, 3).join(" ");
-}
-
-function briefingForWatch(insights: FarmInsight[]): string {
-  const watch = insights.filter(i => i.status === "Keep watching");
-  const parts: string[] = [
-    "Your farm is close to normal, but a few things are worth watching.",
-    `${watch[0].title}: ${watch[0].whatWeFound}`,
-  ];
-  if (watch.length > 1) parts.push(`Also keep an eye on: ${lower(watch[1].title)}.`);
-  return parts.slice(0, 3).join(" ");
-}
-
-function briefingForStable(insights: FarmInsight[]): string {
-  const titles = insights.map(i => lower(i.title));
-  const parts: string[] = ["Your farm looks stable today."];
-  if (titles.length === 1) {
-    parts.push(`${titles[0].charAt(0).toUpperCase() + titles[0].slice(1)}.`);
-  } else if (titles.length >= 2) {
-    // Combine specific stable signals into one natural sentence
-    const first = insights[0];
-    parts.push(`${first.whatWeFound}`);
-    const others = titles.slice(1);
-    if (others.length) parts.push(`${cap(others.join(" and "))}.`);
-  }
-  parts.push("Keep recording production, feed and mortality every day so PoultryPro can keep watching your farm.");
-  return parts.slice(0, 3).join(" ");
-}
-
-function briefingForNoInsights(): string {
-  return "Your farm looks stable today. Keep recording production, feed and mortality every day so PoultryPro can keep watching your farm.";
-}
-
 function lower(s: string): string { return s.charAt(0).toLowerCase() + s.slice(1); }
-function cap(s: string): string { return s.charAt(0).toUpperCase() + s.slice(1); }
-
-function buildBriefing(insights: FarmInsight[]): string {
-  if (!insights.length) return briefingForNoInsights();
-  if (insights.some(i => i.status === "Needs attention")) return briefingForAttention(insights);
-  if (insights.some(i => i.status === "Keep watching") && insights.every(i => i.status !== "Looking good")) {
-    return briefingForWatch(insights);
-  }
-  return briefingForStable(insights);
+function roomKeyOf(name: string): "r2" | "r3" | "r4" | null {
+  const m = /(\d+)/.exec(name);
+  if (!m) return null;
+  return m[1] === "2" ? "r2" : m[1] === "3" ? "r3" : m[1] === "4" ? "r4" : null;
+}
+function roomCratesForRow(name: string, e: EggRow): number | null {
+  const k = roomKeyOf(name);
+  if (!k) return null;
+  return (e as unknown as Record<string, number>)[k] ?? 0;
+}
+function friendlyRoom(name: string): string {
+  return name.replace(/\s+/g, " ").trim().replace(/^ROOM\s*/i, "Room ");
 }
 
-// ---------------- Main ----------------
+// ---------------------------------------------------------------------------
+// 1) Farm intelligence context
+// ---------------------------------------------------------------------------
+
+export type FarmIntelligenceContext = {
+  activeBirds: number;
+  activeRooms: { name: string; current: number }[];
+
+  latestProduction: null | {
+    date: string;
+    totalEggs: number;
+    crates: number;
+    extra: number;
+    layRatePct: number | null;
+  };
+  productionSevenDayAvgEggs: number | null;
+  productionPrevSevenDayAvgEggs: number | null;
+  productionTrendPct: number | null;         // positive = producing more
+  productionRecords: number;
+
+  latestFeedDate: string | null;
+  feedSevenDayAvgBags: number | null;
+  feedPrevSevenDayAvgBags: number | null;
+  feedChangePct: number | null;
+  feedPerBirdPerDay: number | null;
+
+  recentMortality14dTotal: number;
+  recentMortality14dTrendPct: number | null; // vs previous 14d
+  leadingMortalityCause: string | null;
+  mortalityByRoom14d: Record<string, number>;
+
+  recentHealth14d: Array<{ type: string; name: string; date: string; scope: string }>;
+
+  currentEggPricePerCrate: number | null;
+  currentFeedPricePerBag: number | null;
+  weeklyRevenueNaira: number | null;
+  weeklyFeedCostNaira: number | null;
+  weeklyProfitNaira: number | null;
+
+  // Existing intelligence module outputs (structured)
+  declineEvents: DeclineEvent[];
+  mortalityEvents: MortalityEvent[];
+};
+
+export function buildFarmIntelligenceContext(input: {
+  eggs: EggRow[];
+  rooms: Room[];
+  mortality: Mortality[];
+  feed: Feed[];
+  health: Health[];
+  prices: Price[];
+}): FarmIntelligenceContext {
+  const { eggs, rooms, mortality, feed, health, prices } = input;
+  const activeBirds = rooms.reduce((s, r) => s + Math.max(0, r.current), 0);
+  const activeRooms = rooms.map(r => ({ name: r.name, current: r.current }));
+
+  const eggsSorted = sortNewestFirst(eggs);
+  const latest = eggsSorted[0] ?? null;
+  const latestNorm = latest ? normaliseEggRow(latest) : null;
+
+  const layRatePct =
+    latest && activeBirds > 0 && latestNorm
+      ? (latestNorm.totalEggs / activeBirds) * 100
+      : null;
+
+  const recent7 = eggsSorted.slice(0, 7);
+  const prev7 = eggsSorted.slice(7, 14);
+  const avg = (rows: EggRow[]) =>
+    rows.length ? rows.reduce((s, r) => s + totalEggsFromRow(r), 0) / rows.length : null;
+
+  const prodAvg7 = avg(recent7);
+  const prodAvgPrev7 = avg(prev7);
+  const productionTrendPct =
+    prodAvg7 !== null && prodAvgPrev7 !== null && prodAvgPrev7 > 0
+      ? ((prodAvg7 - prodAvgPrev7) / prodAvgPrev7) * 100
+      : null;
+
+  const feedSorted = sortNewestFirst(feed);
+  const latestFeedDate = feedSorted[0]?.date ?? null;
+  const recent7Dates = new Set(recent7.map(e => e.date));
+  const prev7Dates = new Set(prev7.map(e => e.date));
+  const bagsIn = (dates: Set<string>) =>
+    feed.filter(f => dates.has(f.date)).reduce((s, f) => s + Number(f.bags || 0), 0);
+  const feedRecent = recent7Dates.size ? bagsIn(recent7Dates) : null;
+  const feedPrev = prev7Dates.size ? bagsIn(prev7Dates) : null;
+  const feedSevenDayAvgBags = feedRecent !== null && recent7Dates.size ? feedRecent / recent7Dates.size : null;
+  const feedPrevSevenDayAvgBags = feedPrev !== null && prev7Dates.size ? feedPrev / prev7Dates.size : null;
+  const feedChangePct =
+    feedRecent !== null && feedPrev !== null && feedPrev > 0
+      ? ((feedRecent - feedPrev) / feedPrev) * 100
+      : null;
+  const feedPerBirdPerDay =
+    feedSevenDayAvgBags !== null && activeBirds > 0
+      ? feedSevenDayAvgBags / activeBirds
+      : null;
+
+  const today = new Date();
+  const cutoff14 = new Date(today.getTime() - 14 * 86_400_000).toISOString().slice(0, 10);
+  const cutoff28 = new Date(today.getTime() - 28 * 86_400_000).toISOString().slice(0, 10);
+  const recentMort = mortality.filter(m => m.date >= cutoff14);
+  const prevMort = mortality.filter(m => m.date >= cutoff28 && m.date < cutoff14);
+  const recentMortality14dTotal = recentMort.reduce((s, m) => s + Math.abs(m.loss), 0);
+  const prevMortTotal = prevMort.reduce((s, m) => s + Math.abs(m.loss), 0);
+  const recentMortality14dTrendPct =
+    prevMortTotal > 0 ? ((recentMortality14dTotal - prevMortTotal) / prevMortTotal) * 100 : null;
+
+  const mortalityByRoom14d: Record<string, number> = {};
+  for (const m of recentMort) {
+    mortalityByRoom14d[m.room] = (mortalityByRoom14d[m.room] ?? 0) + Math.abs(m.loss);
+  }
+  const causeMap: Record<string, number> = {};
+  for (const m of recentMort) causeMap[m.cause] = (causeMap[m.cause] ?? 0) + Math.abs(m.loss);
+  const leadingMortalityCause =
+    Object.entries(causeMap).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+
+  const recentHealth14d = health
+    .filter(h => h.date >= cutoff14)
+    .slice(0, 20)
+    .map(h => ({ type: h.type, name: h.name, date: h.date, scope: h.scope }));
+
+  const eggPrice = prices.find(p => /egg/i.test(p.item))?.price ?? null;
+  const feedPrice = prices.find(p => /feed/i.test(p.item))?.price ?? null;
+  const cratesRecent = recent7.reduce((s, e) => s + totalEggsFromRow(e) / CRATE, 0);
+  const weeklyRevenueNaira = eggPrice && cratesRecent > 0 ? Math.round(cratesRecent * eggPrice) : null;
+  const weeklyFeedCostNaira = feedPrice && feedRecent !== null && feedRecent > 0 ? Math.round(feedRecent * feedPrice) : null;
+  const weeklyProfitNaira =
+    weeklyRevenueNaira !== null && weeklyFeedCostNaira !== null
+      ? weeklyRevenueNaira - weeklyFeedCostNaira
+      : null;
+
+  const decline = detectProductionDecline({ eggs, rooms, mortality, feed, health });
+  const mort = detectMortalityPatterns({ eggs, rooms, mortality, feed, health });
+
+  return {
+    activeBirds,
+    activeRooms,
+    latestProduction: latest && latestNorm
+      ? {
+          date: latest.date,
+          totalEggs: latestNorm.totalEggs,
+          crates: latestNorm.crates,
+          extra: latestNorm.extra,
+          layRatePct,
+        }
+      : null,
+    productionSevenDayAvgEggs: prodAvg7,
+    productionPrevSevenDayAvgEggs: prodAvgPrev7,
+    productionTrendPct,
+    productionRecords: eggs.length,
+    latestFeedDate,
+    feedSevenDayAvgBags,
+    feedPrevSevenDayAvgBags,
+    feedChangePct,
+    feedPerBirdPerDay,
+    recentMortality14dTotal,
+    recentMortality14dTrendPct,
+    leadingMortalityCause,
+    mortalityByRoom14d,
+    recentHealth14d,
+    currentEggPricePerCrate: eggPrice,
+    currentFeedPricePerBag: feedPrice,
+    weeklyRevenueNaira,
+    weeklyFeedCostNaira,
+    weeklyProfitNaira,
+    declineEvents: decline.events,
+    mortalityEvents: mort.events,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// 2) Pattern detection (cross-module)
+// ---------------------------------------------------------------------------
+
+export type DetectedFarmPattern =
+  | {
+      kind: "production-decline-farm";
+      priority: InsightPriority;
+      changePct: number;             // % below usual (positive)
+      currentPct: number;
+      baselinePct: number;
+      ev: DeclineEvent;
+    }
+  | {
+      kind: "production-decline-room";
+      priority: InsightPriority;
+      room: string;
+      changePct: number;
+      currentPct: number;
+      baselinePct: number;
+      ev: DeclineEvent;
+    }
+  | {
+      kind: "prod-decline-and-mortality";
+      priority: InsightPriority;
+      prodChangePct: number;
+      mortTrendPct: number | null;
+      mortTotal: number;
+    }
+  | {
+      kind: "prod-decline-and-feed-change";
+      priority: InsightPriority;
+      prodChangePct: number;
+      feedChangePct: number;
+      feedRecent: number;
+      feedPrev: number;
+    }
+  | {
+      kind: "prod-decline-after-health";
+      priority: InsightPriority;
+      prodChangePct: number;
+      healthEvent: { type: string; name: string; date: string };
+      daysBetween: number;
+    }
+  | {
+      kind: "feed-rising-prod-flat";
+      priority: InsightPriority;
+      feedChangePct: number;
+      prodChangePct: number;
+      feedRecent: number;
+      feedPrev: number;
+    }
+  | {
+      kind: "mortality-concentrated-room";
+      priority: InsightPriority;
+      room: string;
+      losses: number;
+      totalLosses: number;
+      sharePct: number;
+    }
+  | {
+      kind: "financial-margin-thin";
+      priority: InsightPriority;
+      feedCostPerCrate: number;
+      eggPrice: number;
+      cratesRecent: number;
+      feedRecent: number;
+      feedPrice: number;
+    }
+  | {
+      kind: "stable";
+      priority: "Looking good";
+      whatWasChecked: string[];
+    };
+
+export function detectFarmPatterns(ctx: FarmIntelligenceContext): DetectedFarmPattern[] {
+  const patterns: DetectedFarmPattern[] = [];
+
+  const declineFarm = ctx.declineEvents.find(e => e.scope === "Farm");
+  const declineRooms = ctx.declineEvents.filter(e => e.scope === "Room");
+  const prodChangePct = declineFarm ? declineFarm.changePct : 0;
+
+  // Farm-level production decline
+  if (declineFarm) {
+    patterns.push({
+      kind: "production-decline-farm",
+      priority: declineFarm.risk === "High" ? "Attention" : "Watch",
+      changePct: declineFarm.changePct,
+      currentPct: declineFarm.currentPct,
+      baselinePct: declineFarm.baselinePct,
+      ev: declineFarm,
+    });
+  }
+
+  // Room-level production decline (rule F)
+  for (const ev of declineRooms) {
+    patterns.push({
+      kind: "production-decline-room",
+      priority: ev.risk === "High" ? "Attention" : "Watch",
+      room: ev.scopeLabel,
+      changePct: ev.changePct,
+      currentPct: ev.currentPct,
+      baselinePct: ev.baselinePct,
+      ev,
+    });
+  }
+
+  // Rule B: production decline + mortality increase → HIGH PRIORITY
+  if (
+    declineFarm &&
+    ctx.recentMortality14dTotal > 0 &&
+    (ctx.recentMortality14dTrendPct === null || ctx.recentMortality14dTrendPct >= 25)
+  ) {
+    // require a real mortality signal (either up-trend OR high raw loss vs flock)
+    const flockLossPct = ctx.activeBirds > 0 ? (ctx.recentMortality14dTotal / ctx.activeBirds) * 100 : 0;
+    if ((ctx.recentMortality14dTrendPct ?? 0) >= 25 || flockLossPct >= 1) {
+      patterns.push({
+        kind: "prod-decline-and-mortality",
+        priority: "High priority",
+        prodChangePct,
+        mortTrendPct: ctx.recentMortality14dTrendPct,
+        mortTotal: ctx.recentMortality14dTotal,
+      });
+    }
+  }
+
+  // Rule A: production decline + feed change (either direction, ≥5%)
+  if (
+    declineFarm &&
+    ctx.feedChangePct !== null &&
+    ctx.feedSevenDayAvgBags !== null &&
+    ctx.feedPrevSevenDayAvgBags !== null &&
+    Math.abs(ctx.feedChangePct) >= 5
+  ) {
+    patterns.push({
+      kind: "prod-decline-and-feed-change",
+      priority: "Attention",
+      prodChangePct,
+      feedChangePct: ctx.feedChangePct,
+      feedRecent: ctx.feedSevenDayAvgBags * 7,
+      feedPrev: ctx.feedPrevSevenDayAvgBags * 7,
+    });
+  }
+
+  // Rule C: production decline shortly after a recorded health event (≤10 days)
+  if (declineFarm && ctx.recentHealth14d.length > 0) {
+    const declineDate = declineFarm.firstDeclineDate || declineFarm.latestDate;
+    const candidate = ctx.recentHealth14d
+      .filter(h => h.date <= declineDate)
+      .map(h => ({ h, gap: daysBetweenIso(declineDate, h.date) }))
+      .filter(x => x.gap >= 0 && x.gap <= 10)
+      .sort((a, b) => a.gap - b.gap)[0];
+    if (candidate) {
+      patterns.push({
+        kind: "prod-decline-after-health",
+        priority: "Attention",
+        prodChangePct,
+        healthEvent: { type: candidate.h.type, name: candidate.h.name, date: candidate.h.date },
+        daysBetween: candidate.gap,
+      });
+    }
+  }
+
+  // Rule D: feed usage rising while production stays flat/declining
+  if (
+    ctx.feedChangePct !== null &&
+    ctx.feedChangePct >= 10 &&
+    ctx.productionTrendPct !== null &&
+    ctx.productionTrendPct <= 3 &&
+    ctx.feedSevenDayAvgBags !== null &&
+    ctx.feedPrevSevenDayAvgBags !== null
+  ) {
+    patterns.push({
+      kind: "feed-rising-prod-flat",
+      priority: "Attention",
+      feedChangePct: ctx.feedChangePct,
+      prodChangePct: -ctx.productionTrendPct, // display as "drop"
+      feedRecent: ctx.feedSevenDayAvgBags * 7,
+      feedPrev: ctx.feedPrevSevenDayAvgBags * 7,
+    });
+  }
+
+  // Rule E: mortality concentrated in one room (≥50% of 14-day losses, ≥3 birds)
+  if (ctx.recentMortality14dTotal >= 3) {
+    const entries = Object.entries(ctx.mortalityByRoom14d).sort((a, b) => b[1] - a[1]);
+    const [topRoom, losses] = entries[0] ?? ["", 0];
+    if (topRoom) {
+      const share = (losses / ctx.recentMortality14dTotal) * 100;
+      if (share >= 50 && entries.length >= 1) {
+        patterns.push({
+          kind: "mortality-concentrated-room",
+          priority: share >= 75 ? "Attention" : "Watch",
+          room: topRoom,
+          losses,
+          totalLosses: ctx.recentMortality14dTotal,
+          sharePct: share,
+        });
+      }
+    }
+  }
+
+  // Financial performance — surface only when margin per crate is thin.
+  if (
+    ctx.currentEggPricePerCrate &&
+    ctx.currentFeedPricePerBag &&
+    ctx.feedSevenDayAvgBags !== null &&
+    ctx.feedSevenDayAvgBags > 0 &&
+    ctx.productionSevenDayAvgEggs !== null &&
+    ctx.productionSevenDayAvgEggs > 0
+  ) {
+    const cratesRecent = (ctx.productionSevenDayAvgEggs * 7) / CRATE;
+    const feedRecent = ctx.feedSevenDayAvgBags * 7;
+    if (cratesRecent > 0 && feedRecent > 0) {
+      const feedCostPerCrate = (feedRecent * ctx.currentFeedPricePerBag) / cratesRecent;
+      const margin = ctx.currentEggPricePerCrate - feedCostPerCrate;
+      if (margin < ctx.currentEggPricePerCrate * 0.2) {
+        patterns.push({
+          kind: "financial-margin-thin",
+          priority: margin <= 0 ? "Attention" : "Watch",
+          feedCostPerCrate,
+          eggPrice: ctx.currentEggPricePerCrate,
+          cratesRecent,
+          feedRecent,
+          feedPrice: ctx.currentFeedPricePerBag,
+        });
+      }
+    }
+  }
+
+  // Rule G: stable farm — only when nothing else fired.
+  if (patterns.length === 0) {
+    const checked: string[] = [];
+    if (ctx.productionSevenDayAvgEggs !== null) checked.push("egg production");
+    if (ctx.feedSevenDayAvgBags !== null) checked.push("feed usage");
+    if (ctx.recentMortality14dTotal >= 0) checked.push("bird losses");
+    patterns.push({
+      kind: "stable",
+      priority: "Looking good",
+      whatWasChecked: checked,
+    });
+  }
+
+  return patterns;
+}
+
+// ---------------------------------------------------------------------------
+// 3) Map patterns → farmer-friendly insights, dedupe, rank, cap
+// ---------------------------------------------------------------------------
+
+const PRIORITY_WEIGHT: Record<InsightPriority, number> = {
+  "High priority": 100,
+  "Attention": 80,
+  "Watch": 60,
+  "Looking good": 20,
+};
+
+function pctText(n: number): string {
+  const abs = Math.abs(n);
+  return `${round1(abs)}%`;
+}
+function nairaText(n: number): string {
+  return `₦${Math.round(n).toLocaleString("en-NG")}`;
+}
+
+function patternToInsight(p: DetectedFarmPattern, ctx: FarmIntelligenceContext): FarmInsight | null {
+  switch (p.kind) {
+    case "production-decline-farm": {
+      const cur = round1(p.currentPct);
+      const base = round1(p.baselinePct);
+      return {
+        id: "prod-farm",
+        status: p.priority,
+        category: "Production",
+        priority: PRIORITY_WEIGHT[p.priority] + Math.min(15, Math.round(p.changePct)),
+        title: "Egg production is falling",
+        whatWeFound: `Your farm's egg production has dropped to about ${cur}%, below the recent pattern of ${base}%.`,
+        whyItMatters: "If this continues, weekly crate output and revenue will drop.",
+        whatToCheck: (p.ev.whatToCheck.length ? p.ev.whatToCheck : [
+          "Check water supply and feed access in each room.",
+          "Review yesterday's egg count for miscounts.",
+          "Watch for weak or unwell birds.",
+        ]).slice(0, 4),
+        evidence: [
+          `Today's lay rate: ${cur}%`,
+          `Recent usual: ${base}%`,
+          `Change: -${pctText(p.changePct)}`,
+          `Based on ${ctx.productionRecords} production record${ctx.productionRecords === 1 ? "" : "s"}`,
+        ],
+        scopeLabel: "Whole farm",
+      };
+    }
+
+    case "production-decline-room": {
+      const cur = round1(p.currentPct);
+      const base = round1(p.baselinePct);
+      return {
+        id: `prod-room-${p.room}`,
+        status: p.priority,
+        category: "Room Performance",
+        priority: PRIORITY_WEIGHT[p.priority] + 5,
+        title: `${friendlyRoom(p.room)} is producing below its recent pattern`,
+        whatWeFound: `${friendlyRoom(p.room)} is declining faster than the whole-farm trend.`,
+        whyItMatters: "One room dropping can be an early sign of a room-specific issue.",
+        whatToCheck: [
+          `Compare feed allocation for ${friendlyRoom(p.room)} against other rooms.`,
+          `Review recent mortality records for ${friendlyRoom(p.room)}.`,
+          `Review recent health records for ${friendlyRoom(p.room)}.`,
+          `Confirm the active bird count for ${friendlyRoom(p.room)}.`,
+        ],
+        evidence: [
+          `Current production: ${cur}%`,
+          `Recent room average: ${base}%`,
+          `Change: -${pctText(p.changePct)}`,
+        ],
+        scopeLabel: friendlyRoom(p.room),
+      };
+    }
+
+    case "prod-decline-and-mortality": {
+      return {
+        id: "prod-mortality",
+        status: p.priority,
+        category: "Whole Farm",
+        priority: PRIORITY_WEIGHT[p.priority] + 10,
+        title: "Egg production is falling while bird losses are rising",
+        whatWeFound: `Egg production has dropped by about ${pctText(p.prodChangePct)} while ${p.mortTotal} bird${p.mortTotal === 1 ? "" : "s"} were recorded lost in the last 14 days.`,
+        whyItMatters: "These two changes together deserve close review.",
+        whatToCheck: [
+          "Review the affected rooms and compare mortality causes.",
+          "Review recent health records around this period.",
+          "Watch water, feed and any environmental changes.",
+          "Consider a professional veterinary assessment if the pattern continues.",
+        ],
+        evidence: [
+          `Production change: -${pctText(p.prodChangePct)}`,
+          `Recent bird losses (14 days): ${p.mortTotal}`,
+          p.mortTrendPct !== null ? `Mortality trend: ${p.mortTrendPct >= 0 ? "+" : ""}${pctText(p.mortTrendPct)} vs previous 14 days` : `Mortality trend: not enough previous data to compare`,
+        ],
+        scopeLabel: "Whole farm",
+      };
+    }
+
+    case "prod-decline-and-feed-change": {
+      const up = p.feedChangePct >= 0;
+      return {
+        id: "prod-feed",
+        status: p.priority,
+        category: "Feed",
+        priority: PRIORITY_WEIGHT[p.priority] + 8,
+        title: up
+          ? "Feed use changed while production is falling"
+          : "Feed use dropped while production is falling",
+        whatWeFound: `Production declined by about ${pctText(p.prodChangePct)} while feed use ${up ? "rose" : "fell"} by about ${pctText(p.feedChangePct)} in the same period.`,
+        whyItMatters: "Production and feed patterns changed together — worth understanding why.",
+        whatToCheck: [
+          "Confirm the feed quantity actually issued to each room.",
+          "Check whether feed formulation or supplier changed.",
+          "Confirm birds are accessing feed and water normally.",
+          "Review recent health observations.",
+        ],
+        evidence: [
+          `Feed last 7 days: ${round1(p.feedRecent)} bags`,
+          `Previous 7 days: ${round1(p.feedPrev)} bags`,
+          `Feed change: ${up ? "+" : "-"}${pctText(p.feedChangePct)}`,
+          `Production change: -${pctText(p.prodChangePct)}`,
+        ],
+        scopeLabel: "Whole farm",
+      };
+    }
+
+    case "prod-decline-after-health": {
+      return {
+        id: "prod-health",
+        status: p.priority,
+        category: "Health",
+        priority: PRIORITY_WEIGHT[p.priority] + 6,
+        title: "Production changed after a recent health record",
+        whatWeFound: `Egg production dropped ${p.daysBetween === 0 ? "on the same day" : `${p.daysBetween} day${p.daysBetween === 1 ? "" : "s"} after`} a recorded ${p.healthEvent.type.toLowerCase()} (${p.healthEvent.name}). This timing may be worth reviewing.`,
+        whyItMatters: "Some vaccines or treatments briefly affect lay rate. Confirm the birds recover on schedule.",
+        whatToCheck: [
+          `Review the ${p.healthEvent.type.toLowerCase()} record (${p.healthEvent.name}).`,
+          "Watch daily production over the next 3–5 days.",
+          "Note any unusual bird behaviour, appetite change or stress.",
+        ],
+        evidence: [
+          `Health record: ${p.healthEvent.type} — ${p.healthEvent.name}`,
+          `Recorded on: ${p.healthEvent.date}`,
+          `Production change: -${pctText(p.prodChangePct)}`,
+        ],
+        scopeLabel: "Whole farm",
+      };
+    }
+
+    case "feed-rising-prod-flat": {
+      return {
+        id: "feed-rising",
+        status: p.priority,
+        category: "Feed",
+        priority: PRIORITY_WEIGHT[p.priority] + 4,
+        title: "Feed use changed while production remained flat",
+        whatWeFound: `Feed use rose by about ${pctText(p.feedChangePct)} while egg output stayed close to its recent average.`,
+        whyItMatters: "Extra feed with no extra eggs raises your cost per crate.",
+        whatToCheck: [
+          "Check feed wastage in the pens and feeders.",
+          "Confirm room-level feed allocation.",
+          "Confirm current bird count matches records.",
+          "Compare feed use across rooms.",
+        ],
+        evidence: [
+          `Feed last 7 days: ${round1(p.feedRecent)} bags`,
+          `Previous 7 days: ${round1(p.feedPrev)} bags`,
+          `Feed change: +${pctText(p.feedChangePct)}`,
+          `Production change: ${p.prodChangePct >= 0 ? "-" : "+"}${pctText(p.prodChangePct)}`,
+        ],
+        scopeLabel: "Whole farm",
+      };
+    }
+
+    case "mortality-concentrated-room": {
+      return {
+        id: `mort-room-${p.room}`,
+        status: p.priority,
+        category: "Mortality",
+        priority: PRIORITY_WEIGHT[p.priority] + 6,
+        title: `Most recent bird losses are coming from ${friendlyRoom(p.room)}`,
+        whatWeFound: `${p.losses} of the last ${p.totalLosses} recorded bird losses (${round1(p.sharePct)}%) were in ${friendlyRoom(p.room)}.`,
+        whyItMatters: "Losses concentrated in one room usually point to something room-specific.",
+        whatToCheck: [
+          `Review room-specific health observations for ${friendlyRoom(p.room)}.`,
+          `Check feed and water access in ${friendlyRoom(p.room)}.`,
+          "Review environmental conditions (heat, draft, litter) if recorded.",
+          `Compare ${friendlyRoom(p.room)}'s production trend with other rooms.`,
+        ],
+        evidence: [
+          `Room: ${friendlyRoom(p.room)}`,
+          `Losses in room: ${p.losses}`,
+          `Share of recent mortality: ${round1(p.sharePct)}%`,
+          `Analysis period: last 14 days`,
+        ],
+        scopeLabel: friendlyRoom(p.room),
+      };
+    }
+
+    case "financial-margin-thin": {
+      const margin = p.eggPrice - p.feedCostPerCrate;
+      return {
+        id: "financial-margin",
+        status: p.priority,
+        category: "Financial Performance",
+        priority: PRIORITY_WEIGHT[p.priority],
+        title: margin <= 0
+          ? "Feed cost is higher than egg income"
+          : "Feed cost is eating most of your egg income",
+        whatWeFound: `In the last week, each crate costs about ${nairaText(p.feedCostPerCrate)} in feed while selling for about ${nairaText(p.eggPrice)}.`,
+        whyItMatters: "Profit per crate is thin — small changes in price or wastage make a big difference.",
+        whatToCheck: [
+          "Check that the egg selling price is up to date.",
+          "Check whether feed price or feed usage has increased.",
+          "Look for feed wastage in the pens.",
+        ],
+        evidence: [
+          `Crates last 7 days: ${round1(p.cratesRecent)}`,
+          `Feed used: ${round1(p.feedRecent)} bag${p.feedRecent === 1 ? "" : "s"} at ${nairaText(p.feedPrice)}/bag`,
+          `Egg selling price: ${nairaText(p.eggPrice)} per crate`,
+          `Feed cost per crate: ${nairaText(p.feedCostPerCrate)}`,
+        ],
+        scopeLabel: "Whole farm",
+      };
+    }
+
+    case "stable": {
+      const checked = p.whatWasChecked.length ? p.whatWasChecked.join(", ") : "your recent records";
+      return {
+        id: "stable-farm",
+        status: "Looking good",
+        category: "Whole Farm",
+        priority: PRIORITY_WEIGHT["Looking good"],
+        title: "Your farm looks stable today",
+        whatWeFound: `PoultryPro checked ${checked} and found no unusual pattern.`,
+        whyItMatters: "Steady patterns usually mean the flock is comfortable and routines are working.",
+        whatToCheck: [
+          "Continue recording production, feed and mortality every day.",
+          "Watch for any sustained change over 3–5 days.",
+        ],
+        evidence: buildStableEvidence(ctx),
+        scopeLabel: "Whole farm",
+      };
+    }
+  }
+}
+
+function buildStableEvidence(ctx: FarmIntelligenceContext): string[] {
+  const ev: string[] = [];
+  if (ctx.latestProduction?.layRatePct != null) ev.push(`Today's lay rate: ${round1(ctx.latestProduction.layRatePct)}%`);
+  if (ctx.productionSevenDayAvgEggs != null) ev.push(`7-day production average: ${Math.round(ctx.productionSevenDayAvgEggs)} eggs/day`);
+  if (ctx.feedSevenDayAvgBags != null) ev.push(`7-day feed average: ${round1(ctx.feedSevenDayAvgBags)} bags/day`);
+  ev.push(`Bird losses (14 days): ${ctx.recentMortality14dTotal}`);
+  ev.push(`Based on ${ctx.productionRecords} production record${ctx.productionRecords === 1 ? "" : "s"}`);
+  return ev;
+}
+
+// De-duplicate overlapping production signals so the farmer never sees the
+// same underlying story as separate cards.
+function dedupeProductionInsights(list: FarmInsight[]): FarmInsight[] {
+  const hasCombined = list.some(i => i.id === "prod-mortality" || i.id === "prod-feed" || i.id === "prod-health");
+  if (!hasCombined) return list;
+  // If a combined production insight exists, drop the standalone farm-level
+  // production decline card (room-level ones stay because they add new info).
+  return list.filter(i => i.id !== "prod-farm");
+}
+
+export function rankFarmInsights(
+  patterns: DetectedFarmPattern[],
+  ctx: FarmIntelligenceContext,
+): FarmInsight[] {
+  const insights: FarmInsight[] = [];
+  const seen = new Set<string>();
+  for (const p of patterns) {
+    const ins = patternToInsight(p, ctx);
+    if (!ins) continue;
+    if (seen.has(ins.id)) continue;
+    seen.add(ins.id);
+    insights.push(ins);
+  }
+  const deduped = dedupeProductionInsights(insights);
+  deduped.sort((a, b) => {
+    const pa = PRIORITY_WEIGHT[a.status];
+    const pb = PRIORITY_WEIGHT[b.status];
+    if (pb !== pa) return pb - pa;
+    return b.priority - a.priority;
+  });
+  return deduped.slice(0, 5);
+}
+
+// ---------------------------------------------------------------------------
+// 4) Daily briefing (max 2 sentences), built from top insights
+// ---------------------------------------------------------------------------
+
+function briefingFromInsights(insights: FarmInsight[]): string {
+  if (insights.length === 0) {
+    return "Your farm is generally stable today. Keep recording production, feed and bird losses each day so PoultryPro can catch changes earlier.";
+  }
+  const top = insights[0];
+  const second = insights[1];
+
+  if (top.status === "Looking good") {
+    return "Your farm is generally stable today. Egg production, feed and bird losses remain close to their recent pattern.";
+  }
+
+  const firstSentence = `${top.title}. ${top.whatWeFound}`;
+  if (second && (second.status === "High priority" || second.status === "Attention")) {
+    return `${firstSentence} ${second.title.replace(/\.$/, "")} — worth reviewing too.`;
+  }
+  if (second && second.status === "Watch") {
+    return `${firstSentence} Also worth watching: ${lower(second.title)}.`;
+  }
+  return firstSentence;
+}
+
+// ---------------------------------------------------------------------------
+// 5) Entry point
+// ---------------------------------------------------------------------------
+
 export function buildFarmInsights(input: {
   eggs: EggRow[];
   rooms: Room[];
@@ -447,77 +827,43 @@ export function buildFarmInsights(input: {
   health: Health[];
   prices: Price[];
 }): FarmInsightsReport {
-  const { eggs, rooms, mortality, feed, health, prices } = input;
-  const totalBirds = rooms.reduce((s, r) => s + r.current, 0);
+  const context = buildFarmIntelligenceContext(input);
 
-  // Need at least some baseline data to summarise usefully.
-  if (eggs.length < 3 && mortality.length === 0) {
+  // Data-sufficiency check: without any production or mortality records the
+  // engine has nothing meaningful to summarise.
+  if (input.eggs.length < 3 && input.mortality.length === 0) {
     return {
       ready: false,
       briefing: "",
       insights: [],
-      totalEggRecords: eggs.length,
-      message: "PoultryPro needs more daily records before it can give a full farm summary. Keep recording production, feed and mortality.",
+      totalEggRecords: input.eggs.length,
+      message:
+        "PoultryPro needs more daily records before it can summarise your farm. Keep recording production, feed and bird losses.",
+      context,
+      patterns: [],
     };
   }
 
-  const insights: FarmInsight[] = [];
-
-  // Reuse existing modules' outputs
-  const decline = detectProductionDecline({ eggs, rooms, mortality, feed, health });
-  const mort = detectMortalityPatterns({ eggs, rooms, mortality, feed, health });
-
-  // Mortality first (highest priority)
-  for (const ev of mort.events.slice(0, 2)) insights.push(mortalityInsight(ev));
-
-  // Health + mortality combined
-  const hm = healthMortalityInsight(mort.events);
-  if (hm) insights.push(hm);
-
-  // Production decline
-  for (const ev of decline.events.slice(0, 2)) insights.push(productionInsight(ev));
-
-  // Feed vs production combined
-  const fp = feedProductionSignal(eggs, feed, totalBirds);
-  if (fp) {
-    const fpIns = feedProductionInsight(fp);
-    if (fpIns) insights.push(fpIns);
-  }
-
-  // Profit / cost
-  const profit = profitInsight(prices, eggs, feed);
-  if (profit) insights.push(profit);
-
-  // Deduplicate by id, sort by priority, cap at 3
-  const seen = new Set<string>();
-  const unique = insights.filter(i => (seen.has(i.id) ? false : (seen.add(i.id), true)));
-  unique.sort((a, b) => b.priority - a.priority);
-  let top = unique.slice(0, 3);
-
-  // If nothing was flagged, show up to 3 specific stable insights,
-  // each backed by its own real evidence. Never show a generic
-  // "Your farm looks stable" card — the briefing already says that.
-  if (top.length === 0) {
-    const stable: FarmInsight[] = [];
-    const prodStable = stableProductionInsight(eggs, totalBirds, eggs.length);
-    if (prodStable) stable.push(prodStable);
-    const feedStable = stableFeedInsight(eggs, feed);
-    if (feedStable) stable.push(feedStable);
-    const mortStable = stableMortalityInsight(mortality, totalBirds);
-    if (mortStable) stable.push(mortStable);
-    top = stable.slice(0, 3);
-  }
+  const patterns = detectFarmPatterns(context);
+  const insights = rankFarmInsights(patterns, context);
 
   return {
     ready: true,
-    briefing: buildBriefing(top),
-    insights: top,
-    totalEggRecords: eggs.length,
+    briefing: briefingFromInsights(insights),
+    insights,
+    totalEggRecords: input.eggs.length,
+    context,
+    patterns,
   };
 }
 
+// ---------------------------------------------------------------------------
+// UI helpers
+// ---------------------------------------------------------------------------
+
 export function insightStatusStyle(s: InsightStatus): { badge: string; ring: string; dot: string } {
-  if (s === "Needs attention") return { badge: "bg-red-600 text-white", ring: "border-red-500/40", dot: "bg-red-500" };
-  if (s === "Keep watching")   return { badge: "bg-amber-500 text-white", ring: "border-amber-400/40", dot: "bg-amber-500" };
+  if (s === "High priority") return { badge: "bg-red-600 text-white", ring: "border-red-500/40", dot: "bg-red-500" };
+  if (s === "Attention")     return { badge: "bg-orange-500 text-white", ring: "border-orange-400/40", dot: "bg-orange-500" };
+  if (s === "Watch")         return { badge: "bg-amber-500 text-white", ring: "border-amber-400/40", dot: "bg-amber-500" };
   return { badge: "bg-[color:var(--forest)] text-white", ring: "border-[color:var(--forest)]/30", dot: "bg-[color:var(--forest)]" };
 }

@@ -55,8 +55,9 @@ export function FarmInsightsIntelligence(props: Props) {
       )}
 
       <div className="mt-5 text-[11px] text-muted-foreground border-t border-[color:var(--forest)]/10 pt-3">
-        PoultryPro noticed these things by looking at your recent farm records. This is not a veterinary diagnosis.
+        PoultryPro provides operational decision support and does not replace veterinary diagnosis or professional farm management judgement.
       </div>
+
     </section>
   );
 }
@@ -71,7 +72,10 @@ function InsightCard({ insight }: { insight: FarmInsight }) {
         <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${style.badge}`}>
           <span className={`h-1.5 w-1.5 rounded-full bg-white/90`} /> {insight.status}
         </span>
-        {insight.scopeLabel && (
+        <span className="inline-flex items-center rounded-full border border-[color:var(--forest)]/20 bg-[color:var(--forest)]/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--forest)]">
+          {insight.category}
+        </span>
+        {insight.scopeLabel && insight.scopeLabel !== insight.category && (
           <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
             {insight.scopeLabel}
           </span>
@@ -89,7 +93,7 @@ function InsightCard({ insight }: { insight: FarmInsight }) {
         <div className="mt-3 rounded-xl bg-[color:var(--forest)]/5 border border-[color:var(--forest)]/10 p-3">
           <div className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--forest)] font-semibold">What to check</div>
           <ul className="mt-1.5 space-y-1 text-[14px] text-foreground">
-            {insight.whatToCheck.slice(0, 3).map((c, i) => (
+            {insight.whatToCheck.slice(0, 4).map((c, i) => (
               <li key={i} className="flex gap-2"><span aria-hidden>•</span><span>{c}</span></li>
             ))}
           </ul>
@@ -116,3 +120,4 @@ function InsightCard({ insight }: { insight: FarmInsight }) {
     </article>
   );
 }
+
