@@ -2448,7 +2448,7 @@ function computeFeedEfficiency(
       matched.push(day);
     });
 
-  if (matched.length === 0) return null;
+  if (matched.length < 7) return null;
 
   const latest = matched[matched.length - 1];
   const preceding = matched.slice(0, -1);
