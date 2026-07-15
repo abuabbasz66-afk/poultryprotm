@@ -130,7 +130,7 @@ const tiers = [
     stage: "Understand",
     stageNum: "02",
     promise: "Understand what your farm data means.",
-    subtitle: "Turn structured records into production analytics, financial intelligence and management insight.",
+    subtitle: "Turn your daily records into clear production, cost and profit views so you can see how the farm is really doing.",
     points: [
       "Everything in Basic",
       "Production percentage calculations",
