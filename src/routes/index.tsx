@@ -290,7 +290,12 @@ function Index() {
 
       <section className="bg-primary text-primary-foreground">
         <div className="container-x py-10 grid grid-cols-2 md:grid-cols-4 gap-6">
-          {stats.map((s) => (
+          {[
+            { icon: Bird, label: "Birds Managed", value: formatCount(platform.birds) },
+            { icon: Egg, label: "Eggs Recorded", value: formatCount(platform.eggs) },
+            { icon: Wheat, label: "Crates Tracked", value: formatCount(platform.crates) },
+            { icon: Wallet, label: "Revenue Tracked", value: formatNaira(platform.revenue) },
+          ].map((s) => (
             <div key={s.label} className="flex items-center gap-3">
               <span className="grid h-11 w-11 place-items-center rounded-full bg-[color:var(--gold)] text-[color:var(--ink)]">
                 <s.icon className="h-5 w-5" />
