@@ -225,10 +225,11 @@ function Dashboard() {
   const editMortality = (m: Mortality) => openDialog({ kind: "mortality-edit", item: m });
   const delMortalityRow = (m: Mortality) => {
     askDelete(
-      `Delete mortality record?`,
-      `This will permanently remove the ${m.loss}-bird loss record for ${m.room} on ${m.date} (${m.cause}).`,
+      `Delete this mortality record?`,
+      `This will update mortality analytics and farm intelligence. Removing the ${birdsLabel(Math.abs(m.loss))} loss for ${m.room} on ${formatDayLabel(m.date)} (${m.cause}).`,
       runDelete((v: string) => delMortalityM.mutateAsync(v), m.id, "Mortality record"),
     );
+
   };
 
   const addHealth = () => openDialog({ kind: "health-add" });
