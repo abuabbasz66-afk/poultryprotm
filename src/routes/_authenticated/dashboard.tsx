@@ -1621,18 +1621,6 @@ function computeForecast(eggs: EggRow[], totalBirds: number): ForecastResult | n
 
 /* ------------------ Mortality Risk Monitor ------------------ */
 
-const MONTHS: Record<string, number> = {
-  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
-  jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
-};
-
-// Parse dates like "16 Jan", "3 Feb", "Today" — assume year matches the latest egg record's year.
-// Delegates to the shared farm date normaliser so ISO dates from the
-// database ("2026-04-04", "2026-04-04T17:15:00") and legacy short-form
-// records ("4 Apr", "Today") all resolve to the same local calendar day.
-function parseShortDate(s: string, anchor: Date): Date | null {
-  return toLocalDate(s, anchor);
-}
 
 type MortalityRiskProps = {
   rooms: Room[];
