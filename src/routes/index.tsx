@@ -359,8 +359,8 @@ function Index() {
               Africa's poultry industry runs on notebooks.
             </h2>
             <p className="mt-5 text-muted-foreground leading-relaxed">
-              Poultry contributes 6–8% of Nigeria's GDP and over 25% of agricultural GDP — yet most farms
-              still operate manually, losing profit to invisible inefficiencies every single day.
+              Many poultry farms still keep important records in notebooks or scattered files. This makes
+              it difficult to track production, feed costs, bird losses and farm profit.
             </p>
           </div>
           <div className="lg:col-span-7 space-y-3">
