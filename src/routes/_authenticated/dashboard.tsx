@@ -32,6 +32,16 @@ import { RecordDialogs, RecordConfirmDialog, type RecordDialogState } from "@/co
 import { toast } from "sonner";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
 import { toDateKey, toLocalDate } from "@/lib/date-key";
+import {
+  fmtNum, fmtSigned, parseShortDate,
+  computeForecast, type ForecastResult,
+  computeMortalityRisk, riskTone, classifyRisk,
+  type MortalityAnalysis, type RoomRisk, type RiskLevel, type PatternLabel,
+  computeFeedEfficiency,
+  type FeedEffAnalysis, type MatchedDay, type RoomEffRow, type EffStatus, type MovementLabel,
+  computeAbnormalActivity, classifyActivity, signalPretty,
+  type AbnormalAnalysis, type RoomActivityRow, type ActivityLevel, type SignalKey,
+} from "@/lib/intelligence-modules";
 import { format as formatDate, parseISO, isValid as isValidDate } from "date-fns";
 
 function formatDayLabel(iso: string): string {
