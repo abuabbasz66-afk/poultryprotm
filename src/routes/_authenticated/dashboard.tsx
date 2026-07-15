@@ -14,7 +14,7 @@ import {
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  useRooms, useEggs, useMortality, useHealth, useFeed, usePrices,
+  useRooms, useEggs, useMortality, useHealth, useFeed, usePrices, useFarm,
   useAddRoom, useDeleteRoom,
   useAddEgg, useAddMortality, useAddHealth, useAddFeed,
   useAddPrice, useDeletePrice, useDeleteMortality, useDeleteFeed,
