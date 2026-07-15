@@ -532,7 +532,7 @@ function Dashboard() {
           <div className="grid grid-cols-3 gap-3 mt-4">
             <MiniStat label="Today's Production" value={`${todayCrates} cr`} tone="mint" />
             <MiniStat label="7-Day Avg" value={`${sevenDayAvgEggs.toLocaleString()} eggs`} tone="sky" />
-            <MiniStat label="Current Lay Rate" value={`${currentLayRate.toFixed(1)}%`} tone="plain" />
+            <MiniStat label="Current Lay Rate" value={currentLayRateDisplay} tone="plain" />
           </div>
           <div className="mt-5 overflow-x-auto">
             <table className="w-full text-xs sm:text-sm">
