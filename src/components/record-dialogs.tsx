@@ -665,5 +665,7 @@ export function RecordDialogs({
       return <Modal {...common} title="Edit Feed Day" subtitle={`Update bag counts for ${state.items[0]?.date ?? "this day"}.`}><FeedDayEditForm items={state.items} onClose={onClose} /></Modal>;
     case "price-add":
       return <Modal {...common} title="Add Price Item" subtitle="Track a new item on your price list."><PriceAddForm onClose={onClose} /></Modal>;
+    case "price-edit":
+      return <Modal {...common} title="Edit Price Item" subtitle={`Update ${state.item.item} on your price list.`}><PriceEditForm item={state.item} onClose={onClose} /></Modal>;
   }
 }
