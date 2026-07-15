@@ -133,10 +133,50 @@ export type FarmIntelligenceContext = {
   // Existing intelligence module outputs (structured)
   declineEvents: DeclineEvent[];
   mortalityEvents: MortalityEvent[];
-};
 
-export function buildFarmIntelligenceContext(input: {
-  eggs: EggRow[];
+  // Unified outputs from every PoultryPro intelligence module.
+  // Farm Insights consumes these directly and does not recompute them.
+  productionForecast: null | {
+    currentProduction: number;      // latest total eggs
+    forecastAverage: number;        // avg forecast eggs/day (7d)
+    expectedLow: number;
+    expectedHigh: number;
+    forecastDirection: ForecastResult["direction"];
+    productionRate: number;         // % lay rate
+  };
+  productionDecline: null | {
+    status: "Detected" | "None";
+    declinePercentage: number | null;
+    affectedRoom: string | null;
+    comparisonPeriod: string | null;
+    recordCount: number;
+  };
+  mortalityRisk: null | {
+    riskLevel: MortalityAnalysis["levelLabel"];
+    riskScore: number;
+    mortalityThisMonth: number;
+    mostAffectedRoom: string | null;
+    recentPattern: MortalityAnalysis["patternLabel"];
+  };
+  feedEfficiency: null | {
+    efficiencyStatus: FeedEffAnalysis["status"];
+    movementScore: number;
+    feedPerEgg: number | null;      // grams per egg, if bag weight configured
+    feedPerBird: number | null;     // grams per bird (latest), if bag weight configured
+    feedMovement: number;           // % change in feed usage
+    productionMovement: number;     // % change in production
+    roomVariation: number;          // % variation across rooms
+    latestMatchedDate: string | null;
+  };
+  abnormalActivity: null | {
+    activityStatus: AbnormalAnalysis["level"];
+    activityScore: number;
+    signalsAnalysed: string[];
+    mostAffectedRoom: string | null;
+    strongestSignal: string | null;
+    roomLevelSignals: Array<{ room: string; level: AbnormalAnalysis["level"]; score: number; triggered: string[] }>;
+  };
+};
   rooms: Room[];
   mortality: Mortality[];
   feed: Feed[];
