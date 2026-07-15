@@ -48,9 +48,10 @@ function Modal({
       onClick={onClose}
     >
       <div
-        className="w-full sm:max-w-lg max-h-[92vh] flex flex-col rounded-t-3xl sm:rounded-3xl bg-[color:var(--cream)] border border-[color:var(--forest)]/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.35)] overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95"
+        className="w-[calc(100%-24px)] mx-3 mb-3 sm:m-0 sm:max-w-lg max-h-[90dvh] sm:max-h-[92vh] flex flex-col rounded-3xl bg-[color:var(--cream)] border border-[color:var(--forest)]/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.35)] overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95"
         onClick={(e) => e.stopPropagation()}
       >
+
         <div className="flex items-start justify-between gap-4 border-b border-[color:var(--forest)]/10 bg-background/70 px-5 py-4">
           <div className="min-w-0">
             <div className="font-display text-lg font-semibold text-[color:var(--forest)] truncate">{title}</div>

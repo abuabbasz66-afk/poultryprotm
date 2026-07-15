@@ -102,6 +102,21 @@
   width: 100%;
   max-width: 80rem;
   margin-inline: auto;
-  padding-inline: 1.25rem;
+  padding-inline: 1rem;
+  @media (min-width: 640px) { padding-inline: 1.25rem; }
   @media (min-width: 768px) { padding-inline: 2rem; }
 }
+
+@utility farm-name {
+  font-size: clamp(2rem, 9vw, 3.2rem);
+  line-height: 0.95;
+  overflow-wrap: anywhere;
+  letter-spacing: -0.02em;
+}
+
+@utility section-heading {
+  font-size: clamp(1.5rem, 6vw, 2.25rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
