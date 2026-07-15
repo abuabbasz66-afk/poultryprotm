@@ -332,6 +332,21 @@ function Dashboard() {
   const bagKg = bagWeightKg ?? 25;
   const feedPerBirdG = totalBirds ? (feedToday * bagKg * 1000) / totalBirds : 0;
 
+  // Do not render any farm-scoped UI until the current user's farm id has
+  // resolved. This prevents a moment where cached "Your Farm" fallbacks or
+  // empty-array derivations render before farm-specific queries begin.
+  const farmContextReady = !farmIdQ.isPending && !!farmIdQ.data && !farmQ.isPending;
+  if (!farmContextReady) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 rounded-full border-2 border-[color:var(--forest)]/30 border-t-[color:var(--forest)] animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading your farm…</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground pb-14 overflow-x-hidden">
       {/* Header */}
