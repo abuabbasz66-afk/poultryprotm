@@ -288,14 +288,20 @@ function Dashboard() {
   const feedPerBirdG = totalBirds ? (feedToday * bagKg * 1000) / totalBirds : 0;
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-14">
+    <div className="min-h-screen bg-background text-foreground pb-14 overflow-x-hidden">
       {/* Header */}
       <header className="bg-[color:var(--forest)] text-primary-foreground">
-        <div className="container-x flex items-center justify-between py-4">
-          <Link to="/" className="inline-flex items-center gap-2 text-sm text-primary-foreground/80 hover:text-primary-foreground">
+        <div className="container-x flex items-center justify-between py-3 md:py-4">
+          {/* Mobile: logo left, menu right. Desktop: back-link left, actions right. */}
+          <Link to="/" className="hidden md:inline-flex items-center gap-2 text-sm text-primary-foreground/80 hover:text-primary-foreground">
             <ArrowLeft className="h-4 w-4" /> Back to site
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="md:hidden flex items-center gap-2">
+            <img src={logoAsset.url} alt="" width={28} height={28} className="h-7 w-7 object-contain" />
+            <span className="font-display font-semibold text-[15px]">PoultryPro™</span>
+          </div>
+
+          <div className="hidden md:flex items-center gap-3">
             <div className="flex items-center gap-2">
               <img src={logoAsset.url} alt="" width={28} height={28} className="h-7 w-7 object-contain" />
               <span className="font-display font-semibold">PoultryPro™</span>
@@ -315,54 +321,58 @@ function Dashboard() {
               <LogOut className="h-3.5 w-3.5" /> Sign out
             </button>
           </div>
+
+          <MobileMenu onSignOut={handleSignOut} />
         </div>
-        <div className="container-x pb-10 pt-4">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] uppercase tracking-[0.22em] text-[color:var(--gold)]">
-            <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" /> Capture</span>
+        <div className="container-x pb-6 pt-3 md:pb-10 md:pt-4">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] md:text-[11px] uppercase tracking-[0.18em] md:tracking-[0.22em] text-[color:var(--gold)]">
+            <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3 w-3 md:h-3.5 md:w-3.5" /> Capture</span>
             <ArrowRight className="h-3 w-3 opacity-60" />
             <span>Understand</span>
             <ArrowRight className="h-3 w-3 opacity-60" />
             <span>Predict</span>
           </div>
-          <div className="mt-1.5 text-xs text-primary-foreground/70 max-w-2xl">
-            Farm Records &amp; Analytics active · PoultryPro AI Intelligence progressively rolling out on Premium
+          <div className="mt-1.5 text-[11px] md:text-xs text-primary-foreground/70 max-w-2xl leading-snug">
+            Farm Records &amp; Analytics active · AI Intelligence rolling out on Premium
           </div>
-          <h1 className="mt-2 font-display text-3xl md:text-4xl font-semibold">{farm?.name ?? "Your Farm"}</h1>
-          {(farm?.state || farm?.country) && (
-            <div className="mt-2 flex items-center gap-2 text-sm text-primary-foreground/80">
-              <MapPin className="h-4 w-4" /> {[farm?.state, farm?.country].filter(Boolean).join(", ")}
+          <h1 className="mt-2 font-display font-semibold farm-name md:!text-[2.25rem] lg:!text-4xl md:!leading-tight">{farm?.name ?? "Your Farm"}</h1>
+          {(farm?.state || farm?.country || farm?.location) && (
+            <div className="mt-2 flex items-center gap-1.5 text-[12px] md:text-sm text-primary-foreground/80">
+              <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
+              <span className="truncate">{[farm?.location, farm?.state, farm?.country].filter(Boolean).join(", ")}</span>
             </div>
           )}
-          <div className="mt-2 text-sm text-primary-foreground/70">
+          <div className="mt-1 text-[12px] md:text-sm text-primary-foreground/70">
             {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
           </div>
-          <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm">
-            <Bird className="h-4 w-4 text-[color:var(--gold)]" />
-            <span className="font-semibold">{totalBirds.toLocaleString()} birds</span>
+          <div className="mt-3 md:mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 md:px-4 md:py-1.5 text-[12px] md:text-sm max-w-full">
+            <Bird className="h-3.5 w-3.5 md:h-4 md:w-4 text-[color:var(--gold)] shrink-0" />
+            <span className="font-semibold whitespace-nowrap">{totalBirds.toLocaleString()} birds</span>
             <span className="text-primary-foreground/60">·</span>
-            <span className="text-primary-foreground/80">{rooms.length} rooms</span>
+            <span className="text-primary-foreground/80 whitespace-nowrap">{rooms.length} rooms</span>
           </div>
         </div>
       </header>
 
-      <main className="container-x -mt-6 space-y-6">
+      <main className="container-x -mt-4 md:-mt-6 space-y-5 md:space-y-6">
         {/* Product-area navigation: Capture → Understand → Predict */}
-        <nav aria-label="Dashboard areas" className="rounded-3xl bg-card border border-border p-2 shadow-[var(--shadow-soft)]">
-          <div className="grid grid-cols-3 gap-1.5">
+        <nav aria-label="Dashboard areas" className="rounded-2xl md:rounded-3xl bg-card border border-border p-1.5 md:p-2 shadow-[var(--shadow-soft)]">
+          <div className="grid grid-cols-3 gap-1 md:gap-1.5">
             <AreaTab
               active={area === "records"} onClick={() => setArea("records")}
-              num="01" stage="CAPTURE" title="Farm Records" plan="Basic" icon={LayoutDashboard}
+              num="01" stage="CAPTURE" title="Farm Records" shortLabel="Capture" plan="Basic" icon={LayoutDashboard}
             />
             <AreaTab
               active={area === "analytics"} onClick={() => setArea("analytics")}
-              num="02" stage="UNDERSTAND" title="Farm Analytics" plan="Standard" icon={LineChartIcon}
+              num="02" stage="UNDERSTAND" title="Farm Analytics" shortLabel="Analytics" plan="Standard" icon={LineChartIcon}
             />
             <AreaTab
               active={area === "ai"} onClick={() => setArea("ai")}
-              num="03" stage="PREDICT" title="AI Intelligence" plan="Premium" icon={Brain} premium
+              num="03" stage="PREDICT" title="AI Intelligence" shortLabel="AI" plan="Premium" icon={Brain} premium
             />
           </div>
         </nav>
+
 
         {area === "analytics" && (
           <div className="space-y-6">
