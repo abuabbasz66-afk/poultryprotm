@@ -2151,11 +2151,25 @@ function FeedEfficiencyMonitor({
         </div>
       </div>
 
-      {!analysis && (
-        <div className="mt-4 rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-          Not enough matched feed and production records yet to generate a feed efficiency analysis.
-        </div>
-      )}
+      {!analysis && (() => {
+        const prodKeys = new Set(eggs.map(e => toDateKey(e.date)).filter((k): k is string => !!k));
+        const feedKeys = new Set(feed.map(f => toDateKey(f.date)).filter((k): k is string => !!k));
+        const matchedCount = [...feedKeys].filter(k => prodKeys.has(k)).length;
+        const reason =
+          prodKeys.size === 0
+            ? "No production records available yet. Record daily egg production to begin feed efficiency analysis."
+            : feedKeys.size === 0
+              ? "No feed records available yet. Record daily feed usage to begin feed efficiency analysis."
+              : `${matchedCount} matched feed and production day${matchedCount === 1 ? "" : "s"} found. At least 7 matched days are required for feed efficiency analysis.`;
+        return (
+          <div className="mt-4 rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+            <div>{reason}</div>
+            <div className="mt-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground/80">
+              Production days recorded: {prodKeys.size} · Feed days recorded: {feedKeys.size} · Matched: {matchedCount}
+            </div>
+          </div>
+        );
+      })()}
 
       {analysis && (
         <>
