@@ -8,11 +8,10 @@ import path from "node:path";
 import { loadEnv } from "vite";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-export default defineConfig(({ mode }) => {
-  const serverEnv = loadEnv(mode, process.cwd(), "");
-  Object.assign(process.env, serverEnv);
+const serverEnv = loadEnv(process.env.NODE_ENV === "production" ? "production" : "development", process.cwd(), "");
+Object.assign(process.env, serverEnv);
 
-  return {
+export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
@@ -27,5 +26,4 @@ export default defineConfig(({ mode }) => {
       },
     },
   },
-  };
 });
