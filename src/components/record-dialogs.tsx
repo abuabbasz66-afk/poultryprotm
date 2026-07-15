@@ -539,6 +539,57 @@ function PriceAddForm({ onClose }: { onClose: () => void }) {
   );
 }
 
+function PriceEditForm({ item, onClose }: { item: Price; onClose: () => void }) {
+  const [name, setName] = useState(item.item);
+  const [unit, setUnit] = useState(item.unit);
+  const [price, setPrice] = useState<number | "">(item.price);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const m = useUpdatePrice();
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (m.isPending || !name.trim()) return;
+    setErrorMsg(null);
+    const updated = format(new Date(), "d MMM yyyy");
+    m.mutate(
+      { id: item.id, item: name.trim(), unit: unit.trim() || "1", price: Number(price) || 0, updated },
+      {
+        onSuccess: () => { toast.success("Price updated"); onClose(); },
+        onError: (err) => {
+          const msg = (err as Error).message || "Could not update price. Please try again.";
+          setErrorMsg(msg);
+          toast.error("Failed to update price", { description: msg });
+        },
+      },
+    );
+  };
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      <Field label="Item">
+        <TextInput value={name} onChange={(e) => setName(e.target.value)} autoFocus required />
+      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Unit" hint="e.g. crate, bag, kg.">
+          <TextInput value={unit} onChange={(e) => setUnit(e.target.value)} />
+        </Field>
+        <Field label="Price (₦)">
+          <NumberInput
+            step="any"
+            value={price}
+            onChange={(e) => setPrice(e.target.value === "" ? "" : Number(e.target.value))}
+            required
+          />
+        </Field>
+      </div>
+      {errorMsg && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 text-destructive text-sm px-3 py-2">
+          {errorMsg}
+        </div>
+      )}
+      <Actions onCancel={onClose} submitting={m.isPending} submitLabel="Save Changes" disabled={!name.trim()} />
+    </form>
+  );
+}
+
 /* ---------- Confirm dialog (delete) ---------- */
 
 export function RecordConfirmDialog({
