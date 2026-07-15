@@ -647,7 +647,7 @@ function Dashboard() {
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-destructive/10 text-destructive"><Skull className="h-3.5 w-3.5" /></span>
                         <div className="min-w-0">
-                          <div className="text-sm font-semibold truncate">{g.date} <span className="text-destructive">· -{g.total} birds</span></div>
+                          <div className="text-sm font-semibold truncate">{formatDayLabel(g.date)} <span className="text-destructive">· {birdsLabel(g.total)}</span></div>
                           <div className="text-xs text-muted-foreground truncate">{breakdown || "—"} <span className="opacity-70">| {cause}</span></div>
                         </div>
                       </div>
