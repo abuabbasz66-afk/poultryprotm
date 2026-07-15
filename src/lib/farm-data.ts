@@ -23,7 +23,8 @@ export type Feed = { id: string; room: string; bags: number; date: string };
 export type Price = { id: string; item: string; unit: string; price: number; updated: string };
 
 const KEYS = {
-  farm: ["farm-id"] as const,
+  farm: ["farm"] as const,
+  farmId: ["farm-id"] as const,
   rooms: ["rooms"] as const,
   eggs: ["eggs"] as const,
   mortality: ["mortality"] as const,
@@ -41,9 +42,36 @@ function invalidateAll(qc: QueryClient) {
   qc.invalidateQueries({ queryKey: KEYS.prices });
 }
 
-export function useFarmId() {
+export type Farm = {
+  id: string;
+  name: string;
+  state: string | null;
+  country: string;
+  farm_type: string | null;
+  owner_name: string | null;
+  phone: string | null;
+  bird_count: number | null;
+};
+
+export function useFarm() {
   return useQuery({
     queryKey: KEYS.farm,
+    queryFn: async (): Promise<Farm | null> => {
+      const { data, error } = await supabase
+        .from("farms")
+        .select("id, name, state, country, farm_type, owner_name, phone, bird_count")
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as Farm | null) ?? null;
+    },
+    staleTime: 60_000,
+  });
+}
+
+export function useFarmId() {
+  return useQuery({
+    queryKey: KEYS.farmId,
     queryFn: async (): Promise<string | null> => {
       const { data, error } = await supabase.from("farms").select("id").limit(1).maybeSingle();
       if (error) throw error;
