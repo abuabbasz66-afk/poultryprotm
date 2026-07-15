@@ -322,13 +322,13 @@ function Index() {
       <section id="architecture" className="py-24">
         <div className="container-x">
           <div className="max-w-2xl">
-            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Product Architecture</span>
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">How PoultryPro Works</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Three progressive levels of farm intelligence.
+              Three simple steps: Capture, Understand, Predict.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              PoultryPro is built as a journey: Record Management → Business Intelligence → Predictive Intelligence.
-              Each level unlocks the next.
+              Record what happens on your farm, see what your records are telling you, and get alerted
+              when something looks unusual.
             </p>
           </div>
           <div className="mt-14 grid md:grid-cols-3 gap-5">
