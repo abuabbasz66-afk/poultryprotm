@@ -352,7 +352,7 @@ function stableMortalityInsight(mortality: Mortality[], birds: number): FarmInsi
   if (mortality.length === 0 || birds <= 0) return null;
   const now = new Date();
   const cutoff = new Date(now.getTime() - 30 * 24 * 3600 * 1000).toISOString().slice(0, 10);
-  const monthLoss = mortality.filter(m => m.date >= cutoff).reduce((s, m) => s + m.count, 0);
+  const monthLoss = mortality.filter(m => m.date >= cutoff).reduce((s, m) => s + m.loss, 0);
   const monthPct = (monthLoss / birds) * 100;
   // Only surface as "Looking good" when losses are within a normal range.
   if (monthPct > 2) return null;
