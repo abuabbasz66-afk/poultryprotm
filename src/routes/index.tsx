@@ -413,20 +413,19 @@ function Index() {
             <img src={eggsImg} alt="Fresh eggs" width={1200} height={900} loading="lazy" className="rounded-3xl object-cover w-full h-[480px] shadow-[var(--shadow-lift)]" />
           </div>
           <div className="lg:col-span-6 order-1 lg:order-2 space-y-6">
-            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Validated Impact</span>
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Pilot Farm Results</span>
             <h2 className="font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Proven with real operational data.
+              Tested with real farm records.
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Tested across a working commercial farm — PoultryPro has tracked thousands of birds,
-              analysed tens of thousands of eggs, and turned everyday activity into measurable profit.
+              Based on real records analysed during PoultryPro's pilot deployment on a working poultry farm.
             </p>
             <div className="grid grid-cols-2 gap-4 pt-2">
               {[
                 { k: "3", v: "Active production rooms" },
-                { k: "19", v: "Bags of feed monitored daily" },
-                { k: "₦15M+", v: "Revenue tracked" },
-                { k: "₦8M+", v: "Profit analysed" },
+                { k: "19", v: "Bags of feed tracked daily" },
+                { k: "₦15M+", v: "Revenue recorded" },
+                { k: "₦8M+", v: "Farm profit analysed" },
               ].map((x) => (
                 <div key={x.v} className="rounded-2xl border border-border bg-card p-5">
                   <div className="font-display text-3xl font-semibold text-[color:var(--forest)]">{x.k}</div>
