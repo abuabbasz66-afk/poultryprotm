@@ -22,24 +22,67 @@ export type Health = { id: string; name: string; scope: string; type: HealthType
 export type Feed = { id: string; room: string; bags: number; date: string };
 export type Price = { id: string; item: string; unit: string; price: number; updated: string };
 
-const KEYS = {
-  farm: ["farm"] as const,
-  farmId: ["farm-id"] as const,
-  rooms: ["rooms"] as const,
-  eggs: ["eggs"] as const,
-  mortality: ["mortality"] as const,
-  health: ["health"] as const,
-  feed: ["feed"] as const,
-  prices: ["prices"] as const,
-};
+// ============= QUERY KEY POLICY =============
+// All farm-specific query keys MUST be nested under ["farm", farmId, ...].
+// The active auth user id is a separate top-level key so that on identity
+// change the root cache clear (in __root.tsx) also invalidates the farm id
+// resolver, which prevents any child ["farm", <previous-farm-id>, ...] entry
+// from being re-used by the next signed-in user. Never construct a
+// farm-scoped key without a resolved farmId — pass enabled: !!farmId.
 
-function invalidateAll(qc: QueryClient) {
-  qc.invalidateQueries({ queryKey: KEYS.rooms });
-  qc.invalidateQueries({ queryKey: KEYS.eggs });
-  qc.invalidateQueries({ queryKey: KEYS.mortality });
-  qc.invalidateQueries({ queryKey: KEYS.health });
-  qc.invalidateQueries({ queryKey: KEYS.feed });
-  qc.invalidateQueries({ queryKey: KEYS.prices });
+const AUTH_USER_KEY = ["auth-user-id"] as const;
+const FARM_ID_KEY = (userId: string | null | undefined) =>
+  ["farm-id", userId ?? "anon"] as const;
+
+export function farmScope(farmId: string | null | undefined) {
+  return ["farm", farmId ?? "none"] as const;
+}
+function farmKey(farmId: string | null | undefined, ...parts: readonly (string | number)[]) {
+  return [...farmScope(farmId), ...parts] as const;
+}
+
+/** Invalidate every cache entry belonging to a specific farm. */
+export function invalidateFarm(qc: QueryClient, farmId: string | null | undefined) {
+  if (!farmId) return;
+  qc.invalidateQueries({ queryKey: farmScope(farmId) });
+}
+
+/** Remove every cache entry belonging to a specific farm (hard eviction). */
+export function removeFarm(qc: QueryClient, farmId: string | null | undefined) {
+  if (!farmId) return;
+  qc.removeQueries({ queryKey: farmScope(farmId) });
+}
+
+// ============= AUTH / FARM RESOLVERS =============
+
+export function useAuthUserId() {
+  return useQuery({
+    queryKey: AUTH_USER_KEY,
+    queryFn: async (): Promise<string | null> => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) return null;
+      return data.user?.id ?? null;
+    },
+    staleTime: Infinity,
+  });
+}
+
+export function useFarmId() {
+  const { data: userId, isPending: userPending } = useAuthUserId();
+  return useQuery({
+    queryKey: FARM_ID_KEY(userId),
+    enabled: !userPending && !!userId,
+    queryFn: async (): Promise<string | null> => {
+      const { data, error } = await supabase
+        .from("farms")
+        .select("id")
+        .eq("owner_id", userId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.id ?? null;
+    },
+    staleTime: 5 * 60_000,
+  });
 }
 
 export type Farm = {
@@ -57,13 +100,15 @@ export type Farm = {
 };
 
 export function useFarm() {
+  const { data: farmId } = useFarmId();
   return useQuery({
-    queryKey: KEYS.farm,
+    queryKey: farmKey(farmId, "profile"),
+    enabled: !!farmId,
     queryFn: async (): Promise<Farm | null> => {
       const { data, error } = await supabase
         .from("farms")
         .select("id, name, location, state, country, farm_type, bird_type, rooms_count, owner_name, phone, bird_count")
-        .limit(1)
+        .eq("id", farmId!)
         .maybeSingle();
       if (error) throw error;
       return (data as Farm | null) ?? null;
@@ -72,26 +117,16 @@ export function useFarm() {
   });
 }
 
-
-export function useFarmId() {
-  return useQuery({
-    queryKey: KEYS.farmId,
-    queryFn: async (): Promise<string | null> => {
-      const { data, error } = await supabase.from("farms").select("id").limit(1).maybeSingle();
-      if (error) throw error;
-      return data?.id ?? null;
-    },
-    staleTime: 5 * 60_000,
-  });
-}
-
 export function useRooms() {
+  const { data: farmId } = useFarmId();
   return useQuery({
-    queryKey: KEYS.rooms,
+    queryKey: farmKey(farmId, "rooms"),
+    enabled: !!farmId,
     queryFn: async (): Promise<Room[]> => {
       const { data, error } = await supabase
         .from("rooms")
         .select("id, name, current, initial")
+        .eq("farm_id", farmId!)
         .order("name");
       if (error) throw error;
       return (data ?? []) as Room[];
@@ -100,12 +135,15 @@ export function useRooms() {
 }
 
 export function useEggs() {
+  const { data: farmId } = useFarmId();
   return useQuery({
-    queryKey: KEYS.eggs,
+    queryKey: farmKey(farmId, "eggs"),
+    enabled: !!farmId,
     queryFn: async (): Promise<EggRow[]> => {
       const { data, error } = await supabase
         .from("egg_production")
         .select("id, date, label, r2, r3, r4, extra")
+        .eq("farm_id", farmId!)
         .order("date", { ascending: false });
       if (error) throw error;
       return (data ?? []) as EggRow[];
@@ -114,12 +152,15 @@ export function useEggs() {
 }
 
 export function useMortality() {
+  const { data: farmId } = useFarmId();
   return useQuery({
-    queryKey: KEYS.mortality,
+    queryKey: farmKey(farmId, "mortality"),
+    enabled: !!farmId,
     queryFn: async (): Promise<Mortality[]> => {
       const { data, error } = await supabase
         .from("mortality")
         .select("id, room, cause, date, loss")
+        .eq("farm_id", farmId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Mortality[];
@@ -128,12 +169,15 @@ export function useMortality() {
 }
 
 export function useHealth() {
+  const { data: farmId } = useFarmId();
   return useQuery({
-    queryKey: KEYS.health,
+    queryKey: farmKey(farmId, "health"),
+    enabled: !!farmId,
     queryFn: async (): Promise<Health[]> => {
       const { data, error } = await supabase
         .from("health_records")
         .select("id, name, scope, type, date")
+        .eq("farm_id", farmId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Health[];
@@ -142,12 +186,15 @@ export function useHealth() {
 }
 
 export function useFeed() {
+  const { data: farmId } = useFarmId();
   return useQuery({
-    queryKey: KEYS.feed,
+    queryKey: farmKey(farmId, "feed"),
+    enabled: !!farmId,
     queryFn: async (): Promise<Feed[]> => {
       const { data, error } = await supabase
         .from("feed_usage")
         .select("id, room, bags, date")
+        .eq("farm_id", farmId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []).map(r => ({ ...r, bags: Number(r.bags) })) as Feed[];
@@ -156,12 +203,15 @@ export function useFeed() {
 }
 
 export function usePrices() {
+  const { data: farmId } = useFarmId();
   return useQuery({
-    queryKey: KEYS.prices,
+    queryKey: farmKey(farmId, "prices"),
+    enabled: !!farmId,
     queryFn: async (): Promise<Price[]> => {
       const { data, error } = await supabase
         .from("prices")
         .select("id, item, unit, price, updated")
+        .eq("farm_id", farmId!)
         .order("created_at");
       if (error) throw error;
       return (data ?? []) as Price[];
@@ -169,100 +219,108 @@ export function usePrices() {
   });
 }
 
-async function requireFarmId(): Promise<string> {
-  const { data, error } = await supabase.from("farms").select("id").limit(1).maybeSingle();
-  if (error) throw error;
-  if (!data?.id) throw new Error("No farm found for this user.");
-  return data.id;
-}
-
 // ============= MUTATIONS =============
+// Each mutation resolves the CURRENT farmId (from the RLS-scoped useFarmId
+// query) and invalidates only that farm's cache subtree — never a bare
+// ["rooms"] / ["eggs"] key that could shadow a different farm.
+
+function useFarmIdOrThrow(): string | null {
+  const { data: farmId } = useFarmId();
+  return farmId ?? null;
+}
 
 export function useAddRoom() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (input: { name: string; initial: number }) => {
-      const farm_id = await requireFarmId();
+      if (!farmId) throw new Error("No farm found for this user.");
       const { error } = await supabase.from("rooms").insert({
-        farm_id, name: input.name.toUpperCase(), initial: input.initial, current: input.initial,
+        farm_id: farmId, name: input.name.toUpperCase(), initial: input.initial, current: input.initial,
       });
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useDeleteRoom() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("rooms").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useUpdateRoom() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (input: { id: string; current?: number; initial?: number; name?: string }) => {
       const { id, ...patch } = input;
       const { error } = await supabase.from("rooms").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useAddEgg() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (input: Omit<EggRow, "id">) => {
-      const farm_id = await requireFarmId();
+      if (!farmId) throw new Error("No farm found for this user.");
       const { error } = await supabase
         .from("egg_production")
-        .upsert({ farm_id, ...input }, { onConflict: "farm_id,date" });
+        .upsert({ farm_id: farmId, ...input }, { onConflict: "farm_id,date" });
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useUpdateEgg() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (input: Partial<EggRow> & { id: string }) => {
       const { id, ...patch } = input;
       const { error } = await supabase.from("egg_production").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useDeleteEgg() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("egg_production").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useAddMortality() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (input: Omit<Mortality, "id">) => {
-      const farm_id = await requireFarmId();
-      const { error } = await supabase.from("mortality").insert({ farm_id, ...input });
+      if (!farmId) throw new Error("No farm found for this user.");
+      const { error } = await supabase.from("mortality").insert({ farm_id: farmId, ...input });
       if (error) throw error;
-      // Decrement the matching room's current bird count
       const { data: rm } = await supabase
         .from("rooms")
         .select("id, current")
+        .eq("farm_id", farmId)
         .eq("name", input.room.toUpperCase())
         .maybeSingle();
       if (rm) {
@@ -272,134 +330,145 @@ export function useAddMortality() {
           .eq("id", rm.id);
       }
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useDeleteMortality() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("mortality").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useUpdateMortality() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (input: Partial<Mortality> & { id: string }) => {
       const { id, ...patch } = input;
       const { error } = await supabase.from("mortality").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useAddHealth() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (input: Omit<Health, "id">) => {
-      const farm_id = await requireFarmId();
-      const { error } = await supabase.from("health_records").insert({ farm_id, ...input });
+      if (!farmId) throw new Error("No farm found for this user.");
+      const { error } = await supabase.from("health_records").insert({ farm_id: farmId, ...input });
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useDeleteHealth() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("health_records").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useUpdateHealth() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (input: Partial<Health> & { id: string }) => {
       const { id, ...patch } = input;
       const { error } = await supabase.from("health_records").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useAddFeed() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (input: Omit<Feed, "id">) => {
-      const farm_id = await requireFarmId();
-      const { error } = await supabase.from("feed_usage").insert({ farm_id, ...input });
+      if (!farmId) throw new Error("No farm found for this user.");
+      const { error } = await supabase.from("feed_usage").insert({ farm_id: farmId, ...input });
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useUpdateFeed() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (input: Partial<Feed> & { id: string }) => {
       const { id, ...patch } = input;
       const { error } = await supabase.from("feed_usage").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useDeleteFeed() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("feed_usage").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useAddPrice() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (input: Omit<Price, "id">) => {
-      const farm_id = await requireFarmId();
-      const { error } = await supabase.from("prices").insert({ farm_id, ...input });
+      if (!farmId) throw new Error("No farm found for this user.");
+      const { error } = await supabase.from("prices").insert({ farm_id: farmId, ...input });
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useUpdatePrice() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (input: Partial<Price> & { id: string }) => {
       const { id, ...patch } = input;
       const { error } = await supabase.from("prices").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
 
 export function useDeletePrice() {
   const qc = useQueryClient();
+  const farmId = useFarmIdOrThrow();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("prices").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
