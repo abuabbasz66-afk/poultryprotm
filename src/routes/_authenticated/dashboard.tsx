@@ -14,7 +14,7 @@ import {
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  useRooms, useEggs, useMortality, useHealth, useFeed, usePrices,
+  useRooms, useEggs, useMortality, useHealth, useFeed, usePrices, useFarm,
   useAddRoom, useDeleteRoom,
   useAddEgg, useAddMortality, useAddHealth, useAddFeed,
   useAddPrice, useDeletePrice, useDeleteMortality, useDeleteFeed,
@@ -61,6 +61,8 @@ function todayShortLabel() {
 
 function Dashboard() {
   const navigate = useNavigate();
+  const farmQ = useFarm();
+  const farm = farmQ.data;
   const roomsQ = useRooms();
   const eggsQ = useEggs();
   const mortalityQ = useMortality();
@@ -408,10 +410,12 @@ function Dashboard() {
           <div className="mt-1.5 text-xs text-primary-foreground/70 max-w-2xl">
             Farm Records &amp; Analytics active · PoultryPro AI Intelligence progressively rolling out on Premium
           </div>
-          <h1 className="mt-2 font-display text-3xl md:text-4xl font-semibold">ABZ GLOBAL RESOURCE</h1>
-          <div className="mt-2 flex items-center gap-2 text-sm text-primary-foreground/80">
-            <MapPin className="h-4 w-4" /> Katsina State, Nigeria
-          </div>
+          <h1 className="mt-2 font-display text-3xl md:text-4xl font-semibold">{farm?.name ?? "Your Farm"}</h1>
+          {(farm?.state || farm?.country) && (
+            <div className="mt-2 flex items-center gap-2 text-sm text-primary-foreground/80">
+              <MapPin className="h-4 w-4" /> {[farm?.state, farm?.country].filter(Boolean).join(", ")}
+            </div>
+          )}
           <div className="mt-2 text-sm text-primary-foreground/70">
             {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
           </div>
@@ -1075,7 +1079,7 @@ function Dashboard() {
         )}
 
         <div className="pt-6 text-center text-xs text-muted-foreground">
-          {new Date().getFullYear()} ABZ GLOBAL RESOURCE — Poultry Farm Management System
+          {new Date().getFullYear()} {farm?.name ?? "Your Farm"} — Poultry Farm Management System
         </div>
       </main>
       <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
