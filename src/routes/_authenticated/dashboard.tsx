@@ -2661,37 +2661,6 @@ type AbnormalProps = {
   bagWeightKg: number | null;
 };
 
-type ActivityLevel = "NORMAL" | "WATCH" | "ELEVATED" | "HIGH";
-
-type SignalKey = "production" | "mortality" | "feed" | "health";
-
-type RoomActivityRow = {
-  id: string;
-  name: string;
-  score: number;
-  level: ActivityLevel;
-  signals: Record<SignalKey, { score: number | null; label: string; note: string }>;
-  triggered: SignalKey[];
-};
-
-type AbnormalAnalysis = {
-  score: number;
-  level: ActivityLevel;
-  periodLabel: string;
-  signalsAnalysed: string[];
-  roomsMonitored: number;
-  mostAffected: RoomActivityRow | null;
-  rooms: RoomActivityRow[];
-  insight: { observation: string; connection: string; interpretation: string; action: string };
-  limited: boolean;
-};
-
-function classifyActivity(score: number): ActivityLevel {
-  if (score >= 75) return "HIGH";
-  if (score >= 50) return "ELEVATED";
-  if (score >= 25) return "WATCH";
-  return "NORMAL";
-}
 
 function activityBadgeClass(level: ActivityLevel): string {
   switch (level) {
