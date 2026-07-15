@@ -2,6 +2,10 @@ import type { EggRow, Room, Mortality, Feed, Health, Price } from "@/lib/farm-da
 import { detectProductionDecline, type DeclineEvent } from "@/lib/production-decline";
 import { detectMortalityPatterns, type MortalityEvent } from "@/lib/mortality-pattern";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
+import {
+  computeForecast, computeMortalityRisk, computeFeedEfficiency, computeAbnormalActivity,
+  type ForecastResult, type MortalityAnalysis, type FeedEffAnalysis, type AbnormalAnalysis,
+} from "@/lib/intelligence-modules";
 
 // -----------------------------------------------------------------------------
 // AI-Supported Farm Insights — cross-module farm intelligence & decision support
@@ -129,6 +133,49 @@ export type FarmIntelligenceContext = {
   // Existing intelligence module outputs (structured)
   declineEvents: DeclineEvent[];
   mortalityEvents: MortalityEvent[];
+
+  // Unified outputs from every PoultryPro intelligence module.
+  // Farm Insights consumes these directly and does not recompute them.
+  productionForecast: null | {
+    currentProduction: number;      // latest total eggs
+    forecastAverage: number;        // avg forecast eggs/day (7d)
+    expectedLow: number;
+    expectedHigh: number;
+    forecastDirection: ForecastResult["direction"];
+    productionRate: number;         // % lay rate
+  };
+  productionDecline: null | {
+    status: "Detected" | "None";
+    declinePercentage: number | null;
+    affectedRoom: string | null;
+    comparisonPeriod: string | null;
+    recordCount: number;
+  };
+  mortalityRisk: null | {
+    riskLevel: MortalityAnalysis["levelLabel"];
+    riskScore: number;
+    mortalityThisMonth: number;
+    mostAffectedRoom: string | null;
+    recentPattern: MortalityAnalysis["patternLabel"];
+  };
+  feedEfficiency: null | {
+    efficiencyStatus: FeedEffAnalysis["status"];
+    movementScore: number;
+    feedPerEgg: number | null;      // grams per egg, if bag weight configured
+    feedPerBird: number | null;     // grams per bird (latest), if bag weight configured
+    feedMovement: number;           // % change in feed usage
+    productionMovement: number;     // % change in production
+    roomVariation: number;          // % variation across rooms
+    latestMatchedDate: string | null;
+  };
+  abnormalActivity: null | {
+    activityStatus: AbnormalAnalysis["level"];
+    activityScore: number;
+    signalsAnalysed: string[];
+    mostAffectedRoom: string | null;
+    strongestSignal: string | null;
+    roomLevelSignals: Array<{ room: string; level: AbnormalAnalysis["level"]; score: number; triggered: string[] }>;
+  };
 };
 
 export function buildFarmIntelligenceContext(input: {
@@ -138,6 +185,7 @@ export function buildFarmIntelligenceContext(input: {
   feed: Feed[];
   health: Health[];
   prices: Price[];
+  bagWeightKg?: number | null;
 }): FarmIntelligenceContext {
   const { eggs, rooms, mortality, feed, health, prices } = input;
   const activeBirds = rooms.reduce((s, r) => s + Math.max(0, r.current), 0);
@@ -220,6 +268,79 @@ export function buildFarmIntelligenceContext(input: {
   const decline = detectProductionDecline({ eggs, rooms, mortality, feed, health });
   const mort = detectMortalityPatterns({ eggs, rooms, mortality, feed, health });
 
+  // Consume outputs from every existing PoultryPro intelligence module.
+  const bagWeightKg = input.bagWeightKg ?? null;
+  const forecast = computeForecast(eggs, activeBirds);
+  const mortalityRisk = computeMortalityRisk(rooms, mortality, eggs, health);
+  const feedEff = computeFeedEfficiency(rooms, feed, eggs, mortality, health, bagWeightKg);
+  const abnormal = computeAbnormalActivity(rooms, eggs, feed, mortality, health, bagWeightKg);
+
+  const declineFarmEv = decline.events.find(e => e.scope === "Farm") ?? null;
+  const declineRoomEv = decline.events.find(e => e.scope === "Room") ?? null;
+  const declineTop = declineFarmEv ?? declineRoomEv;
+
+  const productionForecast: FarmIntelligenceContext["productionForecast"] = forecast
+    ? {
+        currentProduction: forecast.latestTotal,
+        forecastAverage: forecast.avgForecast,
+        expectedLow: forecast.low,
+        expectedHigh: forecast.high,
+        forecastDirection: forecast.direction,
+        productionRate: forecast.latestPct,
+      }
+    : null;
+
+  const productionDecline: FarmIntelligenceContext["productionDecline"] = declineTop
+    ? {
+        status: "Detected",
+        declinePercentage: round1(declineTop.changePct),
+        affectedRoom: declineTop.scope === "Room" ? declineTop.scopeLabel : null,
+        comparisonPeriod: declineTop.firstDeclineDate ?? declineTop.latestDate ?? null,
+        recordCount: eggs.length,
+      }
+    : { status: "None", declinePercentage: null, affectedRoom: null, comparisonPeriod: null, recordCount: eggs.length };
+
+  const mortalityRiskCtx: FarmIntelligenceContext["mortalityRisk"] = mortalityRisk
+    ? {
+        riskLevel: mortalityRisk.levelLabel,
+        riskScore: mortalityRisk.score,
+        mortalityThisMonth: mortalityRisk.monthlyMortality,
+        mostAffectedRoom: mortalityRisk.mostAffectedRoom?.name ?? null,
+        recentPattern: mortalityRisk.patternLabel,
+      }
+    : null;
+
+  const feedEfficiency: FarmIntelligenceContext["feedEfficiency"] = feedEff
+    ? {
+        efficiencyStatus: feedEff.status,
+        movementScore: feedEff.score,
+        feedPerEgg: feedEff.latest.feedPerEggG ?? null,
+        feedPerBird: null,
+        feedMovement: Number.isFinite(feedEff.movements.feedPct) ? round1(feedEff.movements.feedPct) : 0,
+        productionMovement: Number.isFinite(feedEff.movements.productionPct) ? round1(feedEff.movements.productionPct) : 0,
+        roomVariation: round1(feedEff.movements.roomVariationPct),
+        latestMatchedDate: feedEff.latestLabel,
+      }
+    : null;
+
+  const abnormalActivity: FarmIntelligenceContext["abnormalActivity"] = abnormal
+    ? {
+        activityStatus: abnormal.level,
+        activityScore: abnormal.score,
+        signalsAnalysed: abnormal.signalsAnalysed,
+        mostAffectedRoom: abnormal.mostAffected?.name ?? null,
+        strongestSignal: abnormal.mostAffected && abnormal.mostAffected.triggered.length
+          ? abnormal.mostAffected.triggered[0]
+          : null,
+        roomLevelSignals: abnormal.rooms.map(r => ({
+          room: r.name,
+          level: r.level,
+          score: r.score,
+          triggered: r.triggered.map(String),
+        })),
+      }
+    : null;
+
   return {
     activeBirds,
     activeRooms,
@@ -253,6 +374,11 @@ export function buildFarmIntelligenceContext(input: {
     weeklyProfitNaira,
     declineEvents: decline.events,
     mortalityEvents: mort.events,
+    productionForecast,
+    productionDecline,
+    mortalityRisk: mortalityRiskCtx,
+    feedEfficiency,
+    abnormalActivity,
   };
 }
 
@@ -826,6 +952,7 @@ export function buildFarmInsights(input: {
   feed: Feed[];
   health: Health[];
   prices: Price[];
+  bagWeightKg?: number | null;
 }): FarmInsightsReport {
   const context = buildFarmIntelligenceContext(input);
 
