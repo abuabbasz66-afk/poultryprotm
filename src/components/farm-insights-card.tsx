@@ -10,15 +10,16 @@ type Props = {
   feed: Feed[];
   health: Health[];
   prices: Price[];
+  bagWeightKg?: number | null;
   loading?: boolean;
 };
 
 export function FarmInsightsIntelligence(props: Props) {
-  const { eggs, rooms, mortality, feed, health, prices, loading } = props;
+  const { eggs, rooms, mortality, feed, health, prices, bagWeightKg, loading } = props;
 
   const report = useMemo(
-    () => buildFarmInsights({ eggs, rooms, mortality, feed, health, prices }),
-    [eggs, rooms, mortality, feed, health, prices],
+    () => buildFarmInsights({ eggs, rooms, mortality, feed, health, prices, bagWeightKg: bagWeightKg ?? null }),
+    [eggs, rooms, mortality, feed, health, prices, bagWeightKg],
   );
 
   return (
