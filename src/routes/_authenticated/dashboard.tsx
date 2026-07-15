@@ -286,7 +286,7 @@ function Dashboard() {
   const mortalityRatePct = totalInitialBirds ? (monthlyMortality / totalInitialBirds) * 100 : 0;
   const leadingCause = useMemo(() => {
     const c: Record<string, number> = {};
-    for (const m of mortality) c[m.cause] = (c[m.cause] ?? 0) + m.loss;
+    for (const m of mortality) c[m.cause] = (c[m.cause] ?? 0) + Math.abs(m.loss);
     const top = Object.entries(c).sort((a, b) => b[1] - a[1])[0];
     return top?.[0] ?? "—";
   }, [mortality]);
