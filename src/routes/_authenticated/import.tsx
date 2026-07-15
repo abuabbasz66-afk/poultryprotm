@@ -294,7 +294,7 @@ function ImportPage() {
     <div className="min-h-screen bg-background text-foreground pb-16">
       <header className="bg-[color:var(--forest)] text-primary-foreground">
         <div className="container-x flex items-center justify-between py-4">
-          <Link to="/_authenticated/dashboard" className="inline-flex items-center gap-2 text-sm text-primary-foreground/80 hover:text-primary-foreground">
+          <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-primary-foreground/80 hover:text-primary-foreground">
             <ArrowLeft className="h-4 w-4" /> Back to dashboard
           </Link>
           <span className="text-sm font-display font-semibold">Import Historical Records</span>
@@ -484,7 +484,7 @@ function ImportPage() {
               </div>
             )}
             <div className="pt-2">
-              <Link to="/_authenticated/dashboard" className="inline-flex items-center gap-2 text-sm text-[color:var(--forest)] hover:underline">
+              <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-[color:var(--forest)] hover:underline">
                 <ArrowLeft className="h-4 w-4" /> Return to dashboard — Analytics and AI Intelligence will reflect the new records
               </Link>
             </div>
