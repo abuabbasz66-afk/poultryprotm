@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import heroAsset from "@/assets/hero-layer-birds.jpg.asset.json";
 import founderAsset from "@/assets/founder-abubakar.jpg.asset.json";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
@@ -11,6 +13,22 @@ import {
 export const Route = createFileRoute("/")({
   component: Index,
 });
+
+function useAuthed() {
+  const [authed, setAuthed] = useState<boolean | null>(null);
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (mounted) setAuthed(!!data.session);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setAuthed(!!session);
+    });
+    return () => { mounted = false; sub.subscription.unsubscribe(); };
+  }, []);
+  return authed;
+}
+
 
 const stats = [
   { icon: Bird, label: "Birds Managed", value: "3,957" },
