@@ -53,11 +53,17 @@ function AuthPage() {
           options: { emailRedirectTo: window.location.origin + "/onboarding" },
         });
         if (error) throw error;
+        // Wipe any farm/dashboard cache from a previous account on this device
+        // before landing on onboarding/dashboard so no stale farm name flashes.
+        await qc.cancelQueries();
+        qc.clear();
         toast.success("Account created. Let's set up your farm.");
         navigate({ to: "/onboarding" });
       } else if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        await qc.cancelQueries();
+        qc.clear();
         navigate({ to: "/dashboard" });
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
