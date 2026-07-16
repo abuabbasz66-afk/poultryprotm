@@ -20,7 +20,7 @@ import { useAuthUserId } from "@/lib/farm-data";
 import {
   useIsSuperAdmin, usePlatformStats, useAdminAccounts, useAdminFarms,
   useAdminFarmSummary, useAdminIntelligence, useAdminAuditLog,
-  useChangeSubscription, useSetAccountStatus,
+  useChangeSubscription, useSetAccountStatus, useDeleteAccount, sendPasswordReset,
   useAdminNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useArchiveNotification,
   type AdminAccount, type AdminFarm, type AuditEntry, type AdminNotification,
 } from "@/lib/admin-api";
