@@ -332,11 +332,11 @@ function Index() {
           <div className="max-w-2xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">How PoultryPro Works</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Three simple steps: Capture, Understand, Predict.
+              From records to decisions in three simple steps.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              Record what happens on your farm, see what your records are telling you, and get alerted
-              when something looks unusual.
+              Capture what happens on your farm, understand what your data means, and get ahead of
+              problems before they cost you money.
             </p>
           </div>
           <div className="mt-14 grid md:grid-cols-3 gap-5">
