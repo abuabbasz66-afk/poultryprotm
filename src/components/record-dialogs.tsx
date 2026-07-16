@@ -288,7 +288,9 @@ function MortalityForm({ item, onClose, rooms }: { item?: Mortality; onClose: ()
   const isEdit = !!item;
   const [room, setRoom] = useState(item?.room ?? (rooms[0]?.name ?? ""));
   const [cause, setCause] = useState(item?.cause ?? "Unknown");
-  const [date, setDate] = useState(item?.date ?? todayIso());
+  // Normalise any stored value (ISO, legacy "6 aPR", etc.) to a YYYY-MM-DD
+  // key so the <input type="date"> pre-fills correctly on edit.
+  const [date, setDate] = useState(toDateKey(item?.date) ?? item?.date ?? todayIso());
 
   const [loss, setLoss] = useState<number | "">(item?.loss ?? 1);
   const add = useAddMortality();
