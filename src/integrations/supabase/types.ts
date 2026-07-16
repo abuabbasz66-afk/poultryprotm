@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action_type: string
+          admin_user_id: string
+          affected_farm_id: string | null
+          affected_user_id: string | null
+          created_at: string
+          id: string
+          new_value: Json | null
+          previous_value: Json | null
+          reason: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_user_id: string
+          affected_farm_id?: string | null
+          affected_user_id?: string | null
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          previous_value?: Json | null
+          reason?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_user_id?: string
+          affected_farm_id?: string | null
+          affected_user_id?: string | null
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          previous_value?: Json | null
+          reason?: string | null
+        }
+        Relationships: []
+      }
       egg_production: {
         Row: {
           created_at: string
@@ -71,8 +107,11 @@ export type Database = {
           owner_id: string
           owner_name: string | null
           phone: string | null
+          plan_updated_at: string
           rooms_count: number | null
           state: string | null
+          status: string
+          subscription_plan: string
         }
         Insert: {
           bird_count?: number | null
@@ -86,8 +125,11 @@ export type Database = {
           owner_id: string
           owner_name?: string | null
           phone?: string | null
+          plan_updated_at?: string
           rooms_count?: number | null
           state?: string | null
+          status?: string
+          subscription_plan?: string
         }
         Update: {
           bird_count?: number | null
@@ -101,8 +143,11 @@ export type Database = {
           owner_id?: string
           owner_name?: string | null
           phone?: string | null
+          plan_updated_at?: string
           rooms_count?: number | null
           state?: string | null
+          status?: string
+          subscription_plan?: string
         }
         Relationships: []
       }
@@ -290,12 +335,106 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_assign_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _target_user: string
+        }
+        Returns: Json
+      }
+      admin_change_subscription: {
+        Args: { _farm_id: string; _new_plan: string; _reason?: string }
+        Returns: Json
+      }
+      admin_farm_summary: { Args: { _farm_id: string }; Returns: Json }
+      admin_intelligence_summary: { Args: never; Returns: Json }
+      admin_list_accounts: {
+        Args: never
+        Returns: {
+          account_created: string
+          email: string
+          farm_id: string
+          farm_name: string
+          last_sign_in: string
+          owner_name: string
+          status: string
+          subscription_plan: string
+          user_id: string
+        }[]
+      }
+      admin_list_audit_log: {
+        Args: { _limit?: number }
+        Returns: {
+          action_type: string
+          admin_email: string
+          admin_user_id: string
+          affected_farm_id: string
+          affected_farm_name: string
+          affected_user_id: string
+          created_at: string
+          id: string
+          new_value: Json
+          previous_value: Json
+          reason: string
+        }[]
+      }
+      admin_list_farms: {
+        Args: never
+        Returns: {
+          bird_count: number
+          country: string
+          created_at: string
+          farm_id: string
+          farm_name: string
+          location: string
+          owner_email: string
+          owner_name: string
+          rooms_count: number
+          state: string
+          status: string
+          subscription_plan: string
+        }[]
+      }
+      admin_platform_stats: { Args: never; Returns: Json }
+      admin_set_account_status: {
+        Args: { _farm_id: string; _new_status: string; _reason?: string }
+        Returns: Json
+      }
       current_farm_id: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_super_admin: { Args: never; Returns: boolean }
       platform_stats: {
         Args: never
         Returns: {
@@ -307,7 +446,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -434,6 +573,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "super_admin"],
+    },
   },
 } as const
