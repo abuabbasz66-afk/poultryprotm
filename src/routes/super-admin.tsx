@@ -253,6 +253,17 @@ function SuperAdminPage() {
   );
 }
 
+// Compat helper — used by IntelligenceTab (kept for backward compatibility)
+function StatCard({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
+  return (
+    <div className="rounded-xl border border-[#12281c]/10 bg-white p-4 shadow-sm">
+      <div className="text-[11px] uppercase tracking-widest text-[#12281c]/60">{label}</div>
+      <div className="mt-1 text-2xl font-semibold text-[#12281c]">{value}</div>
+      {hint && <div className="mt-1 text-xs text-[#12281c]/60">{hint}</div>}
+    </div>
+  );
+}
+
 // -------------------- OVERVIEW --------------------
 // Demo pricing (₦/month) — replaced with real values once payments are wired.
 const PLAN_PRICE_NGN: Record<string, number> = { basic: 2500, standard: 7500, premium: 15000 };
