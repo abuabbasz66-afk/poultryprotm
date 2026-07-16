@@ -187,6 +187,30 @@ export function useSetAccountStatus(userId: string | null | undefined) {
   });
 }
 
+export function useDeleteAccount(userId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: { user_id: string; reason?: string }) => {
+      const { data, error } = await supabase.rpc("admin_delete_account", {
+        _user_id: args.user_id,
+        _reason: args.reason,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", userId ?? "anon"] });
+    },
+  });
+}
+
+export async function sendPasswordReset(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+  if (error) throw error;
+}
+
 // ---------- Admin notifications ----------
 export type AdminNotification = {
   id: string;
