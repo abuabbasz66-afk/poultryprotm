@@ -15,6 +15,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthUserId } from "@/lib/farm-data";
 import {
   useIsSuperAdmin, usePlatformStats, useAdminAccounts, useAdminFarms,
