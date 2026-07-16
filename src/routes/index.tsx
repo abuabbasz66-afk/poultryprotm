@@ -68,6 +68,50 @@ function usePlatformStats() {
   return s;
 }
 
+type LivePlatformStats = {
+  registered_farms: number;
+  registered_users: number;
+  total_birds: number;
+  production_records: number;
+  feed_records: number;
+  mortality_records: number;
+  health_records: number;
+  rooms: number;
+  eggs: number;
+  premium_farms: number;
+};
+
+function useLivePlatformStats() {
+  const [s, setS] = useState<LivePlatformStats | null>(null);
+  useEffect(() => {
+    let mounted = true;
+    supabase.rpc("landing_platform_stats").then(({ data, error }) => {
+      if (!mounted || error || !data) return;
+      const row = data as Record<string, number | string>;
+      setS({
+        registered_farms: Number(row.registered_farms) || 0,
+        registered_users: Number(row.registered_users) || 0,
+        total_birds: Number(row.total_birds) || 0,
+        production_records: Number(row.production_records) || 0,
+        feed_records: Number(row.feed_records) || 0,
+        mortality_records: Number(row.mortality_records) || 0,
+        health_records: Number(row.health_records) || 0,
+        rooms: Number(row.rooms) || 0,
+        eggs: Number(row.eggs) || 0,
+        premium_farms: Number(row.premium_farms) || 0,
+      });
+    });
+    return () => { mounted = false; };
+  }, []);
+  return s;
+}
+
+function fmtStat(n: number | undefined | null): string {
+  if (n === undefined || n === null) return "—";
+  if (n <= 0) return "—";
+  return n.toLocaleString("en-US");
+}
+
 const architecture = [
   {
     step: "01",
