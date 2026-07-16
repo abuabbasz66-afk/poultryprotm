@@ -118,7 +118,7 @@ export function useAdminFarmSummary(userId: string | null | undefined, farmId: s
     queryKey: ADMIN_KEY(userId, "farm-summary", farmId),
     enabled: !!farmId,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("admin_farm_summary", { _farm_id: farmId });
+      const { data, error } = await supabase.rpc("admin_farm_summary", { _farm_id: farmId! });
       if (error) throw error;
       return data as any;
     },
