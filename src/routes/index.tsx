@@ -451,10 +451,11 @@ function Index() {
           <div className="max-w-2xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">The Product</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              See PoultryPro in action.
+              Everything you need to run a data-driven farm.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              From daily farm records to clear farm decisions.
+              From daily record keeping to intelligent alerts, PoultryPro gives you the visibility and
+              insights to stay in control.
             </p>
           </div>
 
@@ -463,7 +464,7 @@ function Index() {
               {
                 icon: LayoutDashboard,
                 title: "Daily Farm Records",
-                desc: "Record egg production, feed use, mortality and farm activities in one place.",
+                desc: "Replace scattered notebooks with one simple, organised record of eggs, feed, health and mortality.",
                 preview: (
                   <div className="space-y-2">
                     {[
@@ -489,7 +490,7 @@ function Index() {
               {
                 icon: LineChart,
                 title: "Farm Performance",
-                desc: "See production trends, costs and farm performance without calculating everything manually.",
+                desc: "See production, cost and profit trends at a glance — no spreadsheets or manual calculations required.",
                 preview: (
                   <div>
                     <div className="flex items-end gap-1.5 h-24">
@@ -507,15 +508,15 @@ function Index() {
               {
                 icon: Sparkles,
                 title: "PoultryPro Prediction",
-                desc: "PoultryPro studies your farm records, spots unusual changes and explains what may need your attention.",
+                desc: "Detect unusual patterns, identify risks earlier and make proactive decisions with AI-supported insights.",
                 preview: (
                   <div className="space-y-2.5">
                     <div className="rounded-lg border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 px-3 py-2.5">
-                      <div className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-medium">Possible attention</div>
-                      <div className="text-xs mt-1">Room 3 egg production dropped compared to usual.</div>
+                      <div className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-medium">Pattern detected</div>
+                      <div className="text-xs mt-1">Room 3 egg production is below its usual range.</div>
                     </div>
                     <div className="rounded-lg border border-border bg-background/70 px-3 py-2.5">
-                      <div className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-medium">What to check</div>
+                      <div className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-medium">Suggested checks</div>
                       <div className="text-xs mt-1">Feed intake, water supply and any recent changes.</div>
                     </div>
                   </div>
