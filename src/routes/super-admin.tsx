@@ -8,7 +8,8 @@ import {
   PauseCircle, Sparkles, DollarSign, PieChart as PieIcon,
   LineChart as LineIcon, Database, Mail, Server, HardDrive,
   Zap, Megaphone, Wrench, ShieldPlus, UserMinus, Send, PackagePlus,
-  Wheat, Skull, Stethoscope, Pill, Upload,
+  Wheat, Skull, Stethoscope, Pill, Upload, MoreVertical, Trash2,
+  KeyRound, Eye, Pencil,
 } from "lucide-react";
 import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip as ReTooltip,
