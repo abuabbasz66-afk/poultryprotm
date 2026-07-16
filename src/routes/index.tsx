@@ -204,23 +204,23 @@ function Index() {
               PoultryPro<sup className="text-[10px] text-muted-foreground">™</sup>
             </span>
           </a>
-          <nav className="hidden md:flex items-center gap-8 text-sm">
-            <a href="#architecture" className="text-muted-foreground hover:text-foreground transition">Architecture</a>
-            <a href="#features" className="text-muted-foreground hover:text-foreground transition">Features</a>
-            <a href="#pricing" className="text-muted-foreground hover:text-foreground transition">Pricing</a>
-            <a href="#founder" className="text-muted-foreground hover:text-foreground transition">Founder</a>
-            <a href="#roadmap" className="text-muted-foreground hover:text-foreground transition">Roadmap</a>
+          <nav className="hidden md:flex items-center gap-10 text-sm font-medium">
+            <a href="#architecture" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Architecture</a>
+            <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Features</a>
+            <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Pricing</a>
+            <a href="#founder" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Founder</a>
+            <a href="#roadmap" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Roadmap</a>
           </nav>
           {authed ? (
-            <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition">
+            <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-200">
               Open Dashboard <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           ) : (
             <div className="flex items-center gap-2">
-              <Link to="/auth" search={{ mode: "signin" }} className="hidden sm:inline-flex items-center rounded-full border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-secondary transition">
+              <Link to="/auth" search={{ mode: "signin" }} className="hidden sm:inline-flex items-center rounded-full border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-secondary transition-colors duration-200">
                 Sign In
               </Link>
-              <Link to="/auth" search={{ mode: "signup" }} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition">
+              <Link to="/auth" search={{ mode: "signup" }} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-200">
                 Create Farm Account <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
@@ -229,44 +229,52 @@ function Index() {
       </header>
 
       <section id="top" className="relative overflow-hidden">
-        <div className="container-x pt-14 pb-20 md:pt-24 md:pb-32 grid lg:grid-cols-12 gap-10 items-center">
-          <div className="lg:col-span-6 space-y-7">
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-[color:var(--forest)]/10 blur-3xl" />
+          <div className="absolute top-40 -right-24 h-80 w-80 rounded-full bg-[color:var(--gold)]/15 blur-3xl" />
+        </div>
+        <div className="container-x pt-20 pb-24 md:pt-32 md:pb-40 grid lg:grid-cols-12 gap-14 items-center">
+          <div className="lg:col-span-6 space-y-8 hero-fade-up">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs font-medium text-secondary-foreground">
               <Sparkles className="h-3.5 w-3.5 text-[color:var(--gold)]" />
               Capture · Understand · Predict
             </span>
-            <h1 className="font-display text-5xl md:text-7xl font-semibold leading-[1.02] tracking-tight">
-              Know your farm. <em className="italic text-[color:var(--forest)]">Spot problems early. Make better decisions.</em>
+            <h1 className="font-display font-extrabold tracking-tight text-foreground text-[2.75rem] sm:text-5xl md:text-6xl lg:text-[4.25rem] leading-[1.05]">
+              The intelligent operating system for modern poultry farms.
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
-              PoultryPro helps poultry farmers record daily farm activities, track production and costs,
-              and understand what is happening on their farm.
+            <p className="text-base md:text-lg text-muted-foreground max-w-[600px] leading-relaxed font-normal">
+              PoultryPro™ is an AI-powered poultry management platform that helps farmers digitize
+              daily operations, monitor flock performance, predict emerging risks, and make smarter
+              business decisions through real-time farm intelligence.
             </p>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 pt-2">
               {authed ? (
-                <Link to="/dashboard" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition shadow-[var(--shadow-lift)]">
-                  Explore the platform <ArrowRight className="h-4 w-4" />
+                <Link to="/dashboard" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] transition-all duration-200 shadow-[var(--shadow-lift)]">
+                  Explore the Platform <ArrowRight className="h-4 w-4" />
                 </Link>
               ) : (
-                <Link to="/auth" search={{ mode: "signin" }} className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition shadow-[var(--shadow-lift)]">
-                  Explore the platform <ArrowRight className="h-4 w-4" />
+                <Link to="/auth" search={{ mode: "signin" }} className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] transition-all duration-200 shadow-[var(--shadow-lift)]">
+                  Explore the Platform <ArrowRight className="h-4 w-4" />
                 </Link>
               )}
-              <a href="#founder" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-medium hover:bg-secondary transition">
-                Meet the founder
+              <a href="#founder" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-secondary hover:-translate-y-0.5 transition-all duration-200">
+                Meet the Founder
               </a>
             </div>
 
-            <div className="flex items-center gap-3 pt-2 text-sm text-muted-foreground">
-              <Trophy className="h-4 w-4 text-[color:var(--gold)]" />
-              Winner — Airtel-sponsored 3MTT × NextGen Knowledge Showcase
+            <div className="pt-3">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 px-4 py-2 text-xs sm:text-sm font-medium text-foreground">
+                <Trophy className="h-4 w-4 text-[color:var(--gold)]" />
+                <span className="font-semibold">Winner</span>
+                <span className="text-muted-foreground">— Airtel Sponsored 3MTT NextGen Knowledge Showcase</span>
+              </span>
             </div>
           </div>
 
-          <div className="lg:col-span-6 relative">
-            <div className="relative rounded-3xl overflow-hidden shadow-[var(--shadow-lift)] ring-1 ring-border">
-              <img src={heroAsset.url} alt="Modern poultry farm" width={1600} height={1200} className="w-full h-[520px] object-cover" />
+          <div className="lg:col-span-6 relative hero-fade-up" style={{ animationDelay: "120ms" }}>
+            <div className="relative rounded-[2rem] overflow-hidden shadow-[0_30px_80px_-20px_rgba(15,60,40,0.35)] ring-1 ring-border/60 hero-float">
+              <img src={heroAsset.url} alt="Modern poultry farm" width={1600} height={1200} className="w-full h-[420px] md:h-[560px] object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--forest)]/40 via-transparent to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 flex gap-3">
                 <div className="flex-1 rounded-2xl bg-background/95 backdrop-blur px-4 py-3">
@@ -282,7 +290,7 @@ function Index() {
               </div>
             </div>
             <div className="absolute -top-6 -right-6 hidden md:block rounded-2xl bg-[color:var(--gold)] text-[color:var(--ink)] px-5 py-4 shadow-[var(--shadow-lift)] rotate-3">
-              <div className="text-xs font-medium uppercase tracking-wider">Simple &amp; Clear</div>
+              <div className="text-xs font-semibold uppercase tracking-wider">Simple &amp; Clear</div>
               <div className="font-display text-lg font-bold">Built for farmers</div>
             </div>
           </div>
