@@ -46,10 +46,16 @@ import {
 } from "@/lib/intelligence-modules";
 import { format as formatDate, parseISO, isValid as isValidDate } from "date-fns";
 
-function formatDayLabel(iso: string): string {
-  if (!iso) return "—";
-  const d = parseISO(iso);
-  return isValidDate(d) ? formatDate(d, "d MMM yyyy") : iso;
+function formatDayLabel(input: string | null | undefined): string {
+  if (!input) return "—";
+  // Route every record date through the shared normaliser so legacy short
+  // strings like "6 aPR" (missing year, mixed case) render identically to
+  // fresh ISO values ("2026-04-06"). Only fall back to the raw string when
+  // even the shared normaliser cannot understand it.
+  const localDate = toLocalDate(input);
+  if (localDate) return formatDate(localDate, "d MMM yyyy");
+  const iso = parseISO(String(input));
+  return isValidDate(iso) ? formatDate(iso, "d MMM yyyy") : String(input);
 }
 function birdsLabel(n: number): string {
   const abs = Math.abs(Number(n) || 0);
