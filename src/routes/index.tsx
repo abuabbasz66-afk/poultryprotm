@@ -73,32 +73,32 @@ const architecture = [
     step: "01",
     title: "Capture",
     tag: "Farm Records",
-    desc: "Record what happens on your farm — eggs, feed, health, mortality and prices — in one simple place.",
+    desc: "Record eggs, feed, health, mortality and costs in one organised place — so nothing gets lost and every decision is based on facts.",
     icon: LayoutDashboard,
   },
   {
     step: "02",
     title: "Understand",
     tag: "Farm Analytics",
-    desc: "See what your farm records are telling you: how birds are performing, how much feed costs, and where your money goes.",
+    desc: "Turn daily records into clear production, cost and profit views that show exactly how your farm is performing.",
     icon: LineChart,
   },
   {
     step: "03",
     title: "Predict",
     tag: "PoultryPro AI",
-    desc: "Spot unusual changes and possible problems early, based on the records you already keep.",
+    desc: "Detect unusual trends, spot hidden risks earlier and make proactive decisions before small issues become costly problems.",
     icon: Sparkles,
   },
 ];
 
 const features = [
-  { icon: LayoutDashboard, title: "Interactive Dashboard", desc: "Real-time visibility into birds, eggs, feed, mortality, revenue and profitability.", tier: "Capture + Understand" },
-  { icon: Egg, title: "Production Management", desc: "Track daily egg production, crates and extras across every room and flock.", tier: "Capture" },
-  { icon: Wheat, title: "Feed Management", desc: "Monitor daily feed usage, cost tracking and efficiency formulas.", tier: "Capture + Understand" },
-  { icon: HeartPulse, title: "Health Records", desc: "Log vaccinations, medications, vitamin schedules and health observations.", tier: "Capture" },
-  { icon: LineChart, title: "Financial Analytics", desc: "Daily and monthly profitability, revenue trends and production economics.", tier: "Understand" },
-  { icon: ShieldCheck, title: "Mortality Tracking", desc: "Room-based mortality logging, loss analysis and historical records.", tier: "Capture + Understand" },
+  { icon: LayoutDashboard, title: "Interactive Dashboard", desc: "Monitor birds, eggs, feed, mortality and revenue from one clear view — no more digging through notebooks.", tier: "Capture + Understand" },
+  { icon: Egg, title: "Production Management", desc: "Track daily egg output by room and flock so you know exactly which groups are performing best.", tier: "Capture" },
+  { icon: Wheat, title: "Feed Management", desc: "Monitor feed usage and costs in real time to protect your biggest farm expense and improve efficiency.", tier: "Capture + Understand" },
+  { icon: HeartPulse, title: "Health Records", desc: "Keep complete vaccination, medication and health histories to support better flock care and compliance.", tier: "Capture" },
+  { icon: LineChart, title: "Financial Analytics", desc: "See daily and monthly profitability, revenue trends and where your money is really going.", tier: "Understand" },
+  { icon: ShieldCheck, title: "Mortality Tracking", desc: "Log and analyse bird losses by room to identify issues faster and protect your investment.", tier: "Capture + Understand" },
 ];
 
 const tiers = [
@@ -107,8 +107,8 @@ const tiers = [
     tagline: "Farm Records",
     stage: "Capture",
     stageNum: "01",
-    promise: "Capture what happens on your farm.",
-    subtitle: "For farmers moving from notebooks and scattered records to a simple, organised farm record system.",
+    promise: "Start with essential record keeping.",
+    subtitle: "Move from scattered notebooks to one organised, searchable record of everything that happens on your farm.",
     points: [
       "Daily egg production recording",
       "Room-based egg records",
@@ -130,8 +130,8 @@ const tiers = [
     tagline: "Farm Analytics",
     stage: "Understand",
     stageNum: "02",
-    promise: "Understand what your farm data means.",
-    subtitle: "Turn your daily records into clear production, cost and profit views so you can see how the farm is really doing.",
+    promise: "Grow into business analytics.",
+    subtitle: "Turn your daily records into clear financial and production insights that help you run the farm more profitably.",
     points: [
       "Everything in Basic",
       "Production percentage calculations",
@@ -154,8 +154,8 @@ const tiers = [
     tagline: "PoultryPro AI Intelligence",
     stage: "Predict",
     stageNum: "03",
-    promise: "Predict what may happen next and act earlier.",
-    subtitle: "Let PoultryPro study your farm records, spot unusual changes and alert you to possible risks earlier.",
+    promise: "Upgrade to AI-powered decision support.",
+    subtitle: "Let PoultryPro continuously analyse your records, detect unusual patterns and alert you to risks earlier.",
     points: [
       "Everything in Basic & Standard",
       "AI-powered egg production forecasting",
@@ -178,17 +178,17 @@ const tiers = [
 
 
 const problems = [
-  "Farm records are easily lost or scattered.",
-  "Farmers cannot quickly see how the farm is performing.",
-  "Feed, the biggest farm cost, is difficult to monitor.",
-  "Profit and production changes are easy to miss.",
-  "Health and mortality records are often incomplete.",
+  "Important records get lost in notebooks or scattered across different places.",
+  "Farmers cannot quickly see how birds, eggs and costs are really performing.",
+  "Feed — your largest expense — is hard to track and even harder to optimise.",
+  "Profitability problems often go unnoticed until it is too late to fix them.",
+  "Health and mortality records are incomplete, making early intervention harder.",
 ];
 
 const timeline = [
-  { phase: "Available Today", items: ["Farm Records — eggs, feed, health, mortality", "Farm Analytics — performance and profit views", "Simple dashboard for every room and flock"] },
-  { phase: "Rolling Out (Premium AI)", items: ["Alerts when egg production drops unusually", "Alerts when bird losses rise above normal", "Simple feed and cost pattern checks"] },
-  { phase: "Long-Term Vision", items: ["Mobile app for iOS & Android", "Farmer marketplace & partner network", "Africa's leading smart poultry platform by 2030"] },
+  { phase: "Available Today", items: ["Digital farm records — eggs, feed, health and mortality", "Farm analytics — production, cost and profit views", "Clean dashboard for every room and flock"] },
+  { phase: "Rolling Out (Premium AI)", items: ["Early detection when egg production changes unusually", "Mortality trend monitoring and alerts", "Feed efficiency and cost pattern checks"] },
+  { phase: "Long-Term Vision", items: ["Mobile apps for iOS and Android", "Farmer marketplace and partner integrations", "Africa's leading smart poultry platform"] },
 ];
 
 function Index() {
@@ -240,12 +240,11 @@ function Index() {
               Capture · Understand · Predict
             </span>
             <h1 className="font-display font-extrabold tracking-tight text-foreground text-[2.75rem] sm:text-5xl md:text-6xl lg:text-[4.25rem] leading-[1.05]">
-              The intelligent operating system for modern poultry farms.
+              Run a smarter, more profitable poultry farm with confidence.
             </h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-[600px] leading-relaxed font-normal">
-              PoultryPro™ is an AI-powered poultry management platform that helps farmers digitize
-              daily operations, monitor flock performance, predict emerging risks, and make smarter
-              business decisions through real-time farm intelligence.
+              PoultryPro™ turns everyday farm records into clear insights and AI-powered recommendations,
+              helping you reduce guesswork, cut waste and make better business decisions every day.
             </p>
 
             <div className="flex flex-wrap gap-3 pt-2">
@@ -285,12 +284,12 @@ function Index() {
                 <div className="flex-1 rounded-2xl bg-background/95 backdrop-blur px-4 py-3">
                   <div className="text-xs text-muted-foreground">Farm View</div>
                   <div className="font-display text-lg font-semibold leading-tight">Every room</div>
-                  <div className="text-[11px] text-muted-foreground">See how birds are doing</div>
+                  <div className="text-[11px] text-muted-foreground">Performance at a glance</div>
                 </div>
               </div>
             </div>
             <div className="absolute -top-6 -right-6 hidden md:block rounded-2xl bg-[color:var(--gold)] text-[color:var(--ink)] px-5 py-4 shadow-[var(--shadow-lift)] rotate-3">
-              <div className="text-xs font-semibold uppercase tracking-wider">Simple &amp; Clear</div>
+              <div className="text-xs font-semibold uppercase tracking-wider">Practical &amp; Clear</div>
               <div className="font-display text-lg font-bold">Built for farmers</div>
             </div>
           </div>
@@ -303,7 +302,7 @@ function Index() {
             <div>
               <div className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--gold)] font-medium">Pilot Farm Results</div>
               <div className="mt-1 text-sm text-primary-foreground/80 max-w-2xl">
-                Based on real records analysed during PoultryPro's pilot deployment on a working poultry farm.
+                Real operational data from a working commercial poultry farm during PoultryPro's pilot deployment.
               </div>
             </div>
           </div>
@@ -333,11 +332,11 @@ function Index() {
           <div className="max-w-2xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">How PoultryPro Works</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Three simple steps: Capture, Understand, Predict.
+              From records to decisions in three simple steps.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              Record what happens on your farm, see what your records are telling you, and get alerted
-              when something looks unusual.
+              Capture what happens on your farm, understand what your data means, and get ahead of
+              problems before they cost you money.
             </p>
           </div>
           <div className="mt-14 grid md:grid-cols-3 gap-5">
@@ -365,11 +364,11 @@ function Index() {
           <div className="lg:col-span-5">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">The Problem</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Africa's poultry industry runs on notebooks.
+              Most poultry farms are flying blind.
             </h2>
             <p className="mt-5 text-muted-foreground leading-relaxed">
-              Many poultry farms still keep important records in notebooks or scattered files. This makes
-              it difficult to track production, feed costs, bird losses and farm profit.
+              When records live in notebooks, spreadsheets and memory, it is impossible to see the full
+              picture. Farmers miss early warning signs, struggle to control costs and leave money on the table.
             </p>
           </div>
           <div className="lg:col-span-7 space-y-3">
@@ -390,11 +389,11 @@ function Index() {
           <div className="max-w-2xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">The Solution</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Your farm records. One clear picture.
+              One farm record. One clear truth.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              PoultryPro brings your production, feed, health, mortality and financial records together
-              so you can understand your farm and make better decisions.
+              PoultryPro brings your production, feed, health, mortality and financial data together so
+              you can understand performance, control costs and make confident decisions.
             </p>
           </div>
 
@@ -424,10 +423,11 @@ function Index() {
           <div className="lg:col-span-6 order-1 lg:order-2 space-y-6">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Pilot Farm Results</span>
             <h2 className="font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Tested with real farm records.
+              Built and tested on a real commercial farm.
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Based on real records analysed during PoultryPro's pilot deployment on a working poultry farm.
+              PoultryPro was developed alongside working poultry operations to solve practical, everyday
+              challenges — not theoretical ones.
             </p>
             <div className="grid grid-cols-2 gap-4 pt-2">
               {[
@@ -451,10 +451,11 @@ function Index() {
           <div className="max-w-2xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">The Product</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              See PoultryPro in action.
+              Everything you need to run a data-driven farm.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              From daily farm records to clear farm decisions.
+              From daily record keeping to intelligent alerts, PoultryPro gives you the visibility and
+              insights to stay in control.
             </p>
           </div>
 
@@ -463,7 +464,7 @@ function Index() {
               {
                 icon: LayoutDashboard,
                 title: "Daily Farm Records",
-                desc: "Record egg production, feed use, mortality and farm activities in one place.",
+                desc: "Replace scattered notebooks with one simple, organised record of eggs, feed, health and mortality.",
                 preview: (
                   <div className="space-y-2">
                     {[
@@ -489,7 +490,7 @@ function Index() {
               {
                 icon: LineChart,
                 title: "Farm Performance",
-                desc: "See production trends, costs and farm performance without calculating everything manually.",
+                desc: "See production, cost and profit trends at a glance — no spreadsheets or manual calculations required.",
                 preview: (
                   <div>
                     <div className="flex items-end gap-1.5 h-24">
@@ -507,15 +508,15 @@ function Index() {
               {
                 icon: Sparkles,
                 title: "PoultryPro Prediction",
-                desc: "PoultryPro studies your farm records, spots unusual changes and explains what may need your attention.",
+                desc: "Detect unusual patterns, identify risks earlier and make proactive decisions with AI-supported insights.",
                 preview: (
                   <div className="space-y-2.5">
                     <div className="rounded-lg border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 px-3 py-2.5">
-                      <div className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-medium">Possible attention</div>
-                      <div className="text-xs mt-1">Room 3 egg production dropped compared to usual.</div>
+                      <div className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-medium">Pattern detected</div>
+                      <div className="text-xs mt-1">Room 3 egg production is below its usual range.</div>
                     </div>
                     <div className="rounded-lg border border-border bg-background/70 px-3 py-2.5">
-                      <div className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-medium">What to check</div>
+                      <div className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-medium">Suggested checks</div>
                       <div className="text-xs mt-1">Feed intake, water supply and any recent changes.</div>
                     </div>
                   </div>
@@ -556,11 +557,11 @@ function Index() {
               Abubakar Sadiq Abbas
             </h2>
             <p className="text-primary-foreground/70 uppercase text-xs tracking-widest">
-              AgriTech Innovator · Project Manager · Agribusiness Manager
+              AgriTech Innovator · Project Manager · Agribusiness Specialist
             </p>
             <blockquote className="font-display text-2xl md:text-3xl italic leading-snug border-l-2 border-[color:var(--gold)] pl-6">
-              "Farmers deserve intelligent tools that transform data into decisions,
-              and decisions into profitability."
+              "I built PoultryPro because farmers deserve technology that turns their daily work
+              into smarter decisions and stronger businesses."
             </blockquote>
             <div className="grid sm:grid-cols-2 gap-4 pt-4">
               {[
@@ -586,11 +587,11 @@ function Index() {
           <div className="max-w-3xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Plans &amp; Subscriptions</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Three plans that grow with your farm.
+              A plan for every stage of your farm's growth.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              Start with simple farm records, then unlock clearer farm performance views and, later,
-              early alerts for unusual changes.
+              Start with essential record keeping, add business analytics as you grow, and unlock
+              AI-powered decision support when you are ready to scale.
             </p>
           </div>
 
@@ -680,8 +681,8 @@ function Index() {
 
           <p className="mt-10 text-xs text-muted-foreground max-w-3xl">
             Basic (Farm Records) and Standard (Farm Analytics) are working platform capabilities today.
-            Premium (PoultryPro AI Intelligence) capabilities are progressively rolling out and are
-            clearly labelled inside the product — we do not present unfinished AI features as fully deployed.
+            Premium (PoultryPro AI Intelligence) features are being rolled out progressively and are
+            clearly labelled inside the product — we never present unfinished capabilities as fully deployed.
           </p>
         </div>
       </section>
@@ -693,7 +694,7 @@ function Index() {
           <div className="max-w-2xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Future Roadmap</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Toward Africa's AI-powered poultry ecosystem.
+              Building Africa's leading poultry intelligence platform.
             </h2>
           </div>
           <div className="mt-14 grid md:grid-cols-3 gap-5">
@@ -724,16 +725,16 @@ function Index() {
               <div className="lg:col-span-8 space-y-5">
                 <Users className="h-8 w-8 text-[color:var(--gold)]" />
                 <h2 className="font-display text-4xl md:text-6xl font-semibold leading-[1.05]">
-                  Build the future of smart poultry farming with us.
+                  Ready to transform your poultry farm?
                 </h2>
                 <p className="text-primary-foreground/75 text-lg max-w-2xl">
-                  We're inviting investors, agricultural institutions, innovation hubs and government
-                  partners to scale PoultryPro across Africa.
+                  Join forward-thinking farmers, investors and partners who are building the future of
+                  smart poultry management in Africa.
                 </p>
               </div>
               <div className="lg:col-span-4 flex lg:justify-end">
                 <a href="mailto:contact@poultrypro.africa" className="inline-flex items-center gap-2 rounded-full bg-[color:var(--gold)] text-[color:var(--ink)] px-7 py-4 font-medium hover:brightness-95 transition">
-                  Start a conversation <ArrowRight className="h-4 w-4" />
+                  Request a Demo <ArrowRight className="h-4 w-4" />
                 </a>
               </div>
             </div>
