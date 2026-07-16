@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { notifyNewAccount } from "@/lib/notify-new-account.functions";
+
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
