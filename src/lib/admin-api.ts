@@ -9,6 +9,8 @@ export type PlatformStats = {
   total_farms: number;
   active_farms: number;
   suspended_accounts: number;
+  new_users_today: number;
+  new_users_this_month: number;
   new_farms_this_month: number;
   basic_plan_farms: number;
   standard_plan_farms: number;
