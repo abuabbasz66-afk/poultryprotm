@@ -924,9 +924,20 @@ function QuickAction({ Icon, label, onClick }: { Icon: any; label: string; onCli
 // -------------------- ACCOUNTS --------------------
 function AccountsTab({ userId }: { userId: string }) {
   const { data, isPending, error } = useAdminAccounts(userId, true);
+  const setStatusM = useSetAccountStatus(userId);
+  const changeSub = useChangeSubscription(userId);
+  const deleteAcct = useDeleteAccount(userId);
   const [q, setQ] = useState("");
   const [plan, setPlan] = useState<"all" | "basic" | "standard" | "premium">("all");
   const [status, setStatus] = useState<"all" | "active" | "suspended">("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [viewFarm, setViewFarm] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<
+    | { kind: "delete-one"; account: AdminAccount }
+    | { kind: "delete-bulk"; accounts: AdminAccount[] }
+    | null
+  >(null);
 
   const rows = useMemo(() => {
     let r = data ?? [];
@@ -943,6 +954,70 @@ function AccountsTab({ userId }: { userId: string }) {
     return r;
   }, [data, q, plan, status]);
 
+  const selectableRows = rows.filter((r) => r.user_id !== userId);
+  const allSelected = selectableRows.length > 0 && selectableRows.every((r) => selected.has(r.user_id));
+  const anySelected = selected.size > 0;
+
+  function toggleAll() {
+    if (allSelected) setSelected(new Set());
+    else setSelected(new Set(selectableRows.map((r) => r.user_id)));
+  }
+  function toggleOne(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function handleReset(a: AdminAccount) {
+    if (!a.email) { toast.error("No email on file for this account"); return; }
+    try {
+      await sendPasswordReset(a.email);
+      toast.success(`Password reset email sent to ${a.email}`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not send password reset");
+    }
+  }
+  async function handleSuspend(a: AdminAccount, next: "active" | "suspended") {
+    if (!a.farm_id) { toast.error("This account has no farm to update"); return; }
+    try {
+      await setStatusM.mutateAsync({ farm_id: a.farm_id, new_status: next, reason: next === "suspended" ? "Suspended by admin" : "Reactivated by admin" });
+      toast.success(next === "suspended" ? "Account suspended" : "Account reactivated");
+    } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+  }
+  async function handleChangePlan(a: AdminAccount, newPlan: string) {
+    if (!a.farm_id) { toast.error("This account has no farm"); return; }
+    try {
+      await changeSub.mutateAsync({ farm_id: a.farm_id, new_plan: newPlan });
+      toast.success(`Plan changed to ${planLabel(newPlan)}`);
+    } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+  }
+  async function handleBulkStatus(next: "active" | "suspended") {
+    const targets = rows.filter((r) => selected.has(r.user_id) && r.farm_id);
+    if (targets.length === 0) { toast.error("No selected accounts have farms to update"); return; }
+    let ok = 0, fail = 0;
+    for (const t of targets) {
+      try { await setStatusM.mutateAsync({ farm_id: t.farm_id!, new_status: next, reason: `Bulk ${next}` }); ok++; }
+      catch { fail++; }
+    }
+    toast.success(`${ok} updated${fail ? `, ${fail} failed` : ""}`);
+    setSelected(new Set());
+  }
+  async function handleDeleteConfirmed() {
+    if (!confirm) return;
+    const targets = confirm.kind === "delete-one" ? [confirm.account] : confirm.accounts;
+    let ok = 0, fail = 0;
+    for (const t of targets) {
+      try { await deleteAcct.mutateAsync({ user_id: t.user_id, reason: "Deleted by super admin" }); ok++; }
+      catch (e: any) { fail++; console.error("delete failed", e); }
+    }
+    setConfirm(null);
+    setSelected(new Set());
+    if (ok > 0) toast.success(ok === 1 ? "Account successfully deleted." : `${ok} accounts successfully deleted.`);
+    if (fail > 0) toast.error(`${fail} could not be deleted`);
+  }
+
   if (isPending) return <Loader />;
   if (error) return <ErrBox message="Could not load accounts." />;
 
@@ -958,18 +1033,54 @@ function AccountsTab({ userId }: { userId: string }) {
         ]}
       />
 
+      {anySelected && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#c9a24a]/40 bg-[#c9a24a]/10 px-3 py-2 text-sm">
+          <span className="font-medium text-[#12281c]">{selected.size} selected</span>
+          <div className="ml-auto flex flex-wrap gap-2">
+            <button onClick={() => handleBulkStatus("active")}
+              className="px-3 py-1.5 rounded-md border border-emerald-300 bg-white text-emerald-800 text-xs font-medium hover:bg-emerald-50">
+              Activate selected
+            </button>
+            <button onClick={() => handleBulkStatus("suspended")}
+              className="px-3 py-1.5 rounded-md border border-amber-300 bg-white text-amber-800 text-xs font-medium hover:bg-amber-50">
+              Suspend selected
+            </button>
+            <button
+              onClick={() => setConfirm({ kind: "delete-bulk", accounts: rows.filter((r) => selected.has(r.user_id)) })}
+              className="px-3 py-1.5 rounded-md bg-red-600 text-white text-xs font-semibold hover:bg-red-700">
+              Delete selected
+            </button>
+            <button onClick={() => setSelected(new Set())}
+              className="px-3 py-1.5 rounded-md border text-xs">Clear</button>
+          </div>
+        </div>
+      )}
+
       {/* Desktop table */}
-      <div className="hidden md:block rounded-xl border border-[#12281c]/10 bg-white overflow-hidden">
+      <div className="hidden md:block rounded-xl border border-[#12281c]/10 bg-white overflow-visible">
         <table className="w-full text-sm">
           <thead className="bg-[#f6f2e6] text-[#12281c]/70 text-xs uppercase tracking-wider">
             <tr>
+              <Th>
+                <input type="checkbox" checked={allSelected} onChange={toggleAll}
+                  aria-label="Select all" className="h-4 w-4 accent-[#12281c]" />
+              </Th>
               <Th>Owner</Th><Th>Email</Th><Th>Farm</Th>
               <Th>Plan</Th><Th>Status</Th><Th>Created</Th><Th>Last sign-in</Th>
+              <Th>Actions</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#12281c]/5">
-            {rows.map((a) => (
+            {rows.map((a) => {
+              const isSelf = a.user_id === userId;
+              return (
               <tr key={a.user_id}>
+                <Td>
+                  <input type="checkbox" disabled={isSelf}
+                    checked={selected.has(a.user_id)} onChange={() => toggleOne(a.user_id)}
+                    aria-label={`Select ${a.email ?? a.user_id}`}
+                    className="h-4 w-4 accent-[#12281c] disabled:opacity-40" />
+                </Td>
                 <Td>{a.owner_name ?? "—"}</Td>
                 <Td className="font-mono text-xs">{a.email ?? "—"}</Td>
                 <Td>{a.farm_name ?? <span className="text-[#12281c]/50">No farm yet</span>}</Td>
@@ -977,10 +1088,26 @@ function AccountsTab({ userId }: { userId: string }) {
                 <Td><Badge className={statusTone(a.status)}>{a.status ?? "—"}</Badge></Td>
                 <Td>{fmtDay(a.account_created)}</Td>
                 <Td>{fmtDT(a.last_sign_in)}</Td>
+                <Td>
+                  <ActionsMenu
+                    open={openMenu === a.user_id}
+                    onToggle={() => setOpenMenu((v) => (v === a.user_id ? null : a.user_id))}
+                    onClose={() => setOpenMenu(null)}
+                    account={a}
+                    isSelf={isSelf}
+                    onView={() => a.farm_id ? setViewFarm(a.farm_id) : toast.info("This account has no farm")}
+                    onResetPassword={() => handleReset(a)}
+                    onSuspend={() => handleSuspend(a, "suspended")}
+                    onActivate={() => handleSuspend(a, "active")}
+                    onChangePlan={(p) => handleChangePlan(a, p)}
+                    onDelete={() => setConfirm({ kind: "delete-one", account: a })}
+                  />
+                </Td>
               </tr>
-            ))}
+              );
+            })}
             {rows.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-[#12281c]/60">No accounts match.</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-[#12281c]/60">No accounts match.</td></tr>
             )}
           </tbody>
         </table>
@@ -988,23 +1115,228 @@ function AccountsTab({ userId }: { userId: string }) {
 
       {/* Mobile cards */}
       <div className="md:hidden space-y-3">
-        {rows.map((a) => (
+        {rows.map((a) => {
+          const isSelf = a.user_id === userId;
+          return (
           <div key={a.user_id} className="rounded-xl border border-[#12281c]/10 bg-white p-3">
             <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="font-semibold">{a.owner_name ?? "—"}</div>
-                <div className="text-xs font-mono text-[#12281c]/70 break-all">{a.email}</div>
+              <div className="flex items-start gap-2 min-w-0">
+                <input type="checkbox" disabled={isSelf}
+                  checked={selected.has(a.user_id)} onChange={() => toggleOne(a.user_id)}
+                  className="mt-1 h-4 w-4 accent-[#12281c] disabled:opacity-40" />
+                <div className="min-w-0">
+                  <div className="font-semibold truncate">{a.owner_name ?? "—"}</div>
+                  <div className="text-xs font-mono text-[#12281c]/70 break-all">{a.email}</div>
+                </div>
               </div>
-              <Badge className={planTone(a.subscription_plan)}>{planLabel(a.subscription_plan)}</Badge>
+              <ActionsMenu
+                open={openMenu === a.user_id}
+                onToggle={() => setOpenMenu((v) => (v === a.user_id ? null : a.user_id))}
+                onClose={() => setOpenMenu(null)}
+                account={a}
+                isSelf={isSelf}
+                onView={() => a.farm_id ? setViewFarm(a.farm_id) : toast.info("This account has no farm")}
+                onResetPassword={() => handleReset(a)}
+                onSuspend={() => handleSuspend(a, "suspended")}
+                onActivate={() => handleSuspend(a, "active")}
+                onChangePlan={(p) => handleChangePlan(a, p)}
+                onDelete={() => setConfirm({ kind: "delete-one", account: a })}
+              />
             </div>
             <div className="mt-2 text-xs space-y-1">
               <div><span className="text-[#12281c]/60">Farm:</span> {a.farm_name ?? "—"}</div>
-              <div><span className="text-[#12281c]/60">Status:</span> {a.status ?? "—"}</div>
+              <div className="flex gap-2">
+                <Badge className={planTone(a.subscription_plan)}>{planLabel(a.subscription_plan)}</Badge>
+                <Badge className={statusTone(a.status)}>{a.status ?? "—"}</Badge>
+              </div>
               <div><span className="text-[#12281c]/60">Joined:</span> {fmtDay(a.account_created)}</div>
               <div><span className="text-[#12281c]/60">Last sign-in:</span> {fmtDT(a.last_sign_in)}</div>
             </div>
           </div>
-        ))}
+          );
+        })}
+      </div>
+
+      {viewFarm && (
+        <FarmSummaryModal userId={userId} farmId={viewFarm} onClose={() => setViewFarm(null)} />
+      )}
+
+      {confirm && (
+        <DeleteAccountDialog
+          accounts={confirm.kind === "delete-one" ? [confirm.account] : confirm.accounts}
+          busy={deleteAcct.isPending}
+          onCancel={() => setConfirm(null)}
+          onConfirm={handleDeleteConfirmed}
+        />
+      )}
+    </div>
+  );
+}
+
+function ActionsMenu({
+  open, onToggle, onClose, account, isSelf,
+  onView, onResetPassword, onSuspend, onActivate, onChangePlan, onDelete,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  account: AdminAccount;
+  isSelf: boolean;
+  onView: () => void;
+  onResetPassword: () => void;
+  onSuspend: () => void;
+  onActivate: () => void;
+  onChangePlan: (plan: string) => void;
+  onDelete: () => void;
+}) {
+  const isSuspended = (account.status ?? "active") === "suspended";
+  const currentPlan = account.subscription_plan;
+  const item = "w-full text-left px-3 py-2 text-sm hover:bg-[#f6f2e6] flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed";
+  return (
+    <div className="relative inline-block">
+      <button
+        onClick={onToggle}
+        aria-label="Account actions"
+        className="p-1.5 rounded-md border border-[#12281c]/20 hover:bg-[#f6f2e6]"
+      >
+        <MoreVertical className="h-4 w-4" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={onClose} />
+          <div className="absolute right-0 mt-1 w-60 z-50 rounded-xl border border-[#12281c]/15 bg-white shadow-2xl overflow-hidden">
+            <button className={item} onClick={() => { onClose(); onView(); }}>
+              <Eye className="h-4 w-4" /> View account
+            </button>
+            <button className={item} onClick={() => { onClose(); onView(); }}>
+              <Warehouse className="h-4 w-4" /> View farm
+            </button>
+            <button className={item} onClick={() => { onClose(); onView(); }}>
+              <Pencil className="h-4 w-4" /> Edit account
+            </button>
+            <button className={item} onClick={() => { onClose(); onResetPassword(); }} disabled={!account.email}>
+              <KeyRound className="h-4 w-4" /> Reset password
+            </button>
+            <div className="border-t border-[#12281c]/10 my-1" />
+            <div className="px-3 pt-1 pb-0.5 text-[10px] uppercase tracking-widest text-[#12281c]/50">
+              Change subscription
+            </div>
+            {(["basic","standard","premium"] as const).map((p) => (
+              <button key={p} className={item} disabled={!account.farm_id || currentPlan === p}
+                onClick={() => { onClose(); onChangePlan(p); }}>
+                <CreditCard className="h-4 w-4" /> {planLabel(p)}
+                {currentPlan === p && <span className="ml-auto text-[10px] text-[#12281c]/50">current</span>}
+              </button>
+            ))}
+            <div className="border-t border-[#12281c]/10 my-1" />
+            {isSuspended ? (
+              <button className={item} disabled={!account.farm_id}
+                onClick={() => { onClose(); onActivate(); }}>
+                <CheckCircle2 className="h-4 w-4 text-emerald-700" /> Activate account
+              </button>
+            ) : (
+              <button className={item} disabled={!account.farm_id}
+                onClick={() => { onClose(); onSuspend(); }}>
+                <PauseCircle className="h-4 w-4 text-amber-700" /> Suspend account
+              </button>
+            )}
+            <button className={`${item} text-red-700`} disabled={isSelf}
+              onClick={() => { onClose(); onDelete(); }}>
+              <Trash2 className="h-4 w-4" /> Delete account
+            </button>
+            {isSelf && (
+              <div className="px-3 py-2 text-[11px] text-[#12281c]/50 bg-slate-50 border-t border-[#12281c]/10">
+                You cannot delete your own super-admin account.
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function DeleteAccountDialog({
+  accounts, busy, onConfirm, onCancel,
+}: {
+  accounts: AdminAccount[];
+  busy: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const [typed, setTyped] = useState("");
+  const isBulk = accounts.length > 1;
+  const canDelete = typed.trim().toUpperCase() === "DELETE" && !busy;
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onCancel}>
+      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl"
+        onClick={(e) => e.stopPropagation()}>
+        <div className="p-5 border-b border-[#12281c]/10 flex items-start gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-red-100 text-red-700 shrink-0">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-[#12281c]">
+              {isBulk ? `Delete ${accounts.length} accounts?` : "Delete Account?"}
+            </h3>
+            <p className="text-sm text-[#12281c]/70 mt-1">
+              You are about to permanently delete {isBulk ? "these accounts" : "this account"} and all associated farm data.
+            </p>
+          </div>
+        </div>
+        <div className="p-5 space-y-4 text-sm">
+          <div className="rounded-lg border border-[#12281c]/10 bg-[#f6f2e6] px-3 py-2 max-h-40 overflow-y-auto">
+            {accounts.map((a) => (
+              <div key={a.user_id} className="py-1 border-b last:border-b-0 border-[#12281c]/5">
+                <div className="font-medium">{a.owner_name ?? a.email ?? a.user_id}</div>
+                <div className="text-xs text-[#12281c]/60 font-mono">{a.email}</div>
+                {a.farm_name && <div className="text-xs text-[#12281c]/60">Farm: {a.farm_name}</div>}
+              </div>
+            ))}
+          </div>
+          <div className="text-sm text-[#12281c]/80">
+            This action will remove:
+            <ul className="mt-1 grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-[#12281c]/70 list-disc pl-5">
+              <li>User account</li>
+              <li>Farm profile</li>
+              <li>Production records</li>
+              <li>Feed records</li>
+              <li>Mortality records</li>
+              <li>Health records</li>
+              <li>Financial records</li>
+              <li>AI history</li>
+              <li>Uploaded files</li>
+              <li>Notifications</li>
+              <li>Reports</li>
+            </ul>
+          </div>
+          <p className="text-sm font-semibold text-red-700">This action cannot be undone.</p>
+          <div>
+            <label className="block text-xs font-medium text-[#12281c]/70 mb-1">
+              Type <span className="font-mono font-bold text-red-700">DELETE</span> to confirm
+            </label>
+            <input
+              autoFocus
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              placeholder="DELETE"
+              className="w-full px-3 py-2 rounded-md border border-[#12281c]/20 font-mono uppercase tracking-widest"
+            />
+          </div>
+        </div>
+        <div className="p-4 border-t border-[#12281c]/10 flex justify-end gap-2 bg-[#faf7ef]">
+          <button onClick={onCancel} disabled={busy}
+            className="px-4 py-2 rounded-md border border-[#12281c]/20 bg-white text-sm font-medium">
+            Cancel
+          </button>
+          <button
+            disabled={!canDelete}
+            onClick={onConfirm}
+            className="px-4 py-2 rounded-md bg-red-600 text-white text-sm font-semibold hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {busy ? "Deleting…" : "Delete Permanently"}
+          </button>
+        </div>
       </div>
     </div>
   );
