@@ -365,7 +365,7 @@ function FarmsTab({ userId }: { userId: string }) {
           <thead className="bg-[#f6f2e6] text-[#12281c]/70 text-xs uppercase tracking-wider">
             <tr>
               <Th>Farm</Th><Th>Owner</Th><Th>Location</Th>
-              <Th>Birds</Th><Th>Rooms</Th><Th>Plan</Th><Th>Status</Th><Th>Created</Th><Th></Th>
+              <Th>Birds</Th><Th>Rooms</Th><Th>Plan</Th><Th>Status</Th><Th>Created</Th><Th>{" "}</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#12281c]/5">
