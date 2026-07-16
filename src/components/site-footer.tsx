@@ -88,8 +88,8 @@ export function SiteFooter() {
               <span className="font-display text-xl font-semibold">PoultryPro™</span>
             </div>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-primary-foreground/70">
-              Smart poultry farm management, analytics and AI-supported decision
-              intelligence for modern poultry farms.
+              Helping poultry farmers transform everyday records into smarter decisions,
+              stronger businesses and more profitable farms.
             </p>
             <div className="mt-5 flex items-center gap-2">
               {SOCIALS.map(({ label, icon: Icon, href }) => {
