@@ -1222,40 +1222,71 @@ function RowActions({ onEdit, onDelete, extra }: { onEdit: () => void; onDelete:
 
 
 
-function AreaTab({ active, onClick, num, stage, title, shortLabel, plan, icon: Icon, premium }: {
-  active: boolean; onClick: () => void; num: string; stage: string; title: string; shortLabel?: string; plan: string;
+type AreaState = "current" | "included" | "upgrade-standard" | "upgrade-premium";
+
+const AREA_STATE_LABEL: Record<AreaState, string> = {
+  "current": "Your current plan",
+  "included": "Included",
+  "upgrade-standard": "Upgrade to Standard",
+  "upgrade-premium": "Unlock with Premium",
+};
+
+function AreaTab({ active, onClick, num, stage, title, shortLabel, state, icon: Icon, premium }: {
+  active: boolean; onClick: () => void; num: string; stage: string; title: string; shortLabel?: string;
+  state: AreaState;
   icon: React.ComponentType<{ className?: string }>; premium?: boolean;
 }) {
   const label = shortLabel ?? title;
+  const locked = state === "upgrade-standard" || state === "upgrade-premium";
+  const isCurrent = state === "current";
   return (
     <button
       onClick={onClick}
+      aria-label={`${title} — ${AREA_STATE_LABEL[state]}`}
       className={
-        "group text-left rounded-xl md:rounded-2xl border px-2 py-2 md:p-4 transition min-w-0 " +
+        "group relative text-left rounded-xl md:rounded-2xl border px-2 py-2 md:p-4 transition min-w-0 " +
         (active
           ? (premium
               ? "bg-gradient-to-br from-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground border-[color:var(--gold)]/50 shadow-[var(--shadow-soft)]"
               : "bg-[color:var(--forest)] text-primary-foreground border-[color:var(--forest)] shadow-[var(--shadow-soft)]")
-          : "bg-card text-[color:var(--forest)] border-border hover:border-[color:var(--forest)]/40")
+          : isCurrent
+            ? "bg-[color:var(--forest)]/5 text-[color:var(--forest)] border-[color:var(--forest)]/40 hover:border-[color:var(--forest)]/60"
+            : locked
+              ? "bg-card text-[color:var(--forest)] border-dashed border-[color:var(--gold)]/50 hover:border-[color:var(--gold)]"
+              : "bg-card text-[color:var(--forest)] border-border hover:border-[color:var(--forest)]/40")
       }
     >
       <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
-        <span className={"grid h-7 w-7 md:h-8 md:w-8 shrink-0 place-items-center rounded-lg " + (active ? "bg-white/10 text-[color:var(--gold)]" : "bg-[color:var(--forest)]/8 text-[color:var(--forest)]")}>
+        <span className={"grid h-7 w-7 md:h-8 md:w-8 shrink-0 place-items-center rounded-lg " + (active ? "bg-white/10 text-[color:var(--gold)]" : locked ? "bg-[color:var(--gold)]/15 text-[color:var(--gold)]" : "bg-[color:var(--forest)]/8 text-[color:var(--forest)]")}>
           <Icon className="h-3.5 w-3.5 md:h-4 md:w-4" />
         </span>
         <div className="min-w-0 flex-1">
           <div className={"hidden md:block text-[10px] uppercase tracking-[0.18em] " + (active ? "text-[color:var(--gold)]" : "text-muted-foreground")}>
             {num} · {stage}
           </div>
-          {/* Mobile: short label; Desktop: full title */}
           <div className="text-[13px] md:text-base font-semibold leading-tight">
             <span className="md:hidden">{label}</span>
             <span className="hidden md:inline">{title}</span>
           </div>
         </div>
+        {locked && (
+          <span className="md:hidden shrink-0 text-[color:var(--gold)]">
+            <Lock className="h-3.5 w-3.5" />
+          </span>
+        )}
       </div>
-      <div className={"mt-2 hidden md:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium " + (active ? "bg-white/10 text-primary-foreground" : "bg-secondary text-secondary-foreground")}>
-        {plan} plan
+      <div className={
+        "mt-2 hidden md:inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium " +
+        (active
+          ? "bg-white/10 text-primary-foreground"
+          : isCurrent
+            ? "bg-[color:var(--forest)] text-primary-foreground"
+            : locked
+              ? "bg-[color:var(--gold)]/15 text-[color:var(--ink)]"
+              : "bg-secondary text-secondary-foreground")
+      }>
+        {locked && <Lock className="h-2.5 w-2.5" />}
+        {AREA_STATE_LABEL[state]}
       </div>
     </button>
   );
