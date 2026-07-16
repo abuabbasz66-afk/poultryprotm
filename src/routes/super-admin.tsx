@@ -167,13 +167,8 @@ function SuperAdminPage() {
                 {fmtDate(now, "EEE d MMM yyyy · HH:mm")}
               </div>
             </div>
-            <button
-              onClick={() => toast("No new notifications", { description: "You're all caught up." })}
-              className="relative p-2 rounded-md border border-white/15 hover:bg-white/10"
-              aria-label="Notifications"
-            >
-              <Bell className="h-4 w-4" />
-            </button>
+            <NotificationBell userId={userId} isAdmin={!!isAdmin} />
+
             <button
               onClick={() => toast("Settings", { description: "Admin preferences coming soon." })}
               className="p-2 rounded-md border border-white/15 hover:bg-white/10"
