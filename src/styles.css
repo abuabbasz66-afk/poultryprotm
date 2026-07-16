@@ -138,6 +138,33 @@
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
+/* Global rule: on any dark / green surface, force text (including headings) to white
+   with tiered opacity for hierarchy. Apply .on-dark on the surface container. */
+@utility on-dark {
+  color: #ffffff;
+  & h1, & h2, & h3, & h4, & h5, & h6,
+  & p, & span, & li, & a, & label, & dt, & dd, & th, & td,
+  & strong, & em, & small, & blockquote, & figcaption {
+    color: inherit;
+  }
+  & .text-muted-foreground,
+  & .text-secondary-foreground,
+  & .text-foreground {
+    color: rgba(255, 255, 255, 0.88) !important;
+  }
+}
+
+@utility text-on-dark { color: #ffffff !important; }
+@utility text-on-dark-muted { color: rgba(255, 255, 255, 0.88) !important; }
+@utility text-on-dark-subtle { color: rgba(255, 255, 255, 0.72) !important; }
+
+@utility hero-text {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+
+
 
 @utility section-heading {
   font-size: clamp(1.5rem, 6vw, 2.25rem);
