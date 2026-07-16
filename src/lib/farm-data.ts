@@ -97,6 +97,7 @@ export type Farm = {
   owner_name: string | null;
   phone: string | null;
   bird_count: number | null;
+  subscription_plan: string | null;
 };
 
 export function useFarm() {
