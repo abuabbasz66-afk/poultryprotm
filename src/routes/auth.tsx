@@ -85,6 +85,31 @@ function AuthPage() {
     else setSignUpPassword(v);
   };
 
+  const redirectTo = search.redirect && search.redirect.startsWith("/") ? search.redirect : "/dashboard";
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate({ to: redirectTo });
+    });
+  }, [navigate, redirectTo]);
+
+  // Sync mode with URL so browser back/forward moves between Sign In / Create Account.
+  useEffect(() => {
+    const next = search.mode ?? "signin";
+    setMode((current) => (current === next ? current : next));
+    setMsg(null);
+    setShowPassword(false);
+  }, [search.mode]);
+
+  const pwChecks = useMemo(() => passwordScore(signUpPassword), [signUpPassword]);
+  const pwStrength = Object.values(pwChecks).filter(Boolean).length;
+
+  const setModeAndUrl = (m: AuthMode) => {
+    if (m === mode) return;
+    setMsg(null);
+    navigate({ to: "/auth", search: { mode: m, redirect: search.redirect }, replace: false });
+  };
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
