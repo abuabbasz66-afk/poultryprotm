@@ -1518,3 +1518,130 @@ function describeAudit(e: AuditEntry): string {
   }
   return "";
 }
+
+// -------------------------- Notification Bell --------------------------
+function NotificationBell({ userId, isAdmin }: { userId: string | null | undefined; isAdmin: boolean }) {
+  const [open, setOpen] = useState(false);
+  const enabled = !!userId && isAdmin;
+  const { data: notifications } = useAdminNotifications(userId, enabled);
+  const markRead = useMarkNotificationRead(userId);
+  const markAll = useMarkAllNotificationsRead(userId);
+  const archive = useArchiveNotification(userId);
+
+  // Realtime: new notifications refresh the query as they arrive.
+  useEffect(() => {
+    if (!enabled) return;
+    const channel = supabase
+      .channel("admin-notifications-bell")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "admin_notifications" },
+        () => {
+          // Invalidate via query key; queryClient is not accessible here
+          // directly, so re-fetch by touching the hook via a tiny event.
+          window.dispatchEvent(new Event("admin-notifications-refresh"));
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [enabled]);
+
+  const qc = useQueryClient();
+  useEffect(() => {
+    const handler = () => qc.invalidateQueries({ queryKey: ["admin", userId ?? "anon", "notifications"] });
+    window.addEventListener("admin-notifications-refresh", handler);
+    return () => window.removeEventListener("admin-notifications-refresh", handler);
+  }, [qc, userId]);
+
+  const list = notifications ?? [];
+  const unread = list.filter((n) => !n.is_read && !n.is_archived).length;
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="relative p-2 rounded-md border border-white/15 hover:bg-white/10"
+        aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
+      >
+        <Bell className="h-4 w-4" />
+        {unread > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#c9a24a] text-[#0f1f16] text-[10px] font-bold grid place-items-center border border-[#0f1f16]">
+            {unread > 99 ? "99+" : unread}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 mt-2 w-[360px] max-w-[92vw] z-50 rounded-xl border border-slate-200 bg-white text-slate-900 shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+              <div>
+                <div className="text-sm font-semibold">Notifications</div>
+                <div className="text-[11px] text-slate-500">{unread} unread</div>
+              </div>
+              {unread > 0 && (
+                <button
+                  onClick={() => markAll.mutate()}
+                  className="text-[11px] font-medium text-emerald-700 hover:underline"
+                >
+                  Mark all read
+                </button>
+              )}
+            </div>
+            <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-100">
+              {list.length === 0 && (
+                <div className="px-4 py-8 text-center text-sm text-slate-500">You're all caught up.</div>
+              )}
+              {list.map((n) => (
+                <NotificationRow
+                  key={n.id}
+                  n={n}
+                  onMarkRead={() => markRead.mutate(n.id)}
+                  onArchive={() => archive.mutate(n.id)}
+                />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function NotificationRow({
+  n, onMarkRead, onArchive,
+}: { n: AdminNotification; onMarkRead: () => void; onArchive: () => void }) {
+  const meta = (n.metadata ?? {}) as Record<string, any>;
+  const when = fmtDT(n.created_at);
+  return (
+    <div className={`px-4 py-3 ${n.is_read ? "bg-white" : "bg-emerald-50/60"}`}>
+      <div className="flex items-start gap-3">
+        <div className={`mt-1 h-2 w-2 rounded-full ${n.is_read ? "bg-slate-300" : "bg-emerald-600"}`} />
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-semibold text-slate-900">{n.title}</div>
+          <div className="text-[13px] text-slate-700 mt-0.5">{n.message}</div>
+          {n.type === "account_created" && (
+            <div className="mt-1.5 text-[11px] text-slate-500 space-y-0.5">
+              {meta.email && <div>Email: <span className="text-slate-700">{meta.email}</span></div>}
+              {meta.country && <div>Location: <span className="text-slate-700">{[meta.state, meta.country].filter(Boolean).join(", ")}</span></div>}
+              {meta.subscription_plan && <div>Plan: <span className="text-slate-700 capitalize">{meta.subscription_plan}</span></div>}
+            </div>
+          )}
+          <div className="mt-1.5 text-[10px] text-slate-400 tabular-nums">{when}</div>
+          <div className="mt-2 flex items-center gap-3">
+            {!n.is_read && (
+              <button onClick={onMarkRead} className="text-[11px] font-medium text-emerald-700 hover:underline">
+                Mark as read
+              </button>
+            )}
+            <button onClick={onArchive} className="text-[11px] font-medium text-slate-500 hover:underline">
+              Archive
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
