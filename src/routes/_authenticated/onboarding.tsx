@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { notifyNewAccount } from "@/lib/notify-new-account.functions";
+
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
@@ -80,6 +82,15 @@ function OnboardingPage() {
           current: perRoom,
         }));
         await supabase.from("rooms").insert(rows);
+      }
+
+      // Fire-and-forget: sends welcome email to the new user and notification
+      // email to super admins. The audit log + in-app notification are created
+      // by the trg_farm_created_notify trigger, so this only handles email.
+      if (farm?.id) {
+        notifyNewAccount({ data: { farmId: farm.id } }).catch((err) => {
+          console.error("[onboarding] notifyNewAccount failed", err);
+        });
       }
 
       await qc.invalidateQueries();

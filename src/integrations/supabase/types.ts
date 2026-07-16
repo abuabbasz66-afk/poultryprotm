@@ -50,6 +50,51 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_notifications: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          id: string
+          is_archived: boolean
+          is_read: boolean
+          message: string
+          metadata: Json
+          read_at: string | null
+          related_farm_id: string | null
+          related_user_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          is_read?: boolean
+          message: string
+          metadata?: Json
+          read_at?: string | null
+          related_farm_id?: string | null
+          related_user_id?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          is_read?: boolean
+          message?: string
+          metadata?: Json
+          read_at?: string | null
+          related_farm_id?: string | null
+          related_user_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       egg_production: {
         Row: {
           created_at: string
@@ -361,6 +406,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_archive_notification: { Args: { _id: string }; Returns: undefined }
       admin_assign_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -421,12 +467,46 @@ export type Database = {
           subscription_plan: string
         }[]
       }
+      admin_list_notifications: {
+        Args: { _include_archived?: boolean; _limit?: number }
+        Returns: {
+          archived_at: string | null
+          created_at: string
+          id: string
+          is_archived: boolean
+          is_read: boolean
+          message: string
+          metadata: Json
+          read_at: string | null
+          related_farm_id: string | null
+          related_user_id: string | null
+          title: string
+          type: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "admin_notifications"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      admin_mark_all_notifications_read: { Args: never; Returns: undefined }
+      admin_mark_notification_read: {
+        Args: { _id: string }
+        Returns: undefined
+      }
       admin_platform_stats: { Args: never; Returns: Json }
       admin_set_account_status: {
         Args: { _farm_id: string; _new_status: string; _reason?: string }
         Returns: Json
       }
       current_farm_id: { Args: never; Returns: string }
+      get_super_admin_emails: {
+        Args: never
+        Returns: {
+          email: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
