@@ -12,6 +12,7 @@ import {
   HEALTH_TYPES, normalizeHealthType,
   type Room, type EggRow, type Mortality, type Health, type HealthType, type Feed, type Price,
 } from "@/lib/farm-data";
+import { toDateKey } from "@/lib/date-key";
 
 export type RecordDialogState =
   | { kind: "room-add" }
