@@ -73,32 +73,32 @@ const architecture = [
     step: "01",
     title: "Capture",
     tag: "Farm Records",
-    desc: "Record what happens on your farm — eggs, feed, health, mortality and prices — in one simple place.",
+    desc: "Record eggs, feed, health, mortality and costs in one organised place — so nothing gets lost and every decision is based on facts.",
     icon: LayoutDashboard,
   },
   {
     step: "02",
     title: "Understand",
     tag: "Farm Analytics",
-    desc: "See what your farm records are telling you: how birds are performing, how much feed costs, and where your money goes.",
+    desc: "Turn daily records into clear production, cost and profit views that show exactly how your farm is performing.",
     icon: LineChart,
   },
   {
     step: "03",
     title: "Predict",
     tag: "PoultryPro AI",
-    desc: "Spot unusual changes and possible problems early, based on the records you already keep.",
+    desc: "Detect unusual trends, spot hidden risks earlier and make proactive decisions before small issues become costly problems.",
     icon: Sparkles,
   },
 ];
 
 const features = [
-  { icon: LayoutDashboard, title: "Interactive Dashboard", desc: "Real-time visibility into birds, eggs, feed, mortality, revenue and profitability.", tier: "Capture + Understand" },
-  { icon: Egg, title: "Production Management", desc: "Track daily egg production, crates and extras across every room and flock.", tier: "Capture" },
-  { icon: Wheat, title: "Feed Management", desc: "Monitor daily feed usage, cost tracking and efficiency formulas.", tier: "Capture + Understand" },
-  { icon: HeartPulse, title: "Health Records", desc: "Log vaccinations, medications, vitamin schedules and health observations.", tier: "Capture" },
-  { icon: LineChart, title: "Financial Analytics", desc: "Daily and monthly profitability, revenue trends and production economics.", tier: "Understand" },
-  { icon: ShieldCheck, title: "Mortality Tracking", desc: "Room-based mortality logging, loss analysis and historical records.", tier: "Capture + Understand" },
+  { icon: LayoutDashboard, title: "Interactive Dashboard", desc: "Monitor birds, eggs, feed, mortality and revenue from one clear view — no more digging through notebooks.", tier: "Capture + Understand" },
+  { icon: Egg, title: "Production Management", desc: "Track daily egg output by room and flock so you know exactly which groups are performing best.", tier: "Capture" },
+  { icon: Wheat, title: "Feed Management", desc: "Monitor feed usage and costs in real time to protect your biggest farm expense and improve efficiency.", tier: "Capture + Understand" },
+  { icon: HeartPulse, title: "Health Records", desc: "Keep complete vaccination, medication and health histories to support better flock care and compliance.", tier: "Capture" },
+  { icon: LineChart, title: "Financial Analytics", desc: "See daily and monthly profitability, revenue trends and where your money is really going.", tier: "Understand" },
+  { icon: ShieldCheck, title: "Mortality Tracking", desc: "Log and analyse bird losses by room to identify issues faster and protect your investment.", tier: "Capture + Understand" },
 ];
 
 const tiers = [
@@ -107,8 +107,8 @@ const tiers = [
     tagline: "Farm Records",
     stage: "Capture",
     stageNum: "01",
-    promise: "Capture what happens on your farm.",
-    subtitle: "For farmers moving from notebooks and scattered records to a simple, organised farm record system.",
+    promise: "Start with essential record keeping.",
+    subtitle: "Move from scattered notebooks to one organised, searchable record of everything that happens on your farm.",
     points: [
       "Daily egg production recording",
       "Room-based egg records",
@@ -130,8 +130,8 @@ const tiers = [
     tagline: "Farm Analytics",
     stage: "Understand",
     stageNum: "02",
-    promise: "Understand what your farm data means.",
-    subtitle: "Turn your daily records into clear production, cost and profit views so you can see how the farm is really doing.",
+    promise: "Grow into business analytics.",
+    subtitle: "Turn your daily records into clear financial and production insights that help you run the farm more profitably.",
     points: [
       "Everything in Basic",
       "Production percentage calculations",
@@ -154,8 +154,8 @@ const tiers = [
     tagline: "PoultryPro AI Intelligence",
     stage: "Predict",
     stageNum: "03",
-    promise: "Predict what may happen next and act earlier.",
-    subtitle: "Let PoultryPro study your farm records, spot unusual changes and alert you to possible risks earlier.",
+    promise: "Upgrade to AI-powered decision support.",
+    subtitle: "Let PoultryPro continuously analyse your records, detect unusual patterns and alert you to risks earlier.",
     points: [
       "Everything in Basic & Standard",
       "AI-powered egg production forecasting",
@@ -178,17 +178,17 @@ const tiers = [
 
 
 const problems = [
-  "Farm records are easily lost or scattered.",
-  "Farmers cannot quickly see how the farm is performing.",
-  "Feed, the biggest farm cost, is difficult to monitor.",
-  "Profit and production changes are easy to miss.",
-  "Health and mortality records are often incomplete.",
+  "Important records get lost in notebooks or scattered across different places.",
+  "Farmers cannot quickly see how birds, eggs and costs are really performing.",
+  "Feed — your largest expense — is hard to track and even harder to optimise.",
+  "Profitability problems often go unnoticed until it is too late to fix them.",
+  "Health and mortality records are incomplete, making early intervention harder.",
 ];
 
 const timeline = [
-  { phase: "Available Today", items: ["Farm Records — eggs, feed, health, mortality", "Farm Analytics — performance and profit views", "Simple dashboard for every room and flock"] },
-  { phase: "Rolling Out (Premium AI)", items: ["Alerts when egg production drops unusually", "Alerts when bird losses rise above normal", "Simple feed and cost pattern checks"] },
-  { phase: "Long-Term Vision", items: ["Mobile app for iOS & Android", "Farmer marketplace & partner network", "Africa's leading smart poultry platform by 2030"] },
+  { phase: "Available Today", items: ["Digital farm records — eggs, feed, health and mortality", "Farm analytics — production, cost and profit views", "Clean dashboard for every room and flock"] },
+  { phase: "Rolling Out (Premium AI)", items: ["Early detection when egg production changes unusually", "Mortality trend monitoring and alerts", "Feed efficiency and cost pattern checks"] },
+  { phase: "Long-Term Vision", items: ["Mobile apps for iOS and Android", "Farmer marketplace and partner integrations", "Africa's leading smart poultry platform"] },
 ];
 
 function Index() {
