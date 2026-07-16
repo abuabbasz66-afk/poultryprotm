@@ -23,6 +23,8 @@ export type MortalityEvent = {
   signals: MortSignal[];              // correlated signals
   factors: string[];                  // possible factors to investigate
   confidence: MortConfidence;
+  population: number;                 // live bird population for this scope (0 if unknown)
+  mortalityRatePct: number | null;    // 7-day mortality rate as % of population
 };
 
 export type MortalityReport = {
