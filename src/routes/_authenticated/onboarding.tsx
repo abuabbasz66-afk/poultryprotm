@@ -84,6 +84,15 @@ function OnboardingPage() {
         await supabase.from("rooms").insert(rows);
       }
 
+      // Fire-and-forget: sends welcome email to the new user and notification
+      // email to super admins. The audit log + in-app notification are created
+      // by the trg_farm_created_notify trigger, so this only handles email.
+      if (farm?.id) {
+        notifyNewAccount({ data: { farmId: farm.id } }).catch((err) => {
+          console.error("[onboarding] notifyNewAccount failed", err);
+        });
+      }
+
       await qc.invalidateQueries();
       toast.success("Farm profile created.");
       navigate({ to: "/dashboard", replace: true });
