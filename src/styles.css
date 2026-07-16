@@ -102,10 +102,11 @@
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    color: var(--color-foreground);
+    color: inherit;
     letter-spacing: -0.02em;
     line-height: 1.15;
   }
+
   h1 { font-weight: 700; font-size: clamp(1.875rem, 4vw, 2.5rem); letter-spacing: -0.025em; }
   h2 { font-weight: 700; font-size: clamp(1.5rem, 3vw, 1.875rem); letter-spacing: -0.02em; }
   h3 { font-weight: 600; font-size: 1.25rem; letter-spacing: -0.015em; }
@@ -136,6 +137,33 @@
   overflow-wrap: anywhere;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
+
+/* Global rule: on any dark / green surface, force text (including headings) to white
+   with tiered opacity for hierarchy. Apply .on-dark on the surface container. */
+@utility on-dark {
+  color: #ffffff;
+  & h1, & h2, & h3, & h4, & h5, & h6,
+  & p, & span, & li, & a, & label, & dt, & dd, & th, & td,
+  & strong, & em, & small, & blockquote, & figcaption {
+    color: inherit;
+  }
+  & .text-muted-foreground,
+  & .text-secondary-foreground,
+  & .text-foreground {
+    color: rgba(255, 255, 255, 0.88) !important;
+  }
+}
+
+@utility text-on-dark { color: #ffffff !important; }
+@utility text-on-dark-muted { color: rgba(255, 255, 255, 0.88) !important; }
+@utility text-on-dark-subtle { color: rgba(255, 255, 255, 0.72) !important; }
+
+@utility hero-text {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+
 
 
 @utility section-heading {
