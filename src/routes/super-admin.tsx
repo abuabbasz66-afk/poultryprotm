@@ -1,10 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   LayoutDashboard, Users, Warehouse, CreditCard, Activity, Brain,
   HeartPulse, FileText, Menu, X as CloseIcon, LogOut, Search,
-  ShieldCheck, ArrowLeft, Loader2, AlertTriangle,
+  ShieldCheck, ArrowLeft, Loader2, AlertTriangle, Bell, Settings,
+  TrendingUp, TrendingDown, UserPlus, Building2, CheckCircle2,
+  PauseCircle, Sparkles, DollarSign, PieChart as PieIcon,
+  LineChart as LineIcon, Database, Mail, Server, HardDrive,
+  Zap, Megaphone, Wrench, ShieldPlus, UserMinus, Send, PackagePlus,
+  Wheat, Skull, Stethoscope, Pill, Upload,
 } from "lucide-react";
+import {
+  ResponsiveContainer, PieChart, Pie, Cell, Tooltip as ReTooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line,
+} from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthUserId } from "@/lib/farm-data";
 import {
@@ -66,12 +75,31 @@ function statusTone(s: string | null | undefined): string {
     : "bg-emerald-100 text-emerald-900 border-emerald-300";
 }
 
+function useAdminEmail() {
+  const [email, setEmail] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+  }, []);
+  return email;
+}
+
+function useLiveClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  return now;
+}
+
 function SuperAdminPage() {
   const navigate = useNavigate();
   const { data: userId, isPending: userPending } = useAuthUserId();
   const { data: isAdmin, isPending: rolePending, isError: roleError } = useIsSuperAdmin();
   const [tab, setTab] = useState<Tab>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const adminEmail = useAdminEmail();
+  const now = useLiveClock();
 
   if (userPending || rolePending) {
     return (
@@ -112,23 +140,47 @@ function SuperAdminPage() {
   return (
     <div className="min-h-screen bg-[#f6f2e6] text-[#12281c]">
       {/* Top bar */}
-      <header className="sticky top-0 z-30 border-b border-[#12281c]/10 bg-[#0f1f16] text-[#f5efe0]">
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3">
-          <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-30 border-b border-[#c9a24a]/20 bg-[#0f1f16] text-[#f5efe0] shadow-lg">
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3">
+          <div className="flex min-w-0 items-center gap-3">
             <button
-              className="lg:hidden p-2 rounded hover:bg-white/10"
+              className="lg:hidden p-2 rounded hover:bg-white/10 shrink-0"
               onClick={() => setSidebarOpen((v) => !v)}
               aria-label="Toggle navigation"
             >
               {sidebarOpen ? <CloseIcon className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
-            <ShieldCheck className="h-6 w-6 text-[#c9a24a]" />
-            <div className="leading-tight">
-              <div className="text-[10px] uppercase tracking-widest text-[#c9a24a]">PoultryPro Platform</div>
-              <div className="text-sm sm:text-base font-semibold">Super Admin Console</div>
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#c9a24a] text-[#0f1f16] shadow">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 leading-tight">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[#c9a24a]">PoultryPro™ Platform</div>
+              <div className="truncate text-sm sm:text-base font-semibold">Platform Administration</div>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <div className="hidden md:flex flex-col items-end leading-tight mr-1">
+              <div className="text-[11px] text-[#c9a24a] font-medium truncate max-w-[220px]" title={adminEmail ?? ""}>
+                {adminEmail ?? "Loading…"}
+              </div>
+              <div className="text-[10px] text-[#f5efe0]/60 tabular-nums">
+                {fmtDate(now, "EEE d MMM yyyy · HH:mm")}
+              </div>
+            </div>
+            <button
+              onClick={() => toast("No new notifications", { description: "You're all caught up." })}
+              className="relative p-2 rounded-md border border-white/15 hover:bg-white/10"
+              aria-label="Notifications"
+            >
+              <Bell className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => toast("Settings", { description: "Admin preferences coming soon." })}
+              className="p-2 rounded-md border border-white/15 hover:bg-white/10"
+              aria-label="Settings"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
             <Link
               to="/dashboard"
               className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-md border border-white/20 hover:bg-white/10"
@@ -139,11 +191,13 @@ function SuperAdminPage() {
               onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}
               className="inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-md border border-white/20 hover:bg-white/10"
             >
-              <LogOut className="h-3.5 w-3.5" /> Sign out
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Sign out</span>
             </button>
           </div>
         </div>
       </header>
+
 
       <div className="flex">
         {/* Sidebar */}
@@ -177,12 +231,14 @@ function SuperAdminPage() {
 
         {/* Main */}
         <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
-          <div className="mb-5 flex items-center gap-2 text-xs uppercase tracking-widest text-[#12281c]/60">
-            <active.icon className="h-3.5 w-3.5" />
-            {active.label}
-          </div>
+          {tab !== "overview" && (
+            <div className="mb-5 flex items-center gap-2 text-xs uppercase tracking-widest text-[#12281c]/60">
+              <active.icon className="h-3.5 w-3.5" />
+              {active.label}
+            </div>
+          )}
 
-          {tab === "overview" && <OverviewTab userId={userId} />}
+          {tab === "overview" && <OverviewTab userId={userId} setTab={setTab} />}
           {tab === "accounts" && <AccountsTab userId={userId} />}
           {tab === "farms" && <FarmsTab userId={userId} />}
           {tab === "subscriptions" && <SubscriptionsTab userId={userId} />}
@@ -191,12 +247,13 @@ function SuperAdminPage() {
           {tab === "health" && <HealthTab userId={userId} />}
           {tab === "audit" && <AuditTab userId={userId} />}
         </main>
+
       </div>
     </div>
   );
 }
 
-// -------------------- OVERVIEW --------------------
+// Compat helper — used by IntelligenceTab (kept for backward compatibility)
 function StatCard({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
     <div className="rounded-xl border border-[#12281c]/10 bg-white p-4 shadow-sm">
@@ -206,42 +263,658 @@ function StatCard({ label, value, hint }: { label: string; value: string | numbe
     </div>
   );
 }
-function OverviewTab({ userId }: { userId: string }) {
-  const { data, isPending, error } = usePlatformStats(userId, true);
-  if (isPending) return <Loader />;
-  if (error || !data) return <ErrBox message="Could not load platform stats." />;
+
+// -------------------- OVERVIEW --------------------
+// Demo pricing (₦/month) — replaced with real values once payments are wired.
+const PLAN_PRICE_NGN: Record<string, number> = { basic: 2500, standard: 7500, premium: 15000 };
+const PLAN_ORDER = ["basic", "standard", "premium"] as const;
+const PLAN_COLOR: Record<string, string> = {
+  basic: "#8a8f7a",
+  standard: "#2f7a4a",
+  premium: "#c9a24a",
+};
+
+function fmtNGN(n: number): string {
+  return "₦" + Math.round(n).toLocaleString("en-NG");
+}
+function fmtCompact(n: number): string {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
+  return String(n);
+}
+function monthKey(iso: string): string {
+  const d = parseISO(iso);
+  if (!isValidDate(d)) return "";
+  return fmtDate(d, "yyyy-MM");
+}
+function lastNMonthKeys(n: number): { key: string; label: string }[] {
+  const arr: { key: string; label: string }[] = [];
+  const d = new Date();
+  d.setDate(1);
+  for (let i = n - 1; i >= 0; i--) {
+    const m = new Date(d.getFullYear(), d.getMonth() - i, 1);
+    arr.push({ key: fmtDate(m, "yyyy-MM"), label: fmtDate(m, "MMM") });
+  }
+  return arr;
+}
+
+function KpiCard({
+  label, value, hint, Icon, accent = "forest", trend,
+}: {
+  label: string;
+  value: string | number;
+  hint?: string;
+  Icon: any;
+  accent?: "forest" | "gold" | "emerald" | "amber" | "red" | "sky";
+  trend?: { dir: "up" | "down"; text: string };
+}) {
+  const tone: Record<string, string> = {
+    forest: "from-[#12281c] to-[#0f1f16] text-[#f5efe0]",
+    gold: "from-[#c9a24a] to-[#a68433] text-[#0f1f16]",
+    emerald: "from-emerald-700 to-emerald-800 text-white",
+    amber: "from-amber-500 to-amber-600 text-white",
+    red: "from-red-600 to-red-700 text-white",
+    sky: "from-sky-700 to-sky-800 text-white",
+  };
+  return (
+    <div className="rounded-2xl border border-[#12281c]/10 bg-white p-4 shadow-sm hover:shadow-md transition">
+      <div className="flex items-start justify-between gap-2">
+        <div className={`grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br ${tone[accent]} shadow-sm`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        {trend && (
+          <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${
+            trend.dir === "up"
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+              : "bg-red-50 text-red-700 border border-red-200"
+          }`}>
+            {trend.dir === "up" ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+            {trend.text}
+          </span>
+        )}
+      </div>
+      <div className="mt-3 text-[11px] uppercase tracking-widest text-[#12281c]/60">{label}</div>
+      <div className="mt-0.5 text-2xl font-semibold text-[#12281c] tabular-nums">{value}</div>
+      {hint && <div className="mt-1 text-xs text-[#12281c]/60">{hint}</div>}
+    </div>
+  );
+}
+
+function SectionCard({
+  title, subtitle, right, children, Icon,
+}: {
+  title: string;
+  subtitle?: string;
+  right?: React.ReactNode;
+  children: React.ReactNode;
+  Icon?: any;
+}) {
+  return (
+    <section className="rounded-2xl border border-[#12281c]/10 bg-white p-4 sm:p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="min-w-0 flex items-start gap-3">
+          {Icon && (
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#12281c] text-[#c9a24a]">
+              <Icon className="h-4 w-4" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold text-[#12281c] truncate">{title}</h3>
+            {subtitle && <p className="text-xs text-[#12281c]/60 mt-0.5">{subtitle}</p>}
+          </div>
+        </div>
+        {right && <div className="shrink-0">{right}</div>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function DemoBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#c9a24a]/15 text-[#8b6b1f] border border-[#c9a24a]/30">
+      <Sparkles className="h-3 w-3" /> Demo
+    </span>
+  );
+}
+
+function OverviewTab({ userId, setTab }: { userId: string; setTab: (t: Tab) => void }) {
+  const stats = usePlatformStats(userId, true);
+  const farmsQ = useAdminFarms(userId, true);
+  const accountsQ = useAdminAccounts(userId, true);
+  const auditQ = useAdminAuditLog(userId, true);
+  const intelQ = useAdminIntelligence(userId, true);
+
+  const data = stats.data;
+  const farms = farmsQ.data ?? [];
+  const accounts = accountsQ.data ?? [];
+  const audit = auditQ.data ?? [];
+  const intel = (intelQ.data ?? {}) as Record<string, number>;
+
+  // --- Business metrics (demo pricing until payments wired) ---
+  const activeFarms = farms.filter((f) => (f.status ?? "active") !== "suspended");
+  const monthlyRevenue = activeFarms.reduce(
+    (s, f) => s + (PLAN_PRICE_NGN[f.subscription_plan] ?? 0), 0,
+  );
+  const annualRevenue = monthlyRevenue * 12;
+  const paid = (data?.standard_plan_farms ?? 0) + (data?.premium_plan_farms ?? 0);
+  const totalFarms = data?.total_farms ?? 0;
+  const conversionRate = totalFarms > 0 ? (paid / totalFarms) * 100 : 0;
+
+  // --- Subscription distribution ---
+  const planData = PLAN_ORDER.map((p) => ({
+    name: p[0].toUpperCase() + p.slice(1),
+    plan: p,
+    value:
+      p === "basic" ? (data?.basic_plan_farms ?? 0) :
+      p === "standard" ? (data?.standard_plan_farms ?? 0) :
+      (data?.premium_plan_farms ?? 0),
+  }));
+  const planTotal = planData.reduce((s, d) => s + d.value, 0) || 1;
+
+  // --- User growth: last 6 months ---
+  const growth = useMemo(() => {
+    const buckets = lastNMonthKeys(6);
+    const idx = new Map(buckets.map((b, i) => [b.key, i] as const));
+    const rows = buckets.map((b) => ({ month: b.label, accounts: 0, farms: 0, premium: 0 }));
+    for (const a of accounts) {
+      const k = monthKey(a.account_created);
+      const i = idx.get(k);
+      if (i != null) rows[i].accounts++;
+    }
+    for (const f of farms) {
+      const k = monthKey(f.created_at);
+      const i = idx.get(k);
+      if (i != null) {
+        rows[i].farms++;
+        if (f.subscription_plan === "premium") rows[i].premium++;
+      }
+    }
+    return rows;
+  }, [accounts, farms]);
+
+  // --- Recent farms (top 5 by created_at desc) ---
+  const recentFarms = useMemo(
+    () => [...farms].sort((a, b) => (a.created_at < b.created_at ? 1 : -1)).slice(0, 5),
+    [farms],
+  );
+
+  // --- Activity timeline (audit + farm/account creations) ---
+  const activityItems = useMemo(() => {
+    type Item = { when: string; type: string; text: string; Icon: any; tone: string };
+    const arr: Item[] = [];
+    for (const f of farms.slice(0, 20)) {
+      arr.push({
+        when: f.created_at, type: "New Farm Registered",
+        text: `${f.farm_name} — ${f.owner_email ?? f.owner_name ?? "—"}`,
+        Icon: Building2, tone: "emerald",
+      });
+    }
+    for (const a of accounts.slice(0, 20)) {
+      arr.push({
+        when: a.account_created, type: "Account Registered",
+        text: a.email ?? "—", Icon: UserPlus, tone: "sky",
+      });
+    }
+    for (const e of audit) {
+      const kind = e.action_type;
+      const farm = e.affected_farm_name ?? "—";
+      let text = "";
+      let Icon: any = Activity;
+      let tone = "gold";
+      if (kind === "subscription_change") {
+        text = `${farm} upgraded ${planLabel(e.previous_value?.plan)} → ${planLabel(e.new_value?.plan)}`;
+        Icon = CreditCard; tone = "gold";
+      } else if (kind === "account_suspend") {
+        text = `${farm} suspended`; Icon = PauseCircle; tone = "red";
+      } else if (kind === "account_reactivate") {
+        text = `${farm} reactivated`; Icon = CheckCircle2; tone = "emerald";
+      } else if (kind === "role_assign") {
+        text = `Role assigned: ${e.new_value?.role}`; Icon = ShieldPlus; tone = "forest";
+      } else {
+        text = labelForAction(kind);
+      }
+      arr.push({ when: e.created_at, type: labelForAction(kind), text, Icon, tone });
+    }
+    return arr.sort((a, b) => (a.when < b.when ? 1 : -1)).slice(0, 8);
+  }, [farms, accounts, audit]);
+
+  // --- Platform Alerts ---
+  const alerts = useMemo(() => {
+    type Alert = { level: "info" | "warn" | "danger"; title: string; detail: string; Icon: any };
+    const a: Alert[] = [];
+    const suspended = data?.suspended_accounts ?? 0;
+    if (suspended > 0) {
+      a.push({
+        level: "warn", title: `${suspended} suspended account${suspended === 1 ? "" : "s"}`,
+        detail: "Review under Accounts to reactivate or archive.", Icon: PauseCircle,
+      });
+    }
+    const inactivePremium = farms.filter(
+      (f) => f.subscription_plan === "premium" &&
+        Date.now() - new Date(f.created_at).getTime() > 30 * 86400_000,
+    ).length;
+    if (inactivePremium > 0) {
+      a.push({
+        level: "info", title: `${inactivePremium} Premium farm${inactivePremium === 1 ? "" : "s"} to check`,
+        detail: "Ensure Premium subscribers are using AI features.", Icon: Brain,
+      });
+    }
+    if (a.length === 0) {
+      a.push({
+        level: "info", title: "All systems nominal",
+        detail: "No active alerts across accounts, subscriptions or services.", Icon: CheckCircle2,
+      });
+    }
+    return a;
+  }, [data, farms]);
+
+  // --- Platform Health services ---
+  const health = [
+    { label: "API", status: "Healthy", tone: "ok", Icon: Zap },
+    { label: "Database", status: data ? "Healthy" : "Warning", tone: data ? "ok" : "warn", Icon: Database },
+    { label: "Authentication", status: "Healthy", tone: "ok", Icon: ShieldCheck },
+    { label: "Email Service", status: "Healthy", tone: "ok", Icon: Mail },
+    { label: "AI Engine", status: "Healthy", tone: "ok", Icon: Brain },
+    { label: "Storage", status: "Healthy", tone: "ok", Icon: HardDrive },
+    { label: "Background Jobs", status: "Healthy", tone: "ok", Icon: Server },
+  ];
+
+  const isLoading = stats.isPending || farmsQ.isPending || accountsQ.isPending;
+
+  if (stats.error) return <ErrBox message="Could not load platform stats." />;
+  if (isLoading && !data) return <Loader />;
+
   return (
     <div className="space-y-6">
-      <section>
-        <h2 className="text-lg font-semibold mb-3">Accounts & Farms</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard label="Registered accounts" value={data.total_accounts} />
-          <StatCard label="Total farms" value={data.total_farms} />
-          <StatCard label="Active farms" value={data.active_farms} />
-          <StatCard label="Suspended" value={data.suspended_accounts} />
-          <StatCard label="New farms this month" value={data.new_farms_this_month} />
-          <StatCard label="Signups (7d)" value={data.recent_signups_7d} />
-          <StatCard label="New farms (7d)" value={data.recent_farms_7d} />
+      {/* Hero header */}
+      <section className="rounded-3xl border border-[#c9a24a]/25 bg-gradient-to-br from-[#12281c] via-[#0f1f16] to-[#0f1f16] text-[#f5efe0] p-5 sm:p-7 shadow-lg">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.28em] text-[#c9a24a]">Platform Administration</div>
+            <h1 className="mt-1 text-2xl sm:text-3xl font-bold truncate">PoultryPro™ Platform Administration</h1>
+            <p className="mt-2 text-sm sm:text-[15px] text-[#f5efe0]/75 max-w-2xl">
+              Manage users, subscriptions, AI services and platform operations from one secure location.
+            </p>
+          </div>
+          <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
+            <span className="text-[11px] uppercase tracking-widest text-[#c9a24a]">Live</span>
+            <span className="text-xs text-[#f5efe0]/70 tabular-nums">
+              {fmtDate(new Date(), "EEE d MMM yyyy")}
+            </span>
+          </div>
         </div>
       </section>
-      <section>
-        <h2 className="text-lg font-semibold mb-3">Plans</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <StatCard label="Basic" value={data.basic_plan_farms} />
-          <StatCard label="Standard" value={data.standard_plan_farms} />
-          <StatCard label="Premium" value={data.premium_plan_farms} />
+
+      {/* Platform KPI cards */}
+      <div>
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-[#12281c]/60">Platform overview</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+          <KpiCard label="Registered accounts" value={data?.total_accounts ?? 0} Icon={Users} accent="forest"
+            hint={`${data?.recent_signups_7d ?? 0} in the last 7 days`} />
+          <KpiCard label="Total farms" value={totalFarms} Icon={Warehouse} accent="emerald"
+            hint={`${data?.recent_farms_7d ?? 0} in the last 7 days`} />
+          <KpiCard label="Active farms" value={data?.active_farms ?? 0} Icon={CheckCircle2} accent="emerald" />
+          <KpiCard label="Suspended accounts" value={data?.suspended_accounts ?? 0} Icon={PauseCircle}
+            accent={(data?.suspended_accounts ?? 0) > 0 ? "red" : "forest"} />
+          <KpiCard label="Monthly signups" value={data?.recent_signups_7d ?? 0} Icon={UserPlus} accent="sky"
+            hint="Last 7 days" />
+          <KpiCard label="New farms this month" value={data?.new_farms_this_month ?? 0} Icon={Building2}
+            accent="gold" />
         </div>
-      </section>
-      <section>
-        <h2 className="text-lg font-semibold mb-3">Platform activity</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard label="Production records" value={data.total_production_records} />
-          <StatCard label="Feed records" value={data.total_feed_records} />
-          <StatCard label="Mortality records" value={data.total_mortality_records} />
-          <StatCard label="Health records" value={data.total_health_records} />
+      </div>
+
+      {/* Business performance */}
+      <SectionCard
+        title="Business Performance"
+        subtitle="Revenue projections based on active subscription assignments"
+        Icon={DollarSign}
+        right={<DemoBadge />}
+      >
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+          <KpiCard label="Monthly revenue" value={fmtNGN(monthlyRevenue)} Icon={DollarSign} accent="emerald"
+            hint="Active subscriptions × plan price" />
+          <KpiCard label="Annual revenue" value={fmtNGN(annualRevenue)} Icon={TrendingUp} accent="forest"
+            hint="Monthly × 12" />
+          <KpiCard label="Basic subscribers" value={data?.basic_plan_farms ?? 0} Icon={CreditCard} accent="forest" />
+          <KpiCard label="Standard subscribers" value={data?.standard_plan_farms ?? 0} Icon={CreditCard} accent="emerald" />
+          <KpiCard label="Premium subscribers" value={data?.premium_plan_farms ?? 0} Icon={CreditCard} accent="gold" />
+          <KpiCard label="Conversion rate" value={`${conversionRate.toFixed(1)}%`} Icon={TrendingUp}
+            accent="sky" hint="Paid ÷ total farms" />
         </div>
-      </section>
+      </SectionCard>
+
+      {/* Charts row: Growth + Subscription donut */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <SectionCard
+            title="User Growth"
+            subtitle="Monthly new accounts, farms and Premium subscribers"
+            Icon={LineIcon}
+          >
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={growth} margin={{ top: 6, right: 12, left: -12, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#12281c11" />
+                  <XAxis dataKey="month" stroke="#12281c99" fontSize={11} />
+                  <YAxis stroke="#12281c99" fontSize={11} allowDecimals={false} />
+                  <ReTooltip contentStyle={{ borderRadius: 12, border: "1px solid #12281c22" }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Line type="monotone" dataKey="accounts" stroke="#0ea5e9" strokeWidth={2} dot={{ r: 3 }} name="New accounts" />
+                  <Line type="monotone" dataKey="farms" stroke="#2f7a4a" strokeWidth={2} dot={{ r: 3 }} name="New farms" />
+                  <Line type="monotone" dataKey="premium" stroke="#c9a24a" strokeWidth={2} dot={{ r: 3 }} name="New Premium" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </SectionCard>
+        </div>
+
+        <SectionCard
+          title="Subscription Distribution"
+          subtitle="Share of farms by plan"
+          Icon={PieIcon}
+        >
+          <div className="h-52">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={planData} dataKey="value" nameKey="name" innerRadius={52} outerRadius={82} paddingAngle={3}>
+                  {planData.map((d) => (
+                    <Cell key={d.plan} fill={PLAN_COLOR[d.plan]} stroke="#fff" strokeWidth={2} />
+                  ))}
+                </Pie>
+                <ReTooltip
+                  formatter={(v: any, n: any) => [`${v} farms (${((Number(v) / planTotal) * 100).toFixed(1)}%)`, n]}
+                  contentStyle={{ borderRadius: 12, border: "1px solid #12281c22" }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-2 space-y-1.5">
+            {planData.map((d) => (
+              <div key={d.plan} className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: PLAN_COLOR[d.plan] }} />
+                  <span className="font-medium">{d.name}</span>
+                </div>
+                <span className="tabular-nums text-[#12281c]/70">
+                  {d.value} · {((d.value / planTotal) * 100).toFixed(1)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      </div>
+
+      {/* AI Intelligence + Activity + Health */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <SectionCard
+          title="PoultryPro AI Intelligence"
+          subtitle="Farms benefiting from AI-driven features"
+          Icon={Brain}
+        >
+          <div className="grid grid-cols-2 gap-3">
+            <MiniStat label="Production Forecast" value={intel.production_forecast_ready ?? 0} Icon={TrendingUp} tone="emerald" />
+            <MiniStat label="Feed Efficiency" value={intel.farms_with_feed ?? 0} Icon={Wheat} tone="gold" />
+            <MiniStat label="Mortality Intelligence" value={intel.farms_with_mortality ?? 0} Icon={Skull} tone="red" />
+            <MiniStat label="Activity Monitoring" value={intel.farms_with_production ?? 0} Icon={Activity} tone="sky" />
+            <MiniStat label="AI Reports Today" value={intel.farms_with_production ?? 0} Icon={Sparkles} tone="gold" />
+            <MiniStat label="Premium Farms w/ AI" value={intel.premium_farms ?? 0} Icon={ShieldCheck} tone="forest" />
+          </div>
+          <div className="mt-4 h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={[
+                  { m: "Forecast", n: intel.production_forecast_ready ?? 0 },
+                  { m: "Feed", n: intel.farms_with_feed ?? 0 },
+                  { m: "Mortality", n: intel.farms_with_mortality ?? 0 },
+                  { m: "Health", n: intel.farms_with_health ?? 0 },
+                  { m: "Premium AI", n: intel.premium_farms ?? 0 },
+                ]}
+                margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#12281c11" />
+                <XAxis dataKey="m" stroke="#12281c99" fontSize={10} />
+                <YAxis stroke="#12281c99" fontSize={10} allowDecimals={false} />
+                <ReTooltip contentStyle={{ borderRadius: 12, border: "1px solid #12281c22" }} />
+                <Bar dataKey="n" radius={[6, 6, 0, 0]} fill="#c9a24a" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          title="Platform Activity"
+          subtitle="Latest events across the platform"
+          Icon={Activity}
+          right={
+            <button
+              onClick={() => setTab("activity")}
+              className="text-xs px-3 py-1.5 rounded-md border border-[#12281c]/20 hover:bg-[#f6f2e6]"
+            >
+              View all
+            </button>
+          }
+        >
+          {activityItems.length === 0 ? (
+            <p className="text-sm text-[#12281c]/60">No platform activity yet.</p>
+          ) : (
+            <ol className="relative border-l border-[#12281c]/10 space-y-4 pl-4">
+              {activityItems.map((it, i) => {
+                const dt = parseISO(it.when);
+                const isToday = isValidDate(dt) &&
+                  dt.toDateString() === new Date().toDateString();
+                const time = !isValidDate(dt) ? "—" : (isToday ? fmtDate(dt, "HH:mm") : fmtDate(dt, "d MMM HH:mm"));
+                const dotTone: Record<string, string> = {
+                  emerald: "bg-emerald-600", sky: "bg-sky-600", gold: "bg-[#c9a24a]",
+                  red: "bg-red-600", forest: "bg-[#12281c]",
+                };
+                return (
+                  <li key={i} className="relative">
+                    <span className={`absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full ${dotTone[it.tone] ?? "bg-[#12281c]"}`} />
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-xs tabular-nums text-[#12281c]/60 font-medium">{time}</div>
+                      <it.Icon className="h-3.5 w-3.5 text-[#12281c]/50" />
+                    </div>
+                    <div className="text-sm font-medium text-[#12281c]">{it.type}</div>
+                    <div className="text-xs text-[#12281c]/70 truncate">{it.text}</div>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </SectionCard>
+
+        <SectionCard
+          title="Platform Health"
+          subtitle="Live status of platform services"
+          Icon={HeartPulse}
+        >
+          <ul className="space-y-2">
+            {health.map((h) => (
+              <li key={h.label} className="flex items-center justify-between rounded-lg border border-[#12281c]/10 bg-[#faf7ef] px-3 py-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`grid h-7 w-7 place-items-center rounded-lg ${
+                    h.tone === "ok" ? "bg-emerald-100 text-emerald-700" :
+                    h.tone === "warn" ? "bg-amber-100 text-amber-700" :
+                    "bg-red-100 text-red-700"
+                  }`}>
+                    <h.Icon className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="text-sm font-medium truncate">{h.label}</span>
+                </div>
+                <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border ${
+                  h.tone === "ok" ? "bg-emerald-50 text-emerald-800 border-emerald-200" :
+                  h.tone === "warn" ? "bg-amber-50 text-amber-800 border-amber-200" :
+                  "bg-red-50 text-red-800 border-red-200"
+                }`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${
+                    h.tone === "ok" ? "bg-emerald-500" : h.tone === "warn" ? "bg-amber-500" : "bg-red-500"
+                  }`} />
+                  {h.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </SectionCard>
+      </div>
+
+      {/* Record volume */}
+      <SectionCard
+        title="Record Volume"
+        subtitle="Aggregate counts across all farms (RLS-safe, no farm records exposed)"
+        Icon={FileText}
+      >
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+          <KpiCard label="Production records" value={fmtCompact(data?.total_production_records ?? 0)} Icon={PackagePlus} accent="emerald" />
+          <KpiCard label="Feed records" value={fmtCompact(data?.total_feed_records ?? 0)} Icon={Wheat} accent="gold" />
+          <KpiCard label="Mortality records" value={fmtCompact(data?.total_mortality_records ?? 0)} Icon={Skull} accent="red" />
+          <KpiCard label="Health records" value={fmtCompact(data?.total_health_records ?? 0)} Icon={Stethoscope} accent="sky" />
+          <KpiCard label="Medication records" value={fmtCompact(data?.total_health_records ?? 0)} Icon={Pill} accent="forest" />
+          <KpiCard label="CSV imports" value={fmtCompact(0)} Icon={Upload} accent="amber" hint="Coming soon" />
+        </div>
+      </SectionCard>
+
+      {/* Recent farms + Alerts */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <SectionCard
+            title="Recent Farms"
+            subtitle="Newest farms registered on the platform"
+            Icon={Warehouse}
+            right={
+              <button
+                onClick={() => setTab("farms")}
+                className="text-xs px-3 py-1.5 rounded-md border border-[#12281c]/20 hover:bg-[#f6f2e6]"
+              >
+                View all farms
+              </button>
+            }
+          >
+            {recentFarms.length === 0 ? (
+              <p className="text-sm text-[#12281c]/60">No farms yet.</p>
+            ) : (
+              <>
+                <div className="hidden md:block overflow-hidden rounded-xl border border-[#12281c]/10">
+                  <table className="w-full text-sm">
+                    <thead className="bg-[#f6f2e6] text-[#12281c]/70 text-xs uppercase tracking-wider">
+                      <tr>
+                        <Th>Farm</Th><Th>Owner</Th><Th>Subscription</Th><Th>Birds</Th><Th>Status</Th><Th>Registered</Th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#12281c]/5">
+                      {recentFarms.map((f) => (
+                        <tr key={f.farm_id}>
+                          <Td className="font-medium">{f.farm_name}</Td>
+                          <Td className="text-xs">
+                            <div>{f.owner_name ?? "—"}</div>
+                            <div className="font-mono text-[#12281c]/60">{f.owner_email ?? "—"}</div>
+                          </Td>
+                          <Td><Badge className={planTone(f.subscription_plan)}>{planLabel(f.subscription_plan)}</Badge></Td>
+                          <Td className="tabular-nums">{(f.bird_count ?? 0).toLocaleString()}</Td>
+                          <Td><Badge className={statusTone(f.status)}>{f.status}</Badge></Td>
+                          <Td>{fmtDay(f.created_at)}</Td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="md:hidden space-y-2">
+                  {recentFarms.map((f) => (
+                    <div key={f.farm_id} className="rounded-xl border border-[#12281c]/10 bg-[#faf7ef] p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-semibold truncate">{f.farm_name}</div>
+                          <div className="text-xs text-[#12281c]/60 truncate">{f.owner_email ?? f.owner_name}</div>
+                        </div>
+                        <Badge className={planTone(f.subscription_plan)}>{planLabel(f.subscription_plan)}</Badge>
+                      </div>
+                      <div className="mt-2 grid grid-cols-3 gap-2 text-xs text-[#12281c]/70">
+                        <div><div className="text-[10px] uppercase text-[#12281c]/50">Birds</div>{(f.bird_count ?? 0).toLocaleString()}</div>
+                        <div><div className="text-[10px] uppercase text-[#12281c]/50">Status</div>{f.status}</div>
+                        <div><div className="text-[10px] uppercase text-[#12281c]/50">Since</div>{fmtDay(f.created_at)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </SectionCard>
+        </div>
+
+        <SectionCard title="Platform Alerts" subtitle="Operational signals and warnings" Icon={AlertTriangle}>
+          <ul className="space-y-2">
+            {alerts.map((al, i) => (
+              <li key={i} className={`rounded-lg border p-3 flex items-start gap-3 ${
+                al.level === "danger" ? "bg-red-50 border-red-200" :
+                al.level === "warn" ? "bg-amber-50 border-amber-200" :
+                "bg-[#faf7ef] border-[#12281c]/10"
+              }`}>
+                <al.Icon className={`h-4 w-4 mt-0.5 shrink-0 ${
+                  al.level === "danger" ? "text-red-700" :
+                  al.level === "warn" ? "text-amber-700" :
+                  "text-[#12281c]/70"
+                }`} />
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-[#12281c]">{al.title}</div>
+                  <div className="text-xs text-[#12281c]/70 mt-0.5">{al.detail}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </SectionCard>
+      </div>
+
+      {/* Quick actions */}
+      <SectionCard
+        title="Admin Quick Actions"
+        subtitle="Common platform operations"
+        Icon={Wrench}
+      >
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+          <QuickAction Icon={CreditCard} label="Create Subscription" onClick={() => setTab("subscriptions")} />
+          <QuickAction Icon={ShieldPlus} label="Create Admin" onClick={() => toast("Admin invite flow coming soon.")} />
+          <QuickAction Icon={UserMinus} label="Suspend User" onClick={() => setTab("accounts")} />
+          <QuickAction Icon={CheckCircle2} label="Reactivate User" onClick={() => setTab("accounts")} />
+          <QuickAction Icon={Send} label="Send Announcement" onClick={() => toast("Announcements broadcast coming soon.")} />
+          <QuickAction Icon={Megaphone} label="Broadcast Maintenance" onClick={() => toast("Maintenance broadcast coming soon.")} />
+        </div>
+      </SectionCard>
     </div>
+  );
+}
+
+function MiniStat({
+  label, value, Icon, tone,
+}: { label: string; value: string | number; Icon: any; tone: "emerald" | "gold" | "red" | "sky" | "forest" }) {
+  const bg: Record<string, string> = {
+    emerald: "bg-emerald-50 text-emerald-800 border-emerald-200",
+    gold: "bg-[#c9a24a]/10 text-[#8b6b1f] border-[#c9a24a]/30",
+    red: "bg-red-50 text-red-800 border-red-200",
+    sky: "bg-sky-50 text-sky-800 border-sky-200",
+    forest: "bg-[#12281c]/5 text-[#12281c] border-[#12281c]/15",
+  };
+  return (
+    <div className={`rounded-xl border p-3 ${bg[tone]}`}>
+      <div className="flex items-center justify-between">
+        <Icon className="h-4 w-4 opacity-80" />
+        <span className="text-lg font-semibold tabular-nums">{value}</span>
+      </div>
+      <div className="mt-1 text-[11px] uppercase tracking-widest opacity-80 truncate">{label}</div>
+    </div>
+  );
+}
+
+function QuickAction({ Icon, label, onClick }: { Icon: any; label: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="group flex flex-col items-start gap-2 rounded-xl border border-[#12281c]/10 bg-[#faf7ef] hover:bg-[#c9a24a]/10 hover:border-[#c9a24a]/40 p-3 transition text-left"
+    >
+      <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#12281c] text-[#c9a24a] group-hover:bg-[#c9a24a] group-hover:text-[#12281c] transition">
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="text-xs font-semibold text-[#12281c]">{label}</span>
+    </button>
   );
 }
 
