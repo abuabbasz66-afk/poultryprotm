@@ -231,6 +231,14 @@ function MortalityEventCard({ event }: { event: MortalityEvent }) {
             <div className="text-primary-foreground/60 uppercase tracking-[0.14em] text-[10px]">Where</div>
             <div>{event.scopeLabel}</div>
           </div>
+          <div>
+            <div className="text-primary-foreground/60 uppercase tracking-[0.14em] text-[10px]">7-day mortality rate</div>
+            <div>
+              {rate !== null
+                ? `${rate < 0.01 ? "<0.01" : rate.toFixed(2)}% of the current flock (${fmtInt(recent)} bird${recent === 1 ? "" : "s"} lost out of ${fmtInt(event.population)}).`
+                : `${fmtInt(recent)} bird${recent === 1 ? "" : "s"} lost. Flock size is not recorded, so a percentage cannot be calculated.`}
+            </div>
+          </div>
           {!toneIsGood && (
             <>
               <div>
