@@ -184,3 +184,68 @@ export function useSetAccountStatus(userId: string | null | undefined) {
     },
   });
 }
+
+// ---------- Admin notifications ----------
+export type AdminNotification = {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  metadata: Record<string, any> | null;
+  related_user_id: string | null;
+  related_farm_id: string | null;
+  is_read: boolean;
+  is_archived: boolean;
+  created_at: string;
+  read_at: string | null;
+  archived_at: string | null;
+};
+
+export function useAdminNotifications(userId: string | null | undefined, enabled: boolean, includeArchived = false) {
+  return useQuery({
+    queryKey: ADMIN_KEY(userId, "notifications", includeArchived),
+    enabled,
+    queryFn: async (): Promise<AdminNotification[]> => {
+      const { data, error } = await supabase.rpc("admin_list_notifications", {
+        _include_archived: includeArchived,
+        _limit: 200,
+      });
+      if (error) throw error;
+      return (data ?? []) as AdminNotification[];
+    },
+  });
+}
+
+export function useMarkNotificationRead(userId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.rpc("admin_mark_notification_read", { _id: id });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", userId ?? "anon", "notifications"] }),
+  });
+}
+
+export function useMarkAllNotificationsRead(userId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("admin_mark_all_notifications_read");
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", userId ?? "anon", "notifications"] }),
+  });
+}
+
+export function useArchiveNotification(userId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.rpc("admin_archive_notification", { _id: id });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", userId ?? "anon", "notifications"] }),
+  });
+}
+
