@@ -435,6 +435,7 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: never; Returns: boolean }
+      landing_platform_stats: { Args: never; Returns: Json }
       platform_stats: {
         Args: never
         Returns: {

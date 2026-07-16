@@ -31,21 +31,6 @@ function useAuthed() {
 }
 
 
-function formatCount(n: number): string {
-  if (!n || n <= 0) return "0";
-  if (n >= 1000) return `${n.toLocaleString("en-US")}+`;
-  return n.toLocaleString("en-US");
-}
-
-function formatNaira(n: number): string {
-  if (!n || n <= 0) return "₦0";
-  if (n >= 1_000_000) {
-    const m = n / 1_000_000;
-    return `₦${m >= 10 ? Math.round(m) : m.toFixed(1)}M+`;
-  }
-  if (n >= 1_000) return `₦${Math.round(n / 1_000)}K+`;
-  return `₦${Math.round(n).toLocaleString("en-US")}`;
-}
 
 function usePlatformStats() {
   const [s, setS] = useState<{ birds: number; eggs: number; crates: number; revenue: number }>({
@@ -66,6 +51,50 @@ function usePlatformStats() {
     return () => { mounted = false; };
   }, []);
   return s;
+}
+
+type LivePlatformStats = {
+  registered_farms: number;
+  registered_users: number;
+  total_birds: number;
+  production_records: number;
+  feed_records: number;
+  mortality_records: number;
+  health_records: number;
+  rooms: number;
+  eggs: number;
+  premium_farms: number;
+};
+
+function useLivePlatformStats() {
+  const [s, setS] = useState<LivePlatformStats | null>(null);
+  useEffect(() => {
+    let mounted = true;
+    supabase.rpc("landing_platform_stats").then(({ data, error }) => {
+      if (!mounted || error || !data) return;
+      const row = data as Record<string, number | string>;
+      setS({
+        registered_farms: Number(row.registered_farms) || 0,
+        registered_users: Number(row.registered_users) || 0,
+        total_birds: Number(row.total_birds) || 0,
+        production_records: Number(row.production_records) || 0,
+        feed_records: Number(row.feed_records) || 0,
+        mortality_records: Number(row.mortality_records) || 0,
+        health_records: Number(row.health_records) || 0,
+        rooms: Number(row.rooms) || 0,
+        eggs: Number(row.eggs) || 0,
+        premium_farms: Number(row.premium_farms) || 0,
+      });
+    });
+    return () => { mounted = false; };
+  }, []);
+  return s;
+}
+
+function fmtStat(n: number | undefined | null): string {
+  if (n === undefined || n === null) return "—";
+  if (n <= 0) return "—";
+  return n.toLocaleString("en-US");
 }
 
 const architecture = [
@@ -194,6 +223,7 @@ const timeline = [
 function Index() {
   const authed = useAuthed();
   const platform = usePlatformStats();
+  const live = useLivePlatformStats();
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/60">
@@ -300,18 +330,22 @@ function Index() {
         <div className="container-x py-10">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
             <div>
-              <div className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--gold)] font-medium">Pilot Farm Results</div>
+              <div className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--gold)] font-medium">Live Platform Snapshot</div>
               <div className="mt-1 text-sm text-primary-foreground/80 max-w-2xl">
-                Real operational data from a working commercial poultry farm during PoultryPro's pilot deployment.
+                Aggregated in real time from every farm using PoultryPro — the same database that powers the dashboard.
               </div>
+            </div>
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-primary-foreground/70">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--gold)] animate-pulse" />
+              Live • Automatically updated
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: Bird, label: "Birds monitored", value: formatCount(platform.birds) },
-              { icon: Egg, label: "Eggs recorded", value: formatCount(platform.eggs) },
-              { icon: Wheat, label: "Crates recorded", value: formatCount(platform.crates) },
-              { icon: Wallet, label: "Revenue recorded", value: formatNaira(platform.revenue) },
+              { icon: Users, label: "Registered farms", value: fmtStat(live?.registered_farms) },
+              { icon: Bird, label: "Birds managed", value: fmtStat(live?.total_birds ?? platform.birds) },
+              { icon: Egg, label: "Eggs recorded", value: fmtStat(live?.eggs ?? platform.eggs) },
+              { icon: LayoutDashboard, label: "Rooms managed", value: fmtStat(live?.rooms) },
             ].map((s) => (
               <div key={s.label} className="flex items-center gap-3">
                 <span className="grid h-11 w-11 place-items-center rounded-full bg-[color:var(--gold)] text-[color:var(--ink)]">
@@ -421,26 +455,36 @@ function Index() {
             <img src={eggsImg} alt="Fresh eggs" width={1200} height={900} loading="lazy" className="rounded-3xl object-cover w-full h-[480px] shadow-[var(--shadow-lift)]" />
           </div>
           <div className="lg:col-span-6 order-1 lg:order-2 space-y-6">
-            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Pilot Farm Results</span>
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Live Platform Statistics</span>
             <h2 className="font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Built and tested on a real commercial farm.
+              Real numbers from the PoultryPro platform.
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              PoultryPro was developed alongside working poultry operations to solve practical, everyday
-              challenges — not theoretical ones.
+              Every metric below is pulled directly from the same database that powers the PoultryPro
+              dashboard — updated automatically as farmers capture new records.
             </p>
             <div className="grid grid-cols-2 gap-4 pt-2">
               {[
-                { k: "3", v: "Active production rooms" },
-                { k: "19", v: "Bags of feed tracked daily" },
-                { k: "₦15M+", v: "Revenue recorded" },
-                { k: "₦8M+", v: "Farm profit analysed" },
+                { k: fmtStat(live?.registered_farms), v: "Registered farms" },
+                { k: fmtStat(live?.registered_users), v: "Registered users" },
+                { k: fmtStat(live?.total_birds), v: "Birds currently managed" },
+                { k: fmtStat(live?.rooms), v: "Rooms being managed" },
+                { k: fmtStat(live?.production_records), v: "Production records captured" },
+                { k: fmtStat(live?.feed_records), v: "Feed records logged" },
+                { k: fmtStat(live?.mortality_records), v: "Mortality records logged" },
+                { k: fmtStat(live?.health_records), v: "Health records logged" },
+                { k: fmtStat(live?.eggs), v: "Eggs recorded" },
+                { k: fmtStat(live?.premium_farms), v: "Active premium farms" },
               ].map((x) => (
                 <div key={x.v} className="rounded-2xl border border-border bg-card p-5">
                   <div className="font-display text-3xl font-semibold text-[color:var(--forest)]">{x.k}</div>
                   <div className="text-xs text-muted-foreground mt-1">{x.v}</div>
                 </div>
               ))}
+            </div>
+            <div className="flex items-center gap-2 pt-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--forest)] animate-pulse" />
+              Live platform statistics • Automatically updated
             </div>
           </div>
         </div>
