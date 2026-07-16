@@ -404,7 +404,7 @@ function Dashboard() {
           <div className="mt-1.5 text-[11px] md:text-xs text-primary-foreground/70 max-w-2xl leading-snug">
             Farm Records &amp; Analytics active · AI Intelligence rolling out on Premium
           </div>
-          <h1 className="mt-2 font-display font-semibold farm-name md:!text-[2.25rem] lg:!text-4xl md:!leading-tight">{farm?.name ?? "Your Farm"}</h1>
+          <h1 className="mt-2 farm-name">{farm?.name ?? "Your Farm"}</h1>
           {(farm?.state || farm?.country || farm?.location) && (
             <div className="mt-2 flex items-center gap-1.5 text-[12px] md:text-sm text-primary-foreground/80">
               <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
