@@ -466,26 +466,36 @@ function Index() {
             <img src={eggsImg} alt="Fresh eggs" width={1200} height={900} loading="lazy" className="rounded-3xl object-cover w-full h-[480px] shadow-[var(--shadow-lift)]" />
           </div>
           <div className="lg:col-span-6 order-1 lg:order-2 space-y-6">
-            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Pilot Farm Results</span>
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Live Platform Statistics</span>
             <h2 className="font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Built and tested on a real commercial farm.
+              Real numbers from the PoultryPro platform.
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              PoultryPro was developed alongside working poultry operations to solve practical, everyday
-              challenges — not theoretical ones.
+              Every metric below is pulled directly from the same database that powers the PoultryPro
+              dashboard — updated automatically as farmers capture new records.
             </p>
             <div className="grid grid-cols-2 gap-4 pt-2">
               {[
-                { k: "3", v: "Active production rooms" },
-                { k: "19", v: "Bags of feed tracked daily" },
-                { k: "₦15M+", v: "Revenue recorded" },
-                { k: "₦8M+", v: "Farm profit analysed" },
+                { k: fmtStat(live?.registered_farms), v: "Registered farms" },
+                { k: fmtStat(live?.registered_users), v: "Registered users" },
+                { k: fmtStat(live?.total_birds), v: "Birds currently managed" },
+                { k: fmtStat(live?.rooms), v: "Rooms being managed" },
+                { k: fmtStat(live?.production_records), v: "Production records captured" },
+                { k: fmtStat(live?.feed_records), v: "Feed records logged" },
+                { k: fmtStat(live?.mortality_records), v: "Mortality records logged" },
+                { k: fmtStat(live?.health_records), v: "Health records logged" },
+                { k: fmtStat(live?.eggs), v: "Eggs recorded" },
+                { k: fmtStat(live?.premium_farms), v: "Active premium farms" },
               ].map((x) => (
                 <div key={x.v} className="rounded-2xl border border-border bg-card p-5">
                   <div className="font-display text-3xl font-semibold text-[color:var(--forest)]">{x.k}</div>
                   <div className="text-xs text-muted-foreground mt-1">{x.v}</div>
                 </div>
               ))}
+            </div>
+            <div className="flex items-center gap-2 pt-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--forest)] animate-pulse" />
+              Live platform statistics • Automatically updated
             </div>
           </div>
         </div>
