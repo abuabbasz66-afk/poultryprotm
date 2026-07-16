@@ -51,18 +51,39 @@ function AuthPage() {
   const search = Route.useSearch();
   const qc = useQueryClient();
   const [mode, setMode] = useState<AuthMode>(search.mode ?? "signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+
+  // Separate, independent state per form. Switching modes must never share data.
+  const [signInEmail, setSignInEmail] = useState("");
+  const [signInPassword, setSignInPassword] = useState("");
+  const [remember, setRemember] = useState(true);
+
+  const [signUpEmail, setSignUpEmail] = useState("");
+  const [signUpPassword, setSignUpPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [farmName, setFarmName] = useState("");
   const [phone, setPhone] = useState("");
   const [country, setCountry] = useState("Nigeria");
   const [stateRegion, setStateRegion] = useState("");
-  const [remember, setRemember] = useState(true);
+
+  const [forgotEmail, setForgotEmail] = useState("");
+
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+
+  // Derived values for the currently active form
+  const email = mode === "signin" ? signInEmail : mode === "signup" ? signUpEmail : forgotEmail;
+  const setEmail = (v: string) => {
+    if (mode === "signin") setSignInEmail(v);
+    else if (mode === "signup") setSignUpEmail(v);
+    else setForgotEmail(v);
+  };
+  const password = mode === "signin" ? signInPassword : signUpPassword;
+  const setPassword = (v: string) => {
+    if (mode === "signin") setSignInPassword(v);
+    else setSignUpPassword(v);
+  };
 
   const redirectTo = search.redirect && search.redirect.startsWith("/") ? search.redirect : "/dashboard";
 
@@ -72,18 +93,23 @@ function AuthPage() {
     });
   }, [navigate, redirectTo]);
 
+  // Sync mode with URL so browser back/forward moves between Sign In / Create Account.
   useEffect(() => {
-    if (search.mode) setMode(search.mode);
+    const next = search.mode ?? "signin";
+    setMode((current) => (current === next ? current : next));
+    setMsg(null);
+    setShowPassword(false);
   }, [search.mode]);
 
-  const pwChecks = useMemo(() => passwordScore(password), [password]);
+  const pwChecks = useMemo(() => passwordScore(signUpPassword), [signUpPassword]);
   const pwStrength = Object.values(pwChecks).filter(Boolean).length;
 
   const setModeAndUrl = (m: AuthMode) => {
-    setMode(m);
+    if (m === mode) return;
     setMsg(null);
     navigate({ to: "/auth", search: { mode: m, redirect: search.redirect }, replace: false });
   };
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
