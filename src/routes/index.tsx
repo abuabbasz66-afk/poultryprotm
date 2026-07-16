@@ -557,11 +557,11 @@ function Index() {
               Abubakar Sadiq Abbas
             </h2>
             <p className="text-primary-foreground/70 uppercase text-xs tracking-widest">
-              AgriTech Innovator · Project Manager · Agribusiness Manager
+              AgriTech Innovator · Project Manager · Agribusiness Specialist
             </p>
             <blockquote className="font-display text-2xl md:text-3xl italic leading-snug border-l-2 border-[color:var(--gold)] pl-6">
-              "Farmers deserve intelligent tools that transform data into decisions,
-              and decisions into profitability."
+              "I built PoultryPro because farmers deserve technology that turns their daily work
+              into smarter decisions and stronger businesses."
             </blockquote>
             <div className="grid sm:grid-cols-2 gap-4 pt-4">
               {[
