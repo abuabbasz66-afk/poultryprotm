@@ -1117,6 +1117,7 @@ function Dashboard() {
       </main>
       <RecordDialogs state={dialog} onClose={() => setDialog(null)} rooms={rooms} />
       <RecordConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
+      <UpgradeDialog tier={upgradeTier} open={upgradeTier !== null} onOpenChange={(v) => { if (!v) setUpgradeTier(null); }} />
 
     </div>
   );
