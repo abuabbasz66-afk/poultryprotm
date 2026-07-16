@@ -358,11 +358,11 @@ export function detectMortalityPatterns(input: {
 
   const events: MortalityEvent[] = [];
 
-  const farmEvent = analyseForRoom({ mortality, roomName: null, anchorDate, eggs, feed, health });
+  const farmEvent = analyseForRoom({ mortality, rooms, roomName: null, anchorDate, eggs, feed, health });
   if (farmEvent) events.push(farmEvent);
 
   for (const room of rooms) {
-    const ev = analyseForRoom({ mortality, roomName: room.name, anchorDate, eggs, feed, health });
+    const ev = analyseForRoom({ mortality, rooms, roomName: room.name, anchorDate, eggs, feed, health });
     if (ev) events.push(ev);
   }
 
