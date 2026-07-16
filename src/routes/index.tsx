@@ -389,11 +389,11 @@ function Index() {
           <div className="max-w-2xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">The Solution</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Your farm records. One clear picture.
+              One farm record. One clear truth.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              PoultryPro brings your production, feed, health, mortality and financial records together
-              so you can understand your farm and make better decisions.
+              PoultryPro brings your production, feed, health, mortality and financial data together so
+              you can understand performance, control costs and make confident decisions.
             </p>
           </div>
 
