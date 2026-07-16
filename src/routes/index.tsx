@@ -423,10 +423,11 @@ function Index() {
           <div className="lg:col-span-6 order-1 lg:order-2 space-y-6">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Pilot Farm Results</span>
             <h2 className="font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Tested with real farm records.
+              Built and tested on a real commercial farm.
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Based on real records analysed during PoultryPro's pilot deployment on a working poultry farm.
+              PoultryPro was developed alongside working poultry operations to solve practical, everyday
+              challenges — not theoretical ones.
             </p>
             <div className="grid grid-cols-2 gap-4 pt-2">
               {[
