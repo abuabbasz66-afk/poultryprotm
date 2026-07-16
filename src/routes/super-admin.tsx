@@ -1554,7 +1554,11 @@ function NotificationBell({ userId, isAdmin }: { userId: string | null | undefin
 
   const qc = useQueryClient();
   useEffect(() => {
-    const handler = () => qc.invalidateQueries({ queryKey: ["admin", userId ?? "anon", "notifications"] });
+    const handler = () => {
+      // Refresh notifications AND the broader admin dataset (stats, accounts,
+      // farms, audit) so counters update in real time.
+      qc.invalidateQueries({ queryKey: ["admin", userId ?? "anon"] });
+    };
     window.addEventListener("admin-notifications-refresh", handler);
     return () => window.removeEventListener("admin-notifications-refresh", handler);
   }, [qc, userId]);
