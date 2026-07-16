@@ -128,6 +128,7 @@ function Dashboard() {
 
   const [feedTab, setFeedTab] = useState<"Usage" | "Formulas">("Usage");
   const [area, setArea] = useState<"records" | "analytics" | "ai">("records");
+  const [upgradeTier, setUpgradeTier] = useState<UpgradeTier | null>(null);
   const [forecastOpen, setForecastOpen] = useState(false);
   const [mortalityOpen, setMortalityOpen] = useState(false);
   const [feedEffOpen, setFeedEffOpen] = useState(false);
