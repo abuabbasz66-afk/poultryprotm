@@ -587,11 +587,11 @@ function Index() {
           <div className="max-w-3xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Plans &amp; Subscriptions</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Three plans that grow with your farm.
+              A plan for every stage of your farm's growth.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              Start with simple farm records, then unlock clearer farm performance views and, later,
-              early alerts for unusual changes.
+              Start with essential record keeping, add business analytics as you grow, and unlock
+              AI-powered decision support when you are ready to scale.
             </p>
           </div>
 
@@ -681,8 +681,8 @@ function Index() {
 
           <p className="mt-10 text-xs text-muted-foreground max-w-3xl">
             Basic (Farm Records) and Standard (Farm Analytics) are working platform capabilities today.
-            Premium (PoultryPro AI Intelligence) capabilities are progressively rolling out and are
-            clearly labelled inside the product — we do not present unfinished AI features as fully deployed.
+            Premium (PoultryPro AI Intelligence) features are being rolled out progressively and are
+            clearly labelled inside the product — we never present unfinished capabilities as fully deployed.
           </p>
         </div>
       </section>
