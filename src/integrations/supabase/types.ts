@@ -418,6 +418,10 @@ export type Database = {
         Args: { _farm_id: string; _new_plan: string; _reason?: string }
         Returns: Json
       }
+      admin_delete_account: {
+        Args: { _reason?: string; _user_id: string }
+        Returns: Json
+      }
       admin_farm_summary: { Args: { _farm_id: string }; Returns: Json }
       admin_intelligence_summary: { Args: never; Returns: Json }
       admin_list_accounts: {
