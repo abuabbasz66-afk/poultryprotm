@@ -694,7 +694,7 @@ function Index() {
           <div className="max-w-2xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Future Roadmap</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Toward Africa's AI-powered poultry ecosystem.
+              Building Africa's leading poultry intelligence platform.
             </h2>
           </div>
           <div className="mt-14 grid md:grid-cols-3 gap-5">
