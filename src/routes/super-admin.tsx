@@ -231,12 +231,14 @@ function SuperAdminPage() {
 
         {/* Main */}
         <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
-          <div className="mb-5 flex items-center gap-2 text-xs uppercase tracking-widest text-[#12281c]/60">
-            <active.icon className="h-3.5 w-3.5" />
-            {active.label}
-          </div>
+          {tab !== "overview" && (
+            <div className="mb-5 flex items-center gap-2 text-xs uppercase tracking-widest text-[#12281c]/60">
+              <active.icon className="h-3.5 w-3.5" />
+              {active.label}
+            </div>
+          )}
 
-          {tab === "overview" && <OverviewTab userId={userId} />}
+          {tab === "overview" && <OverviewTab userId={userId} setTab={setTab} />}
           {tab === "accounts" && <AccountsTab userId={userId} />}
           {tab === "farms" && <FarmsTab userId={userId} />}
           {tab === "subscriptions" && <SubscriptionsTab userId={userId} />}
@@ -245,6 +247,7 @@ function SuperAdminPage() {
           {tab === "health" && <HealthTab userId={userId} />}
           {tab === "audit" && <AuditTab userId={userId} />}
         </main>
+
       </div>
     </div>
   );
