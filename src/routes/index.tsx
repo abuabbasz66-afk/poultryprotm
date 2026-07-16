@@ -345,18 +345,22 @@ function Index() {
         <div className="container-x py-10">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
             <div>
-              <div className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--gold)] font-medium">Pilot Farm Results</div>
+              <div className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--gold)] font-medium">Live Platform Snapshot</div>
               <div className="mt-1 text-sm text-primary-foreground/80 max-w-2xl">
-                Real operational data from a working commercial poultry farm during PoultryPro's pilot deployment.
+                Aggregated in real time from every farm using PoultryPro — the same database that powers the dashboard.
               </div>
+            </div>
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-primary-foreground/70">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--gold)] animate-pulse" />
+              Live • Automatically updated
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: Bird, label: "Birds monitored", value: formatCount(platform.birds) },
-              { icon: Egg, label: "Eggs recorded", value: formatCount(platform.eggs) },
-              { icon: Wheat, label: "Crates recorded", value: formatCount(platform.crates) },
-              { icon: Wallet, label: "Revenue recorded", value: formatNaira(platform.revenue) },
+              { icon: Users, label: "Registered farms", value: fmtStat(live?.registered_farms) },
+              { icon: Bird, label: "Birds managed", value: fmtStat(live?.total_birds ?? platform.birds) },
+              { icon: Egg, label: "Eggs recorded", value: fmtStat(live?.eggs ?? platform.eggs) },
+              { icon: LayoutDashboard, label: "Rooms managed", value: fmtStat(live?.rooms) },
             ].map((s) => (
               <div key={s.label} className="flex items-center gap-3">
                 <span className="grid h-11 w-11 place-items-center rounded-full bg-[color:var(--gold)] text-[color:var(--ink)]">
