@@ -75,12 +75,31 @@ function statusTone(s: string | null | undefined): string {
     : "bg-emerald-100 text-emerald-900 border-emerald-300";
 }
 
+function useAdminEmail() {
+  const [email, setEmail] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+  }, []);
+  return email;
+}
+
+function useLiveClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  return now;
+}
+
 function SuperAdminPage() {
   const navigate = useNavigate();
   const { data: userId, isPending: userPending } = useAuthUserId();
   const { data: isAdmin, isPending: rolePending, isError: roleError } = useIsSuperAdmin();
   const [tab, setTab] = useState<Tab>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const adminEmail = useAdminEmail();
+  const now = useLiveClock();
 
   if (userPending || rolePending) {
     return (
