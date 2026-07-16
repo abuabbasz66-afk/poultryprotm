@@ -140,23 +140,47 @@ function SuperAdminPage() {
   return (
     <div className="min-h-screen bg-[#f6f2e6] text-[#12281c]">
       {/* Top bar */}
-      <header className="sticky top-0 z-30 border-b border-[#12281c]/10 bg-[#0f1f16] text-[#f5efe0]">
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3">
-          <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-30 border-b border-[#c9a24a]/20 bg-[#0f1f16] text-[#f5efe0] shadow-lg">
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3">
+          <div className="flex min-w-0 items-center gap-3">
             <button
-              className="lg:hidden p-2 rounded hover:bg-white/10"
+              className="lg:hidden p-2 rounded hover:bg-white/10 shrink-0"
               onClick={() => setSidebarOpen((v) => !v)}
               aria-label="Toggle navigation"
             >
               {sidebarOpen ? <CloseIcon className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
-            <ShieldCheck className="h-6 w-6 text-[#c9a24a]" />
-            <div className="leading-tight">
-              <div className="text-[10px] uppercase tracking-widest text-[#c9a24a]">PoultryPro Platform</div>
-              <div className="text-sm sm:text-base font-semibold">Super Admin Console</div>
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#c9a24a] text-[#0f1f16] shadow">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 leading-tight">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[#c9a24a]">PoultryPro™ Platform</div>
+              <div className="truncate text-sm sm:text-base font-semibold">Platform Administration</div>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <div className="hidden md:flex flex-col items-end leading-tight mr-1">
+              <div className="text-[11px] text-[#c9a24a] font-medium truncate max-w-[220px]" title={adminEmail ?? ""}>
+                {adminEmail ?? "Loading…"}
+              </div>
+              <div className="text-[10px] text-[#f5efe0]/60 tabular-nums">
+                {fmtDate(now, "EEE d MMM yyyy · HH:mm")}
+              </div>
+            </div>
+            <button
+              onClick={() => toast("No new notifications", { description: "You're all caught up." })}
+              className="relative p-2 rounded-md border border-white/15 hover:bg-white/10"
+              aria-label="Notifications"
+            >
+              <Bell className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => toast("Settings", { description: "Admin preferences coming soon." })}
+              className="p-2 rounded-md border border-white/15 hover:bg-white/10"
+              aria-label="Settings"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
             <Link
               to="/dashboard"
               className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-md border border-white/20 hover:bg-white/10"
@@ -167,11 +191,13 @@ function SuperAdminPage() {
               onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}
               className="inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-md border border-white/20 hover:bg-white/10"
             >
-              <LogOut className="h-3.5 w-3.5" /> Sign out
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Sign out</span>
             </button>
           </div>
         </div>
       </header>
+
 
       <div className="flex">
         {/* Sidebar */}
