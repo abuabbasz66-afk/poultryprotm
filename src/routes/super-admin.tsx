@@ -1,10 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   LayoutDashboard, Users, Warehouse, CreditCard, Activity, Brain,
   HeartPulse, FileText, Menu, X as CloseIcon, LogOut, Search,
-  ShieldCheck, ArrowLeft, Loader2, AlertTriangle,
+  ShieldCheck, ArrowLeft, Loader2, AlertTriangle, Bell, Settings,
+  TrendingUp, TrendingDown, UserPlus, Building2, CheckCircle2,
+  PauseCircle, Sparkles, DollarSign, PieChart as PieIcon,
+  LineChart as LineIcon, Database, Mail, Server, HardDrive,
+  Zap, Megaphone, Wrench, ShieldPlus, UserMinus, Send, PackagePlus,
+  Wheat, Skull, Stethoscope, Pill, Upload,
 } from "lucide-react";
+import {
+  ResponsiveContainer, PieChart, Pie, Cell, Tooltip as ReTooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line,
+} from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthUserId } from "@/lib/farm-data";
 import {
