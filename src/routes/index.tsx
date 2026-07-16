@@ -364,11 +364,11 @@ function Index() {
           <div className="lg:col-span-5">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">The Problem</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Africa's poultry industry runs on notebooks.
+              Most poultry farms are flying blind.
             </h2>
             <p className="mt-5 text-muted-foreground leading-relaxed">
-              Many poultry farms still keep important records in notebooks or scattered files. This makes
-              it difficult to track production, feed costs, bird losses and farm profit.
+              When records live in notebooks, spreadsheets and memory, it is impossible to see the full
+              picture. Farmers miss early warning signs, struggle to control costs and leave money on the table.
             </p>
           </div>
           <div className="lg:col-span-7 space-y-3">
