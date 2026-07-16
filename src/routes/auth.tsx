@@ -354,39 +354,46 @@ function AuthPage() {
         {/* RIGHT: branding panel */}
         <div className="relative hidden lg:block overflow-hidden">
           <img src={heroAsset.url} alt="Modern poultry farm" className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-br from-[color:var(--forest)]/95 via-[color:var(--forest)]/85 to-[color:var(--ink)]/90" />
-          <div className="relative flex h-full flex-col justify-between p-12 xl:p-16 text-white">
+          <div
+            className="absolute inset-0"
+            style={{ background: "linear-gradient(rgba(8,56,28,0.82), rgba(8,56,28,0.82))" }}
+          />
+          <div
+            className="relative flex h-full flex-col justify-between p-12 xl:p-16 text-white"
+            style={{ textShadow: "0 2px 8px rgba(0,0,0,0.35)" }}
+          >
             <div className="flex items-center gap-3">
               <img src={logoAsset.url} alt="" className="h-10 w-10 rounded-lg bg-white/10 p-1" />
               <div>
-                <div className="text-lg font-semibold">PoultryPro™</div>
-                <div className="text-xs text-white/70">Smart Poultry Management Platform</div>
+                <div className="text-lg font-semibold text-white">PoultryPro™</div>
+                <div className="text-xs text-white/80">Smart Poultry Management Platform</div>
               </div>
             </div>
 
             <div className="max-w-lg">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium ring-1 ring-white/15 backdrop-blur">
-                <Sparkles className="h-3 w-3" />
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium text-white ring-1 ring-white/15 backdrop-blur">
+                <Sparkles className="h-3 w-3 text-white" />
                 Built for modern poultry farms
               </div>
-              <h2 className="mt-5 text-4xl xl:text-5xl font-bold tracking-tight leading-[1.05]">
+              <h2 className="mt-5 text-4xl xl:text-5xl font-bold tracking-tight leading-[1.05] !text-white">
                 Run a smarter, more profitable poultry farm.
               </h2>
-              <p className="mt-5 text-[15px] leading-relaxed text-white/85">
+              <p className="mt-5 text-[15px] leading-relaxed text-white/90">
                 Digitize your farm records, understand performance, monitor profitability
                 and unlock intelligent insights—all in one platform.
               </p>
 
               <ul className="mt-8 space-y-3">
-                <Feature icon={<ClipboardList className="h-4 w-4" />} label="Daily Farm Records" />
-                <Feature icon={<LineChart className="h-4 w-4" />} label="Business Analytics" />
-                <Feature icon={<Sparkles className="h-4 w-4" />} label="AI-powered Insights" />
+                <Feature icon={<ClipboardList className="h-4 w-4 text-white" />} label="Daily Farm Records" />
+                <Feature icon={<LineChart className="h-4 w-4 text-white" />} label="Business Analytics" />
+                <Feature icon={<Sparkles className="h-4 w-4 text-white" />} label="AI-powered Insights" />
               </ul>
             </div>
 
-            <div className="text-xs text-white/60">
+            <div className="text-xs text-white/70">
               © {new Date().getFullYear()} PoultryPro™. Empowering African poultry farmers.
             </div>
+
           </div>
         </div>
       </div>
