@@ -130,17 +130,23 @@ function computeConfidence(baselineDays: number, cluster: number, supportCount: 
 
 function analyseForRoom(args: {
   mortality: Mortality[];
+  rooms: Room[];
   roomName: string | null;              // null = whole farm
   anchorDate: string;                    // latest overall data date (defines "now")
   eggs: EggRow[];
   feed: Feed[];
   health: Health[];
 }): MortalityEvent | null {
-  const { mortality, roomName, anchorDate, eggs, feed, health } = args;
+  const { mortality, rooms, roomName, anchorDate, eggs, feed, health } = args;
 
   const inScope = (r: string) => (roomName ? r.trim().toUpperCase() === roomName.trim().toUpperCase() : true);
   const rows = mortality.filter((m) => inScope(m.room));
   if (rows.length === 0) return null;
+
+  // Live bird population for this scope
+  const population = roomName
+    ? (rooms.find((r) => r.name.trim().toUpperCase() === roomName.trim().toUpperCase())?.current ?? 0)
+    : rooms.reduce((s, r) => s + (r.current || 0), 0);
 
   const recentEndISO = anchorDate;
   const recentStartISO = addDays(recentEndISO, -(RECENT_DAYS - 1));
@@ -160,7 +166,6 @@ function analyseForRoom(args: {
   // Only alert when recent losses exist
   if (recentLoss <= 0) return null;
 
-  // Compare recent daily rate to baseline daily rate
   const recentPerDay = recentLoss / RECENT_DAYS;
   let aboveBaselinePct: number | null = null;
   if (baselinePerDay > 0) {
@@ -181,15 +186,8 @@ function analyseForRoom(args: {
   }
   const firstEventDate = addDays(latestDate, -(cluster - 1));
 
-  // Alert gating: only when recent losses exceed expected, or a strong independent
-  // cluster/no-baseline signal exists. Never alert when recent <= expected.
-  const exceedsExpected = recentLoss > expectedLoss;
-  const meaningfulPct = aboveBaselinePct !== null && aboveBaselinePct >= 50 && exceedsExpected;
-  const meaningfulNoBaseline = baselinePerDay === 0 && (recentLoss >= 2 || cluster >= 2);
-  const meaningfulCluster = cluster >= 3 && recentLoss >= 3 && exceedsExpected;
-  if (!(meaningfulPct || meaningfulNoBaseline || meaningfulCluster)) return null;
-
-  const severity = severityFor(aboveBaselinePct, magnitudeAbove, cluster);
+  // Population-normalised 7-day mortality rate (percentage of flock)
+  const mortalityRatePct = population > 0 ? (recentLoss / population) * 100 : null;
 
   // Causes
   const causes = [...new Set(recentRows.map((r) => (r.cause || "").trim()).filter(Boolean))];
@@ -255,6 +253,18 @@ function analyseForRoom(args: {
   if (causesLc.some((c) => c.includes("predator"))) factors.add("Predator / biosecurity");
   factors.add("Flock health");
 
+  const severity = severityFor(mortalityRatePct, aboveBaselinePct, magnitudeAbove, cluster, signals.length);
+
+  // Alert gating (population-aware). An isolated small loss in a large flock
+  // must NOT surface as an alert — the card falls back to "looks normal".
+  const hasCluster = cluster >= 2;
+  const hasSignals = signals.length >= 1;
+  const strongBaselineJump =
+    aboveBaselinePct !== null && aboveBaselinePct >= 100 && recentLoss >= 3;
+  const shouldEmit =
+    severity !== "Monitoring" || hasCluster || hasSignals || strongBaselineJump;
+  if (!shouldEmit) return null;
+
   const confidence = computeConfidence(BASELINE_DAYS, cluster, signals.length, recentLoss);
 
   return {
@@ -275,8 +285,11 @@ function analyseForRoom(args: {
     signals,
     factors: [...factors],
     confidence,
+    population,
+    mortalityRatePct,
   };
 }
+
 
 export function detectMortalityPatterns(input: {
   eggs: EggRow[];
