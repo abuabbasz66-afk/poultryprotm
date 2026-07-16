@@ -419,22 +419,56 @@ function Dashboard() {
 
       <main className="container-x -mt-4 md:-mt-6 space-y-5 md:space-y-6">
         {/* Product-area navigation: Capture → Understand → Predict */}
-        <nav aria-label="Dashboard areas" className="rounded-2xl md:rounded-3xl bg-card border border-border p-1.5 md:p-2 shadow-[var(--shadow-soft)]">
-          <div className="grid grid-cols-3 gap-1 md:gap-1.5">
-            <AreaTab
-              active={area === "records"} onClick={() => setArea("records")}
-              num="01" stage="CAPTURE" title="Farm Records" shortLabel="Capture" plan="Basic" icon={LayoutDashboard}
-            />
-            <AreaTab
-              active={area === "analytics"} onClick={() => setArea("analytics")}
-              num="02" stage="UNDERSTAND" title="Farm Analytics" shortLabel="Analytics" plan="Standard" icon={LineChartIcon}
-            />
-            <AreaTab
-              active={area === "ai"} onClick={() => setArea("ai")}
-              num="03" stage="PREDICT" title="AI Intelligence" shortLabel="AI" plan="Premium" icon={Brain} premium
-            />
-          </div>
-        </nav>
+        {(() => {
+          const rawPlan = (farm?.subscription_plan ?? "basic").toLowerCase();
+          const plan: "basic" | "standard" | "premium" =
+            rawPlan === "premium" ? "premium" : rawPlan === "standard" ? "standard" : "basic";
+          const canAnalytics = plan === "standard" || plan === "premium";
+          const canAI = plan === "premium";
+          const stateFor = (stage: "records" | "analytics" | "ai"): AreaState => {
+            if (stage === "records") return plan === "basic" ? "current" : "included";
+            if (stage === "analytics") {
+              if (plan === "basic") return "upgrade-standard";
+              if (plan === "standard") return "current";
+              return "included";
+            }
+            // ai
+            if (plan === "premium") return "current";
+            return "upgrade-premium";
+          };
+          const handleClick = (stage: "records" | "analytics" | "ai") => {
+            if (stage === "analytics" && !canAnalytics) { setUpgradeTier("standard"); return; }
+            if (stage === "ai" && !canAI) { setUpgradeTier("premium"); return; }
+            setArea(stage);
+          };
+          return (
+            <>
+              <nav aria-label="Dashboard areas" className="rounded-2xl md:rounded-3xl bg-card border border-border p-1.5 md:p-2 shadow-[var(--shadow-soft)]">
+                <div className="grid grid-cols-3 gap-1 md:gap-1.5">
+                  <AreaTab
+                    active={area === "records"} onClick={() => handleClick("records")}
+                    num="01" stage="CAPTURE" title="Farm Records" shortLabel="Capture"
+                    state={stateFor("records")} icon={LayoutDashboard}
+                  />
+                  <AreaTab
+                    active={area === "analytics"} onClick={() => handleClick("analytics")}
+                    num="02" stage="UNDERSTAND" title="Farm Analytics" shortLabel="Analytics"
+                    state={stateFor("analytics")} icon={LineChartIcon}
+                  />
+                  <AreaTab
+                    active={area === "ai"} onClick={() => handleClick("ai")}
+                    num="03" stage="PREDICT" title="AI Intelligence" shortLabel="AI"
+                    state={stateFor("ai")} icon={Brain} premium
+                  />
+                </div>
+              </nav>
+              <p className="mt-2 px-1 text-[11px] md:text-xs text-muted-foreground">
+                Start with your records. Understand your performance. Predict what comes next.
+              </p>
+            </>
+          );
+        })()}
+
 
 
         {area === "analytics" && (
