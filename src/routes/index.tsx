@@ -9,6 +9,7 @@ import {
   Egg, Bird, LineChart, HeartPulse, Wheat, Wallet, LayoutDashboard,
   ShieldCheck, Sparkles, ArrowRight, MapPin, Trophy, Cpu, Users, Leaf,
 } from "lucide-react";
+import { SiteFooter } from "@/components/site-footer";
 
 export const Route = createFileRoute("/")({
   component: Index,
