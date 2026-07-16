@@ -302,7 +302,7 @@ function Index() {
             <div>
               <div className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--gold)] font-medium">Pilot Farm Results</div>
               <div className="mt-1 text-sm text-primary-foreground/80 max-w-2xl">
-                Based on real records analysed during PoultryPro's pilot deployment on a working poultry farm.
+                Real operational data from a working commercial poultry farm during PoultryPro's pilot deployment.
               </div>
             </div>
           </div>
