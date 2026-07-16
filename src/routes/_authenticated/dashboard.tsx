@@ -29,6 +29,8 @@ import { ProductionDeclineIntelligence } from "@/components/production-decline-c
 import { MortalityPatternIntelligence } from "@/components/mortality-pattern-card";
 import { FarmInsightsIntelligence } from "@/components/farm-insights-card";
 import { RecordDialogs, RecordConfirmDialog, type RecordDialogState } from "@/components/record-dialogs";
+import { UpgradeDialog, type UpgradeTier } from "@/components/upgrade-dialog";
+import { Lock } from "lucide-react";
 import { toast } from "sonner";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
 import { toDateKey, toLocalDate } from "@/lib/date-key";
