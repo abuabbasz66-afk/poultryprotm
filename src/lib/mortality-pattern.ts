@@ -82,16 +82,42 @@ function daysBetween(a: string, b: string): number {
 }
 
 
-function severityFor(pct: number | null, magnitude: number, cluster: number): MortSeverity {
-  if (pct === null) {
+// Population-normalised severity. `ratePct` is the 7-day mortality rate as a
+// percentage of the live bird population for this scope. When the population
+// is unknown (0), fall back to a conservative absolute-magnitude ladder.
+function severityFor(
+  ratePct: number | null,
+  aboveBaselinePct: number | null,
+  magnitude: number,
+  cluster: number,
+  supportCount: number,
+): MortSeverity {
+  // Rate-driven ladder (preferred path)
+  if (ratePct !== null) {
+    // HIGH RISK / Critical: severe rate or sustained abnormal losses with signals
+    if (ratePct >= 1.5) return "Critical";
+    if (ratePct >= 0.75 && (cluster >= 3 || supportCount >= 2)) return "Critical";
+    // NEEDS ATTENTION / Warning
+    if (ratePct >= 0.75) return "Warning";
+    if (ratePct >= 0.35 && cluster >= 2) return "Warning";
+    if (ratePct >= 0.35 && aboveBaselinePct !== null && aboveBaselinePct >= 100) return "Warning";
+    // WATCH
+    if (ratePct >= 0.15) return "Watch";
+    if (cluster >= 3 && supportCount >= 1) return "Watch";
+    if (aboveBaselinePct !== null && aboveBaselinePct >= 100 && cluster >= 2) return "Watch";
+    // Otherwise NORMAL
+    return "Monitoring";
+  }
+  // No population known — fall back to conservative absolute counts
+  if (aboveBaselinePct === null) {
     if (magnitude >= 10 || cluster >= 4) return "Critical";
     if (magnitude >= 5 || cluster >= 3) return "Warning";
     if (magnitude >= 2) return "Watch";
     return "Monitoring";
   }
-  if (pct >= 200 || cluster >= 4) return "Critical";
-  if (pct >= 100 || cluster >= 3) return "Warning";
-  if (pct >= 50) return "Watch";
+  if (aboveBaselinePct >= 200 || cluster >= 4) return "Critical";
+  if (aboveBaselinePct >= 100 || cluster >= 3) return "Warning";
+  if (aboveBaselinePct >= 50) return "Watch";
   return "Monitoring";
 }
 
