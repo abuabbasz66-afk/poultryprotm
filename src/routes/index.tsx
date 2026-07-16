@@ -732,16 +732,7 @@ function Index() {
         </div>
       </section>
 
-      <footer className="border-t border-border py-10">
-        <div className="container-x flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <img src={logoAsset.url} alt="PoultryPro" width={28} height={28} className="h-7 w-7 object-contain" />
-            <span className="font-display font-semibold text-foreground">PoultryPro™</span>
-            <span>· Katsina State, Nigeria</span>
-          </div>
-          <div>© {new Date().getFullYear()} Abubakar Sadiq Abbas · GREENFIELD CONTRACTS & AGRO LIMITED</div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
