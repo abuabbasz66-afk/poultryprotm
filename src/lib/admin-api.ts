@@ -156,7 +156,7 @@ export function useChangeSubscription(userId: string | null | undefined) {
       const { data, error } = await supabase.rpc("admin_change_subscription", {
         _farm_id: args.farm_id,
         _new_plan: args.new_plan,
-        _reason: args.reason ?? null,
+        _reason: args.reason,
       });
       if (error) throw error;
       return data;
@@ -174,7 +174,7 @@ export function useSetAccountStatus(userId: string | null | undefined) {
       const { data, error } = await supabase.rpc("admin_set_account_status", {
         _farm_id: args.farm_id,
         _new_status: args.new_status,
-        _reason: args.reason ?? null,
+        _reason: args.reason,
       });
       if (error) throw error;
       return data;
