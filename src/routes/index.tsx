@@ -240,12 +240,11 @@ function Index() {
               Capture · Understand · Predict
             </span>
             <h1 className="font-display font-extrabold tracking-tight text-foreground text-[2.75rem] sm:text-5xl md:text-6xl lg:text-[4.25rem] leading-[1.05]">
-              The intelligent operating system for modern poultry farms.
+              Run a smarter, more profitable poultry farm with confidence.
             </h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-[600px] leading-relaxed font-normal">
-              PoultryPro™ is an AI-powered poultry management platform that helps farmers digitize
-              daily operations, monitor flock performance, predict emerging risks, and make smarter
-              business decisions through real-time farm intelligence.
+              PoultryPro™ turns everyday farm records into clear insights and AI-powered recommendations,
+              helping you reduce guesswork, cut waste and make better business decisions every day.
             </p>
 
             <div className="flex flex-wrap gap-3 pt-2">
@@ -285,12 +284,12 @@ function Index() {
                 <div className="flex-1 rounded-2xl bg-background/95 backdrop-blur px-4 py-3">
                   <div className="text-xs text-muted-foreground">Farm View</div>
                   <div className="font-display text-lg font-semibold leading-tight">Every room</div>
-                  <div className="text-[11px] text-muted-foreground">See how birds are doing</div>
+                  <div className="text-[11px] text-muted-foreground">Performance at a glance</div>
                 </div>
               </div>
             </div>
             <div className="absolute -top-6 -right-6 hidden md:block rounded-2xl bg-[color:var(--gold)] text-[color:var(--ink)] px-5 py-4 shadow-[var(--shadow-lift)] rotate-3">
-              <div className="text-xs font-semibold uppercase tracking-wider">Simple &amp; Clear</div>
+              <div className="text-xs font-semibold uppercase tracking-wider">Practical &amp; Clear</div>
               <div className="font-display text-lg font-bold">Built for farmers</div>
             </div>
           </div>
