@@ -114,34 +114,65 @@ function MortalityEventCard({ event }: { event: MortalityEvent }) {
   const [tech, setTech] = useState(false);
 
   const pct = event.aboveBaselinePct;
-  const isBelow = pct !== null && pct < 0;
-  const isAbove = pct !== null && pct > 0;
-
+  const rate = event.mortalityRatePct;
   const recent = Math.round(event.recentLoss);
   const expected = Math.round(event.expectedLoss);
   const diffBirds = Math.abs(recent - expected);
 
+  const sev = event.severity;
+  const isBelow = pct !== null && pct < 0 && sev === "Monitoring";
+
+  // Population-normalised, persistence-aware language
   let headline: string;
   let explanation: string;
   let situation: string;
+  let badge: string;
   let toneIsGood = false;
+
+  const ratePhrase =
+    rate !== null
+      ? `This represents approximately ${rate < 0.01 ? "<0.01" : rate.toFixed(2)}% of the current flock`
+      : null;
 
   if (isBelow) {
     headline = "Bird losses are lower than usual";
     explanation = `You recorded ${fmtInt(recent)} bird loss${recent === 1 ? "" : "es"} in the last ${event.recentDays} days. Based on your previous farm records, about ${fmtInt(expected)} were expected.`;
     situation = "Current situation: Better than usual";
+    badge = "Good news";
     toneIsGood = true;
-  } else if (isAbove) {
+  } else if (sev === "Critical") {
+    headline = "Bird losses are at high risk";
+    explanation = `You lost ${fmtInt(recent)} bird${recent === 1 ? "" : "s"} in the last ${event.recentDays} days.${
+      ratePhrase ? ` ${ratePhrase} and shows a severe mortality pattern.` : ""
+    }`;
+    situation = "Current situation: High risk";
+    badge = "High risk";
+  } else if (sev === "Warning") {
     headline = "Bird losses are increasing";
-    explanation = `You lost ${fmtInt(recent)} bird${recent === 1 ? "" : "s"} in the last ${event.recentDays} days. This is ${fmtInt(diffBirds)} more bird${diffBirds === 1 ? "" : "s"} than your farm usually records.`;
+    explanation = `Mortality has remained above your farm's recent baseline and ${
+      event.clusterDays >= 2 ? "repeated losses have been recorded across " + event.clusterDays + " consecutive days" : "losses meaningfully exceed the usual pattern"
+    }.${ratePhrase ? ` ${ratePhrase}.` : ""}`;
     situation = "Current situation: Needs attention";
+    badge = "Needs attention";
+  } else if (sev === "Watch") {
+    headline = "Bird losses are beginning to rise";
+    explanation = `Recent mortality is above your farm's usual pattern. Continue monitoring the affected ${event.scope === "Room" ? "room" : "rooms"}.${
+      ratePhrase ? ` ${ratePhrase}.` : ""
+    }`;
+    situation = "Current situation: Watch";
+    badge = "Watch";
   } else {
-    headline = "New bird losses recorded";
-    explanation = `You recorded ${fmtInt(recent)} bird loss${recent === 1 ? "" : "es"} in the last ${event.recentDays} days.`;
-    situation = "Current situation: Keep watching";
+    // Monitoring emitted only when supporting signals or cluster nudged the gate
+    headline = "Bird losses remain low";
+    explanation = `${fmtInt(recent)} bird${recent === 1 ? " was" : "s were"} lost in the last ${event.recentDays} days.${
+      ratePhrase ? ` ${ratePhrase} and remains within a low mortality pattern.` : ""
+    }`;
+    situation = "Current situation: Looking good";
+    badge = "Looking good";
+    toneIsGood = true;
   }
 
-  const style = mortSeverityStyle(event.severity);
+  const style = mortSeverityStyle(sev);
   const ringClass = toneIsGood ? "border-emerald-500/30" : style.ring;
   const bgClass = toneIsGood ? "bg-emerald-500/5" : "bg-white/5";
 
@@ -153,7 +184,7 @@ function MortalityEventCard({ event }: { event: MortalityEvent }) {
             toneIsGood ? "bg-emerald-500/20 text-emerald-200" : style.badge
           }`}>
             {toneIsGood ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
-            {toneIsGood ? "Good news" : "Needs attention"}
+            {badge}
           </span>
         </div>
         <div className="mt-1.5 text-[11px] uppercase tracking-[0.18em] text-primary-foreground/60">
@@ -165,6 +196,7 @@ function MortalityEventCard({ event }: { event: MortalityEvent }) {
         <p className="mt-1 text-sm text-primary-foreground/85">{explanation}</p>
         <p className="mt-1 text-[13px] text-primary-foreground/70">{situation}</p>
       </div>
+
 
       {!toneIsGood && event.causes.length > 0 && (
         <div className="mt-3">
@@ -198,6 +230,14 @@ function MortalityEventCard({ event }: { event: MortalityEvent }) {
           <div>
             <div className="text-primary-foreground/60 uppercase tracking-[0.14em] text-[10px]">Where</div>
             <div>{event.scopeLabel}</div>
+          </div>
+          <div>
+            <div className="text-primary-foreground/60 uppercase tracking-[0.14em] text-[10px]">7-day mortality rate</div>
+            <div>
+              {rate !== null
+                ? `${rate < 0.01 ? "<0.01" : rate.toFixed(2)}% of the current flock (${fmtInt(recent)} bird${recent === 1 ? "" : "s"} lost out of ${fmtInt(event.population)}).`
+                : `${fmtInt(recent)} bird${recent === 1 ? "" : "s"} lost. Flock size is not recorded, so a percentage cannot be calculated.`}
+            </div>
           </div>
           {!toneIsGood && (
             <>

@@ -23,6 +23,8 @@ export type MortalityEvent = {
   signals: MortSignal[];              // correlated signals
   factors: string[];                  // possible factors to investigate
   confidence: MortConfidence;
+  population: number;                 // live bird population for this scope (0 if unknown)
+  mortalityRatePct: number | null;    // 7-day mortality rate as % of population
 };
 
 export type MortalityReport = {
@@ -80,16 +82,42 @@ function daysBetween(a: string, b: string): number {
 }
 
 
-function severityFor(pct: number | null, magnitude: number, cluster: number): MortSeverity {
-  if (pct === null) {
+// Population-normalised severity. `ratePct` is the 7-day mortality rate as a
+// percentage of the live bird population for this scope. When the population
+// is unknown (0), fall back to a conservative absolute-magnitude ladder.
+function severityFor(
+  ratePct: number | null,
+  aboveBaselinePct: number | null,
+  magnitude: number,
+  cluster: number,
+  supportCount: number,
+): MortSeverity {
+  // Rate-driven ladder (preferred path)
+  if (ratePct !== null) {
+    // HIGH RISK / Critical: severe rate or sustained abnormal losses with signals
+    if (ratePct >= 1.5) return "Critical";
+    if (ratePct >= 0.75 && (cluster >= 3 || supportCount >= 2)) return "Critical";
+    // NEEDS ATTENTION / Warning
+    if (ratePct >= 0.75) return "Warning";
+    if (ratePct >= 0.35 && cluster >= 2) return "Warning";
+    if (ratePct >= 0.35 && aboveBaselinePct !== null && aboveBaselinePct >= 100) return "Warning";
+    // WATCH
+    if (ratePct >= 0.15) return "Watch";
+    if (cluster >= 3 && supportCount >= 1) return "Watch";
+    if (aboveBaselinePct !== null && aboveBaselinePct >= 100 && cluster >= 2) return "Watch";
+    // Otherwise NORMAL
+    return "Monitoring";
+  }
+  // No population known — fall back to conservative absolute counts
+  if (aboveBaselinePct === null) {
     if (magnitude >= 10 || cluster >= 4) return "Critical";
     if (magnitude >= 5 || cluster >= 3) return "Warning";
     if (magnitude >= 2) return "Watch";
     return "Monitoring";
   }
-  if (pct >= 200 || cluster >= 4) return "Critical";
-  if (pct >= 100 || cluster >= 3) return "Warning";
-  if (pct >= 50) return "Watch";
+  if (aboveBaselinePct >= 200 || cluster >= 4) return "Critical";
+  if (aboveBaselinePct >= 100 || cluster >= 3) return "Warning";
+  if (aboveBaselinePct >= 50) return "Watch";
   return "Monitoring";
 }
 
@@ -102,17 +130,23 @@ function computeConfidence(baselineDays: number, cluster: number, supportCount: 
 
 function analyseForRoom(args: {
   mortality: Mortality[];
+  rooms: Room[];
   roomName: string | null;              // null = whole farm
   anchorDate: string;                    // latest overall data date (defines "now")
   eggs: EggRow[];
   feed: Feed[];
   health: Health[];
 }): MortalityEvent | null {
-  const { mortality, roomName, anchorDate, eggs, feed, health } = args;
+  const { mortality, rooms, roomName, anchorDate, eggs, feed, health } = args;
 
   const inScope = (r: string) => (roomName ? r.trim().toUpperCase() === roomName.trim().toUpperCase() : true);
   const rows = mortality.filter((m) => inScope(m.room));
   if (rows.length === 0) return null;
+
+  // Live bird population for this scope
+  const population = roomName
+    ? (rooms.find((r) => r.name.trim().toUpperCase() === roomName.trim().toUpperCase())?.current ?? 0)
+    : rooms.reduce((s, r) => s + (r.current || 0), 0);
 
   const recentEndISO = anchorDate;
   const recentStartISO = addDays(recentEndISO, -(RECENT_DAYS - 1));
@@ -132,7 +166,6 @@ function analyseForRoom(args: {
   // Only alert when recent losses exist
   if (recentLoss <= 0) return null;
 
-  // Compare recent daily rate to baseline daily rate
   const recentPerDay = recentLoss / RECENT_DAYS;
   let aboveBaselinePct: number | null = null;
   if (baselinePerDay > 0) {
@@ -153,15 +186,8 @@ function analyseForRoom(args: {
   }
   const firstEventDate = addDays(latestDate, -(cluster - 1));
 
-  // Alert gating: only when recent losses exceed expected, or a strong independent
-  // cluster/no-baseline signal exists. Never alert when recent <= expected.
-  const exceedsExpected = recentLoss > expectedLoss;
-  const meaningfulPct = aboveBaselinePct !== null && aboveBaselinePct >= 50 && exceedsExpected;
-  const meaningfulNoBaseline = baselinePerDay === 0 && (recentLoss >= 2 || cluster >= 2);
-  const meaningfulCluster = cluster >= 3 && recentLoss >= 3 && exceedsExpected;
-  if (!(meaningfulPct || meaningfulNoBaseline || meaningfulCluster)) return null;
-
-  const severity = severityFor(aboveBaselinePct, magnitudeAbove, cluster);
+  // Population-normalised 7-day mortality rate (percentage of flock)
+  const mortalityRatePct = population > 0 ? (recentLoss / population) * 100 : null;
 
   // Causes
   const causes = [...new Set(recentRows.map((r) => (r.cause || "").trim()).filter(Boolean))];
@@ -227,6 +253,18 @@ function analyseForRoom(args: {
   if (causesLc.some((c) => c.includes("predator"))) factors.add("Predator / biosecurity");
   factors.add("Flock health");
 
+  const severity = severityFor(mortalityRatePct, aboveBaselinePct, magnitudeAbove, cluster, signals.length);
+
+  // Alert gating (population-aware). An isolated small loss in a large flock
+  // must NOT surface as an alert — the card falls back to "looks normal".
+  const hasCluster = cluster >= 2;
+  const hasSignals = signals.length >= 1;
+  const strongBaselineJump =
+    aboveBaselinePct !== null && aboveBaselinePct >= 100 && recentLoss >= 3;
+  const shouldEmit =
+    severity !== "Monitoring" || hasCluster || hasSignals || strongBaselineJump;
+  if (!shouldEmit) return null;
+
   const confidence = computeConfidence(BASELINE_DAYS, cluster, signals.length, recentLoss);
 
   return {
@@ -247,8 +285,11 @@ function analyseForRoom(args: {
     signals,
     factors: [...factors],
     confidence,
+    population,
+    mortalityRatePct,
   };
 }
+
 
 export function detectMortalityPatterns(input: {
   eggs: EggRow[];
@@ -317,11 +358,11 @@ export function detectMortalityPatterns(input: {
 
   const events: MortalityEvent[] = [];
 
-  const farmEvent = analyseForRoom({ mortality, roomName: null, anchorDate, eggs, feed, health });
+  const farmEvent = analyseForRoom({ mortality, rooms, roomName: null, anchorDate, eggs, feed, health });
   if (farmEvent) events.push(farmEvent);
 
   for (const room of rooms) {
-    const ev = analyseForRoom({ mortality, roomName: room.name, anchorDate, eggs, feed, health });
+    const ev = analyseForRoom({ mortality, rooms, roomName: room.name, anchorDate, eggs, feed, health });
     if (ev) events.push(ev);
   }
 
