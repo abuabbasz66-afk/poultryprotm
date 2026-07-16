@@ -554,10 +554,15 @@ function OverviewTab({ userId, setTab }: { userId: string; setTab: (t: Tab) => v
           <KpiCard label="Active farms" value={data?.active_farms ?? 0} Icon={CheckCircle2} accent="emerald" />
           <KpiCard label="Suspended accounts" value={data?.suspended_accounts ?? 0} Icon={PauseCircle}
             accent={(data?.suspended_accounts ?? 0) > 0 ? "red" : "forest"} />
-          <KpiCard label="Monthly signups" value={data?.recent_signups_7d ?? 0} Icon={UserPlus} accent="sky"
+          <KpiCard label="New users today" value={(data as any)?.new_users_today ?? 0} Icon={UserPlus}
+            accent="sky" hint="Signed up in the last 24h" />
+          <KpiCard label="New users this month" value={(data as any)?.new_users_this_month ?? 0} Icon={UserPlus}
+            accent="emerald" />
+          <KpiCard label="Signups (7 days)" value={data?.recent_signups_7d ?? 0} Icon={UserPlus} accent="forest"
             hint="Last 7 days" />
           <KpiCard label="New farms this month" value={data?.new_farms_this_month ?? 0} Icon={Building2}
             accent="gold" />
+
         </div>
       </div>
 
