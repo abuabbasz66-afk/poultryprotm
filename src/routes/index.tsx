@@ -31,21 +31,6 @@ function useAuthed() {
 }
 
 
-function formatCount(n: number): string {
-  if (!n || n <= 0) return "0";
-  if (n >= 1000) return `${n.toLocaleString("en-US")}+`;
-  return n.toLocaleString("en-US");
-}
-
-function formatNaira(n: number): string {
-  if (!n || n <= 0) return "₦0";
-  if (n >= 1_000_000) {
-    const m = n / 1_000_000;
-    return `₦${m >= 10 ? Math.round(m) : m.toFixed(1)}M+`;
-  }
-  if (n >= 1_000) return `₦${Math.round(n / 1_000)}K+`;
-  return `₦${Math.round(n).toLocaleString("en-US")}`;
-}
 
 function usePlatformStats() {
   const [s, setS] = useState<{ birds: number; eggs: number; crates: number; revenue: number }>({
