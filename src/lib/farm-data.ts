@@ -97,6 +97,7 @@ export type Farm = {
   owner_name: string | null;
   phone: string | null;
   bird_count: number | null;
+  subscription_plan: string | null;
 };
 
 export function useFarm() {
@@ -107,7 +108,7 @@ export function useFarm() {
     queryFn: async (): Promise<Farm | null> => {
       const { data, error } = await supabase
         .from("farms")
-        .select("id, name, location, state, country, farm_type, bird_type, rooms_count, owner_name, phone, bird_count")
+        .select("id, name, location, state, country, farm_type, bird_type, rooms_count, owner_name, phone, bird_count, subscription_plan")
         .eq("id", farmId!)
         .maybeSingle();
       if (error) throw error;
