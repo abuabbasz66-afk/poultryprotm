@@ -128,11 +128,15 @@
 }
 
 @utility farm-name {
-  font-size: clamp(2rem, 9vw, 3.2rem);
-  line-height: 0.95;
-  overflow-wrap: anywhere;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.1;
   letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
+
 
 @utility section-heading {
   font-size: clamp(1.5rem, 6vw, 2.25rem);
