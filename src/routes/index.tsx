@@ -725,16 +725,16 @@ function Index() {
               <div className="lg:col-span-8 space-y-5">
                 <Users className="h-8 w-8 text-[color:var(--gold)]" />
                 <h2 className="font-display text-4xl md:text-6xl font-semibold leading-[1.05]">
-                  Build the future of smart poultry farming with us.
+                  Ready to transform your poultry farm?
                 </h2>
                 <p className="text-primary-foreground/75 text-lg max-w-2xl">
-                  We're inviting investors, agricultural institutions, innovation hubs and government
-                  partners to scale PoultryPro across Africa.
+                  Join forward-thinking farmers, investors and partners who are building the future of
+                  smart poultry management in Africa.
                 </p>
               </div>
               <div className="lg:col-span-4 flex lg:justify-end">
                 <a href="mailto:contact@poultrypro.africa" className="inline-flex items-center gap-2 rounded-full bg-[color:var(--gold)] text-[color:var(--ink)] px-7 py-4 font-medium hover:brightness-95 transition">
-                  Start a conversation <ArrowRight className="h-4 w-4" />
+                  Request a Demo <ArrowRight className="h-4 w-4" />
                 </a>
               </div>
             </div>
