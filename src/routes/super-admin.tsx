@@ -1841,6 +1841,7 @@ function labelForAction(a: string): string {
     case "subscription_change": return "Subscription change";
     case "account_suspend": return "Account suspended";
     case "account_reactivate": return "Account reactivated";
+    case "account_delete": return "Account deleted";
     case "role_assign": return "Role assigned";
     default: return a;
   }
@@ -1851,6 +1852,11 @@ function describeAudit(e: AuditEntry): string {
   }
   if (e.action_type === "account_suspend" || e.action_type === "account_reactivate") {
     return `${e.previous_value?.status ?? "?"} → ${e.new_value?.status ?? "?"}`;
+  }
+  if (e.action_type === "account_delete") {
+    const email = e.previous_value?.email ?? "?";
+    const farms = Array.isArray(e.previous_value?.farms) ? e.previous_value.farms.join(", ") : "";
+    return farms ? `${email} · ${farms}` : email;
   }
   if (e.action_type === "role_assign") {
     return `role=${e.new_value?.role}`;
