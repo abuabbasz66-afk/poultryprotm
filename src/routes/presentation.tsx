@@ -589,7 +589,7 @@ function StepPricing() {
                 ? "border-[color:var(--gold)] bg-gradient-to-br from-[color:var(--forest)] to-[color:var(--forest)]/90 text-white shadow-[var(--shadow-lift)]"
                 : "border-border bg-card"
             }`}
-            style={{ animationDelay: `${i * 120}ms", animationFillMode: "both" }}
+            style={{ animationDelay: `${i * 120}ms`, animationFillMode: "both" }}
           >
             {p.featured && (
               <span className="absolute -top-3 left-6 rounded-full bg-[color:var(--gold)] text-[color:var(--ink)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em]">
