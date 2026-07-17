@@ -242,12 +242,12 @@ function ControlBtn({ onClick, label, children, disabled }: { onClick: () => voi
 }
 
 // ---------- Step bodies ----------
-function StepBody({ id }: { id: string }) {
+function StepBody({ id, live }: { id: string; live: LiveData }) {
   switch (id) {
     case "welcome": return <StepWelcome />;
-    case "dashboard": return <StepDashboard />;
+    case "dashboard": return <StepDashboard live={live} />;
     case "records": return <StepRecords />;
-    case "analytics": return <StepAnalytics />;
+    case "analytics": return <StepAnalytics live={live} />;
     case "ai": return <StepAI />;
     case "reports": return <StepReports />;
     case "admin": return <StepAdmin />;
