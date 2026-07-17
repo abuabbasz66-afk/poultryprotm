@@ -56,6 +56,7 @@ const STEPS: Step[] = [
   { id: "reports", title: "Reports", subtitle: "Share with owners, auditors and banks" },
   { id: "admin", title: "Platform Administration", subtitle: "Manage thousands of farms from one dashboard" },
   { id: "mobile", title: "Mobile Experience", subtitle: "PoultryPro works anywhere, anytime" },
+  { id: "pricing", title: "Subscription Plans", subtitle: "Simple, transparent pricing for every farm size" },
   { id: "vision", title: "Future Vision", subtitle: "The AI roadmap" },
   { id: "close", title: "Ready for Commercial Deployment", subtitle: "Digitizing poultry farming across Africa" },
 ];
