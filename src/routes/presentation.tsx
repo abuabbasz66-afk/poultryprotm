@@ -169,7 +169,7 @@ function PresentationMode() {
           </span>
         </div>
         <div className="hidden sm:flex items-center gap-3 text-white/80">
-          <span>{DEMO_FARM.name}</span>
+          <span>{live.farm_name}</span>
           <span>•</span>
           <span>{stepIdx + 1} / {STEPS.length}</span>
         </div>
