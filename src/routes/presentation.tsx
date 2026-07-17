@@ -317,25 +317,25 @@ function KpiCard({ icon: Icon, label, value, delay = 0, tint = "forest" }: { ico
   );
 }
 
-function StepDashboard() {
+function StepDashboard({ live }: { live: LiveData }) {
   return (
     <div className="space-y-5">
       <div className="rounded-2xl bg-gradient-to-r from-[color:var(--forest)] to-[color:var(--forest)]/80 text-white p-5 sm:p-6">
         <div className="text-xs uppercase tracking-[0.18em] text-white/70">Live Dashboard</div>
-        <div className="mt-1 text-xl sm:text-2xl font-bold !text-white">{DEMO_FARM.name}</div>
-        <div className="text-sm text-white/80">{DEMO_FARM.location}</div>
+        <div className="mt-1 text-xl sm:text-2xl font-bold !text-white">{live.farm_name}</div>
+        <div className="text-sm text-white/80">{live.location}</div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-        <KpiCard icon={Bird} label="Birds" value={<AnimatedCounter to={DEMO_FARM.birds} />} delay={0} />
-        <KpiCard icon={Home} label="Houses" value={<AnimatedCounter to={DEMO_FARM.houses} />} delay={80} />
-        <KpiCard icon={Egg} label="Today's Production" value={<><AnimatedCounter to={DEMO_FARM.cratesToday} /> <span className="text-sm font-medium text-muted-foreground">crates</span></>} delay={160} tint="gold" />
-        <KpiCard icon={Wallet} label="Annual Revenue" value={<AnimatedCounter to={DEMO_FARM.annualRevenueNGN / 1_000_000} decimals={1} prefix="₦" suffix="M" />} delay={240} tint="gold" />
-        <KpiCard icon={Wheat} label="Feed Stock" value={<AnimatedCounter to={DEMO_FARM.feedStockPct} suffix="%" />} delay={320} />
-        <KpiCard icon={AlertTriangle} label="Active Alerts" value={<AnimatedCounter to={DEMO_FARM.activeAlerts} />} delay={400} />
+        <KpiCard icon={Bird} label="Birds" value={<AnimatedCounter to={live.birds} />} delay={0} />
+        <KpiCard icon={Home} label="Houses" value={<AnimatedCounter to={live.houses} />} delay={80} />
+        <KpiCard icon={Egg} label="Today's Production" value={<><AnimatedCounter to={live.today_crates} /> <span className="text-sm font-medium text-muted-foreground">crates</span></>} delay={160} tint="gold" />
+        <KpiCard icon={Wallet} label="Annual Revenue" value={<AnimatedCounter to={live.annual_revenue / 1_000_000} decimals={1} prefix="₦" suffix="M" />} delay={240} tint="gold" />
+        <KpiCard icon={Wheat} label="Feed Stock" value={<AnimatedCounter to={live.feed_stock_pct} suffix="%" />} delay={320} />
+        <KpiCard icon={AlertTriangle} label="Active Alerts" value={<AnimatedCounter to={live.active_alerts} />} delay={400} />
       </div>
       <div className="rounded-2xl border border-border bg-card p-5">
         <div className="text-sm font-semibold mb-3">7-day production (crates)</div>
-        <Sparkline data={PRODUCTION_TREND} />
+        <Sparkline data={live.production_trend} />
       </div>
     </div>
   );
