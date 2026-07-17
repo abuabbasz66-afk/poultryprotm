@@ -166,7 +166,7 @@ function PresentationMode() {
         <div className="flex items-center gap-2 min-w-0">
           <span className="inline-flex h-2 w-2 rounded-full bg-[color:var(--gold)] animate-pulse" />
           <span className="truncate">
-            Presentation Mode • Sample Commercial Farm • Demo Data Only
+            Presentation Mode • Live Platform Data • Aggregated across all farms
           </span>
         </div>
         <div className="hidden sm:flex items-center gap-3 text-white/80">
