@@ -529,6 +529,7 @@ export type Database = {
           revenue: number
         }[]
       }
+      presentation_demo_data: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "user" | "super_admin"
