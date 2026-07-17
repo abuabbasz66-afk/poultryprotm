@@ -505,6 +505,7 @@ export type Database = {
         Returns: Json
       }
       current_farm_id: { Args: never; Returns: string }
+      demo_greenfield_data: { Args: never; Returns: Json }
       get_super_admin_emails: {
         Args: never
         Returns: {
