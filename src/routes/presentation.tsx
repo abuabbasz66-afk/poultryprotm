@@ -7,6 +7,7 @@ import {
   Rocket, Play, Pause, SkipForward, RotateCcw, Maximize2, X, ArrowRight,
   Brain, Cpu, Mic, CloudSun, Radio, Camera, Activity, CheckCircle2,
 } from "lucide-react";
+import { PRICING_PLANS } from "@/lib/pricing-plans";
 
 export const Route = createFileRoute("/presentation")({
   head: () => ({
