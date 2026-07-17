@@ -105,6 +105,7 @@ function PresentationMode() {
   const [exited, setExited] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
+  const live = useLiveData();
   const goNext = useCallback(() => setStepIdx((i) => Math.min(i + 1, STEPS.length - 1)), []);
   const goPrev = useCallback(() => setStepIdx((i) => Math.max(i - 1, 0)), []);
   const restart = useCallback(() => { setStepIdx(0); setPlaying(false); }, []);
