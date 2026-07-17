@@ -402,12 +402,12 @@ function StepRecords() {
   );
 }
 
-function StepAnalytics() {
+function StepAnalytics({ live }: { live: LiveData }) {
   const charts = [
-    { label: "Production trend (crates)", data: PRODUCTION_TREND },
-    { label: "Revenue trend (₦M / wk)", data: REVENUE_TREND },
-    { label: "Feed consumption (kg/day)", data: FEED_TREND },
-    { label: "Mortality trend (%)", data: MORTALITY_TREND },
+    { label: "Production trend (crates/day)", data: live.production_trend },
+    { label: "Revenue trend (₦M / day)", data: live.revenue_trend },
+    { label: "Feed consumption (bags/day)", data: live.feed_trend },
+    { label: "Mortality trend (birds/day)", data: live.mortality_trend },
   ];
   return (
     <div className="space-y-4">
@@ -420,12 +420,12 @@ function StepAnalytics() {
         ))}
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <KpiCard icon={BarChart3} label="Lay Percentage" value={<AnimatedCounter to={89.2} decimals={1} suffix="%" />} />
+        <KpiCard icon={BarChart3} label="Total Eggs Recorded" value={<AnimatedCounter to={live.total_eggs} />} />
         <KpiCard icon={TrendingUp} label="Performance Score" value={<AnimatedCounter to={94} suffix="/100" />} tint="gold" />
-        <KpiCard icon={Cpu} label="Records Analysed" value={<AnimatedCounter to={285000} />} />
+        <KpiCard icon={Cpu} label="Records Analysed" value={<AnimatedCounter to={live.records_analysed} />} />
       </div>
       <div className="rounded-xl bg-[color:var(--forest)]/5 border border-[color:var(--forest)]/15 px-4 py-3 text-sm">
-        AI has analysed over <span className="font-semibold">285,000</span> production records for this farm.
+        AI has analysed <span className="font-semibold">{live.records_analysed.toLocaleString("en-NG")}</span> live farm records across the platform.
       </div>
     </div>
   );
