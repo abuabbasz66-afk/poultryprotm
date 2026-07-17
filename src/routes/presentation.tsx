@@ -215,6 +215,7 @@ function StepBody({ id }: { id: string }) {
     case "reports": return <StepReports />;
     case "admin": return <StepAdmin />;
     case "mobile": return <StepMobile />;
+    case "pricing": return <StepPricing />;
     case "vision": return <StepVision />;
     case "close": return <StepClose />;
     default: return null;
