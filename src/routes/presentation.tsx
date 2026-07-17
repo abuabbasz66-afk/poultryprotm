@@ -8,35 +8,69 @@ import {
   Brain, Cpu, Mic, CloudSun, Radio, Camera, Activity, CheckCircle2,
 } from "lucide-react";
 import { PRICING_PLANS } from "@/lib/pricing-plans";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/presentation")({
   head: () => ({
     meta: [
       { title: "PoultryPro™ — Live Investor Demo" },
-      { name: "description", content: "Guided investor demonstration of the PoultryPro platform using the Greenfield Demonstration Farm." },
+      { name: "description", content: "Guided investor demonstration of the PoultryPro platform using live aggregated farm data." },
       { name: "robots", content: "noindex" },
     ],
   }),
   component: PresentationMode,
 });
 
-// ---------- Sample demo data (read-only, never persisted) ----------
-const DEMO_FARM = {
-  name: "Greenfield Demonstration Farm",
-  location: "Kaduna, Nigeria",
-  birds: 5280,
-  houses: 4,
-  cratesToday: 470,
-  annualRevenueNGN: 48_700_000,
-  feedStockPct: 74,
-  mortalityPct: 0.08,
-  activeAlerts: 3,
+// ---------- Live platform data (aggregated, read-only) ----------
+type LiveData = {
+  farm_name: string;
+  location: string;
+  birds: number;
+  houses: number;
+  today_crates: number;
+  active_alerts: number;
+  annual_revenue: number;
+  feed_stock_pct: number;
+  records_analysed: number;
+  total_eggs: number;
+  production_trend: number[];
+  revenue_trend: number[];
+  feed_trend: number[];
+  mortality_trend: number[];
 };
 
-const PRODUCTION_TREND = [380, 402, 418, 431, 445, 458, 470];
-const REVENUE_TREND = [3.9, 4.2, 4.5, 4.7, 5.1, 5.6, 6.3]; // ₦M / week
-const FEED_TREND = [1120, 1150, 1180, 1170, 1200, 1215, 1240]; // kg/day
-const MORTALITY_TREND = [0.12, 0.11, 0.10, 0.10, 0.09, 0.08, 0.08];
+const FALLBACK: LiveData = {
+  farm_name: "PoultryPro Live Platform",
+  location: "Aggregated across all farms",
+  birds: 0, houses: 0, today_crates: 0, active_alerts: 0,
+  annual_revenue: 0, feed_stock_pct: 74, records_analysed: 0, total_eggs: 0,
+  production_trend: [0,0,0,0,0,0,0],
+  revenue_trend: [0,0,0,0,0,0,0],
+  feed_trend: [0,0,0,0,0,0,0],
+  mortality_trend: [0,0,0,0,0,0,0],
+};
+
+function useLiveData(): LiveData {
+  const [data, setData] = useState<LiveData>(FALLBACK);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data: res, error } = await supabase.rpc("presentation_demo_data" as never);
+      if (!alive || error || !res) return;
+      const d = res as unknown as Partial<LiveData>;
+      setData({
+        ...FALLBACK,
+        ...d,
+        production_trend: (d.production_trend?.length ? d.production_trend : FALLBACK.production_trend).map(Number),
+        revenue_trend: (d.revenue_trend?.length ? d.revenue_trend : FALLBACK.revenue_trend).map(Number),
+        feed_trend: (d.feed_trend?.length ? d.feed_trend : FALLBACK.feed_trend).map(Number),
+        mortality_trend: (d.mortality_trend?.length ? d.mortality_trend : FALLBACK.mortality_trend).map(Number),
+      });
+    })();
+    return () => { alive = false; };
+  }, []);
+  return data;
+}
 
 const AI_INSIGHTS = [
   { icon: TrendingUp, title: "Egg production up 4.2% this week", body: "Sustained increase across House 2 and House 3 vs the previous 7-day average.", tone: "good" },
@@ -45,6 +79,7 @@ const AI_INSIGHTS = [
   { icon: Sparkles, title: "Predicted next-week production", body: "1,240 crates · confidence 92%", tone: "info" },
   { icon: Wallet, title: "Estimated next-week revenue", body: "₦6.3 million · confidence 89%", tone: "info" },
 ];
+
 
 // ---------- Step definitions ----------
 type Step = { id: string; title: string; subtitle: string };
