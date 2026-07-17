@@ -7,9 +7,9 @@ export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
       { title: "Pricing — PoultryPro™" },
-      { name: "description", content: "Simple, transparent pricing for poultry farms of every size. Starter, Growth and Enterprise plans." },
+      { name: "description", content: "PoultryPro subscription plans for small, commercial and enterprise poultry farms. Pricing announced soon." },
       { property: "og:title", content: "Pricing — PoultryPro™" },
-      { property: "og:description", content: "Simple, transparent pricing for poultry farms of every size." },
+      { property: "og:description", content: "PoultryPro subscription plans for poultry farms of every size." },
     ],
   }),
   component: PricingPage,
@@ -33,13 +33,19 @@ function PricingPage() {
       <main className="flex-1">
         <section className="container-x py-14 sm:py-20 text-center">
           <div className="text-[11px] uppercase tracking-[0.22em] text-[color:var(--forest)] font-semibold">Pricing</div>
-          <h1 className="mt-2 text-3xl sm:text-5xl font-bold tracking-tight">Simple pricing for every farm size</h1>
+          <h1 className="mt-2 text-3xl sm:text-5xl font-bold tracking-tight">Simple plans for every farm size</h1>
           <p className="mt-3 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-            Start free for 14 days on any plan. No card required. Upgrade, downgrade or cancel anytime.
+            Choose the plan that fits your poultry operation. Pricing will be announced soon.
           </p>
         </section>
 
         <section className="container-x pb-16">
+          <div className="flex justify-center mb-8">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--gold)]/15 text-[color:var(--gold)] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em]">
+              Early Access
+            </span>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {PRICING_PLANS.map((p) => (
               <div
@@ -52,15 +58,11 @@ function PricingPage() {
               >
                 {p.featured && (
                   <span className="absolute -top-3 left-6 rounded-full bg-[color:var(--gold)] text-[color:var(--ink)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em]">
-                    Most popular
+                    Most Popular
                   </span>
                 )}
                 <div className={`text-xs uppercase tracking-[0.18em] font-semibold ${p.featured ? "text-white/70" : "text-muted-foreground"}`}>{p.tagline}</div>
                 <div className={`mt-1 text-xl font-bold ${p.featured ? "!text-white" : ""}`}>{p.name}</div>
-                <div className="mt-4 flex items-baseline gap-1">
-                  <span className={`text-4xl font-bold tracking-tight ${p.featured ? "!text-white" : ""}`}>{p.priceLabel}</span>
-                  <span className={`text-sm ${p.featured ? "text-white/70" : "text-muted-foreground"}`}>{p.priceSub}</span>
-                </div>
                 <ul className={`mt-5 space-y-2 text-sm flex-1 ${p.featured ? "text-white/90" : "text-foreground"}`}>
                   {p.features.map((f) => (
                     <li key={f} className="flex items-start gap-2">
@@ -85,8 +87,7 @@ function PricingPage() {
           </div>
 
           <div className="mt-8 rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground text-center">
-            All plans include daily records, mobile access, secure cloud backup, and free updates. Annual billing saves approximately 15%.
-            Need something custom? <Link to="/" hash="founder" className="text-[color:var(--forest)] font-semibold hover:underline">Contact our team</Link>.
+            Subscription pricing will be announced soon. Join our early adopters and experience the future of intelligent poultry farm management.
           </div>
         </section>
       </main>
