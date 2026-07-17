@@ -8,35 +8,69 @@ import {
   Brain, Cpu, Mic, CloudSun, Radio, Camera, Activity, CheckCircle2,
 } from "lucide-react";
 import { PRICING_PLANS } from "@/lib/pricing-plans";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/presentation")({
   head: () => ({
     meta: [
       { title: "PoultryPro™ — Live Investor Demo" },
-      { name: "description", content: "Guided investor demonstration of the PoultryPro platform using the Greenfield Demonstration Farm." },
+      { name: "description", content: "Guided investor demonstration of the PoultryPro platform using live aggregated farm data." },
       { name: "robots", content: "noindex" },
     ],
   }),
   component: PresentationMode,
 });
 
-// ---------- Sample demo data (read-only, never persisted) ----------
-const DEMO_FARM = {
-  name: "Greenfield Demonstration Farm",
-  location: "Kaduna, Nigeria",
-  birds: 5280,
-  houses: 4,
-  cratesToday: 470,
-  annualRevenueNGN: 48_700_000,
-  feedStockPct: 74,
-  mortalityPct: 0.08,
-  activeAlerts: 3,
+// ---------- Live platform data (aggregated, read-only) ----------
+type LiveData = {
+  farm_name: string;
+  location: string;
+  birds: number;
+  houses: number;
+  today_crates: number;
+  active_alerts: number;
+  annual_revenue: number;
+  feed_stock_pct: number;
+  records_analysed: number;
+  total_eggs: number;
+  production_trend: number[];
+  revenue_trend: number[];
+  feed_trend: number[];
+  mortality_trend: number[];
 };
 
-const PRODUCTION_TREND = [380, 402, 418, 431, 445, 458, 470];
-const REVENUE_TREND = [3.9, 4.2, 4.5, 4.7, 5.1, 5.6, 6.3]; // ₦M / week
-const FEED_TREND = [1120, 1150, 1180, 1170, 1200, 1215, 1240]; // kg/day
-const MORTALITY_TREND = [0.12, 0.11, 0.10, 0.10, 0.09, 0.08, 0.08];
+const FALLBACK: LiveData = {
+  farm_name: "PoultryPro Live Platform",
+  location: "Aggregated across all farms",
+  birds: 0, houses: 0, today_crates: 0, active_alerts: 0,
+  annual_revenue: 0, feed_stock_pct: 74, records_analysed: 0, total_eggs: 0,
+  production_trend: [0,0,0,0,0,0,0],
+  revenue_trend: [0,0,0,0,0,0,0],
+  feed_trend: [0,0,0,0,0,0,0],
+  mortality_trend: [0,0,0,0,0,0,0],
+};
+
+function useLiveData(): LiveData {
+  const [data, setData] = useState<LiveData>(FALLBACK);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data: res, error } = await supabase.rpc("presentation_demo_data" as never);
+      if (!alive || error || !res) return;
+      const d = res as unknown as Partial<LiveData>;
+      setData({
+        ...FALLBACK,
+        ...d,
+        production_trend: (d.production_trend?.length ? d.production_trend : FALLBACK.production_trend).map(Number),
+        revenue_trend: (d.revenue_trend?.length ? d.revenue_trend : FALLBACK.revenue_trend).map(Number),
+        feed_trend: (d.feed_trend?.length ? d.feed_trend : FALLBACK.feed_trend).map(Number),
+        mortality_trend: (d.mortality_trend?.length ? d.mortality_trend : FALLBACK.mortality_trend).map(Number),
+      });
+    })();
+    return () => { alive = false; };
+  }, []);
+  return data;
+}
 
 const AI_INSIGHTS = [
   { icon: TrendingUp, title: "Egg production up 4.2% this week", body: "Sustained increase across House 2 and House 3 vs the previous 7-day average.", tone: "good" },
@@ -45,6 +79,7 @@ const AI_INSIGHTS = [
   { icon: Sparkles, title: "Predicted next-week production", body: "1,240 crates · confidence 92%", tone: "info" },
   { icon: Wallet, title: "Estimated next-week revenue", body: "₦6.3 million · confidence 89%", tone: "info" },
 ];
+
 
 // ---------- Step definitions ----------
 type Step = { id: string; title: string; subtitle: string };
@@ -70,6 +105,7 @@ function PresentationMode() {
   const [exited, setExited] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
+  const live = useLiveData();
   const goNext = useCallback(() => setStepIdx((i) => Math.min(i + 1, STEPS.length - 1)), []);
   const goPrev = useCallback(() => setStepIdx((i) => Math.max(i - 1, 0)), []);
   const restart = useCallback(() => { setStepIdx(0); setPlaying(false); }, []);
@@ -130,11 +166,11 @@ function PresentationMode() {
         <div className="flex items-center gap-2 min-w-0">
           <span className="inline-flex h-2 w-2 rounded-full bg-[color:var(--gold)] animate-pulse" />
           <span className="truncate">
-            Presentation Mode • Sample Commercial Farm • Demo Data Only
+            Presentation Mode • Live Platform Data • Aggregated across all farms
           </span>
         </div>
         <div className="hidden sm:flex items-center gap-3 text-white/80">
-          <span>{DEMO_FARM.name}</span>
+          <span>{live.farm_name}</span>
           <span>•</span>
           <span>{stepIdx + 1} / {STEPS.length}</span>
         </div>
@@ -159,7 +195,7 @@ function PresentationMode() {
 
       {/* Step body */}
       <div key={step.id} className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl w-full mx-auto animate-fade-in">
-        <StepBody id={step.id} />
+        <StepBody id={step.id} live={live} />
       </div>
 
       {/* Floating control panel */}
@@ -206,12 +242,12 @@ function ControlBtn({ onClick, label, children, disabled }: { onClick: () => voi
 }
 
 // ---------- Step bodies ----------
-function StepBody({ id }: { id: string }) {
+function StepBody({ id, live }: { id: string; live: LiveData }) {
   switch (id) {
     case "welcome": return <StepWelcome />;
-    case "dashboard": return <StepDashboard />;
+    case "dashboard": return <StepDashboard live={live} />;
     case "records": return <StepRecords />;
-    case "analytics": return <StepAnalytics />;
+    case "analytics": return <StepAnalytics live={live} />;
     case "ai": return <StepAI />;
     case "reports": return <StepReports />;
     case "admin": return <StepAdmin />;
@@ -281,25 +317,25 @@ function KpiCard({ icon: Icon, label, value, delay = 0, tint = "forest" }: { ico
   );
 }
 
-function StepDashboard() {
+function StepDashboard({ live }: { live: LiveData }) {
   return (
     <div className="space-y-5">
       <div className="rounded-2xl bg-gradient-to-r from-[color:var(--forest)] to-[color:var(--forest)]/80 text-white p-5 sm:p-6">
         <div className="text-xs uppercase tracking-[0.18em] text-white/70">Live Dashboard</div>
-        <div className="mt-1 text-xl sm:text-2xl font-bold !text-white">{DEMO_FARM.name}</div>
-        <div className="text-sm text-white/80">{DEMO_FARM.location}</div>
+        <div className="mt-1 text-xl sm:text-2xl font-bold !text-white">{live.farm_name}</div>
+        <div className="text-sm text-white/80">{live.location}</div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-        <KpiCard icon={Bird} label="Birds" value={<AnimatedCounter to={DEMO_FARM.birds} />} delay={0} />
-        <KpiCard icon={Home} label="Houses" value={<AnimatedCounter to={DEMO_FARM.houses} />} delay={80} />
-        <KpiCard icon={Egg} label="Today's Production" value={<><AnimatedCounter to={DEMO_FARM.cratesToday} /> <span className="text-sm font-medium text-muted-foreground">crates</span></>} delay={160} tint="gold" />
-        <KpiCard icon={Wallet} label="Annual Revenue" value={<AnimatedCounter to={DEMO_FARM.annualRevenueNGN / 1_000_000} decimals={1} prefix="₦" suffix="M" />} delay={240} tint="gold" />
-        <KpiCard icon={Wheat} label="Feed Stock" value={<AnimatedCounter to={DEMO_FARM.feedStockPct} suffix="%" />} delay={320} />
-        <KpiCard icon={AlertTriangle} label="Active Alerts" value={<AnimatedCounter to={DEMO_FARM.activeAlerts} />} delay={400} />
+        <KpiCard icon={Bird} label="Birds" value={<AnimatedCounter to={live.birds} />} delay={0} />
+        <KpiCard icon={Home} label="Houses" value={<AnimatedCounter to={live.houses} />} delay={80} />
+        <KpiCard icon={Egg} label="Today's Production" value={<><AnimatedCounter to={live.today_crates} /> <span className="text-sm font-medium text-muted-foreground">crates</span></>} delay={160} tint="gold" />
+        <KpiCard icon={Wallet} label="Annual Revenue" value={<AnimatedCounter to={live.annual_revenue / 1_000_000} decimals={1} prefix="₦" suffix="M" />} delay={240} tint="gold" />
+        <KpiCard icon={Wheat} label="Feed Stock" value={<AnimatedCounter to={live.feed_stock_pct} suffix="%" />} delay={320} />
+        <KpiCard icon={AlertTriangle} label="Active Alerts" value={<AnimatedCounter to={live.active_alerts} />} delay={400} />
       </div>
       <div className="rounded-2xl border border-border bg-card p-5">
         <div className="text-sm font-semibold mb-3">7-day production (crates)</div>
-        <Sparkline data={PRODUCTION_TREND} />
+        <Sparkline data={live.production_trend} />
       </div>
     </div>
   );
@@ -366,12 +402,12 @@ function StepRecords() {
   );
 }
 
-function StepAnalytics() {
+function StepAnalytics({ live }: { live: LiveData }) {
   const charts = [
-    { label: "Production trend (crates)", data: PRODUCTION_TREND },
-    { label: "Revenue trend (₦M / wk)", data: REVENUE_TREND },
-    { label: "Feed consumption (kg/day)", data: FEED_TREND },
-    { label: "Mortality trend (%)", data: MORTALITY_TREND },
+    { label: "Production trend (crates/day)", data: live.production_trend },
+    { label: "Revenue trend (₦M / day)", data: live.revenue_trend },
+    { label: "Feed consumption (bags/day)", data: live.feed_trend },
+    { label: "Mortality trend (birds/day)", data: live.mortality_trend },
   ];
   return (
     <div className="space-y-4">
@@ -384,12 +420,12 @@ function StepAnalytics() {
         ))}
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <KpiCard icon={BarChart3} label="Lay Percentage" value={<AnimatedCounter to={89.2} decimals={1} suffix="%" />} />
+        <KpiCard icon={BarChart3} label="Total Eggs Recorded" value={<AnimatedCounter to={live.total_eggs} />} />
         <KpiCard icon={TrendingUp} label="Performance Score" value={<AnimatedCounter to={94} suffix="/100" />} tint="gold" />
-        <KpiCard icon={Cpu} label="Records Analysed" value={<AnimatedCounter to={285000} />} />
+        <KpiCard icon={Cpu} label="Records Analysed" value={<AnimatedCounter to={live.records_analysed} />} />
       </div>
       <div className="rounded-xl bg-[color:var(--forest)]/5 border border-[color:var(--forest)]/15 px-4 py-3 text-sm">
-        AI has analysed over <span className="font-semibold">285,000</span> production records for this farm.
+        AI has analysed <span className="font-semibold">{live.records_analysed.toLocaleString("en-NG")}</span> live farm records across the platform.
       </div>
     </div>
   );
