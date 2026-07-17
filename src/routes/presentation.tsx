@@ -195,7 +195,7 @@ function PresentationMode() {
 
       {/* Step body */}
       <div key={step.id} className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl w-full mx-auto animate-fade-in">
-        <StepBody id={step.id} />
+        <StepBody id={step.id} live={live} />
       </div>
 
       {/* Floating control panel */}
