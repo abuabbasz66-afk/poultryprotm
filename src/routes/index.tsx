@@ -247,6 +247,9 @@ function Index() {
             </Link>
           ) : (
             <div className="flex items-center gap-2">
+              <Link to="/pricing" className="hidden md:inline-flex items-center rounded-full px-3 py-2 text-sm font-medium hover:bg-secondary transition-colors">
+                Pricing
+              </Link>
               <Link to="/auth" search={{ mode: "signin" }} className="hidden sm:inline-flex items-center rounded-full border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-secondary transition-colors duration-200">
                 Sign In
               </Link>
