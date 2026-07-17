@@ -536,6 +536,57 @@ function StepMobile() {
   );
 }
 
+function StepPricing() {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {PRICING_PLANS.map((p, i) => (
+          <div
+            key={p.id}
+            className={`relative rounded-2xl border p-6 animate-fade-in flex flex-col ${
+              p.featured
+                ? "border-[color:var(--gold)] bg-gradient-to-br from-[color:var(--forest)] to-[color:var(--forest)]/90 text-white shadow-[var(--shadow-lift)]"
+                : "border-border bg-card"
+            }`}
+            style={{ animationDelay: `${i * 120}ms`, animationFillMode: "both" }}
+          >
+            {p.featured && (
+              <span className="absolute -top-3 left-6 rounded-full bg-[color:var(--gold)] text-[color:var(--ink)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em]">
+                Most popular
+              </span>
+            )}
+            <div className={`text-xs uppercase tracking-[0.18em] font-semibold ${p.featured ? "text-white/70" : "text-muted-foreground"}`}>{p.tagline}</div>
+            <div className={`mt-1 text-xl font-bold ${p.featured ? "!text-white" : ""}`}>{p.name}</div>
+            <div className="mt-4 flex items-baseline gap-1">
+              <span className={`text-3xl sm:text-4xl font-bold tracking-tight ${p.featured ? "!text-white" : ""}`}>{p.priceLabel}</span>
+              <span className={`text-sm ${p.featured ? "text-white/70" : "text-muted-foreground"}`}>{p.priceSub}</span>
+            </div>
+            <ul className={`mt-5 space-y-2 text-sm flex-1 ${p.featured ? "text-white/90" : "text-foreground"}`}>
+              {p.features.map((f) => (
+                <li key={f} className="flex items-start gap-2">
+                  <CheckCircle2 className={`h-4 w-4 mt-0.5 shrink-0 ${p.featured ? "text-[color:var(--gold)]" : "text-[color:var(--forest)]"}`} />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+            <div className={`mt-6 inline-flex items-center justify-center rounded-full px-4 py-2.5 text-sm font-semibold ${
+              p.featured
+                ? "bg-[color:var(--gold)] text-[color:var(--ink)]"
+                : "bg-[color:var(--forest)] text-white"
+            }`}>
+              {p.cta}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="rounded-xl bg-[color:var(--forest)]/5 border border-[color:var(--forest)]/15 px-4 py-3 text-sm text-muted-foreground">
+        All plans include: daily records, mobile access, secure cloud backup, and free updates. Annual billing saves ~15%.
+      </div>
+    </div>
+  );
+}
+
+
 function StepVision() {
   const items = [
     { icon: Brain, name: "Disease prediction" },
