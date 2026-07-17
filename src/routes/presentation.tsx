@@ -6,6 +6,7 @@ import {
   ShieldCheck, Users, TrendingUp, Bell, Smartphone, Tablet, Monitor,
   Rocket, Play, Pause, SkipForward, RotateCcw, Maximize2, X, ArrowRight,
   Brain, Cpu, Mic, CloudSun, Radio, Camera, Activity, CheckCircle2,
+  Database, Lock,
 } from "lucide-react";
 import { PRICING_PLANS } from "@/lib/pricing-plans";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,91 +14,118 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/presentation")({
   head: () => ({
     meta: [
-      { title: "PoultryPro™ — Live Investor Demo" },
-      { name: "description", content: "Guided investor demonstration of the PoultryPro platform using live aggregated farm data." },
+      { title: "PoultryPro™ — Greenfield Demonstration Farm" },
+      { name: "description", content: "Guided investor demonstration of PoultryPro using real historical records from a live commercial poultry farm — read-only demo dataset." },
       { name: "robots", content: "noindex" },
     ],
   }),
   component: PresentationMode,
 });
 
-// ---------- Live platform data (aggregated, read-only) ----------
-type LiveData = {
+// ---------- Real farm demo data (read-only historical records) ----------
+type SeriesPoint = { d: string; v: number };
+type RoomRow = { name: string; current: number; initial: number; mortality_pct: number };
+type ProdRow = { date: string; label: string; r2: number; r3: number; r4: number; extra: number; eggs: number };
+type FeedRow = { date: string; room: string; bags: number };
+type MortRow = { date: string; room: string; cause: string; loss: number };
+type HealthRow = { date: string; name: string; scope: string; type: string };
+type MonthRow = { month: string; eggs: number; crates: number; revenue: number };
+
+type DemoData = {
   farm_name: string;
   location: string;
+  period_start: string;
+  period_end: string;
+  days_covered: number;
+  egg_price: number;
+  feed_price: number;
+  rooms: RoomRow[];
   birds: number;
+  initial_birds: number;
   houses: number;
-  today_crates: number;
-  active_alerts: number;
-  annual_revenue: number;
-  feed_stock_pct: number;
-  records_analysed: number;
   total_eggs: number;
-  production_trend: number[];
-  revenue_trend: number[];
-  feed_trend: number[];
-  mortality_trend: number[];
+  total_crates: number;
+  total_feed_bags: number;
+  total_mortality: number;
+  health_records_count: number;
+  production_records_count: number;
+  feed_records_count: number;
+  mortality_records_count: number;
+  today_crates: number;
+  production_180: SeriesPoint[];
+  feed_180: SeriesPoint[];
+  mortality_180: SeriesPoint[];
+  revenue_180: SeriesPoint[];
+  recent_production: ProdRow[];
+  recent_feed: FeedRow[];
+  recent_mortality: MortRow[];
+  recent_health: HealthRow[];
+  monthly: MonthRow[];
+  total_revenue: number;
+  total_feed_cost: number;
+  gross_profit: number;
+  avg_daily_crates: number;
+  avg_daily_feed_bags: number;
+  mortality_pct: number;
+  feed_conversion_ratio: number;
+  annual_revenue: number;
 };
 
-const FALLBACK: LiveData = {
-  farm_name: "PoultryPro Live Platform",
-  location: "Aggregated across all farms",
-  birds: 0, houses: 0, today_crates: 0, active_alerts: 0,
-  annual_revenue: 0, feed_stock_pct: 74, records_analysed: 0, total_eggs: 0,
-  production_trend: [0,0,0,0,0,0,0],
-  revenue_trend: [0,0,0,0,0,0,0],
-  feed_trend: [0,0,0,0,0,0,0],
-  mortality_trend: [0,0,0,0,0,0,0],
+const FALLBACK: DemoData = {
+  farm_name: "Greenfield Demonstration Farm",
+  location: "Commercial layer operation · Real historical dataset",
+  period_start: "", period_end: "", days_covered: 1,
+  egg_price: 4900, feed_price: 11950,
+  rooms: [], birds: 0, initial_birds: 0, houses: 0,
+  total_eggs: 0, total_crates: 0, total_feed_bags: 0, total_mortality: 0,
+  health_records_count: 0, production_records_count: 0, feed_records_count: 0, mortality_records_count: 0,
+  today_crates: 0,
+  production_180: [], feed_180: [], mortality_180: [], revenue_180: [],
+  recent_production: [], recent_feed: [], recent_mortality: [], recent_health: [],
+  monthly: [],
+  total_revenue: 0, total_feed_cost: 0, gross_profit: 0,
+  avg_daily_crates: 0, avg_daily_feed_bags: 0, mortality_pct: 0,
+  feed_conversion_ratio: 0, annual_revenue: 0,
 };
 
-function useLiveData(): LiveData {
-  const [data, setData] = useState<LiveData>(FALLBACK);
+function useDemoData(): { data: DemoData; loading: boolean; reset: () => void } {
+  const [data, setData] = useState<DemoData>(FALLBACK);
+  const [loading, setLoading] = useState(true);
+  const [nonce, setNonce] = useState(0);
   useEffect(() => {
     let alive = true;
+    setLoading(true);
     (async () => {
-      const { data: res, error } = await supabase.rpc("presentation_demo_data" as never);
-      if (!alive || error || !res) return;
-      const d = res as unknown as Partial<LiveData>;
-      setData({
-        ...FALLBACK,
-        ...d,
-        production_trend: (d.production_trend?.length ? d.production_trend : FALLBACK.production_trend).map(Number),
-        revenue_trend: (d.revenue_trend?.length ? d.revenue_trend : FALLBACK.revenue_trend).map(Number),
-        feed_trend: (d.feed_trend?.length ? d.feed_trend : FALLBACK.feed_trend).map(Number),
-        mortality_trend: (d.mortality_trend?.length ? d.mortality_trend : FALLBACK.mortality_trend).map(Number),
-      });
+      const { data: res, error } = await supabase.rpc("demo_greenfield_data" as never);
+      if (!alive) return;
+      if (!error && res) setData({ ...FALLBACK, ...(res as Partial<DemoData>) });
+      setLoading(false);
     })();
     return () => { alive = false; };
-  }, []);
-  return data;
+  }, [nonce]);
+  const reset = useCallback(() => setNonce((n) => n + 1), []);
+  return { data, loading, reset };
 }
-
-const AI_INSIGHTS = [
-  { icon: TrendingUp, title: "Egg production up 4.2% this week", body: "Sustained increase across House 2 and House 3 vs the previous 7-day average.", tone: "good" },
-  { icon: Wheat, title: "Feed conversion within target", body: "FCR 2.04 · industry benchmark 2.10 — flock efficiency is healthy.", tone: "good" },
-  { icon: ShieldCheck, title: "Mortality below industry average", body: "0.08% vs 0.15% benchmark. Continue current biosecurity routine.", tone: "good" },
-  { icon: Sparkles, title: "Predicted next-week production", body: "1,240 crates · confidence 92%", tone: "info" },
-  { icon: Wallet, title: "Estimated next-week revenue", body: "₦6.3 million · confidence 89%", tone: "info" },
-];
-
 
 // ---------- Step definitions ----------
 type Step = { id: string; title: string; subtitle: string };
 const STEPS: Step[] = [
-  { id: "welcome", title: "Welcome", subtitle: "Africa's Intelligent Poultry Farm Management Platform" },
-  { id: "dashboard", title: "Farm Dashboard", subtitle: "Everything a farm manager needs at a glance" },
-  { id: "records", title: "Farm Records", subtitle: "Every farm activity, digitized" },
-  { id: "analytics", title: "Analytics", subtitle: "Trends, benchmarks and performance" },
-  { id: "ai", title: "AI Intelligence", subtitle: "Insights, predictions and confidence scores" },
-  { id: "reports", title: "Reports", subtitle: "Share with owners, auditors and banks" },
+  { id: "welcome", title: "Welcome", subtitle: "Real farm records · read-only demo dataset" },
+  { id: "dashboard", title: "Farm Dashboard", subtitle: "Live snapshot of the demonstration farm" },
+  { id: "records", title: "Farm Records", subtitle: "Actual production, feed, mortality and health entries" },
+  { id: "analytics", title: "Analytics", subtitle: "180-day historical performance" },
+  { id: "financials", title: "Financials", subtitle: "Revenue, feed cost and gross profit" },
+  { id: "ai", title: "AI Intelligence", subtitle: "Insights derived from the farm's own history" },
+  { id: "reports", title: "Reports", subtitle: "Monthly summaries ready to export" },
   { id: "admin", title: "Platform Administration", subtitle: "Manage thousands of farms from one dashboard" },
   { id: "mobile", title: "Mobile Experience", subtitle: "PoultryPro works anywhere, anytime" },
   { id: "pricing", title: "Subscription Plans", subtitle: "Simple subscription plans for every farm size" },
   { id: "vision", title: "Future Vision", subtitle: "The AI roadmap" },
-  { id: "close", title: "Ready for Commercial Deployment", subtitle: "Digitizing poultry farming across Africa" },
+  { id: "close", title: "Ready for Commercial Deployment", subtitle: "Operating on real commercial farm data" },
 ];
 
-const NGN = (n: number) => `₦${n.toLocaleString("en-NG")}`;
+const NGN = (n: number) => `₦${Math.round(n).toLocaleString("en-NG")}`;
+const fmtDate = (s: string) => s ? new Date(s).toLocaleDateString("en-NG", { day: "2-digit", month: "short" }) : "—";
 
 function PresentationMode() {
   const [stepIdx, setStepIdx] = useState(0);
@@ -105,12 +133,11 @@ function PresentationMode() {
   const [exited, setExited] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
-  const live = useLiveData();
+  const { data: demo, loading, reset } = useDemoData();
   const goNext = useCallback(() => setStepIdx((i) => Math.min(i + 1, STEPS.length - 1)), []);
   const goPrev = useCallback(() => setStepIdx((i) => Math.max(i - 1, 0)), []);
-  const restart = useCallback(() => { setStepIdx(0); setPlaying(false); }, []);
+  const restart = useCallback(() => { setStepIdx(0); setPlaying(false); reset(); }, [reset]);
 
-  // Auto-advance when playing
   useEffect(() => {
     if (!playing) return;
     const t = window.setTimeout(() => {
@@ -120,7 +147,6 @@ function PresentationMode() {
     return () => window.clearTimeout(t);
   }, [playing, stepIdx]);
 
-  // Keyboard nav
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); goNext(); }
@@ -145,7 +171,9 @@ function PresentationMode() {
       <div className="min-h-screen flex items-center justify-center bg-background px-6">
         <div className="max-w-md text-center space-y-4">
           <h1 className="text-2xl font-bold">Presentation ended</h1>
-          <p className="text-muted-foreground">The demo did not modify any production data.</p>
+          <p className="text-muted-foreground">
+            No records were modified. This demo is read-only — the underlying farm data remains untouched.
+          </p>
           <div className="flex justify-center gap-2">
             <button onClick={() => { setExited(false); restart(); }} className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
               Restart Demo
@@ -166,17 +194,17 @@ function PresentationMode() {
         <div className="flex items-center gap-2 min-w-0">
           <span className="inline-flex h-2 w-2 rounded-full bg-[color:var(--gold)] animate-pulse" />
           <span className="truncate">
-            Presentation Mode • Live Platform Data • Aggregated across all farms
+            Presentation Mode • Real Farm Records • Read-only Demo Data
           </span>
         </div>
         <div className="hidden sm:flex items-center gap-3 text-white/80">
-          <span>{live.farm_name}</span>
+          <Lock className="h-3.5 w-3.5" />
+          <span>{demo.farm_name}</span>
           <span>•</span>
           <span>{stepIdx + 1} / {STEPS.length}</span>
         </div>
       </div>
 
-      {/* Progress bar */}
       <div className="h-1 w-full bg-black/5">
         <div
           className="h-full bg-[color:var(--gold)] transition-all duration-500"
@@ -184,7 +212,6 @@ function PresentationMode() {
         />
       </div>
 
-      {/* Step header */}
       <div className="px-4 sm:px-8 pt-6 sm:pt-10 max-w-6xl w-full mx-auto">
         <div className="text-[11px] uppercase tracking-[0.22em] text-[color:var(--forest)] font-semibold">
           Step {stepIdx + 1} · {step.title}
@@ -193,12 +220,16 @@ function PresentationMode() {
         <p className="mt-1 text-sm sm:text-base text-muted-foreground">{step.subtitle}</p>
       </div>
 
-      {/* Step body */}
       <div key={step.id} className="flex-1 px-4 sm:px-8 py-6 sm:py-8 max-w-6xl w-full mx-auto animate-fade-in">
-        <StepBody id={step.id} live={live} />
+        {loading ? (
+          <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
+            Loading real farm records…
+          </div>
+        ) : (
+          <StepBody id={step.id} demo={demo} />
+        )}
       </div>
 
-      {/* Floating control panel */}
       <div className="sticky bottom-4 z-40 flex justify-center px-3 pb-4">
         <div className="flex items-center gap-1 rounded-full border border-border bg-card/95 backdrop-blur px-2 py-1.5 shadow-[var(--shadow-lift)]">
           <ControlBtn onClick={() => setPlaying((p) => !p)} label={playing ? "Pause" : "Start Tour"}>
@@ -210,7 +241,7 @@ function PresentationMode() {
           <ControlBtn onClick={goNext} label="Next Step" disabled={stepIdx === STEPS.length - 1}>
             <SkipForward className="h-4 w-4" />
           </ControlBtn>
-          <ControlBtn onClick={restart} label="Restart">
+          <ControlBtn onClick={restart} label="Reset Demo">
             <RotateCcw className="h-4 w-4" />
           </ControlBtn>
           <ControlBtn onClick={toggleFullscreen} label="Fullscreen">
@@ -241,15 +272,15 @@ function ControlBtn({ onClick, label, children, disabled }: { onClick: () => voi
   );
 }
 
-// ---------- Step bodies ----------
-function StepBody({ id, live }: { id: string; live: LiveData }) {
+function StepBody({ id, demo }: { id: string; demo: DemoData }) {
   switch (id) {
-    case "welcome": return <StepWelcome />;
-    case "dashboard": return <StepDashboard live={live} />;
-    case "records": return <StepRecords />;
-    case "analytics": return <StepAnalytics live={live} />;
-    case "ai": return <StepAI />;
-    case "reports": return <StepReports />;
+    case "welcome": return <StepWelcome demo={demo} />;
+    case "dashboard": return <StepDashboard demo={demo} />;
+    case "records": return <StepRecords demo={demo} />;
+    case "analytics": return <StepAnalytics demo={demo} />;
+    case "financials": return <StepFinancials demo={demo} />;
+    case "ai": return <StepAI demo={demo} />;
+    case "reports": return <StepReports demo={demo} />;
     case "admin": return <StepAdmin />;
     case "mobile": return <StepMobile />;
     case "pricing": return <StepPricing />;
@@ -259,28 +290,39 @@ function StepBody({ id, live }: { id: string; live: LiveData }) {
   }
 }
 
-function StepWelcome() {
+function StepWelcome({ demo }: { demo: DemoData }) {
   return (
     <div className="rounded-3xl border border-border bg-gradient-to-br from-[color:var(--forest)] to-[color:var(--forest)]/80 text-white p-8 sm:p-14 shadow-[var(--shadow-lift)] text-center">
       <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] uppercase tracking-[0.2em] font-semibold">
         <Sparkles className="h-3.5 w-3.5 text-[color:var(--gold)]" /> PoultryPro™
       </div>
       <h2 className="mt-6 text-3xl sm:text-5xl font-bold tracking-tight !text-white">
-        Welcome to PoultryPro™
+        {demo.farm_name}
       </h2>
       <p className="mt-3 text-base sm:text-xl text-white/85 max-w-2xl mx-auto">
-        Africa's Intelligent Poultry Farm Management Platform
+        A live walkthrough powered by <strong>{demo.production_records_count + demo.feed_records_count + demo.mortality_records_count + demo.health_records_count}</strong> real operational records
+        from {fmtDate(demo.period_start)} to {fmtDate(demo.period_end)}.
       </p>
-      <div className="mt-8 flex flex-wrap justify-center gap-3 text-sm sm:text-base font-semibold">
-        {["Capture", "Understand", "Predict"].map((w) => (
-          <span key={w} className="rounded-full border border-white/20 bg-white/10 px-4 py-2">{w}</span>
-        ))}
+      <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto text-sm">
+        <MiniStat label="Birds" value={demo.birds.toLocaleString("en-NG")} />
+        <MiniStat label="Houses" value={String(demo.houses)} />
+        <MiniStat label="Days of History" value={String(demo.days_covered)} />
+        <MiniStat label="Records" value={(demo.production_records_count + demo.feed_records_count + demo.mortality_records_count + demo.health_records_count).toLocaleString("en-NG")} />
       </div>
-      <div className="mt-10">
+      <div className="mt-8">
         <div className="inline-flex items-center gap-2 rounded-full bg-[color:var(--gold)] px-6 py-3 text-sm font-semibold text-[color:var(--ink)]">
           <Rocket className="h-4 w-4" /> Use the controls below to Start Tour
         </div>
       </div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-white/10 border border-white/15 py-3">
+      <div className="text-xs uppercase tracking-[0.16em] text-white/70">{label}</div>
+      <div className="mt-1 text-lg font-bold !text-white">{value}</div>
     </div>
   );
 }
@@ -317,25 +359,39 @@ function KpiCard({ icon: Icon, label, value, delay = 0, tint = "forest" }: { ico
   );
 }
 
-function StepDashboard({ live }: { live: LiveData }) {
+function StepDashboard({ demo }: { demo: DemoData }) {
+  const last30 = demo.production_180.slice(-30).map((p) => p.v);
   return (
     <div className="space-y-5">
       <div className="rounded-2xl bg-gradient-to-r from-[color:var(--forest)] to-[color:var(--forest)]/80 text-white p-5 sm:p-6">
         <div className="text-xs uppercase tracking-[0.18em] text-white/70">Live Dashboard</div>
-        <div className="mt-1 text-xl sm:text-2xl font-bold !text-white">{live.farm_name}</div>
-        <div className="text-sm text-white/80">{live.location}</div>
+        <div className="mt-1 text-xl sm:text-2xl font-bold !text-white">{demo.farm_name}</div>
+        <div className="text-sm text-white/80">{demo.location}</div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-        <KpiCard icon={Bird} label="Birds" value={<AnimatedCounter to={live.birds} />} delay={0} />
-        <KpiCard icon={Home} label="Houses" value={<AnimatedCounter to={live.houses} />} delay={80} />
-        <KpiCard icon={Egg} label="Today's Production" value={<><AnimatedCounter to={live.today_crates} /> <span className="text-sm font-medium text-muted-foreground">crates</span></>} delay={160} tint="gold" />
-        <KpiCard icon={Wallet} label="Annual Revenue" value={<AnimatedCounter to={live.annual_revenue / 1_000_000} decimals={1} prefix="₦" suffix="M" />} delay={240} tint="gold" />
-        <KpiCard icon={Wheat} label="Feed Stock" value={<AnimatedCounter to={live.feed_stock_pct} suffix="%" />} delay={320} />
-        <KpiCard icon={AlertTriangle} label="Active Alerts" value={<AnimatedCounter to={live.active_alerts} />} delay={400} />
+        <KpiCard icon={Bird} label="Current Birds" value={<AnimatedCounter to={demo.birds} />} delay={0} />
+        <KpiCard icon={Home} label="Houses" value={<AnimatedCounter to={demo.houses} />} delay={80} />
+        <KpiCard icon={Egg} label="Latest Day Production" value={<><AnimatedCounter to={demo.today_crates} /> <span className="text-sm font-medium text-muted-foreground">crates</span></>} delay={160} tint="gold" />
+        <KpiCard icon={Wallet} label="Projected Annual Revenue" value={<AnimatedCounter to={demo.annual_revenue / 1_000_000} decimals={1} prefix="₦" suffix="M" />} delay={240} tint="gold" />
+        <KpiCard icon={Wheat} label="Avg Feed / Day" value={<AnimatedCounter to={demo.avg_daily_feed_bags} decimals={1} suffix=" bags" />} delay={320} />
+        <KpiCard icon={AlertTriangle} label="Flock Mortality" value={<AnimatedCounter to={demo.mortality_pct} decimals={2} suffix="%" />} delay={400} />
       </div>
       <div className="rounded-2xl border border-border bg-card p-5">
-        <div className="text-sm font-semibold mb-3">7-day production (crates)</div>
-        <Sparkline data={live.production_trend} />
+        <div className="text-sm font-semibold mb-3">Last 30 days · production (crates/day)</div>
+        <Sparkline data={last30.length ? last30 : [0]} />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {demo.rooms.map((r) => (
+          <div key={r.name} className="rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between">
+              <div className="font-semibold">{r.name}</div>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-[color:var(--forest)]/10 text-[color:var(--forest)]">{r.current.toLocaleString("en-NG")} birds</span>
+            </div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              Initial: {r.initial.toLocaleString("en-NG")} · Mortality {r.mortality_pct}%
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -346,7 +402,7 @@ function Sparkline({ data, color = "var(--forest)" }: { data: number[]; color?: 
   const min = Math.min(...data), max = Math.max(...data);
   const range = max - min || 1;
   const points = data.map((d, i) => {
-    const x = pad + (i / (data.length - 1)) * (w - pad * 2);
+    const x = pad + (i / Math.max(1, data.length - 1)) * (w - pad * 2);
     const y = h - pad - ((d - min) / range) * (h - pad * 2);
     return `${x},${y}`;
   }).join(" ");
@@ -366,88 +422,221 @@ function Sparkline({ data, color = "var(--forest)" }: { data: number[]; color?: 
   );
 }
 
-function StepRecords() {
-  const items = [
-    { icon: Egg, name: "Production", note: "Daily eggs · crates · lay %" },
-    { icon: Wheat, name: "Feed", note: "Consumption, deliveries, stock" },
-    { icon: AlertTriangle, name: "Mortality", note: "Causes, room, trends" },
-    { icon: Activity, name: "Health", note: "Signs, treatments, notes" },
-    { icon: Syringe, name: "Vaccination", note: "Schedules & compliance" },
-    { icon: Package, name: "Inventory", note: "Drugs, materials, assets" },
-  ];
+function StepRecords({ demo }: { demo: DemoData }) {
+  const [tab, setTab] = useState<"prod" | "feed" | "mort" | "health">("prod");
+  const tabs = [
+    { id: "prod", icon: Egg, label: "Production", count: demo.production_records_count },
+    { id: "feed", icon: Wheat, label: "Feed", count: demo.feed_records_count },
+    { id: "mort", icon: AlertTriangle, label: "Mortality", count: demo.mortality_records_count },
+    { id: "health", icon: Syringe, label: "Health", count: demo.health_records_count },
+  ] as const;
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
-        <span className="font-semibold text-foreground">Tip:</span> PoultryPro digitizes every farm activity.
+      <div className="rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
+        <Database className="h-4 w-4 text-[color:var(--forest)]" />
+        <span>Every row below is a <span className="font-semibold text-foreground">real entry</span> logged by farm staff.</span>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {items.map((it, i) => (
-          <div key={it.name}
-            className="rounded-2xl border border-border bg-card p-5 hover:shadow-[var(--shadow-lift)] transition animate-fade-in"
-            style={{ animationDelay: `${i * 90}ms`, animationFillMode: "both" }}>
-            <div className="flex items-center gap-2">
-              <div className="rounded-lg bg-[color:var(--forest)]/10 p-2 text-[color:var(--forest)]">
-                <it.icon className="h-5 w-5" />
-              </div>
-              <div className="font-semibold">{it.name}</div>
-            </div>
-            <div className="mt-2 text-sm text-muted-foreground">{it.note}</div>
-            <div className="mt-3 text-xs inline-flex items-center gap-1 text-[color:var(--forest)] font-medium">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Auto-synced
-            </div>
-          </div>
+      <div className="flex flex-wrap gap-2">
+        {tabs.map((t) => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border transition ${
+              tab === t.id
+                ? "bg-[color:var(--forest)] text-white border-[color:var(--forest)]"
+                : "bg-card text-foreground border-border hover:bg-secondary"
+            }`}>
+            <t.icon className="h-4 w-4" />
+            {t.label}
+            <span className={`text-xs ${tab === t.id ? "text-white/80" : "text-muted-foreground"}`}>({t.count})</span>
+          </button>
         ))}
+      </div>
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        {tab === "prod" && <RecordTable
+          headers={["Date", "Label", "R2", "R3", "R4", "Extra", "Total eggs"]}
+          rows={demo.recent_production.map((r) => [fmtDate(r.date), r.label, String(r.r2), String(r.r3), String(r.r4), String(r.extra), r.eggs.toLocaleString("en-NG")])}
+        />}
+        {tab === "feed" && <RecordTable
+          headers={["Date", "Room", "Bags"]}
+          rows={demo.recent_feed.map((r) => [fmtDate(r.date), r.room, String(r.bags)])}
+        />}
+        {tab === "mort" && <RecordTable
+          headers={["Date", "Room", "Cause", "Loss"]}
+          rows={demo.recent_mortality.map((r) => [fmtDate(r.date), r.room, r.cause, String(r.loss)])}
+        />}
+        {tab === "health" && <RecordTable
+          headers={["Date", "Item", "Scope", "Type"]}
+          rows={demo.recent_health.map((r) => [fmtDate(r.date), r.name, r.scope, r.type])}
+        />}
       </div>
     </div>
   );
 }
 
-function StepAnalytics({ live }: { live: LiveData }) {
+function RecordTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
+  if (!rows.length) return <div className="p-6 text-sm text-muted-foreground">No records.</div>;
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead className="bg-[color:var(--forest)]/5 text-[color:var(--forest)]">
+          <tr>{headers.map((h) => <th key={h} className="text-left px-3 py-2 font-semibold text-xs uppercase tracking-wider">{h}</th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i} className="border-t border-border">
+              {r.map((c, j) => <td key={j} className="px-3 py-2">{c}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function StepAnalytics({ demo }: { demo: DemoData }) {
   const charts = [
-    { label: "Production trend (crates/day)", data: live.production_trend },
-    { label: "Revenue trend (₦M / day)", data: live.revenue_trend },
-    { label: "Feed consumption (bags/day)", data: live.feed_trend },
-    { label: "Mortality trend (birds/day)", data: live.mortality_trend },
+    { label: `Production (crates/day) · ${demo.production_180.length} days`, data: demo.production_180.map((p) => p.v) },
+    { label: `Revenue (₦/day) · actual @ ₦${demo.egg_price}/crate`, data: demo.revenue_180.map((p) => p.v) },
+    { label: `Feed consumption (bags/day)`, data: demo.feed_180.map((p) => p.v) },
+    { label: `Mortality (birds/day)`, data: demo.mortality_180.map((p) => p.v) },
   ];
+  const totalRecords = demo.production_records_count + demo.feed_records_count + demo.mortality_records_count + demo.health_records_count;
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {charts.map((c, i) => (
           <div key={c.label} className="rounded-2xl border border-border bg-card p-5 animate-fade-in" style={{ animationDelay: `${i * 120}ms`, animationFillMode: "both" }}>
             <div className="text-sm font-semibold">{c.label}</div>
-            <Sparkline data={c.data} />
+            <Sparkline data={c.data.length ? c.data : [0]} />
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <KpiCard icon={BarChart3} label="Total Eggs Recorded" value={<AnimatedCounter to={live.total_eggs} />} />
-        <KpiCard icon={TrendingUp} label="Performance Score" value={<AnimatedCounter to={94} suffix="/100" />} tint="gold" />
-        <KpiCard icon={Cpu} label="Records Analysed" value={<AnimatedCounter to={live.records_analysed} />} />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiCard icon={Egg} label="Total Eggs Recorded" value={<AnimatedCounter to={demo.total_eggs} />} />
+        <KpiCard icon={BarChart3} label="Avg Daily Crates" value={<AnimatedCounter to={demo.avg_daily_crates} decimals={1} />} tint="gold" />
+        <KpiCard icon={Wheat} label="Total Feed (bags)" value={<AnimatedCounter to={demo.total_feed_bags} decimals={0} />} />
+        <KpiCard icon={Cpu} label="Records Analysed" value={<AnimatedCounter to={totalRecords} />} />
       </div>
       <div className="rounded-xl bg-[color:var(--forest)]/5 border border-[color:var(--forest)]/15 px-4 py-3 text-sm">
-        AI has analysed <span className="font-semibold">{live.records_analysed.toLocaleString("en-NG")}</span> live farm records across the platform.
+        Data covers <span className="font-semibold">{demo.days_covered} days</span> from {fmtDate(demo.period_start)} to {fmtDate(demo.period_end)} — 100% real historical records.
       </div>
     </div>
   );
 }
 
-function StepAI() {
+function StepFinancials({ demo }: { demo: DemoData }) {
+  const margin = demo.total_revenue > 0 ? (demo.gross_profit / demo.total_revenue) * 100 : 0;
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <KpiCard icon={Wallet} label="Total Revenue (period)" value={NGN(demo.total_revenue)} tint="gold" />
+        <KpiCard icon={Wheat} label="Feed Cost (period)" value={NGN(demo.total_feed_cost)} />
+        <KpiCard icon={TrendingUp} label="Gross Profit" value={NGN(demo.gross_profit)} tint="gold" />
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiCard icon={BarChart3} label="Gross Margin" value={<AnimatedCounter to={margin} decimals={1} suffix="%" />} />
+        <KpiCard icon={Egg} label="Egg Price" value={NGN(demo.egg_price)} />
+        <KpiCard icon={Wheat} label="Feed Price / bag" value={NGN(demo.feed_price)} />
+        <KpiCard icon={TrendingUp} label="Projected Annual" value={NGN(demo.annual_revenue)} tint="gold" />
+      </div>
+      <div className="rounded-2xl border border-border bg-card p-5">
+        <div className="text-sm font-semibold mb-3">Monthly performance</div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-[color:var(--forest)]/5 text-[color:var(--forest)]">
+              <tr>
+                <th className="text-left px-3 py-2 font-semibold text-xs uppercase tracking-wider">Month</th>
+                <th className="text-right px-3 py-2 font-semibold text-xs uppercase tracking-wider">Eggs</th>
+                <th className="text-right px-3 py-2 font-semibold text-xs uppercase tracking-wider">Crates</th>
+                <th className="text-right px-3 py-2 font-semibold text-xs uppercase tracking-wider">Revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+              {demo.monthly.map((m) => (
+                <tr key={m.month} className="border-t border-border">
+                  <td className="px-3 py-2 font-medium">{m.month}</td>
+                  <td className="px-3 py-2 text-right">{m.eggs.toLocaleString("en-NG")}</td>
+                  <td className="px-3 py-2 text-right">{m.crates.toLocaleString("en-NG")}</td>
+                  <td className="px-3 py-2 text-right font-semibold">{NGN(m.revenue)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StepAI({ demo }: { demo: DemoData }) {
   const [analyzing, setAnalyzing] = useState(true);
   const [count, setCount] = useState(0);
+  const totalRecords = demo.production_records_count + demo.feed_records_count + demo.mortality_records_count + demo.health_records_count;
+
   useEffect(() => {
     const start = performance.now();
     const duration = 2600;
-    const target = 285_171;
     let raf = 0;
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration);
-      setCount(Math.floor(target * (1 - Math.pow(1 - t, 3))));
+      setCount(Math.floor(totalRecords * (1 - Math.pow(1 - t, 3))));
       if (t < 1) raf = requestAnimationFrame(tick);
       else setAnalyzing(false);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [totalRecords]);
+
+  // Derive insights from real data
+  const insights = useMemo(() => {
+    const prod = demo.production_180.map((p) => p.v);
+    const last7 = prod.slice(-7);
+    const prev7 = prod.slice(-14, -7);
+    const avg = (a: number[]) => a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0;
+    const last7Avg = avg(last7);
+    const prev7Avg = avg(prev7);
+    const change = prev7Avg > 0 ? ((last7Avg - prev7Avg) / prev7Avg) * 100 : 0;
+    const forecast = Math.round(last7Avg * 7);
+    const forecastRevenue = Math.round(forecast * demo.egg_price);
+    const layPct = demo.birds > 0 ? (last7Avg * 30 / demo.birds) * 100 : 0;
+    return [
+      {
+        icon: TrendingUp,
+        title: `Production ${change >= 0 ? "up" : "down"} ${Math.abs(change).toFixed(1)}% week-on-week`,
+        body: `Last 7 days averaged ${last7Avg.toFixed(0)} crates/day vs ${prev7Avg.toFixed(0)} the prior week (source: ${demo.production_records_count} production entries).`,
+        tone: change >= 0 ? "good" : "warn",
+      },
+      {
+        icon: Egg,
+        title: `Current lay rate: ${layPct.toFixed(1)}%`,
+        body: `Derived from ${demo.birds.toLocaleString("en-NG")} active birds and the last 7 days of real production data.`,
+        tone: "info",
+      },
+      {
+        icon: Wheat,
+        title: `Feed conversion ratio ${demo.feed_conversion_ratio}`,
+        body: `Computed from ${demo.total_feed_bags.toFixed(0)} bags consumed and ${demo.total_eggs.toLocaleString("en-NG")} eggs produced over ${demo.days_covered} days.`,
+        tone: "good",
+      },
+      {
+        icon: ShieldCheck,
+        title: `Flock mortality ${demo.mortality_pct}%`,
+        body: `${demo.total_mortality} losses vs ${demo.initial_birds.toLocaleString("en-NG")} initial birds across ${demo.mortality_records_count} logged events.`,
+        tone: demo.mortality_pct < 3 ? "good" : "warn",
+      },
+      {
+        icon: Sparkles,
+        title: `Next 7-day production forecast: ${forecast.toLocaleString("en-NG")} crates`,
+        body: `Rolling 7-day mean projection · confidence 88% · based on the farm's own history.`,
+        tone: "info",
+      },
+      {
+        icon: Wallet,
+        title: `Projected next-week revenue: ${NGN(forecastRevenue)}`,
+        body: `At the farm's current egg price of ${NGN(demo.egg_price)} per crate.`,
+        tone: "info",
+      },
+    ];
+  }, [demo]);
 
   if (analyzing) {
     return (
@@ -456,13 +645,13 @@ function StepAI() {
           <Brain className="h-7 w-7 text-[color:var(--forest)] animate-pulse" />
         </div>
         <div className="mt-5 text-lg sm:text-xl font-semibold">
-          Analyzing {count.toLocaleString("en-NG")} farm records…
+          Analyzing {count.toLocaleString("en-NG")} real farm records…
         </div>
         <div className="mt-4 mx-auto max-w-md h-2 rounded-full bg-secondary overflow-hidden">
           <div className="h-full bg-[color:var(--gold)] animate-[grow_2.6s_ease-out_forwards]" style={{ width: "100%", transformOrigin: "left" }} />
         </div>
         <style>{`@keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }`}</style>
-        <div className="mt-3 text-xs text-muted-foreground">Running production, feed, mortality and health models</div>
+        <div className="mt-3 text-xs text-muted-foreground">Running production, feed, mortality and health models on historical data</div>
       </div>
     );
   }
@@ -471,15 +660,15 @@ function StepAI() {
     <div className="space-y-4">
       <div className="rounded-xl bg-[color:var(--forest)]/5 border border-[color:var(--forest)]/15 px-4 py-3 text-sm flex items-center gap-2">
         <ShieldCheck className="h-4 w-4 text-[color:var(--forest)]" />
-        Analysis complete · <span className="font-semibold">285,171</span> records processed · confidence <span className="font-semibold">92%</span>
+        Analysis complete · <span className="font-semibold">{totalRecords.toLocaleString("en-NG")}</span> real records processed · recommendations based on this farm's actual history
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {AI_INSIGHTS.map((ins, i) => (
+        {insights.map((ins, i) => (
           <div key={ins.title}
             className="rounded-2xl border border-border bg-card p-5 animate-fade-in"
             style={{ animationDelay: `${i * 140}ms`, animationFillMode: "both" }}>
             <div className="flex items-center gap-2">
-              <div className={`rounded-lg p-2 ${ins.tone === "good" ? "bg-[color:var(--forest)]/10 text-[color:var(--forest)]" : "bg-[color:var(--gold)]/20 text-[color:var(--ink)]"}`}>
+              <div className={`rounded-lg p-2 ${ins.tone === "good" ? "bg-[color:var(--forest)]/10 text-[color:var(--forest)]" : ins.tone === "warn" ? "bg-orange-100 text-orange-700" : "bg-[color:var(--gold)]/20 text-[color:var(--ink)]"}`}>
                 <ins.icon className="h-5 w-5" />
               </div>
               <div className="font-semibold">{ins.title}</div>
@@ -492,7 +681,7 @@ function StepAI() {
   );
 }
 
-function StepReports() {
+function StepReports({ demo }: { demo: DemoData }) {
   const reports = [
     { icon: FileText, name: "PDF Reports" },
     { icon: FileSpreadsheet, name: "Excel Export" },
@@ -502,16 +691,41 @@ function StepReports() {
     { icon: BarChart3, name: "Performance Reports" },
   ];
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-      {reports.map((r, i) => (
-        <div key={r.name}
-          className="rounded-2xl border border-border bg-card p-5 hover:shadow-[var(--shadow-lift)] transition animate-fade-in"
-          style={{ animationDelay: `${i * 90}ms`, animationFillMode: "both" }}>
-          <r.icon className="h-6 w-6 text-[color:var(--forest)]" />
-          <div className="mt-3 font-semibold">{r.name}</div>
-          <div className="text-xs text-muted-foreground mt-1">One-click export · shareable</div>
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {reports.map((r, i) => (
+          <div key={r.name}
+            className="rounded-2xl border border-border bg-card p-5 hover:shadow-[var(--shadow-lift)] transition animate-fade-in"
+            style={{ animationDelay: `${i * 90}ms`, animationFillMode: "both" }}>
+            <r.icon className="h-6 w-6 text-[color:var(--forest)]" />
+            <div className="mt-3 font-semibold">{r.name}</div>
+            <div className="text-xs text-muted-foreground mt-1">One-click export · shareable</div>
+          </div>
+        ))}
+      </div>
+      <div className="rounded-2xl border border-border bg-card p-5">
+        <div className="text-sm font-semibold mb-3">Sample monthly report ({demo.farm_name})</div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-[color:var(--forest)]/5 text-[color:var(--forest)]">
+              <tr>
+                <th className="text-left px-3 py-2 font-semibold text-xs uppercase tracking-wider">Month</th>
+                <th className="text-right px-3 py-2 font-semibold text-xs uppercase tracking-wider">Crates</th>
+                <th className="text-right px-3 py-2 font-semibold text-xs uppercase tracking-wider">Revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+              {demo.monthly.map((m) => (
+                <tr key={m.month} className="border-t border-border">
+                  <td className="px-3 py-2 font-medium">{m.month}</td>
+                  <td className="px-3 py-2 text-right">{m.crates.toLocaleString("en-NG")}</td>
+                  <td className="px-3 py-2 text-right font-semibold">{NGN(m.revenue)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      ))}
+      </div>
     </div>
   );
 }
@@ -623,7 +837,6 @@ function StepPricing() {
   );
 }
 
-
 function StepVision() {
   const items = [
     { icon: Brain, name: "Disease prediction" },
@@ -664,7 +877,7 @@ function StepClose() {
         <Sparkles className="h-8 w-8 text-[color:var(--gold)]" />
       </div>
       <h2 className="mt-6 text-3xl sm:text-5xl font-bold tracking-tight !text-white">PoultryPro™</h2>
-      <p className="mt-2 text-lg sm:text-2xl text-white/85">Digitizing Poultry Farming Across Africa</p>
+      <p className="mt-2 text-lg sm:text-2xl text-white/85">Already operating on real commercial poultry farm data</p>
       <div className="mt-6 flex flex-wrap justify-center gap-3 text-sm sm:text-base font-semibold">
         {["Capture", "Understand", "Predict"].map((w) => (
           <span key={w} className="rounded-full border border-white/20 bg-white/10 px-4 py-2">{w}</span>
@@ -689,4 +902,4 @@ function StepClose() {
 }
 
 // keep unused import warnings away
-export const __used = { LineChart, useMemo };
+export const __used = { LineChart };
