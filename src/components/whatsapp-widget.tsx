@@ -1,5 +1,6 @@
 import { useEffect, useState, lazy, Suspense } from "react";
 import { useRouterState } from "@tanstack/react-router";
+import { sendTracking, pageLabelFromPath } from "@/lib/whatsapp-tracking";
 
 const PANEL = lazy(() => import("./whatsapp-widget-panel"));
 
@@ -8,8 +9,9 @@ const DEFAULT_MSG =
   "Hello PoultryPro Team,\n\nI would like to know more about PoultryPro. Please provide me with more information.\n\nThank you.";
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(DEFAULT_MSG)}`;
 
-const HIDE_PREFIXES = ["/_authenticated", "/dashboard", "/onboarding", "/import", "/super-admin", "/presentation", "/lovable"];
+const HIDE_PREFIXES = ["/_authenticated", "/dashboard", "/onboarding", "/import", "/super-admin", "/presentation", "/lovable", "/api"];
 const DISMISS_KEY = "pp_wa_dismissed";
+const VISIT_KEY = "pp_wa_visit_logged";
 
 export function WhatsAppWidget() {
   const path = useRouterState({ select: (s) => s.location.pathname });
@@ -24,16 +26,32 @@ export function WhatsAppWidget() {
     } catch {}
   }, []);
 
+  // Log one landing visit per session per page label (denominator for conversion rate).
+  useEffect(() => {
+    if (!mounted) return;
+    if (HIDE_PREFIXES.some((p) => path.startsWith(p))) return;
+    try {
+      const label = pageLabelFromPath(path);
+      const raw = sessionStorage.getItem(VISIT_KEY);
+      const seen: string[] = raw ? JSON.parse(raw) : [];
+      if (seen.includes(label)) return;
+      sendTracking({ kind: "visit", page_path: path, page_label: label });
+      sessionStorage.setItem(VISIT_KEY, JSON.stringify([...seen, label]));
+    } catch {}
+  }, [mounted, path]);
+
   if (!mounted) return null;
   if (HIDE_PREFIXES.some((p) => path.startsWith(p))) return null;
   if (dismissed) return null;
 
   const trackClick = () => {
-    try {
-      // Fire-and-forget analytics ping; safe to fail silently.
-      void fetch("/api/public/whatsapp-click", { method: "POST", keepalive: true }).catch(() => {});
-    } catch {}
+    sendTracking({
+      kind: "click",
+      page_path: path,
+      page_label: pageLabelFromPath(path),
+    });
   };
+
 
   return (
     <div className="fixed bottom-4 right-4 z-[60] flex flex-col items-end gap-3 print:hidden">

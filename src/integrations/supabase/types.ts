@@ -269,6 +269,27 @@ export type Database = {
           },
         ]
       }
+      landing_visits: {
+        Row: {
+          created_at: string
+          id: string
+          page_label: string | null
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page_label?: string | null
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page_label?: string | null
+          session_id?: string | null
+        }
+        Relationships: []
+      }
       mortality: {
         Row: {
           cause: string
@@ -401,6 +422,57 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_clicks: {
+        Row: {
+          browser: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          device_type: string | null
+          id: string
+          page_label: string | null
+          page_path: string | null
+          referrer: string | null
+          referrer_source: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+          user_type: string
+        }
+        Insert: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          page_label?: string | null
+          page_path?: string | null
+          referrer?: string | null
+          referrer_source?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          user_type?: string
+        }
+        Update: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          page_label?: string | null
+          page_path?: string | null
+          referrer?: string | null
+          referrer_source?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          user_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -504,6 +576,57 @@ export type Database = {
         Args: { _farm_id: string; _new_status: string; _reason?: string }
         Returns: Json
       }
+      admin_whatsapp_export: {
+        Args: never
+        Returns: {
+          browser: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          device_type: string | null
+          id: string
+          page_label: string | null
+          page_path: string | null
+          referrer: string | null
+          referrer_source: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+          user_type: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "whatsapp_clicks"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      admin_whatsapp_recent: {
+        Args: { _limit?: number }
+        Returns: {
+          browser: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          device_type: string | null
+          id: string
+          page_label: string | null
+          page_path: string | null
+          referrer: string | null
+          referrer_source: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+          user_type: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "whatsapp_clicks"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      admin_whatsapp_stats: { Args: never; Returns: Json }
       current_farm_id: { Args: never; Returns: string }
       demo_greenfield_data: { Args: never; Returns: Json }
       get_super_admin_emails: {
