@@ -247,6 +247,7 @@ function SuperAdminPage() {
           {tab === "farms" && <FarmsTab userId={userId} />}
           {tab === "subscriptions" && <SubscriptionsTab userId={userId} />}
           {tab === "activity" && <ActivityTab userId={userId} />}
+          {tab === "whatsapp" && <WhatsAppTab userId={userId} />}
           {tab === "intelligence" && <IntelligenceTab userId={userId} />}
           {tab === "health" && <HealthTab userId={userId} />}
           {tab === "audit" && <AuditTab userId={userId} />}
