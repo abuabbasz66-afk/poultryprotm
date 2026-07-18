@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   LayoutDashboard, Users, Warehouse, CreditCard, Activity, Brain,
   HeartPulse, FileText, Menu, X as CloseIcon, LogOut, Search,
@@ -2183,7 +2183,7 @@ function WaKpi({ icon: Icon, label, value, hint, tone }: {
 }
 
 function BarPanel({ title, data, xKey, color = "#0F5132" }: {
-  title: React.ReactNode; data: any[]; xKey: string; color?: string;
+  title: ReactNode; data: any[]; xKey: string; color?: string;
 }) {
   return (
     <div className="rounded-xl border border-[#12281c]/10 bg-white p-4">
