@@ -9,11 +9,12 @@ import {
   LineChart as LineIcon, Database, Mail, Server, HardDrive,
   Zap, Megaphone, Wrench, ShieldPlus, UserMinus, Send, PackagePlus,
   Wheat, Skull, Stethoscope, Pill, Upload, MoreVertical, Trash2,
-  KeyRound, Eye, Pencil,
+  KeyRound, Eye, Pencil, MessageCircle, Download, FileDown, Smartphone, Globe,
 } from "lucide-react";
 import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip as ReTooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line,
+  AreaChart, Area,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
