@@ -2001,3 +2001,204 @@ function NotificationRow({
   );
 }
 
+
+// -------------------- WHATSAPP ENQUIRIES --------------------
+const WA_COLORS = ["#0F5132", "#c9a24a", "#25D366", "#0ea5e9", "#f97316", "#a855f7", "#ef4444", "#64748b"];
+
+function WhatsAppTab({ userId }: { userId: string }) {
+  const stats = useWhatsAppStats(userId, true);
+  const recent = useWhatsAppRecent(userId, true);
+  const [exporting, setExporting] = useState<null | "csv" | "pdf">(null);
+
+  const kpis = stats.data;
+  const rows = recent.data ?? [];
+
+  const runExport = async (kind: "csv" | "pdf") => {
+    setExporting(kind);
+    try {
+      const data = await fetchWhatsAppExport();
+      if (kind === "csv") downloadCsv(data);
+      else downloadPdf(data, kpis);
+      toast.success(`Export ready (${data.length} rows)`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Export failed");
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  if (stats.isPending) return <Loader />;
+  if (stats.error) return <ErrBox message="Could not load WhatsApp analytics." />;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-[#12281c] flex items-center gap-2">
+            <MessageCircle className="h-5 w-5 text-[#25D366]" /> WhatsApp Enquiries
+          </h2>
+          <p className="text-xs text-[#12281c]/60">Real-time click tracking from the floating chat widget.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => runExport("csv")}
+            disabled={exporting !== null}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#12281c]/15 bg-white px-3 py-1.5 text-xs font-medium hover:bg-[#f6f2e6] disabled:opacity-50"
+          >
+            <Download className="h-3.5 w-3.5" /> {exporting === "csv" ? "Preparing…" : "Export CSV"}
+          </button>
+          <button
+            onClick={() => runExport("pdf")}
+            disabled={exporting !== null}
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#12281c] px-3 py-1.5 text-xs font-medium text-white hover:brightness-110 disabled:opacity-50"
+          >
+            <FileDown className="h-3.5 w-3.5" /> {exporting === "pdf" ? "Preparing…" : "Export PDF"}
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <WaKpi icon={MessageCircle} label="Total enquiries" value={kpis?.total ?? 0} tone="emerald" />
+        <WaKpi icon={Zap} label="Today" value={kpis?.today ?? 0} tone="gold" />
+        <WaKpi icon={TrendingUp} label="Last 7 days" value={kpis?.last_7_days ?? 0} tone="forest" />
+        <WaKpi icon={Activity} label="Last 30 days" value={kpis?.last_30_days ?? 0} tone="slate" />
+        <WaKpi icon={PieIcon} label="Conversion rate"
+          value={`${kpis?.conversion_rate ?? 0}%`}
+          hint={`${kpis?.total_visits ?? 0} visits tracked`} tone="sky" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 rounded-xl border border-[#12281c]/10 bg-white p-4">
+          <div className="text-sm font-semibold mb-2">Clicks — last 30 days</div>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={kpis?.daily_trend ?? []}>
+                <defs>
+                  <linearGradient id="waGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#25D366" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#25D366" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v: string) => v?.slice(5)} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                <ReTooltip />
+                <Area type="monotone" dataKey="clicks" stroke="#0F5132" strokeWidth={2} fill="url(#waGrad)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        <div className="rounded-xl border border-[#12281c]/10 bg-white p-4">
+          <div className="text-sm font-semibold mb-2 flex items-center gap-1.5"><Smartphone className="h-4 w-4" /> Devices</div>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={kpis?.devices ?? []} dataKey="clicks" nameKey="device" outerRadius={80} label>
+                  {(kpis?.devices ?? []).map((_, i) => (
+                    <Cell key={i} fill={WA_COLORS[i % WA_COLORS.length]} />
+                  ))}
+                </Pie>
+                <ReTooltip />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <BarPanel title="Top pages generating enquiries" data={kpis?.top_pages ?? []} xKey="page" />
+        <BarPanel title="Traffic sources" data={kpis?.sources ?? []} xKey="source" color="#c9a24a" />
+        <BarPanel title="User types" data={kpis?.user_types ?? []} xKey="user_type" color="#0ea5e9" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <BarPanel title="Browsers" data={kpis?.browsers ?? []} xKey="browser" color="#a855f7" />
+        <BarPanel
+          title={<span className="flex items-center gap-1.5"><Globe className="h-4 w-4" /> Countries</span>}
+          data={kpis?.countries ?? []} xKey="country" color="#f97316"
+        />
+      </div>
+
+      <div className="rounded-xl border border-[#12281c]/10 bg-white overflow-hidden">
+        <div className="px-4 py-3 flex items-center justify-between border-b border-[#12281c]/10">
+          <div className="text-sm font-semibold">Recent enquiries</div>
+          <div className="text-xs text-[#12281c]/60">Auto-refreshing · showing last {rows.length}</div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-[#f6f2e6] text-[#12281c]/70 text-xs uppercase tracking-wider">
+              <tr>
+                <Th>When</Th><Th>Page</Th><Th>User</Th><Th>Device</Th>
+                <Th>Browser</Th><Th>Country</Th><Th>Source</Th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#12281c]/5">
+              {rows.length === 0 ? (
+                <tr><td colSpan={7} className="p-6 text-center text-[#12281c]/60">
+                  No enquiries yet. The tracker records every click on the floating WhatsApp widget.
+                </td></tr>
+              ) : rows.map((r) => (
+                <tr key={r.id}>
+                  <Td className="whitespace-nowrap">{fmtDT(r.created_at)}</Td>
+                  <Td>{r.page_label ?? "—"}</Td>
+                  <Td className="capitalize">{r.user_type}</Td>
+                  <Td>{r.device_type ?? "—"}</Td>
+                  <Td>{r.browser ?? "—"}</Td>
+                  <Td>{r.country ?? "—"}{r.city ? `, ${r.city}` : ""}</Td>
+                  <Td>{r.referrer_source ?? "Direct"}</Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WaKpi({ icon: Icon, label, value, hint, tone }: {
+  icon: any; label: string; value: string | number; hint?: string;
+  tone: "emerald" | "gold" | "forest" | "slate" | "sky";
+}) {
+  const toneMap: Record<string, string> = {
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    gold: "bg-amber-50 text-amber-700 border-amber-200",
+    forest: "bg-[#0F5132]/5 text-[#0F5132] border-[#0F5132]/20",
+    slate: "bg-slate-50 text-slate-700 border-slate-200",
+    sky: "bg-sky-50 text-sky-700 border-sky-200",
+  };
+  return (
+    <div className="rounded-xl border border-[#12281c]/10 bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div className="text-[11px] uppercase tracking-widest text-[#12281c]/60">{label}</div>
+        <span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg border ${toneMap[tone]}`}>
+          <Icon className="h-3.5 w-3.5" />
+        </span>
+      </div>
+      <div className="mt-2 text-2xl font-semibold text-[#12281c]">{value}</div>
+      {hint && <div className="mt-0.5 text-[11px] text-[#12281c]/60">{hint}</div>}
+    </div>
+  );
+}
+
+function BarPanel({ title, data, xKey, color = "#0F5132" }: {
+  title: React.ReactNode; data: any[]; xKey: string; color?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-[#12281c]/10 bg-white p-4">
+      <div className="text-sm font-semibold mb-2">{title}</div>
+      <div className="h-56">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey={xKey} tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={50} />
+            <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+            <ReTooltip />
+            <Bar dataKey="clicks" fill={color} radius={[6, 6, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
