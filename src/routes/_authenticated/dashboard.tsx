@@ -30,6 +30,8 @@ import { MortalityPatternIntelligence } from "@/components/mortality-pattern-car
 import { FarmInsightsIntelligence } from "@/components/farm-insights-card";
 import { RecordDialogs, RecordConfirmDialog, type RecordDialogState } from "@/components/record-dialogs";
 import { UpgradeDialog, type UpgradeTier } from "@/components/upgrade-dialog";
+import { TrialBanner } from "@/components/trial-banner";
+import { useSubscription } from "@/lib/subscription";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
@@ -424,11 +426,10 @@ function Dashboard() {
       </header>
 
       <main className="container-x -mt-4 md:-mt-6 space-y-5 md:space-y-6">
+        <TrialBanner />
         {/* Product-area navigation: Capture → Understand → Predict */}
         {(() => {
-          const rawPlan = (farm?.subscription_plan ?? "basic").toLowerCase();
-          const plan: "basic" | "standard" | "premium" =
-            rawPlan === "premium" ? "premium" : rawPlan === "standard" ? "standard" : "basic";
+          const plan = subscription?.effectivePlan ?? "basic";
           const canAnalytics = plan === "standard" || plan === "premium";
           const canAI = plan === "premium";
           const stateFor = (stage: "records" | "analytics" | "ai"): AreaState => {
