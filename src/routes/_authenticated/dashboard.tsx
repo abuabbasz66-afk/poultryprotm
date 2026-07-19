@@ -103,6 +103,7 @@ function Dashboard() {
   const farmIdQ = useFarmId();
   const farmQ = useFarm();
   const farm = farmQ.data;
+  const { data: subscription } = useSubscription();
   const roomsQ = useRooms();
   const eggsQ = useEggs();
   const mortalityQ = useMortality();
