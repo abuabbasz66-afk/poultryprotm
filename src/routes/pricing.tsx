@@ -35,16 +35,18 @@ function PricingPage() {
           <div className="text-[11px] uppercase tracking-[0.22em] text-[color:var(--forest)] font-semibold">Pricing</div>
           <h1 className="mt-2 text-3xl sm:text-5xl font-bold tracking-tight">Simple plans for every farm size</h1>
           <p className="mt-3 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-            Choose the plan that fits your poultry operation. Pricing will be announced soon.
+            Choose the plan that fits your poultry operation. Every new farm starts with a 30-day Premium trial.
           </p>
         </section>
+
 
         <section className="container-x pb-16">
           <div className="flex justify-center mb-8">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--gold)]/15 text-[color:var(--gold)] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em]">
-              Early Access
+              30-day free Premium trial
             </span>
           </div>
+
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {PRICING_PLANS.map((p) => (
@@ -63,7 +65,9 @@ function PricingPage() {
                 )}
                 <div className={`text-xs uppercase tracking-[0.18em] font-semibold ${p.featured ? "text-white/70" : "text-muted-foreground"}`}>{p.tagline}</div>
                 <div className={`mt-1 text-xl font-bold ${p.featured ? "!text-white" : ""}`}>{p.name}</div>
+                <div className={`mt-3 text-3xl font-display font-bold ${p.featured ? "!text-white" : "text-foreground"}`}>{p.priceLabel}</div>
                 <ul className={`mt-5 space-y-2 text-sm flex-1 ${p.featured ? "text-white/90" : "text-foreground"}`}>
+
                   {p.features.map((f) => (
                     <li key={f} className="flex items-start gap-2">
                       <CheckCircle2 className={`h-4 w-4 mt-0.5 shrink-0 ${p.featured ? "text-[color:var(--gold)]" : "text-[color:var(--forest)]"}`} />
@@ -87,9 +91,10 @@ function PricingPage() {
           </div>
 
           <div className="mt-8 rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground text-center">
-            Subscription pricing will be announced soon. Join our early adopters and experience the future of intelligent poultry farm management.
+            Every new PoultryPro account starts with a 30-day Premium trial — full access to every feature. No credit card required. After the trial you can stay on Basic (free) or upgrade to Standard or Premium.
           </div>
         </section>
+
       </main>
 
       <SiteFooter />

@@ -141,6 +141,7 @@ export type Database = {
       }
       farms: {
         Row: {
+          auto_renew: boolean
           bird_count: number | null
           bird_type: string | null
           country: string
@@ -157,8 +158,11 @@ export type Database = {
           state: string | null
           status: string
           subscription_plan: string
+          trial_ends_at: string
+          trial_started_at: string
         }
         Insert: {
+          auto_renew?: boolean
           bird_count?: number | null
           bird_type?: string | null
           country?: string
@@ -175,8 +179,11 @@ export type Database = {
           state?: string | null
           status?: string
           subscription_plan?: string
+          trial_ends_at?: string
+          trial_started_at?: string
         }
         Update: {
+          auto_renew?: boolean
           bird_count?: number | null
           bird_type?: string | null
           country?: string
@@ -193,6 +200,8 @@ export type Database = {
           state?: string | null
           status?: string
           subscription_plan?: string
+          trial_ends_at?: string
+          trial_started_at?: string
         }
         Relationships: []
       }
@@ -566,6 +575,22 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      admin_list_subscriptions: {
+        Args: never
+        Returns: {
+          auto_renew: boolean
+          created_at: string
+          days_remaining: number
+          effective_plan: string
+          farm_id: string
+          farm_name: string
+          is_trial: boolean
+          owner_email: string
+          plan: string
+          status: string
+          trial_ends_at: string
+        }[]
+      }
       admin_mark_all_notifications_read: { Args: never; Returns: undefined }
       admin_mark_notification_read: {
         Args: { _id: string }
@@ -576,6 +601,7 @@ export type Database = {
         Args: { _farm_id: string; _new_status: string; _reason?: string }
         Returns: Json
       }
+      admin_subscription_stats: { Args: never; Returns: Json }
       admin_whatsapp_export: {
         Args: never
         Returns: {
@@ -629,6 +655,7 @@ export type Database = {
       admin_whatsapp_stats: { Args: never; Returns: Json }
       current_farm_id: { Args: never; Returns: string }
       demo_greenfield_data: { Args: never; Returns: Json }
+      farm_subscription_status: { Args: never; Returns: Json }
       get_super_admin_emails: {
         Args: never
         Returns: {
