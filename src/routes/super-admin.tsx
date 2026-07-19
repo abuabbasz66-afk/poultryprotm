@@ -1639,6 +1639,21 @@ function SubscriptionsTab({ userId }: { userId: string }) {
   );
 }
 
+function SubKpi({ label, value, tone }: { label: string; value: number | string; tone?: "amber" | "emerald" | "gold" }) {
+  const toneCls =
+    tone === "amber" ? "border-amber-300 bg-amber-50 text-amber-900"
+    : tone === "emerald" ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+    : tone === "gold" ? "border-yellow-300 bg-yellow-50 text-yellow-900"
+    : "border-[#12281c]/10 bg-white text-[#12281c]";
+  return (
+    <div className={`rounded-xl border p-3 ${toneCls}`}>
+      <div className="text-[10px] uppercase tracking-wider opacity-70 font-semibold">{label}</div>
+      <div className="mt-1 text-lg font-bold tabular-nums">{value}</div>
+    </div>
+  );
+}
+
+
 function PlanPicker({ current, onPick }: { current: string; onPick: (p: string) => void }) {
   return (
     <div className="flex flex-wrap gap-1">
