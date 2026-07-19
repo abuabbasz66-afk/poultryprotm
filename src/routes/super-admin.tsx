@@ -1542,12 +1542,34 @@ function SubscriptionsTab({ userId }: { userId: string }) {
   const { data, isPending, error } = useAdminFarms(userId, true);
   const change = useChangeSubscription(userId);
   const [target, setTarget] = useState<{ farm: AdminFarm; plan: string } | null>(null);
+  const [subStats, setSubStats] = useState<Record<string, number> | null>(null);
+
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any).rpc("admin_subscription_stats").then(({ data: d }: { data: any }) => {
+      if (d) setSubStats(d as Record<string, number>);
+    });
+  }, [data]);
 
   if (isPending) return <Loader />;
   if (error || !data) return <ErrBox message="Could not load farms." />;
 
+
   return (
     <div className="space-y-4">
+      {subStats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-2 md:gap-3">
+          <SubKpi label="Total" value={subStats.total_subscribers ?? 0} />
+          <SubKpi label="Trial users" value={subStats.trial_users ?? 0} tone="amber" />
+          <SubKpi label="Basic (free)" value={subStats.basic_users ?? 0} />
+          <SubKpi label="Standard" value={subStats.standard_users ?? 0} tone="emerald" />
+          <SubKpi label="Premium" value={subStats.premium_users ?? 0} tone="gold" />
+          <SubKpi label="Expired trials" value={subStats.expired_trials ?? 0} />
+          <SubKpi label="Renewals · 7d" value={subStats.renewals_due_7d ?? 0} />
+          <SubKpi label="Monthly ₦" value={`₦${Number(subStats.monthly_revenue_ngn ?? 0).toLocaleString("en-NG")}`} tone="emerald" />
+        </div>
+      )}
+
       <div className="hidden md:block rounded-xl border border-[#12281c]/10 bg-white overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-[#f6f2e6] text-[#12281c]/70 text-xs uppercase tracking-wider">

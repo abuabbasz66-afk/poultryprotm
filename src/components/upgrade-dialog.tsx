@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Sparkles, LineChart as LineChartIcon, Brain, Check } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 export type UpgradeTier = "standard" | "premium";
 
@@ -107,16 +108,16 @@ export function UpgradeDialog({
             >
               Maybe Later
             </button>
-            <button
-              type="button"
+            <Link
+              to="/subscriptions"
               onClick={() => onOpenChange(false)}
               className="inline-flex items-center justify-center rounded-full bg-[color:var(--gold)] px-5 py-2.5 text-sm font-semibold text-[color:var(--ink)] hover:brightness-95 transition"
             >
               {c.primary}
-            </button>
+            </Link>
           </DialogFooter>
           <p className="mt-3 text-center text-[11px] text-muted-foreground">
-            Subscription checkout is coming soon.
+            View plan details on your Subscriptions page.
           </p>
         </div>
       </DialogContent>
