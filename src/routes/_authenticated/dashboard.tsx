@@ -518,39 +518,40 @@ function Dashboard() {
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                 <InsightRow
                   label="Production vs 80% target"
-                  value={`${productionRate}%`}
-                  detail={productionRate >= 80
-                    ? `${productionRate - 80} pts above target`
-                    : `${80 - productionRate} pts below target`}
-                  positive={productionRate >= 80}
+                  value={productionRatePct !== null ? `${productionRatePct.toFixed(1)}%` : "—"}
+                  detail={productionRatePct === null
+                    ? "Add today's production to compute"
+                    : productionRatePct >= 80
+                      ? `${(productionRatePct - 80).toFixed(1)} pts above target`
+                      : `${(80 - productionRatePct).toFixed(1)} pts below target`}
+                  positive={productionRatePct !== null && productionRatePct >= 80}
                 />
                 <InsightRow
-                  label="Today vs previous recorded day"
-                  value={`${diffPct >= 0 ? "+" : ""}${diffPct.toFixed(1)}%`}
-                  detail={`${todayEggs.toLocaleString()} eggs today · ${yesterdayEggs.toLocaleString()} prior`}
-                  positive={diffPct >= 0}
+                  label="Latest vs previous recorded day"
+                  value={hasComparison ? `${diffPct >= 0 ? "+" : ""}${diffPct.toFixed(1)}%` : "—"}
+                  detail={hasComparison
+                    ? `${metrics.comparison.latestEggs.toLocaleString()} eggs latest · ${yesterdayEggs.toLocaleString()} prior`
+                    : (metrics.comparison.message ?? "Not enough data")}
+                  positive={hasComparison ? diffPct >= 0 : true}
                 />
                 <InsightRow
-                  label="Highest producing room today"
-                  value={(() => {
-                    if (!today) return "—";
-                    const arr = [
-                      { name: "ROOM 2", v: today.r2 },
-                      { name: "ROOM 3", v: today.r3 },
-                      { name: "ROOM 4", v: today.r4 },
-                    ].sort((a, b) => b.v - a.v);
-                    return `${arr[0].name} · ${arr[0].v} crates`;
-                  })()}
-                  detail="Based on latest recorded production"
+                  label="Highest producing room (latest)"
+                  value={metrics.highestRoom.hasData
+                    ? `${metrics.highestRoom.roomName} · ${metrics.highestRoom.crates} crates`
+                    : "—"}
+                  detail={metrics.highestRoom.hasData
+                    ? `${metrics.highestRoom.eggs.toLocaleString()} eggs · ${(metrics.highestRoom.sharePct ?? 0).toFixed(1)}% of day's output`
+                    : "No production records yet"}
                   positive
                 />
                 <InsightRow
-                  label="Monthly mortality total"
+                  label="Monthly mortality (this month)"
                   value={String(monthlyMortality)}
-                  detail={`${feedToday} bags fed today · today's profit ${naira(todayProfit)}`}
+                  detail={`Today: ${todayMortality} · All-time: ${allTimeMortality} · ${feedToday} bags fed today`}
                   positive={monthlyMortality <= 5}
                 />
               </div>
+
             </Card>
 
 
