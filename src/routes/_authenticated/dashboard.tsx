@@ -36,6 +36,7 @@ import { Lock } from "lucide-react";
 import { toast } from "sonner";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
 import { toDateKey, toLocalDate } from "@/lib/date-key";
+import { computeDashboardMetrics } from "@/lib/farm-analytics";
 import {
   fmtNum, fmtSigned, parseShortDate,
   computeForecast, type ForecastResult,
