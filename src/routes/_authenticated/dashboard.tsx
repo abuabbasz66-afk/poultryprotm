@@ -726,7 +726,7 @@ function Dashboard() {
           <Card>
             <CardHeader title="Mortality Log" subtitle="Grouped by date" right={<ActionBtn onClick={addMortality} icon={Plus}>Add</ActionBtn>} />
             <div className="grid grid-cols-3 gap-3 mt-4">
-              <MiniStat label="Total Loss" value={String(monthlyMortality)} tone="peach" />
+              <MiniStat label="This Month" value={String(monthlyMortality)} tone="peach" />
               <MiniStat label="Mortality Rate" value={mortalityRatePct.toFixed(2) + "%"} tone="plain" />
               <MiniStat label="Leading Cause" value={leadingCause} tone="mint" />
             </div>
