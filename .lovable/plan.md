@@ -1,58 +1,94 @@
-# PoultryPro — Database Persistence & Live Sync
+## Overview
 
-## Root cause (audit)
+Overhaul dashboard analytics so every metric is computed dynamically from database records against a user-selected date range, with a clear split between today / month / all-time totals. Fixes the "Monthly Mortality" cumulative bug and standardises every card, chart, and insight on the same date-filtered computation layer.
 
-`src/routes/dashboard.tsx` holds every entity in `useState` seeded from in-file arrays:
+## Scope
 
-- `rooms`, `eggs`, `mortality`, `health`, `feed`, `prices` (lines 105–110)
-- All create / edit / delete handlers mutate these arrays only. Nothing is written to any database.
-- The project has **no backend enabled**: no `src/integrations/supabase/`, no `supabase/` folder, no auth. `.lovable/project.json` is a bare TanStack Start template.
-- Result: every record disappears on refresh because there is no persistence layer at all — not a cache bug.
+Dashboard (`src/routes/_authenticated/dashboard.tsx`) and supporting analytics utilities. No schema changes required — all data already exists in `egg_production`, `mortality`, `feed_usage`, `prices`, `rooms`, `health_records`. Bird movement (added/sold) is not tracked as a separate table today; see "Open decisions" below.
 
-So "which modules were not persisting" = **all of them**: Egg Production, Mortality, Health, Rooms, Feed Usage, Feed Formulas, Prices, Farm/Room profile.
+## Deliverables
 
-## What I'll build
+### 1. New analytics engine — `src/lib/farm-analytics.ts`
 
-### 1. Enable Lovable Cloud + Auth
-- Turn on Lovable Cloud (managed Supabase).
-- Add an email/password auth screen at `/auth` and gate the dashboard under `_authenticated/`.
-- On first sign-in, auto-create a `farm` row for that user and seed default rooms + current prices (one-time, DB-side, per user).
+Pure functions that take raw hooks output (`eggs`, `mortality`, `feed`, `rooms`, `prices`) plus a `DateRange` and return:
 
-### 2. Schema (single source of truth)
+- `todayMetrics`, `monthMetrics`, `allTimeMetrics`, `rangeMetrics`
+- Each includes: eggs, crates, revenue, feed bags, feed cost, mortality count, mortality %, production rate, active birds, highest producing room, feed per bird, FCR.
+- `dailySeries(range)` → `[{ date, eggs, crates, feed, mortality, revenue, productionRate }]` for charts.
+- `compareLatestTwoDays(eggs)` → `{ latest, previous, delta, deltaPct }` or `null`.
 
+All date logic uses `toDateKey` / `toLocalDate` from `@/lib/date-key` — no cumulative sums leak into monthly/daily calculations.
+
+### 2. Date range filter
+
+New `DateRangeFilter` component (top of dashboard) with presets: **Today · Yesterday · Last 7 Days · This Month · Last Month · Custom**. Custom uses the shadcn calendar in a popover. Selected range is held in dashboard state and passed to the analytics engine + charts. Cards that are inherently "today" or "all-time" ignore the range and show a small label; the range drives the middle band of "range metrics" and the charts.
+
+### 3. Executive summary cards (replaces current top KPI grid)
+
+Exact set requested:
+
+1. Total Live Birds — sum(rooms.current)
+2. Today's Eggs
+3. Today's Revenue — today's crates × latest egg price
+4. Production Rate — (today's eggs ÷ live birds) × 100
+5. Today's Mortality
+6. Monthly Mortality — current calendar month only
+7. Total Mortality (All Time)
+8. Highest Producing Room — name + crates + eggs + % of today
+9. Feed Used Today — bags
+10. AI Farm Health Score — 0–100 composite (production vs target, mortality trend, feed anomaly, data freshness); logic in `farm-analytics.ts`.
+
+### 4. Fixed detail sections
+
+- **Production Performance**: shows Current Rate / Target 80% / Gap (pp) with signed value + colour.
+- **Daily Comparison**: latest vs previous *recorded* production day (skips gaps). Empty state = "No previous record available."
+- **Financial Analytics**: Today / This Month / All Time revenue, feed cost, medication cost (sum of health_records with `type='medication'` × price where available, else 0 with note), other expenses (0 placeholder), Profit = Revenue − Feed − Medication − Other.
+- **Feed Analytics**: Today, Month, All Time, Feed/Bird, FCR (kg feed per dozen eggs using bag_weight_kg from farm settings).
+- **Bird Population**: Initial (sum rooms.initial), Total Mortality, Current = Initial − Mortality (Birds Added / Sold = 0 with "Not tracked yet" tooltip until movement table exists — see Open decisions).
+
+### 5. Charts (recharts, responsive)
+
+Six charts driven by `dailySeries(range)`:
+
+- Daily Egg Production (bar)
+- Monthly Production Trend (line, aggregated by month)
+- Feed Usage Trend (bar)
+- Mortality Trend (line)
+- Revenue vs Expenses (stacked line/area: revenue vs feed+med cost)
+- Production Rate Trend (line, 0–100%, 80% reference line)
+
+### 6. AI Insights
+
+Extend `src/lib/farm-insights.ts` (already exists) with 5 new detectors: production-below-target, mortality-rising (7-day slope), feed-anomaly (z-score vs 14-day mean), revenue-trend, low-flock-performance. Each returns a suggested action string; rendered by the existing `FarmInsightsIntelligence` card unchanged.
+
+### 7. Correctness guarantees
+
+- All aggregations run through `toDateKey(row.date)` so edits/deletes flow through immediately (queries auto-invalidate on mutation — already wired).
+- Empty period → returns `0` and cards render "No data available" instead of NaN.
+- Monthly/daily metrics NEVER read from all-time sums.
+
+## Files touched
+
+```text
+src/lib/farm-analytics.ts            NEW  ~400 LOC pure functions + types
+src/lib/farm-insights.ts             EDIT append 5 detectors
+src/components/date-range-filter.tsx NEW  preset + custom-range popover
+src/components/executive-cards.tsx   NEW  10-card grid (extracted for clarity)
+src/components/dashboard-charts.tsx  NEW  6 recharts panels
+src/routes/_authenticated/dashboard.tsx  EDIT wire filter + swap KPI grid + insert charts; delete cumulative-mortality bug
 ```
-farms(id, owner_id, name, created_at)
-rooms(id, farm_id, name, initial_birds, created_at)
-egg_production(id, farm_id, room_id, date, trays, loose, broken)
-mortality(id, farm_id, room_id, date, count, cause, notes)
-health(id, farm_id, room_id nullable = All Rooms, date, type, product, notes)
-feed_usage(id, farm_id, room_id, date, bags, bag_weight_kg, notes)
-feed_formulas(id, farm_id, name, ingredients_json, created_at)
-prices(id, farm_id, item, unit, price, effective_date)
-```
 
-- All tables: `farm_id` FK, RLS via `farm_id IN (SELECT id FROM farms WHERE owner_id = auth.uid())`.
-- Explicit `GRANT SELECT,INSERT,UPDATE,DELETE ... TO authenticated`, `GRANT ALL ... TO service_role`. No `anon` grants.
-- Unique constraints where the spec requires one-per-room-per-date (egg_production, feed_usage).
-- Stable UUID `id` used for edit/delete.
+No database migration. No changes to record dialogs, subscription gating, or routing.
 
-### 3. Data layer
-- `src/lib/farm.queries.ts` — TanStack Query hooks (`useRooms`, `useEggs`, …) built on the browser Supabase client, keyed by `['rooms', farmId]` etc.
-- `src/lib/farm.mutations.ts` — `useMutation` for create/update/delete each entity. On success: `queryClient.invalidateQueries` for the entity **and every dependent key** (analytics/AI derive from the same queries, so invalidating source keys is enough — no duplicate datasets).
-- Every form: validate → mutate → await DB confirmation → toast success or preserve inputs on error → invalidate.
+## Open decisions (need your call before I build)
 
-### 4. Dashboard refactor
-- Replace the six `useState` seeds with the query hooks. Keep the same UI, components, and AI methodology.
-- All derived values (Farm Analytics, Forecast, Mortality Risk, Feed Efficiency, Abnormal Activity) already recompute via `useMemo` on the arrays — they'll automatically recalculate as queries refresh.
-- Preserve user-selected dates (no silent "today" replacement); use record `id` for edit/delete.
+1. **Bird movements (added / sold)** — there is no table for this today. Options:
+   - a) Add a `bird_movements` table (date, room_id, type=add|sale, count, notes, unit_price) and surface it in a new "Movements" record dialog. Enables accurate "Birds Sold" revenue too.
+   - b) Show the fields as `0` with a "Not tracked yet" tooltip and skip until you're ready.
+2. **Medication cost** — `health_records` doesn't store cost. Options:
+   - a) Add a `cost` numeric column to `health_records` and prompt for it in the health dialog.
+   - b) Approximate from `prices` where `item ILIKE 'medication%'` × record count (rough).
+   - c) Show `₦0` with a note.
+3. **AI Farm Health Score weights** — propose: production 40% · mortality 30% · feed anomaly 20% · data freshness 10%. OK, or tune?
 
-### 5. Verification
-- Manual pass per module: add → refresh → edit → refresh → delete → refresh; confirm Analytics + AI update.
-
-## Questions before I start
-
-1. **Auth method** — email/password only, or also Google sign-in via the Lovable broker?
-2. **Existing seed data** — the demo rows currently shown (production, mortality, etc.): drop them entirely so each user starts empty, or seed a small demo set into the new user's farm on first login so the dashboard isn't blank?
-3. **Rooms** — keep the current 4 default rooms auto-created on signup (editable after), or start with zero rooms and require the user to add them?
-
-Once you confirm these three, I'll enable Cloud, ship the schema + auth, and refactor the dashboard to read/write the database.
+Reply with a/b/c for each, or "your call" and I'll pick the safest option (b, c, proposed weights).
