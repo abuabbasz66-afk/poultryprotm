@@ -36,6 +36,7 @@ import { Lock } from "lucide-react";
 import { toast } from "sonner";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
 import { toDateKey, toLocalDate } from "@/lib/date-key";
+import { computeDashboardMetrics } from "@/lib/farm-analytics";
 import {
   fmtNum, fmtSigned, parseShortDate,
   computeForecast, type ForecastResult,
@@ -155,41 +156,63 @@ function Dashboard() {
   const [dialog, setDialog] = useState<RecordDialogState | null>(null);
   const openDialog = (s: RecordDialogState) => setDialog(s);
 
-  // Derived
-  const totalBirds = rooms.reduce((s, r) => s + r.current, 0);
-  const totalLoss = rooms.reduce((s, r) => s + (r.initial - r.current), 0);
+  // ---------------------------------------------------------------------------
+  // Derived — every figure is calculated from live records via the analytics
+  // engine so daily/monthly/all-time counts never leak into each other.
+  // ---------------------------------------------------------------------------
+  const metrics = useMemo(
+    () => computeDashboardMetrics({ rooms, eggs, feed, mortality, health, prices, bagWeightKg }),
+    [rooms, eggs, feed, mortality, health, prices, bagWeightKg],
+  );
+
+  const totalBirds = metrics.population.totalLiveBirds;
+  const totalLoss = metrics.population.totalMortalityAllTime;
   const today = eggs[0];
   const todayNorm = today ? normaliseEggRow(today) : { crates: 0, extra: 0, totalEggs: 0 };
   const todayCrates = todayNorm.crates;
   const todayExtra = todayNorm.extra;
   const todayEggs = todayNorm.totalEggs;
-  const yesterdayEggs = eggs[1] ? totalEggsFromRow(eggs[1]) : todayEggs;
-  const diffPct = yesterdayEggs ? ((todayEggs - yesterdayEggs) / yesterdayEggs) * 100 : 0;
-  const totalEggs = eggs.reduce((s, r) => s + totalEggsFromRow(r), 0);
-  const totalCrates = Math.floor(totalEggs / 30);
-  const monthlyMortality = mortality.reduce((s, m) => s + Math.abs(m.loss), 0);
-  const latestFeedDate = feed[0]?.date;
-  const feedToday = latestFeedDate ? feed.filter(f => f.date === latestFeedDate).reduce((s, f) => s + f.bags, 0) : 0;
-  const productionRate = totalBirds ? Math.round((todayEggs / totalBirds) * 100) : 0;
+  const yesterdayEggs = metrics.comparison.previousEggs;
+  const diffPct = metrics.comparison.deltaPct ?? 0;
+  const hasComparison = metrics.comparison.hasComparison;
+  const totalEggs = metrics.allTime.eggs;
+  const totalCrates = metrics.allTime.crates;
+
+  // Period mortality — filtered by calendar date, not cumulative
+  const todayMortality = metrics.todayMortality;
+  const monthlyMortality = metrics.monthlyMortality;
+  const allTimeMortality = metrics.allTimeMortality;
+
+  // Feed
+  const feedToday = metrics.feed.todayBags;
+  const feedMonth = metrics.feed.monthlyBags;
+  const feedAllTime = metrics.feed.allTimeBags;
+
+  // Production rate — one decimal place preserved for AI + display
+  const productionRatePct = metrics.productionRate.currentPct;
+  const productionRate = productionRatePct !== null ? Math.round(productionRatePct * 10) / 10 : 0;
+
   const last7Eggs = eggs.slice(0, 7);
   const sevenDayAvgEggs = last7Eggs.length
     ? Math.round(last7Eggs.reduce((s, r) => s + totalEggsFromRow(r), 0) / last7Eggs.length)
     : 0;
-  // Current Lay Rate: today's total eggs vs active birds. Guard against 0/missing birds
-  // and impossible >100% results so the dashboard never shows Infinity or NaN.
-  const rawLayRate = totalBirds > 0 && todayEggs > 0 ? (todayEggs / totalBirds) * 100 : null;
+
+  const rawLayRate = productionRatePct;
   const layRateValid = rawLayRate !== null && Number.isFinite(rawLayRate) && rawLayRate <= 100;
   const currentLayRateDisplay = rawLayRate === null
     ? "—"
     : layRateValid
       ? `${rawLayRate.toFixed(1)}%`
       : "—";
-  const eggPrice = prices.find(p => p.item === "Egg")?.price ?? 4900;
-  const feedPrice = prices.find(p => p.item.startsWith("Feed"))?.price ?? 13600;
-  const todayRevenue = Math.round((todayEggs / 30) * eggPrice);
+
+  const eggPrice = metrics.eggPrice;
+  const feedPrice = metrics.feedPrice;
+  const todayRevenue = metrics.todayRevenue;
+  const monthlyRevenue = metrics.monthlyRevenue;
+  const allTimeRevenue = metrics.allTimeRevenue;
   const todayCost = Math.round(feedToday * feedPrice);
   const todayProfit = todayRevenue - todayCost;
-  void totalCrates;
+  void totalCrates; void allTimeRevenue; void feedAllTime;
 
   const chartData = useMemo(
     () => [...eggs].reverse().map(e => ({
@@ -495,39 +518,40 @@ function Dashboard() {
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                 <InsightRow
                   label="Production vs 80% target"
-                  value={`${productionRate}%`}
-                  detail={productionRate >= 80
-                    ? `${productionRate - 80} pts above target`
-                    : `${80 - productionRate} pts below target`}
-                  positive={productionRate >= 80}
+                  value={productionRatePct !== null ? `${productionRatePct.toFixed(1)}%` : "—"}
+                  detail={productionRatePct === null
+                    ? "Add today's production to compute"
+                    : productionRatePct >= 80
+                      ? `${(productionRatePct - 80).toFixed(1)} pts above target`
+                      : `${(80 - productionRatePct).toFixed(1)} pts below target`}
+                  positive={productionRatePct !== null && productionRatePct >= 80}
                 />
                 <InsightRow
-                  label="Today vs previous recorded day"
-                  value={`${diffPct >= 0 ? "+" : ""}${diffPct.toFixed(1)}%`}
-                  detail={`${todayEggs.toLocaleString()} eggs today · ${yesterdayEggs.toLocaleString()} prior`}
-                  positive={diffPct >= 0}
+                  label="Latest vs previous recorded day"
+                  value={hasComparison ? `${diffPct >= 0 ? "+" : ""}${diffPct.toFixed(1)}%` : "—"}
+                  detail={hasComparison
+                    ? `${metrics.comparison.latestEggs.toLocaleString()} eggs latest · ${yesterdayEggs.toLocaleString()} prior`
+                    : (metrics.comparison.message ?? "Not enough data")}
+                  positive={hasComparison ? diffPct >= 0 : true}
                 />
                 <InsightRow
-                  label="Highest producing room today"
-                  value={(() => {
-                    if (!today) return "—";
-                    const arr = [
-                      { name: "ROOM 2", v: today.r2 },
-                      { name: "ROOM 3", v: today.r3 },
-                      { name: "ROOM 4", v: today.r4 },
-                    ].sort((a, b) => b.v - a.v);
-                    return `${arr[0].name} · ${arr[0].v} crates`;
-                  })()}
-                  detail="Based on latest recorded production"
+                  label="Highest producing room (latest)"
+                  value={metrics.highestRoom.hasData
+                    ? `${metrics.highestRoom.roomName} · ${metrics.highestRoom.crates} crates`
+                    : "—"}
+                  detail={metrics.highestRoom.hasData
+                    ? `${metrics.highestRoom.eggs.toLocaleString()} eggs · ${(metrics.highestRoom.sharePct ?? 0).toFixed(1)}% of day's output`
+                    : "No production records yet"}
                   positive
                 />
                 <InsightRow
-                  label="Monthly mortality total"
+                  label="Monthly mortality (this month)"
                   value={String(monthlyMortality)}
-                  detail={`${feedToday} bags fed today · today's profit ${naira(todayProfit)}`}
+                  detail={`Today: ${todayMortality} · All-time: ${allTimeMortality} · ${feedToday} bags fed today`}
                   positive={monthlyMortality <= 5}
                 />
               </div>
+
             </Card>
 
 
@@ -702,7 +726,7 @@ function Dashboard() {
           <Card>
             <CardHeader title="Mortality Log" subtitle="Grouped by date" right={<ActionBtn onClick={addMortality} icon={Plus}>Add</ActionBtn>} />
             <div className="grid grid-cols-3 gap-3 mt-4">
-              <MiniStat label="Total Loss" value={String(monthlyMortality)} tone="peach" />
+              <MiniStat label="This Month" value={String(monthlyMortality)} tone="peach" />
               <MiniStat label="Mortality Rate" value={mortalityRatePct.toFixed(2) + "%"} tone="plain" />
               <MiniStat label="Leading Cause" value={leadingCause} tone="mint" />
             </div>
