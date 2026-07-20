@@ -156,41 +156,63 @@ function Dashboard() {
   const [dialog, setDialog] = useState<RecordDialogState | null>(null);
   const openDialog = (s: RecordDialogState) => setDialog(s);
 
-  // Derived
-  const totalBirds = rooms.reduce((s, r) => s + r.current, 0);
-  const totalLoss = rooms.reduce((s, r) => s + (r.initial - r.current), 0);
+  // ---------------------------------------------------------------------------
+  // Derived — every figure is calculated from live records via the analytics
+  // engine so daily/monthly/all-time counts never leak into each other.
+  // ---------------------------------------------------------------------------
+  const metrics = useMemo(
+    () => computeDashboardMetrics({ rooms, eggs, feed, mortality, health, prices, bagWeightKg }),
+    [rooms, eggs, feed, mortality, health, prices, bagWeightKg],
+  );
+
+  const totalBirds = metrics.population.totalLiveBirds;
+  const totalLoss = metrics.population.totalMortalityAllTime;
   const today = eggs[0];
   const todayNorm = today ? normaliseEggRow(today) : { crates: 0, extra: 0, totalEggs: 0 };
   const todayCrates = todayNorm.crates;
   const todayExtra = todayNorm.extra;
   const todayEggs = todayNorm.totalEggs;
-  const yesterdayEggs = eggs[1] ? totalEggsFromRow(eggs[1]) : todayEggs;
-  const diffPct = yesterdayEggs ? ((todayEggs - yesterdayEggs) / yesterdayEggs) * 100 : 0;
-  const totalEggs = eggs.reduce((s, r) => s + totalEggsFromRow(r), 0);
-  const totalCrates = Math.floor(totalEggs / 30);
-  const monthlyMortality = mortality.reduce((s, m) => s + Math.abs(m.loss), 0);
-  const latestFeedDate = feed[0]?.date;
-  const feedToday = latestFeedDate ? feed.filter(f => f.date === latestFeedDate).reduce((s, f) => s + f.bags, 0) : 0;
-  const productionRate = totalBirds ? Math.round((todayEggs / totalBirds) * 100) : 0;
+  const yesterdayEggs = metrics.comparison.previousEggs;
+  const diffPct = metrics.comparison.deltaPct ?? 0;
+  const hasComparison = metrics.comparison.hasComparison;
+  const totalEggs = metrics.allTime.eggs;
+  const totalCrates = metrics.allTime.crates;
+
+  // Period mortality — filtered by calendar date, not cumulative
+  const todayMortality = metrics.todayMortality;
+  const monthlyMortality = metrics.monthlyMortality;
+  const allTimeMortality = metrics.allTimeMortality;
+
+  // Feed
+  const feedToday = metrics.feed.todayBags;
+  const feedMonth = metrics.feed.monthlyBags;
+  const feedAllTime = metrics.feed.allTimeBags;
+
+  // Production rate — one decimal place preserved for AI + display
+  const productionRatePct = metrics.productionRate.currentPct;
+  const productionRate = productionRatePct !== null ? Math.round(productionRatePct * 10) / 10 : 0;
+
   const last7Eggs = eggs.slice(0, 7);
   const sevenDayAvgEggs = last7Eggs.length
     ? Math.round(last7Eggs.reduce((s, r) => s + totalEggsFromRow(r), 0) / last7Eggs.length)
     : 0;
-  // Current Lay Rate: today's total eggs vs active birds. Guard against 0/missing birds
-  // and impossible >100% results so the dashboard never shows Infinity or NaN.
-  const rawLayRate = totalBirds > 0 && todayEggs > 0 ? (todayEggs / totalBirds) * 100 : null;
+
+  const rawLayRate = productionRatePct;
   const layRateValid = rawLayRate !== null && Number.isFinite(rawLayRate) && rawLayRate <= 100;
   const currentLayRateDisplay = rawLayRate === null
     ? "—"
     : layRateValid
       ? `${rawLayRate.toFixed(1)}%`
       : "—";
-  const eggPrice = prices.find(p => p.item === "Egg")?.price ?? 4900;
-  const feedPrice = prices.find(p => p.item.startsWith("Feed"))?.price ?? 13600;
-  const todayRevenue = Math.round((todayEggs / 30) * eggPrice);
+
+  const eggPrice = metrics.eggPrice;
+  const feedPrice = metrics.feedPrice;
+  const todayRevenue = metrics.todayRevenue;
+  const monthlyRevenue = metrics.monthlyRevenue;
+  const allTimeRevenue = metrics.allTimeRevenue;
   const todayCost = Math.round(feedToday * feedPrice);
   const todayProfit = todayRevenue - todayCost;
-  void totalCrates;
+  void totalCrates; void allTimeRevenue; void feedAllTime;
 
   const chartData = useMemo(
     () => [...eggs].reverse().map(e => ({
