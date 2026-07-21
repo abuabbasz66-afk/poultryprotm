@@ -13,6 +13,7 @@ import {
   type Room, type EggRow, type Mortality, type Health, type HealthType, type Feed, type Price,
 } from "@/lib/farm-data";
 import { toDateKey } from "@/lib/date-key";
+import { FeedRecordingModal } from "@/components/daily-recording/FeedRecordingModal";
 
 export type RecordDialogState =
   | { kind: "room-add" }
@@ -662,7 +663,7 @@ export function RecordDialogs({
     case "health-edit":
       return <Modal {...common} title="Edit Health Record" subtitle="Update this health record."><HealthForm onClose={onClose} rooms={rooms} item={state.item} /></Modal>;
     case "feed-add":
-      return <Modal {...common} title="Record Feed" subtitle="Log feed usage for a room."><FeedForm onClose={onClose} rooms={rooms} /></Modal>;
+      return <FeedRecordingModal open onClose={onClose} />;
     case "feed-edit":
       return <Modal {...common} title="Edit Feed Record" subtitle="Update this feed record."><FeedForm onClose={onClose} rooms={rooms} item={state.item} /></Modal>;
     case "feed-day-edit":
