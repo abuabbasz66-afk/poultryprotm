@@ -21,7 +21,7 @@ import {
   useAddEgg, useAddMortality, useAddHealth, useAddFeed,
   useAddPrice, useDeletePrice, useDeleteMortality, useDeleteFeed,
   useDeleteEgg, useUpdateEgg, useUpdateMortality, useUpdateHealth, useUpdateFeed,
-  useDeleteHealth,
+  useDeleteHealth, useUpdateFarmBagWeight,
   HEALTH_TYPES, normalizeHealthType,
   type Room, type EggRow, type Mortality, type Health, type HealthType, type Feed, type Price,
 } from "@/lib/farm-data";
@@ -143,7 +143,15 @@ function Dashboard() {
   const [mortalityOpen, setMortalityOpen] = useState(false);
   const [feedEffOpen, setFeedEffOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
-  const [bagWeightKg, setBagWeightKg] = useState<number | null>(null);
+// Bag weight (kg per bag) is persisted per farm. Kilograms are the source of
+// truth for feed input; bag counts are a derived display value. If the farm
+// changes the weight later, all bag-count displays recalculate automatically.
+const updBagWeightM = useUpdateFarmBagWeight();
+const bagWeightKg: number | null = farmQ.data?.bag_weight_kg ?? null;
+const setBagWeightKg = (v: number | null) => {
+  if (!farmIdQ.data || v == null || !Number.isFinite(v) || v <= 0) return;
+  updBagWeightM.mutate({ farmId: farmIdQ.data, bagWeightKg: v });
+};
   const [mortShowAll, setMortShowAll] = useState(false);
   const [feedShowAll, setFeedShowAll] = useState(false);
   const [expandedMortDate, setExpandedMortDate] = useState<string | null>(null);
@@ -294,7 +302,7 @@ function Dashboard() {
   const delFeedRow = (f: Feed) => {
     askDelete(
       `Delete feed record?`,
-      `This will permanently remove the ${f.bags}-bag feed record for ${f.room} on ${f.date}.`,
+      `This will permanently remove the ${Math.round(f.bags * (farmQ.data?.bag_weight_kg ?? 25) * 10) / 10} kg feed record for ${f.room} on ${f.date}.`,
       runDelete((v: string) => delFeedM.mutateAsync(v), f.id, "Feed record"),
     );
   };
@@ -364,8 +372,12 @@ function Dashboard() {
   const feed30 = feedByDate.slice(0, 30);
   const feed7Avg = feed7.length ? feed7.reduce((s, g) => s + g.total, 0) / feed7.length : 0;
   const feed30Total = feed30.reduce((s, g) => s + g.total, 0);
+  const feed30Avg = feed30.length ? feed30Total / feed30.length : 0;
   const bagKg = bagWeightKg ?? 25;
   const feedPerBirdG = totalBirds ? (feedToday * bagKg * 1000) / totalBirds : 0;
+  // Kilograms are the source of truth; bags are derived from bagKg.
+  const round1 = (n: number) => Math.round(n * 10) / 10;
+  const feedFmt = (bags: number) => `${round1(bags * bagKg)} kg (${round1(bags)} bags)`;
 
   // Do not render any farm-scoped UI until the current user's farm id has
   // resolved. This prevents a moment where cached "Your Farm" fallbacks or
@@ -548,7 +560,7 @@ function Dashboard() {
                 <InsightRow
                   label="Monthly mortality (this month)"
                   value={String(monthlyMortality)}
-                  detail={`Today: ${todayMortality} · All-time: ${allTimeMortality} · ${feedToday} bags fed today`}
+                  detail={`Today: ${todayMortality} · All-time: ${allTimeMortality} · ${feedFmt(feedToday)} fed today`}
                   positive={monthlyMortality <= 5}
                 />
               </div>
@@ -563,7 +575,7 @@ function Dashboard() {
           <KpiCard tone="plain" icon={Bird} label="Total Birds" value={totalBirds.toLocaleString()} hint={`Across ${rooms.length} rooms`} />
           <KpiCard tone="sky" icon={TrendingUp} label="Production Rate" value={`${productionRate}%`} hint="Target: 80%" />
           <KpiCard tone="peach" icon={Skull} label="Monthly Mortality" value={String(monthlyMortality)} hint="This month" />
-          <KpiCard tone="plain" icon={Wheat} label="Feed Today" value={`${feedToday} bags`} hint="All rooms" />
+          <KpiCard tone="plain" icon={Wheat} label="Feed Today" value={`${round1(feedToday * bagKg)} kg`} hint={`${round1(feedToday)} bags · all rooms`} />
           <KpiCard tone="mint" icon={DollarSign} label="Today's Profit" value={naira(todayProfit)} hint={`Revenue: ${naira(todayRevenue)}`} />
         </div>
 
@@ -894,10 +906,10 @@ function Dashboard() {
           {feedTab === "Usage" ? (
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-                <MiniStat label="Today's Feed" value={`${feedToday} bags`} tone="sky" />
-                <MiniStat label="7-Day Avg" value={`${feed7Avg.toFixed(1)} bags`} tone="mint" />
+                <MiniStat label="Today's Feed" value={`${round1(feedToday * bagKg)} kg`} tone="sky" hint={`${round1(feedToday)} bags`} />
+                <MiniStat label="7-Day Avg" value={`${round1(feed7Avg * bagKg)} kg/day`} tone="mint" hint={`${round1(feed7Avg)} bags/day`} />
                 <MiniStat label="Feed / Bird" value={`${feedPerBirdG.toFixed(0)} g`} tone="plain" />
-                <MiniStat label="30-Day Usage" value={`${feed30Total.toFixed(1)} bags`} tone="peach" />
+                <MiniStat label="30-Day Avg" value={`${round1(feed30Avg * bagKg)} kg/day`} tone="peach" hint={`${round1(feed30Total * bagKg)} kg total · ${round1(feed30Total)} bags`} />
               </div>
               <div className="mt-4 overflow-x-auto rounded-xl border border-border">
                 <table className="w-full text-xs sm:text-sm">
@@ -918,10 +930,20 @@ function Dashboard() {
                         <Fragment key={g.date}>
                           <tr key={g.date} className="border-t border-border/60 hover:bg-[color:var(--gold)]/5 cursor-pointer" onClick={() => setExpandedFeedDate(isOpen ? null : g.date)}>
                             <td className="py-2 px-3 font-medium whitespace-nowrap">{g.date}</td>
-                            {feedRoomNames.map(rn => (
-                              <td key={rn} className="py-2 px-3 text-right tabular-nums">{g.byRoom[rn] ? g.byRoom[rn] : <span className="text-muted-foreground/50">—</span>}</td>
-                            ))}
-                            <td className="py-2 px-3 text-right font-semibold tabular-nums whitespace-nowrap">{g.total} bags</td>
+                            {feedRoomNames.map(rn => {
+                              const bagsVal = g.byRoom[rn];
+                              return (
+                                <td key={rn} className="py-2 px-3 text-right tabular-nums">
+                                  {bagsVal
+                                    ? <span>{round1(bagsVal * bagKg)}<span className="text-[10px] text-muted-foreground ml-0.5">kg</span></span>
+                                    : <span className="text-muted-foreground/50">—</span>}
+                                </td>
+                              );
+                            })}
+                            <td className="py-2 px-3 text-right font-semibold tabular-nums whitespace-nowrap">
+                              {round1(g.total * bagKg)} kg
+                              <span className="ml-1 text-[10px] font-normal text-muted-foreground">({round1(g.total)} bags)</span>
+                            </td>
                             <td className="py-2 px-2 text-muted-foreground"><ChevronDown className={"h-3.5 w-3.5 transition-transform " + (isOpen ? "rotate-180" : "")} /></td>
                           </tr>
                           {isOpen && (
@@ -937,7 +959,7 @@ function Dashboard() {
                                     <div key={f.id} className="flex items-center justify-between text-xs">
                                       <span className="font-medium">{f.room}</span>
                                       <div className="flex items-center gap-3">
-                                        <span className="tabular-nums">{f.bags} bags</span>
+                                        <span className="tabular-nums">{round1(f.bags * bagKg)} kg <span className="text-muted-foreground">({round1(f.bags)} bags)</span></span>
                                         <RowActions onEdit={() => editFeed(f)} onDelete={() => delFeedRow(f)} />
                                       </div>
                                     </div>
@@ -1072,9 +1094,9 @@ function Dashboard() {
                 />
                 <PreviewInsight
                   kicker="Feed vs Production"
-                  metric={`${feedToday} bags`}
-                  metricLabel={`for ${todayEggs.toLocaleString()} eggs today`}
-                  observation={`Today's feed usage is ${feedToday} bags against ${todayEggs.toLocaleString()} eggs produced across ${rooms.length} rooms.`}
+                  metric={`${round1(feedToday * bagKg)} kg`}
+                  metricLabel={`(${round1(feedToday)} bags) for ${todayEggs.toLocaleString()} eggs today`}
+                  observation={`Today's feed usage is ${round1(feedToday * bagKg)} kg (${round1(feedToday)} bags) against ${todayEggs.toLocaleString()} eggs produced across ${rooms.length} rooms.`}
                   action="Watch for feed usage rising while egg output stays flat — an early signal of efficiency change."
                 />
               </div>
@@ -1205,11 +1227,12 @@ function KpiCard({ tone, icon: Icon, label, value, hint, trend }: {
   );
 }
 
-function MiniStat({ label, value, tone }: { label: string; value: string; tone: keyof typeof toneMap }) {
+function MiniStat({ label, value, tone, hint }: { label: string; value: string; tone: keyof typeof toneMap; hint?: string }) {
   return (
     <div className={"rounded-xl border p-3 " + toneMap[tone]}>
       <div className="flex items-center gap-2 text-xs text-muted-foreground"><Egg className="h-3.5 w-3.5" /> {label}</div>
       <div className="font-display text-xl font-semibold mt-1">{value}</div>
+      {hint && <div className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">{hint}</div>}
     </div>
   );
 }
@@ -1961,8 +1984,8 @@ function FeedEfficiencyMonitor({
             />
             <ForecastStat
               label="Feed Used — Latest Matched Date"
-              value={`${fmtNum(analysis.latest.bags)} bags`}
-              hint={hasWeight ? `${fmtNum(analysis.latest.bags * (bagWeightKg as number))} kg` : "Configure bag weight for kg"}
+              value={hasWeight ? `${fmtNum(analysis.latest.bags * (bagWeightKg as number))} kg` : `${fmtNum(analysis.latest.bags)} bags`}
+              hint={hasWeight ? `${fmtNum(analysis.latest.bags)} bags (1 bag = ${bagWeightKg} kg)` : "Configure bag weight for kg"}
             />
             <ForecastStat
               label="Egg Output — Latest Matched Date"
