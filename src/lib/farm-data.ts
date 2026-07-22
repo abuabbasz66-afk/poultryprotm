@@ -98,6 +98,7 @@ export type Farm = {
   phone: string | null;
   bird_count: number | null;
   subscription_plan: string | null;
+  bag_weight_kg: number | null;
 };
 
 export function useFarm() {
@@ -108,13 +109,34 @@ export function useFarm() {
     queryFn: async (): Promise<Farm | null> => {
       const { data, error } = await supabase
         .from("farms")
-        .select("id, name, location, state, country, farm_type, bird_type, rooms_count, owner_name, phone, bird_count, subscription_plan")
+        .select("id, name, location, state, country, farm_type, bird_type, rooms_count, owner_name, phone, bird_count, subscription_plan, bag_weight_kg")
         .eq("id", farmId!)
         .maybeSingle();
       if (error) throw error;
-      return (data as Farm | null) ?? null;
+      if (!data) return null;
+      return { ...data, bag_weight_kg: data.bag_weight_kg == null ? null : Number(data.bag_weight_kg) } as Farm;
     },
     staleTime: 60_000,
+  });
+}
+
+/** Persist per-farm bag weight (kg per bag). Feed is captured in kg;
+ *  bag counts are derived by dividing kg by this configurable weight. */
+export function useUpdateFarmBagWeight() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { farmId: string; bagWeightKg: number }) => {
+      if (!input.farmId) throw new Error("No farm found for this user.");
+      if (!Number.isFinite(input.bagWeightKg) || input.bagWeightKg <= 0) {
+        throw new Error("Bag weight must be greater than zero.");
+      }
+      const { error } = await supabase
+        .from("farms")
+        .update({ bag_weight_kg: input.bagWeightKg })
+        .eq("id", input.farmId);
+      if (error) throw error;
+    },
+    onSuccess: (_r, vars) => invalidateFarm(qc, vars.farmId),
   });
 }
 
