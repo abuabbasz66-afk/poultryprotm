@@ -1398,12 +1398,21 @@ function FarmsTab({ userId }: { userId: string }) {
                 <Td><Badge className={statusTone(f.status)}>{f.status}</Badge></Td>
                 <Td>{fmtDay(f.created_at)}</Td>
                 <Td>
-                  <button
-                    onClick={() => setOpenFarm(f.farm_id)}
-                    className="text-xs px-2 py-1 rounded border border-[#12281c]/20 hover:bg-[#f6f2e6]"
-                  >
-                    View
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      to="/super-admin/farms/$farmId"
+                      params={{ farmId: f.farm_id }}
+                      className="text-xs px-2 py-1 rounded bg-[#0f1f16] text-white hover:brightness-110"
+                    >
+                      Intelligence
+                    </Link>
+                    <button
+                      onClick={() => setOpenFarm(f.farm_id)}
+                      className="text-xs px-2 py-1 rounded border border-[#12281c]/20 hover:bg-[#f6f2e6]"
+                    >
+                      Summary
+                    </button>
+                  </div>
                 </Td>
               </tr>
             ))}
