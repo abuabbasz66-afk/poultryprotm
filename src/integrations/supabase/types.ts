@@ -337,6 +337,69 @@ export type Database = {
           },
         ]
       }
+      platform_activity_log: {
+        Row: {
+          action: string
+          browser: string | null
+          created_at: string
+          device: string | null
+          entity_id: string | null
+          farm_id: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          module: string
+          success: boolean
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          browser?: string | null
+          created_at?: string
+          device?: string | null
+          entity_id?: string | null
+          farm_id?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          module: string
+          success?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          browser?: string | null
+          created_at?: string
+          device?: string | null
+          entity_id?: string | null
+          farm_id?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          module?: string
+          success?: boolean
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      platform_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       prices: {
         Row: {
           created_at: string
@@ -409,6 +472,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      support_sessions: {
+        Row: {
+          actions_taken: Json | null
+          admin_user_id: string
+          ended_at: string | null
+          farm_id: string
+          id: string
+          reason: string
+          started_at: string
+        }
+        Insert: {
+          actions_taken?: Json | null
+          admin_user_id: string
+          ended_at?: string | null
+          farm_id: string
+          id?: string
+          reason: string
+          started_at?: string
+        }
+        Update: {
+          actions_taken?: Json | null
+          admin_user_id?: string
+          ended_at?: string | null
+          farm_id?: string
+          id?: string
+          reason?: string
+          started_at?: string
+        }
+        Relationships: []
+      }
+      user_presence: {
+        Row: {
+          last_seen: string
+          user_id: string
+        }
+        Insert: {
+          last_seen?: string
+          user_id: string
+        }
+        Update: {
+          last_seen?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -487,6 +595,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_active_support_session: {
+        Args: { _farm_id: string }
+        Returns: {
+          actions_taken: Json | null
+          admin_user_id: string
+          ended_at: string | null
+          farm_id: string
+          id: string
+          reason: string
+          started_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "support_sessions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       admin_archive_notification: { Args: { _id: string }; Returns: undefined }
       admin_assign_role: {
         Args: {
@@ -503,7 +629,10 @@ export type Database = {
         Args: { _reason?: string; _user_id: string }
         Returns: Json
       }
+      admin_end_support: { Args: { _session_id: string }; Returns: undefined }
+      admin_farm_intelligence: { Args: { _farm_id: string }; Returns: Json }
       admin_farm_summary: { Args: { _farm_id: string }; Returns: Json }
+      admin_get_settings: { Args: never; Returns: Json }
       admin_intelligence_summary: { Args: never; Returns: Json }
       admin_list_accounts: {
         Args: never
@@ -516,6 +645,35 @@ export type Database = {
           owner_name: string
           status: string
           subscription_plan: string
+          user_id: string
+        }[]
+      }
+      admin_list_activity: {
+        Args: {
+          _action?: string
+          _farm_id?: string
+          _from?: string
+          _limit?: number
+          _module?: string
+          _offset?: number
+          _to?: string
+          _user_id?: string
+        }
+        Returns: {
+          action: string
+          browser: string
+          created_at: string
+          device: string
+          entity_id: string
+          farm_id: string
+          farm_name: string
+          id: string
+          ip_address: string
+          metadata: Json
+          module: string
+          success: boolean
+          total_count: number
+          user_email: string
           user_id: string
         }[]
       }
@@ -601,9 +759,18 @@ export type Database = {
         Returns: undefined
       }
       admin_platform_stats: { Args: never; Returns: Json }
+      admin_platform_timeseries: { Args: { _days?: number }; Returns: Json }
       admin_set_account_status: {
         Args: { _farm_id: string; _new_status: string; _reason?: string }
         Returns: Json
+      }
+      admin_set_setting: {
+        Args: { _key: string; _value: Json }
+        Returns: undefined
+      }
+      admin_start_support: {
+        Args: { _farm_id: string; _reason: string }
+        Returns: string
       }
       admin_subscription_stats: { Args: never; Returns: Json }
       admin_whatsapp_export: {
