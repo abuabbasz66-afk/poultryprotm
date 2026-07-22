@@ -32,6 +32,7 @@ import {
   useWhatsAppStats, useWhatsAppRecent, fetchWhatsAppExport,
   downloadCsv, downloadPdf, type WhatsAppStats, type WhatsAppClickRow,
 } from "@/lib/whatsapp-analytics";
+import { useActivityLog, usePlatformTimeseries } from "@/lib/admin-monitoring";
 
 export const Route = createFileRoute("/super-admin")({
   ssr: false,
