@@ -959,7 +959,7 @@ const setBagWeightKg = (v: number | null) => {
                                     <div key={f.id} className="flex items-center justify-between text-xs">
                                       <span className="font-medium">{f.room}</span>
                                       <div className="flex items-center gap-3">
-                                        <span className="tabular-nums">{f.bags} bags</span>
+                                        <span className="tabular-nums">{round1(f.bags * bagKg)} kg <span className="text-muted-foreground">({round1(f.bags)} bags)</span></span>
                                         <RowActions onEdit={() => editFeed(f)} onDelete={() => delFeedRow(f)} />
                                       </div>
                                     </div>
