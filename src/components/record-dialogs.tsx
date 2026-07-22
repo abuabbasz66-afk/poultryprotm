@@ -475,8 +475,11 @@ function FeedForm({ item, onClose, rooms }: { item?: Feed; onClose: () => void; 
 }
 
 function FeedDayEditForm({ items, onClose }: { items: Feed[]; onClose: () => void }) {
+  const farmQ = useFarm();
+  const bagWeightKg = farmQ.data?.bag_weight_kg ?? 25;
+  const bagsToKg = (b: number) => Math.round(b * bagWeightKg * 100) / 100;
   const [values, setValues] = useState<Record<string, number | "">>(
-    () => Object.fromEntries(items.map((f) => [f.id, f.bags])),
+    () => Object.fromEntries(items.map((f) => [f.id, bagsToKg(f.bags)])),
   );
   const upd = useUpdateFeed();
   const [submitting, setSubmitting] = useState(false);
@@ -488,10 +491,12 @@ function FeedDayEditForm({ items, onClose }: { items: Feed[]; onClose: () => voi
     let updated = 0;
     let failed = 0;
     for (const f of items) {
-      const next = Number(values[f.id]);
-      if (!Number.isFinite(next) || next === f.bags) continue;
+      const nextKg = Number(values[f.id]);
+      if (!Number.isFinite(nextKg) || nextKg < 0) continue;
+      const nextBags = nextKg / bagWeightKg;
+      if (Math.abs(nextBags - f.bags) < 1e-6) continue;
       try {
-        await upd.mutateAsync({ id: f.id, bags: next });
+        await upd.mutateAsync({ id: f.id, bags: nextBags });
         updated++;
       } catch (err) {
         failed++;
@@ -505,22 +510,31 @@ function FeedDayEditForm({ items, onClose }: { items: Feed[]; onClose: () => voi
 
   return (
     <form onSubmit={submit} className="space-y-4">
+      <p className="text-[11px] text-muted-foreground">Enter kilograms — bags update automatically (1 bag = {bagWeightKg} kg).</p>
       <div className="space-y-2">
-        {items.map((f) => (
-          <div key={f.id} className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-xl border border-[color:var(--forest)]/10 bg-background/60 px-3 py-2.5">
-            <div>
-              <div className="text-sm font-medium">{f.room}</div>
-              <div className="text-[11px] text-muted-foreground">{f.date}</div>
+        {items.map((f) => {
+          const kgVal = values[f.id];
+          const kgNum = Number(kgVal);
+          const bagsPreview = Number.isFinite(kgNum) && kgNum > 0 ? Math.round((kgNum / bagWeightKg) * 100) / 100 : 0;
+          return (
+            <div key={f.id} className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-xl border border-[color:var(--forest)]/10 bg-background/60 px-3 py-2.5">
+              <div>
+                <div className="text-sm font-medium">{f.room}</div>
+                <div className="text-[11px] text-muted-foreground">{f.date} · {bagsPreview} bags</div>
+              </div>
+              <div className="flex items-center gap-1">
+                <NumberInput
+                  min={0}
+                  step="any"
+                  className="w-24 text-right"
+                  value={kgVal}
+                  onChange={(e) => setValues((v) => ({ ...v, [f.id]: e.target.value === "" ? "" : Number(e.target.value) }))}
+                />
+                <span className="text-[11px] text-muted-foreground">kg</span>
+              </div>
             </div>
-            <NumberInput
-              min={0}
-              step="any"
-              className="w-24 text-right"
-              value={values[f.id]}
-              onChange={(e) => setValues((v) => ({ ...v, [f.id]: e.target.value === "" ? "" : Number(e.target.value) }))}
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
       <Actions onCancel={onClose} submitting={submitting} submitLabel="Save Changes" />
     </form>
