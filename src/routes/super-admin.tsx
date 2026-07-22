@@ -2277,7 +2277,7 @@ function ActivityLogTab({ userId }: { userId: string }) {
     () => ({ module: module || null, action: action || null, limit: 300 }),
     [module, action],
   );
-  const { useActivityLog } = require("@/lib/admin-monitoring") as typeof import("@/lib/admin-monitoring");
+  
   const query = useActivityLog(userId, filters, true);
   const rows = (query.data ?? []).filter((r) => {
     const s = q.trim().toLowerCase();
@@ -2356,7 +2356,7 @@ function ActivityLogTab({ userId }: { userId: string }) {
 }
 
 function LiveFeedTab({ userId }: { userId: string }) {
-  const { useActivityLog } = require("@/lib/admin-monitoring") as typeof import("@/lib/admin-monitoring");
+  
   const query = useActivityLog(userId, { limit: 100 }, true);
   const rows = query.data ?? [];
 
@@ -2422,7 +2422,7 @@ function humaniseFeedAction(mod: string, action: string): string {
 }
 
 function AnalyticsTab({ userId }: { userId: string }) {
-  const { usePlatformTimeseries } = require("@/lib/admin-monitoring") as typeof import("@/lib/admin-monitoring");
+  
   const [days, setDays] = useState(90);
   const q = usePlatformTimeseries(userId, true, days);
 
