@@ -1,80 +1,98 @@
-## Goal
+# Super Admin — Platform Monitoring & Farm Intelligence Center
 
-Every daily recording screen in PoultryPro looks and behaves like the Production modal: date at the top, one card per room pulled live from the database, a live summary panel, and a single Save that writes one row per room. History tables switch to one-row-per-day pivoted by room.
+This upgrade extends the existing `/super-admin` route in place. No new roles, no new auth, no UI rewrite — new tabs and drill-down views layered onto the current console using the same design tokens (Inter + Cormorant Garamond, existing card/table styles).
 
-## Phased delivery
+## Scope of work
 
-This is multi-turn work. I'll ship it in three phases so you can review after each.
+The existing dashboard already has: Overview KPIs, Accounts, Farms, Subscriptions, Notifications, Audit Log, WhatsApp Enquiries. This adds seven capability areas across new/expanded tabs.
 
-### Phase 1 — Shared framework + refactor the 4 existing modules
-- Build a reusable `DailyRecordingModal` component that takes a schema (fields per room) and renders the standard layout, summary panel, save/edit logic, copy-yesterday, draft auto-save, and keyboard nav (Tab + Arrow keys between room inputs).
-- Refactor Production, Feed, Mortality, Health to use it.
-- Pivot the four history tables to Date | Room 1 | … | Total, with expandable rows for per-room detail.
-- Wire dashboard/AI/analytics invalidation on save (already keyed under `farmScope`).
+### 1. Extended Platform KPIs (Overview tab)
+Extend `admin_platform_stats()` to also return: total birds managed, total eggs recorded, total feed bags, total mortality, total health records, total revenue logged, total expenses logged, active-today count, new-registrations-today, online users (proxied by sessions active in last 15 min via a lightweight `user_presence` table updated by a heartbeat), and subscription breakdown. Render as KPI cards + a small sparkline row.
 
-### Phase 2 — Sales, Expenses, Medication, Vaccination
-- One migration adds four tables (`sales`, `expenses`, `medication_records`, `vaccination_records`) with GRANTs, RLS scoped to `auth.uid()` via `farm_id → farms.owner_id`, and `updated_at` triggers.
-- Add matching hooks in `farm-data.ts` and mount each module using the shared framework.
-- Add nav entries + history pages.
-- Update financial summaries to consume Sales + Expenses.
+### 2. Farm Activity Monitor (expanded Farms tab)
+Extend `admin_list_farms()` to include: last_login, last_activity (max timestamp across production/feed/mortality/health inserts), online status (presence table), user count, room count, bird count. Each row becomes clickable → opens Farm Intelligence.
 
-### Phase 3 — Feed Stock Issuance, Water, Environmental
-- Migration adds `feed_stock`, `water_consumption`, `environmental_readings`.
-- Environmental uses non-room-scoped fields (temp/humidity per room) but same layout.
-- Extend AI insights to surface anomalies (feed stock depletion, water drop, temp spikes).
+### 3. Farm Intelligence drill-down (new route `/super-admin/farms/$farmId`)
+Read-only tabs: Production, Feed, Mortality, Health, Finance, Inventory. Backed by new SECURITY DEFINER RPCs (`admin_farm_production`, `admin_farm_feed`, `admin_farm_mortality`, `admin_farm_health`, `admin_farm_finance`, `admin_farm_inventory`) that each re-check `is_super_admin()`. Uses existing chart components (recharts) for trends. Finance/Inventory show empty-state cards when tables don't yet exist (documented for follow-up).
 
-## Standard modal contract
+### 4. User Activity & Audit Logs (expanded Audit tab)
+New `platform_activity_log` table capturing: user_id, farm_id, module, action, entity_id, device, browser, ip, success, metadata, created_at. Populated by:
+- DB triggers on `egg_production`, `feed_usage`, `mortality`, `health_records` for insert/update/delete.
+- A `log_activity` server fn called from client for login/logout/password reset/profile update/report export.
+- Existing `admin_audit_log` continues to hold admin actions.
+New RPC `admin_list_activity(filters, limit, offset)` with server-side filters (farm, user, module, action, date range) + pagination. Table view with filter chips.
 
+### 5. Live Activity Feed (new tab)
+Human-readable stream from the last 200 activity + audit entries. Uses Supabase Realtime subscription on `platform_activity_log` to append new events. Auto-scrolls, groups by minute.
+
+### 6. Alerts (extends Notifications tab)
+Add server-side generator (`generate_platform_alerts()`) triggered by pg_cron every 15 min:
+- Inactive farms (>7 days no activity).
+- Mortality spike (>configurable %/day per farm).
+- Trial ending within 7 days.
+- Multiple failed logins (from activity log with action='login', success=false).
+Writes into existing `admin_notifications`. Threshold config stored in a new `platform_settings` table.
+
+### 7. Platform Analytics (new tab)
+Charts (recharts): farm growth, subscription growth, DAU/MAU, eggs over time, feed usage, mortality, revenue trend, top-10 farms by production, most-active farms. Backed by `admin_platform_timeseries(range)` RPC returning bucketed series.
+
+### 8. Support Mode
+New `support_sessions` table: admin_user_id, farm_id, reason, started_at, ended_at, actions_taken jsonb[]. New RPCs `admin_start_support(farm_id, reason)`, `admin_end_support(session_id)`. UI: "Enter Support Mode" button on Farm Intelligence header → confirmation dialog with reason field → yellow persistent banner while active → auto-ends after 60 min or on navigation away. All farm-intelligence RPCs remain read-only; support mode is a logged access marker, no write privileges granted.
+
+### 9. Performance
+- All list RPCs accept `_limit`/`_offset` and return `total_count`.
+- New indexes on activity log (farm_id, user_id, created_at desc, module).
+- React Query: `staleTime: 30_000`, `refetchInterval: 60_000` on KPIs, realtime for feed.
+- Route-level code splitting via TanStack Router (drill-down is its own route).
+
+## Technical layout
+
+### New migrations
+1. `platform_activity_log` table + indexes + GRANTs + RLS (admins only via `is_super_admin()`).
+2. `user_presence` table (user_id PK, last_seen).
+3. `support_sessions` table.
+4. `platform_settings` table (kv config for thresholds).
+5. All new SECURITY DEFINER RPCs.
+6. Triggers on domain tables to auto-log activity.
+7. pg_cron job for `generate_platform_alerts()` every 15 min.
+
+### New/changed files
 ```text
-┌────────────────────────────────────────────┐
-│  Record {Module}         [Date picker]     │
-│  ─────────────────────────────────────     │
-│  [Copy Yesterday ▾]  [Clear All]           │
-│                                            │
-│  ROOM 1  ┌─────────────────────────────┐   │
-│          │ field  field  field         │   │
-│          └─────────────────────────────┘   │
-│  ROOM 2  ┌─────────────────────────────┐   │
-│  ...     (one card per room from DB)       │
-│                                            │
-│  ─────── Live Summary ───────              │
-│  Rooms recorded · Totals · Per-bird KPIs   │
-│                                            │
-│                    [Cancel]  [Save/Update] │
-└────────────────────────────────────────────┘
+src/routes/super-admin.tsx                 (add tabs: Analytics, Live Feed; expand Overview/Farms/Audit)
+src/routes/_authenticated/super-admin.       (drill-down)
+  farms.$farmId.tsx
+src/lib/admin-api.ts                       (new hooks + types)
+src/lib/admin-intelligence.ts              (farm-detail hooks)
+src/lib/admin-activity.ts                  (activity log hooks + realtime subscription)
+src/lib/admin-alerts.ts                    (threshold config hook)
+src/lib/presence.ts                        (heartbeat + online user query)
+src/components/super-admin/
+  KpiGrid.tsx
+  FarmActivityTable.tsx
+  LiveActivityFeed.tsx
+  ActivityLogTable.tsx
+  PlatformAnalytics.tsx
+  SupportModeBanner.tsx
+  SupportModeDialog.tsx
+  FarmIntelligenceTabs.tsx
 ```
 
-Behaviour rules (shared across every module):
-- Room list from `useRooms()` — never hardcoded.
-- If records exist for the chosen date, preload and switch button to **Update Record**; prevents duplicate day entries.
-- **Copy Yesterday** (selective per your note): dropdown lets user pick which fields to copy (e.g. bird count, feed bags, environmental readings), leaves production/mortality/health blank by default, shows confirmation before applying, supports undo via a toast action.
-- Draft auto-save to `localStorage` keyed by `farmId:module:date`, cleared on successful save.
-- Keyboard: Tab moves to next input; ArrowUp/Down moves between the same field across rooms; ArrowLeft/Right across fields in a row.
-- Live summary recomputes on every keystroke.
-- Save writes one row per non-empty room in a single batch; success toast + cache invalidation, no page refresh.
-- Client-side Zod validation + RLS on the server.
+Presence heartbeat wired in `src/routes/_authenticated/route.tsx` (30 s interval while tab visible).
 
-## History table contract
+## Delivery order
+1. Migrations (activity log, presence, support, settings, RPCs, triggers, cron).
+2. Extended KPIs + Farm Activity Monitor.
+3. Farm Intelligence drill-down.
+4. Activity log + Live Feed.
+5. Analytics tab.
+6. Alerts generator + threshold config.
+7. Support Mode.
+8. Performance pass (pagination, indexes, realtime tuning).
 
-Pivoted: `Date | Room 1 | Room 2 | … | Total | Actions`. Click a row to expand and see per-room detail cards. Edit/delete from the expanded panel.
+## Explicit non-goals
+- No changes to `is_super_admin()`, `_authenticated` layout, or existing sign-in flow.
+- No new admin write actions against farm data — support mode is audit-only.
+- Finance/Inventory tabs render "no data yet" placeholders until those domain tables exist; adding them is out of scope for this pass.
+- No IP geolocation service integration; IP captured from request headers only.
 
-## Technical details
-
-- New file: `src/components/daily-recording/DailyRecordingModal.tsx` (schema-driven).
-- New file: `src/components/daily-recording/module-schemas.ts` — one schema per module (fields, units, summary calculators, Zod schema).
-- New file: `src/components/daily-recording/PivotedHistoryTable.tsx`.
-- New hook: `useCopyYesterday(module, date)` — returns previous-day snapshot per room.
-- New hook: `useDraftAutosave(key, value)` — debounced localStorage persist.
-- Phase 2 migration (single file): `sales`, `expenses`, `medication_records`, `vaccination_records` — each with `id, farm_id, date, room, …fields, created_at, updated_at`; `GRANT SELECT/INSERT/UPDATE/DELETE ... TO authenticated`; `GRANT ALL ... TO service_role`; RLS `USING (EXISTS (SELECT 1 FROM farms WHERE id = farm_id AND owner_id = auth.uid()))`.
-- Phase 3 migration: `feed_stock`, `water_consumption`, `environmental_readings` (same pattern).
-- Extend `farm-data.ts` with `useSales`, `useExpenses`, `useMedications`, `useVaccinations`, `useFeedStock`, `useWater`, `useEnvironmental` + mutations, all under `farmScope(farmId)`.
-- Nav: add entries under a new "Daily Records" group in the dashboard sidebar.
-
-## What ships in Phase 1 (this turn)
-
-1. `DailyRecordingModal` framework + schemas for Production/Feed/Mortality/Health.
-2. Refactored Production/Feed/Mortality/Health modals inside `record-dialogs.tsx`.
-3. Pivoted history tables for those four.
-4. Copy-yesterday (selective), draft auto-save, edit-mode, keyboard nav — all shared.
-
-Reply **go** to start Phase 1, or tell me to reorder / cut / split further.
+Approve to proceed and I'll ship migrations first (they need your review), then the UI in follow-up turns.
