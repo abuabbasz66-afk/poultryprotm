@@ -1437,12 +1437,21 @@ function FarmsTab({ userId }: { userId: string }) {
               <div><span className="text-[#12281c]/60">Birds / Rooms:</span> {f.bird_count ?? "—"} / {f.rooms_count}</div>
               <div><span className="text-[#12281c]/60">Status:</span> {f.status}</div>
             </div>
-            <button
-              onClick={() => setOpenFarm(f.farm_id)}
-              className="mt-3 w-full text-xs px-3 py-2 rounded border border-[#12281c]/20 hover:bg-[#f6f2e6]"
-            >
-              View support summary
-            </button>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Link
+                to="/super-admin/farms/$farmId"
+                params={{ farmId: f.farm_id }}
+                className="text-center text-xs px-3 py-2 rounded bg-[#0f1f16] text-white"
+              >
+                Intelligence
+              </Link>
+              <button
+                onClick={() => setOpenFarm(f.farm_id)}
+                className="text-xs px-3 py-2 rounded border border-[#12281c]/20 hover:bg-[#f6f2e6]"
+              >
+                Summary
+              </button>
+            </div>
           </div>
         ))}
       </div>
