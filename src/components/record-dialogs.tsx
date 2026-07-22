@@ -410,17 +410,25 @@ function HealthForm({ item, onClose, rooms }: { item?: Health; onClose: () => vo
 
 function FeedForm({ item, onClose, rooms }: { item?: Feed; onClose: () => void; rooms: Room[] }) {
   const isEdit = !!item;
+  const farmQ = useFarm();
+  const bagWeightKg = farmQ.data?.bag_weight_kg ?? 25;
   const [room, setRoom] = useState(item?.room ?? (rooms[0]?.name ?? ""));
-  const [bags, setBags] = useState<number | "">(item?.bags ?? 1);
+  // Feed is captured in kg — bag counts are derived from the farm's bag weight.
+  const initialKg = item ? Math.round(item.bags * bagWeightKg * 100) / 100 : "";
+  const [kg, setKg] = useState<number | "">(initialKg);
   const [date, setDate] = useState(todayIso());
   const add = useAddFeed();
   const upd = useUpdateFeed();
   const pending = add.isPending || upd.isPending;
 
+  const kgNum = Number(kg);
+  const bagsPreview = Number.isFinite(kgNum) && kgNum > 0 ? kgNum / bagWeightKg : 0;
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pending || !room || !bags) return;
-    const payload = { room: room.toUpperCase(), bags: Number(bags), date };
+    if (pending || !room || kg === "" || !Number.isFinite(kgNum) || kgNum <= 0) return;
+    const bags = kgNum / bagWeightKg;
+    const payload = { room: room.toUpperCase(), bags, date };
     const done = {
       onSuccess: () => { toast.success(isEdit ? "Feed record updated" : "Feed usage recorded"); onClose(); },
       onError: (err: unknown) => toast.error("Failed to save feed", { description: (err as Error).message }),
@@ -443,20 +451,25 @@ function FeedForm({ item, onClose, rooms }: { item?: Feed; onClose: () => void; 
             <TextInput value={room} onChange={(e) => setRoom(e.target.value.toUpperCase())} placeholder="ROOM 3" required />
           )}
         </Field>
-        <Field label="Bags">
+        <Field label="Feed issued (kg)">
           <NumberInput
-            min={1}
+            min={0}
             step="any"
-            value={bags}
-            onChange={(e) => setBags(e.target.value === "" ? "" : Number(e.target.value))}
+            value={kg}
+            onChange={(e) => setKg(e.target.value === "" ? "" : Number(e.target.value))}
+            placeholder="e.g. 162.5"
             required
           />
         </Field>
       </div>
+      <div className="rounded-lg bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+        Auto-calculated: <span className="font-semibold text-foreground tabular-nums">{bagsPreview ? (Math.round(bagsPreview * 100) / 100) : 0} bags</span>
+        <span className="ml-2 opacity-70">(1 bag = {bagWeightKg} kg)</span>
+      </div>
       <Field label="Date">
         <DateInput value={date} onChange={(e) => setDate(e.target.value)} required />
       </Field>
-      <Actions onCancel={onClose} submitting={pending} submitLabel={isEdit ? "Save Changes" : "Save Feed"} disabled={!room || !bags} />
+      <Actions onCancel={onClose} submitting={pending} submitLabel={isEdit ? "Save Changes" : "Save Feed"} disabled={!room || !kg || kgNum <= 0} />
     </form>
   );
 }
