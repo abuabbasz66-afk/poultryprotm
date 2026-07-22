@@ -20,6 +20,7 @@ import { Route as AuthenticatedSubscriptionsRouteImport } from './routes/_authen
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as SuperAdminFarmsFarmIdRouteImport } from './routes/super-admin.farms.$farmId'
 import { Route as ApiPublicWhatsappClickRouteImport } from './routes/api/public/whatsapp-click'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -80,6 +81,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const SuperAdminFarmsFarmIdRoute = SuperAdminFarmsFarmIdRouteImport.update({
+  id: '/farms/$farmId',
+  path: '/farms/$farmId',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
 const ApiPublicWhatsappClickRoute = ApiPublicWhatsappClickRouteImport.update({
   id: '/api/public/whatsapp-click',
   path: '/api/public/whatsapp-click',
@@ -108,12 +114,13 @@ export interface FileRoutesByFullPath {
   '/presentation': typeof PresentationRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/super-admin': typeof SuperAdminRoute
+  '/super-admin': typeof SuperAdminRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/import': typeof AuthenticatedImportRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
+  '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -124,12 +131,13 @@ export interface FileRoutesByTo {
   '/presentation': typeof PresentationRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/super-admin': typeof SuperAdminRoute
+  '/super-admin': typeof SuperAdminRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/import': typeof AuthenticatedImportRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
+  '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -142,12 +150,13 @@ export interface FileRoutesById {
   '/presentation': typeof PresentationRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/super-admin': typeof SuperAdminRoute
+  '/super-admin': typeof SuperAdminRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
+  '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/subscriptions'
     | '/api/public/whatsapp-click'
+    | '/super-admin/farms/$farmId'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/subscriptions'
     | '/api/public/whatsapp-click'
+    | '/super-admin/farms/$farmId'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/subscriptions'
     | '/api/public/whatsapp-click'
+    | '/super-admin/farms/$farmId'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -211,7 +223,7 @@ export interface RootRouteChildren {
   PresentationRoute: typeof PresentationRoute
   PricingRoute: typeof PricingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  SuperAdminRoute: typeof SuperAdminRoute
+  SuperAdminRoute: typeof SuperAdminRouteWithChildren
   ApiPublicWhatsappClickRoute: typeof ApiPublicWhatsappClickRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -297,6 +309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/super-admin/farms/$farmId': {
+      id: '/super-admin/farms/$farmId'
+      path: '/farms/$farmId'
+      fullPath: '/super-admin/farms/$farmId'
+      preLoaderRoute: typeof SuperAdminFarmsFarmIdRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
     '/api/public/whatsapp-click': {
       id: '/api/public/whatsapp-click'
       path: '/api/public/whatsapp-click'
@@ -345,6 +364,18 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface SuperAdminRouteChildren {
+  SuperAdminFarmsFarmIdRoute: typeof SuperAdminFarmsFarmIdRoute
+}
+
+const SuperAdminRouteChildren: SuperAdminRouteChildren = {
+  SuperAdminFarmsFarmIdRoute: SuperAdminFarmsFarmIdRoute,
+}
+
+const SuperAdminRouteWithChildren = SuperAdminRoute._addFileChildren(
+  SuperAdminRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -352,7 +383,7 @@ const rootRouteChildren: RootRouteChildren = {
   PresentationRoute: PresentationRoute,
   PricingRoute: PricingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  SuperAdminRoute: SuperAdminRoute,
+  SuperAdminRoute: SuperAdminRouteWithChildren,
   ApiPublicWhatsappClickRoute: ApiPublicWhatsappClickRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
