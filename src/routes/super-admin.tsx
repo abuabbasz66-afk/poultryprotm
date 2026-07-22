@@ -1843,10 +1843,40 @@ function Info({ label, value }: { label: string; value: React.ReactNode }) {
 function Loader() {
   return <div className="flex items-center justify-center py-12"><Loader2 className="h-5 w-5 animate-spin" /></div>;
 }
-function ErrBox({ message }: { message: string }) {
+function ErrBox({ message, error, onRetry }: { message: string; error?: unknown; onRetry?: () => void }) {
+  const detail =
+    error && typeof error === "object"
+      ? ((error as any).message as string | undefined) ??
+        ((error as any).details as string | undefined) ??
+        ((error as any).hint as string | undefined)
+      : undefined;
+  const code = error && typeof error === "object" ? ((error as any).code as string | undefined) : undefined;
   return (
-    <div className="rounded-xl border border-red-200 bg-red-50 text-red-800 p-4 text-sm flex gap-2">
-      <AlertTriangle className="h-4 w-4 flex-shrink-0" /> {message}
+    <div className="rounded-xl border border-red-200 bg-red-50 text-red-800 p-4 text-sm space-y-2">
+      <div className="flex gap-2 items-start">
+        <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+        <div className="space-y-1 flex-1">
+          <div className="font-medium">{message}</div>
+          {detail && (
+            <div className="text-xs font-mono text-red-700/90 whitespace-pre-wrap break-words">
+              {code ? `[${code}] ` : ""}{detail}
+            </div>
+          )}
+          {detail === "forbidden" && (
+            <div className="text-xs text-red-700/80">
+              Your signed-in account is not a platform super_admin. Sign in with your admin account, or ask a super admin to grant your account the super_admin role.
+            </div>
+          )}
+        </div>
+        {onRetry && (
+          <button
+            onClick={onRetry}
+            className="text-xs px-2 py-1 rounded border border-red-300 hover:bg-red-100"
+          >
+            Retry
+          </button>
+        )}
+      </div>
     </div>
   );
 }
