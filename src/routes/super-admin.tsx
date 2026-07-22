@@ -535,7 +535,7 @@ function OverviewTab({ userId, setTab }: { userId: string; setTab: (t: Tab) => v
 
   const isLoading = stats.isPending || farmsQ.isPending || accountsQ.isPending;
 
-  if (stats.error) return <ErrBox message="Could not load platform stats." />;
+  if (stats.error) return <ErrBox message="Could not load platform stats." error={stats.error} onRetry={() => stats.refetch()} />;
   if (isLoading && !data) return <Loader />;
 
   return (
@@ -1034,7 +1034,7 @@ function AccountsTab({ userId }: { userId: string }) {
   }
 
   if (isPending) return <Loader />;
-  if (error) return <ErrBox message="Could not load accounts." />;
+  if (error) return <ErrBox message="Could not load accounts." error={error} onRetry={() => refetch()} />;
 
   return (
     <div className="space-y-4">
@@ -1378,7 +1378,7 @@ function FarmsTab({ userId }: { userId: string }) {
   }, [data, q]);
 
   if (isPending) return <Loader />;
-  if (error) return <ErrBox message="Could not load farms." />;
+  if (error) return <ErrBox message="Could not load farms." error={error} onRetry={() => refetch()} />;
 
   return (
     <div className="space-y-4">
@@ -1578,7 +1578,7 @@ function SubscriptionsTab({ userId }: { userId: string }) {
   }, [data]);
 
   if (isPending) return <Loader />;
-  if (error || !data) return <ErrBox message="Could not load farms." />;
+  if (error || !data) return <ErrBox message="Could not load subscriptions." error={error} onRetry={() => refetch()} />;
 
 
   return (
@@ -1742,7 +1742,7 @@ function ActivityTab({ userId }: { userId: string }) {
 function IntelligenceTab({ userId }: { userId: string }) {
   const { data, isPending, error } = useAdminIntelligence(userId, true);
   if (isPending) return <Loader />;
-  if (error || !data) return <ErrBox message="Could not load intelligence summary." />;
+  if (error || !data) return <ErrBox message="Could not load intelligence summary." error={error} />;
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
       <StatCard label="Farms with production data" value={data.farms_with_production ?? 0} />
@@ -1794,7 +1794,7 @@ function HealthTab({ userId }: { userId: string }) {
 function AuditTab({ userId }: { userId: string }) {
   const { data, isPending, error } = useAdminAuditLog(userId, true);
   if (isPending) return <Loader />;
-  if (error) return <ErrBox message="Could not load audit log." />;
+  if (error) return <ErrBox message="Could not load audit log." error={error} />;
   const items = data ?? [];
   if (!items.length) return <div className="text-sm text-[#12281c]/60">No admin actions recorded yet.</div>;
   return (
@@ -2121,7 +2121,7 @@ function WhatsAppTab({ userId }: { userId: string }) {
   };
 
   if (stats.isPending) return <Loader />;
-  if (stats.error) return <ErrBox message="Could not load WhatsApp analytics." />;
+  if (stats.error) return <ErrBox message="Could not load WhatsApp analytics." error={stats.error} onRetry={() => stats.refetch()} />;
 
   return (
     <div className="space-y-5">
@@ -2457,6 +2457,7 @@ function AnalyticsTab({ userId }: { userId: string }) {
   const q = usePlatformTimeseries(userId, true, days);
 
   if (q.isPending) return <Loader />;
+  if (q.error) return <ErrBox message="Could not load analytics." error={q.error} onRetry={() => q.refetch()} />;
   if (!q.data) return <ErrBox message="Could not load analytics." />;
   const d = q.data;
 
