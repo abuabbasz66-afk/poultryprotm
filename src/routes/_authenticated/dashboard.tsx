@@ -906,10 +906,10 @@ const setBagWeightKg = (v: number | null) => {
           {feedTab === "Usage" ? (
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-                <MiniStat label="Today's Feed" value={`${feedToday} bags`} tone="sky" />
-                <MiniStat label="7-Day Avg" value={`${feed7Avg.toFixed(1)} bags`} tone="mint" />
+                <MiniStat label="Today's Feed" value={`${round1(feedToday * bagKg)} kg`} tone="sky" hint={`${round1(feedToday)} bags`} />
+                <MiniStat label="7-Day Avg" value={`${round1(feed7Avg * bagKg)} kg/day`} tone="mint" hint={`${round1(feed7Avg)} bags/day`} />
                 <MiniStat label="Feed / Bird" value={`${feedPerBirdG.toFixed(0)} g`} tone="plain" />
-                <MiniStat label="30-Day Usage" value={`${feed30Total.toFixed(1)} bags`} tone="peach" />
+                <MiniStat label="30-Day Avg" value={`${round1(feed30Avg * bagKg)} kg/day`} tone="peach" hint={`${round1(feed30Total * bagKg)} kg total · ${round1(feed30Total)} bags`} />
               </div>
               <div className="mt-4 overflow-x-auto rounded-xl border border-border">
                 <table className="w-full text-xs sm:text-sm">
