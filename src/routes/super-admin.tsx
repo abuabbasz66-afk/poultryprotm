@@ -46,14 +46,18 @@ export const Route = createFileRoute("/super-admin")({
 
 type Tab =
   | "overview" | "accounts" | "farms" | "subscriptions"
-  | "activity" | "whatsapp" | "intelligence" | "health" | "audit";
+  | "activity" | "activity-log" | "live-feed" | "analytics"
+  | "whatsapp" | "intelligence" | "health" | "audit";
 
 const NAV: { id: Tab; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "accounts", label: "Accounts", icon: Users },
   { id: "farms", label: "Farms", icon: Warehouse },
   { id: "subscriptions", label: "Subscriptions", icon: CreditCard },
-  { id: "activity", label: "Platform Activity", icon: Activity },
+  { id: "live-feed", label: "Live Feed", icon: Activity },
+  { id: "activity-log", label: "Activity Log", icon: FileText },
+  { id: "analytics", label: "Analytics", icon: LineIcon },
+  { id: "activity", label: "Platform Activity", icon: Zap },
   { id: "whatsapp", label: "WhatsApp Enquiries", icon: MessageCircle },
   { id: "intelligence", label: "AI Intelligence", icon: Brain },
   { id: "health", label: "Platform Health", icon: HeartPulse },
