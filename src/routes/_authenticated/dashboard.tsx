@@ -372,8 +372,12 @@ const setBagWeightKg = (v: number | null) => {
   const feed30 = feedByDate.slice(0, 30);
   const feed7Avg = feed7.length ? feed7.reduce((s, g) => s + g.total, 0) / feed7.length : 0;
   const feed30Total = feed30.reduce((s, g) => s + g.total, 0);
+  const feed30Avg = feed30.length ? feed30Total / feed30.length : 0;
   const bagKg = bagWeightKg ?? 25;
   const feedPerBirdG = totalBirds ? (feedToday * bagKg * 1000) / totalBirds : 0;
+  // Kilograms are the source of truth; bags are derived from bagKg.
+  const round1 = (n: number) => Math.round(n * 10) / 10;
+  const feedFmt = (bags: number) => `${round1(bags * bagKg)} kg (${round1(bags)} bags)`;
 
   // Do not render any farm-scoped UI until the current user's farm id has
   // resolved. This prevents a moment where cached "Your Farm" fallbacks or
