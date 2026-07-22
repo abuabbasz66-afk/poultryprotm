@@ -932,7 +932,7 @@ const setBagWeightKg = (v: number | null) => {
                 <MiniStat label="Today's Feed" value={`${round1(feedToday * bagKg)} kg`} tone="sky" hint={`${round1(feedToday)} bags`} />
                 <MiniStat label="7-Day Avg" value={`${round1(feed7Avg * bagKg)} kg/day`} tone="mint" hint={`${round1(feed7Avg)} bags/day`} />
                 <MiniStat label="Feed / Bird" value={`${feedPerBirdG.toFixed(0)} g`} tone="plain" />
-                <MiniStat label="30-Day Avg" value={`${round1(feed30Avg * bagKg)} kg/day`} tone="peach" hint={`${round1(feed30Total * bagKg)} kg total · ${round1(feed30Total)} bags`} />
+                <MiniStat label="30-Day Avg" value={`${round1(feed30Avg * bagKg)} kg/day`} tone="peach" hint={`${round1(w30.totalBags * bagKg)} kg total · ${round1(w30.totalBags)} bags`} />
               </div>
               <div className="mt-4 overflow-x-auto rounded-xl border border-border">
                 <table className="w-full text-xs sm:text-sm">
