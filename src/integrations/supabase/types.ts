@@ -543,6 +543,9 @@ export type Database = {
           created_at: string
           farm_id: string
           farm_name: string
+          is_online: boolean
+          last_activity: string
+          last_login: string
           location: string
           owner_email: string
           owner_name: string
@@ -550,6 +553,7 @@ export type Database = {
           state: string
           status: string
           subscription_plan: string
+          users_count: number
         }[]
       }
       admin_list_notifications: {
