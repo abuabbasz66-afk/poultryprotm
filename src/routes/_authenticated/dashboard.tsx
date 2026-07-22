@@ -143,7 +143,15 @@ function Dashboard() {
   const [mortalityOpen, setMortalityOpen] = useState(false);
   const [feedEffOpen, setFeedEffOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
-  const [bagWeightKg, setBagWeightKg] = useState<number | null>(null);
+// Bag weight (kg per bag) is persisted per farm. Kilograms are the source of
+// truth for feed input; bag counts are a derived display value. If the farm
+// changes the weight later, all bag-count displays recalculate automatically.
+const updBagWeightM = useUpdateFarmBagWeight();
+const bagWeightKg: number | null = farmQ.data?.bag_weight_kg ?? null;
+const setBagWeightKg = (v: number | null) => {
+  if (!farmIdQ.data || v == null || !Number.isFinite(v) || v <= 0) return;
+  updBagWeightM.mutate({ farmId: farmIdQ.data, bagWeightKg: v });
+};
   const [mortShowAll, setMortShowAll] = useState(false);
   const [feedShowAll, setFeedShowAll] = useState(false);
   const [expandedMortDate, setExpandedMortDate] = useState<string | null>(null);
