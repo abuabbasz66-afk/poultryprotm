@@ -132,7 +132,11 @@ function Actions({
 
 /* ---------- Utils ---------- */
 
-const todayIso = () => new Date().toISOString().slice(0, 10);
+const todayIso = () => {
+  const d = new Date();
+  const p = (n: number) => (n < 10 ? `0${n}` : String(n));
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+};
 const isoToLabel = (iso: string) => {
   // "2026-07-15" -> "Wed, 15 Jul"
   try { return format(parse(iso, "yyyy-MM-dd", new Date()), "EEE, d MMM"); }

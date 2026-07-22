@@ -368,12 +368,35 @@ const setBagWeightKg = (v: number | null) => {
     return Array.from(set).sort();
   }, [rooms, feed]);
 
-  const feed7 = feedByDate.slice(0, 7);
-  const feed30 = feedByDate.slice(0, 30);
-  const feed7Avg = feed7.length ? feed7.reduce((s, g) => s + g.total, 0) / feed7.length : 0;
-  const feed30Total = feed30.reduce((s, g) => s + g.total, 0);
-  const feed30Avg = feed30.length ? feed30Total / feed30.length : 0;
+  // 7-day / 30-day feed averages: window is the last N calendar days ending
+  // today (local time). Average is TOTAL bags in the window ÷ number of days
+  // that actually had a record (so a single 12.5 kg entry averages to 12.5 kg
+  // rather than being diluted across empty days).
   const bagKg = bagWeightKg ?? 25;
+  const todayKeyLocal = (() => {
+    const d = new Date();
+    const p = (n: number) => (n < 10 ? `0${n}` : String(n));
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  })();
+  const daysAgoKey = (n: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    const p = (x: number) => (x < 10 ? `0${x}` : String(x));
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  };
+  const feedWindow = (days: number) => {
+    const start = daysAgoKey(days - 1);
+    const inWin = feedByDate.filter(g => {
+      const k = toDateKey(g.date) ?? g.date;
+      return k >= start && k <= todayKeyLocal;
+    });
+    const totalBags = inWin.reduce((s, g) => s + g.total, 0);
+    return { totalBags, daysWithRecords: inWin.length };
+  };
+  const w7 = feedWindow(7);
+  const w30 = feedWindow(30);
+  const feed7Avg = w7.daysWithRecords ? w7.totalBags / w7.daysWithRecords : 0;
+  const feed30Avg = w30.daysWithRecords ? w30.totalBags / w30.daysWithRecords : 0;
   const feedPerBirdG = totalBirds ? (feedToday * bagKg * 1000) / totalBirds : 0;
   // Kilograms are the source of truth; bags are derived from bagKg.
   const round1 = (n: number) => Math.round(n * 10) / 10;
@@ -909,7 +932,7 @@ const setBagWeightKg = (v: number | null) => {
                 <MiniStat label="Today's Feed" value={`${round1(feedToday * bagKg)} kg`} tone="sky" hint={`${round1(feedToday)} bags`} />
                 <MiniStat label="7-Day Avg" value={`${round1(feed7Avg * bagKg)} kg/day`} tone="mint" hint={`${round1(feed7Avg)} bags/day`} />
                 <MiniStat label="Feed / Bird" value={`${feedPerBirdG.toFixed(0)} g`} tone="plain" />
-                <MiniStat label="30-Day Avg" value={`${round1(feed30Avg * bagKg)} kg/day`} tone="peach" hint={`${round1(feed30Total * bagKg)} kg total · ${round1(feed30Total)} bags`} />
+                <MiniStat label="30-Day Avg" value={`${round1(feed30Avg * bagKg)} kg/day`} tone="peach" hint={`${round1(w30.totalBags * bagKg)} kg total · ${round1(w30.totalBags)} bags`} />
               </div>
               <div className="mt-4 overflow-x-auto rounded-xl border border-border">
                 <table className="w-full text-xs sm:text-sm">
