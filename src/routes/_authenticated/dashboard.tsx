@@ -1278,16 +1278,16 @@ function AreaTab({ active, onClick, num, stage, title, shortLabel, state, icon: 
       onClick={onClick}
       aria-label={`${title} — ${AREA_STATE_LABEL[state]}`}
       className={
-        "group relative text-left rounded-xl md:rounded-2xl border px-2 py-2 md:p-4 transition min-w-0 " +
+        "group relative text-left rounded-xl md:rounded-2xl border px-2 py-2.5 md:p-4 transition-all duration-200 min-w-0 h-full flex flex-col justify-between hover:-translate-y-0.5 " +
         (active
           ? (premium
-              ? "bg-gradient-to-br from-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground border-[color:var(--gold)]/50 shadow-[var(--shadow-soft)]"
-              : "bg-[color:var(--forest)] text-primary-foreground border-[color:var(--forest)] shadow-[var(--shadow-soft)]")
+              ? "bg-gradient-to-br from-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground border-[color:var(--gold)]/50 shadow-[var(--shadow-lift)]"
+              : "bg-[color:var(--forest)] text-primary-foreground border-[color:var(--forest)] shadow-[var(--shadow-lift)]")
           : isCurrent
-            ? "bg-[color:var(--forest)]/5 text-[color:var(--forest)] border-[color:var(--forest)]/40 hover:border-[color:var(--forest)]/60"
+            ? "bg-[color:var(--forest)]/5 text-[color:var(--forest)] border-[color:var(--forest)]/40 hover:border-[color:var(--forest)]/60 hover:shadow-[var(--shadow-soft)]"
             : locked
-              ? "bg-card text-[color:var(--forest)] border-dashed border-[color:var(--gold)]/50 hover:border-[color:var(--gold)]"
-              : "bg-card text-[color:var(--forest)] border-border hover:border-[color:var(--forest)]/40")
+              ? "bg-card text-[color:var(--forest)] border-dashed border-[color:var(--gold)]/50 hover:border-[color:var(--gold)] hover:shadow-[var(--shadow-soft)]"
+              : "bg-card text-[color:var(--forest)] border-border hover:border-[color:var(--forest)]/40 hover:shadow-[var(--shadow-soft)]")
       }
     >
       <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
