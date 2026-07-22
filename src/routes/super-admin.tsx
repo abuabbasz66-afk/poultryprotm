@@ -938,7 +938,7 @@ function QuickAction({ Icon, label, onClick }: { Icon: any; label: string; onCli
 
 // -------------------- ACCOUNTS --------------------
 function AccountsTab({ userId }: { userId: string }) {
-  const { data, isPending, error } = useAdminAccounts(userId, true);
+  const { data, isPending, error, refetch } = useAdminAccounts(userId, true);
   const setStatusM = useSetAccountStatus(userId);
   const changeSub = useChangeSubscription(userId);
   const deleteAcct = useDeleteAccount(userId);
@@ -1359,7 +1359,7 @@ function DeleteAccountDialog({
 
 // -------------------- FARMS --------------------
 function FarmsTab({ userId }: { userId: string }) {
-  const { data, isPending, error } = useAdminFarms(userId, true);
+  const { data, isPending, error, refetch } = useAdminFarms(userId, true);
   const [q, setQ] = useState("");
   const [openFarm, setOpenFarm] = useState<string | null>(null);
 
@@ -1565,7 +1565,7 @@ function FarmSummaryModal({ userId, farmId, onClose }: { userId: string; farmId:
 
 // -------------------- SUBSCRIPTIONS --------------------
 function SubscriptionsTab({ userId }: { userId: string }) {
-  const { data, isPending, error } = useAdminFarms(userId, true);
+  const { data, isPending, error, refetch } = useAdminFarms(userId, true);
   const change = useChangeSubscription(userId);
   const [target, setTarget] = useState<{ farm: AdminFarm; plan: string } | null>(null);
   const [subStats, setSubStats] = useState<Record<string, number> | null>(null);
