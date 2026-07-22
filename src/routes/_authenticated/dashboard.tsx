@@ -649,19 +649,21 @@ function Dashboard() {
               </thead>
               <tbody>
                 {(eggShowAll ? eggs : eggs.slice(0, 7)).map(e => {
-                  const roomVal = (name: string): number | null => {
-                    const n = name.toUpperCase();
-                    if (n === "ROOM 2") return e.r2;
-                    if (n === "ROOM 3") return e.r3;
-                    if (n === "ROOM 4") return e.r4;
+                  // Rooms are stored positionally in r2/r3/r4 (schema legacy).
+                  // Map by ORDER in the farm's rooms list, not by name string,
+                  // so "ROOM 1" / "House A" / any label displays correctly.
+                  const roomVal = (idx: number): number | null => {
+                    if (idx === 0) return e.r2;
+                    if (idx === 1) return e.r3;
+                    if (idx === 2) return e.r4;
                     return null;
                   };
                   const norm = normaliseEggRow(e);
                   return (
                     <tr key={e.id ?? e.date + e.label} className="border-b border-border/50">
                       <td className="py-2.5 pr-4 whitespace-nowrap">{e.label}</td>
-                      {rooms.map(r => {
-                        const v = roomVal(r.name);
+                      {rooms.map((r, idx) => {
+                        const v = roomVal(idx);
                         return (
                           <td key={r.id} className="py-2.5 pr-4 tabular-nums">
                             {v === null ? <span className="text-muted-foreground/50" title="Not recorded">—</span> : v}
