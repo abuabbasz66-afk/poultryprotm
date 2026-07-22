@@ -302,7 +302,7 @@ const setBagWeightKg = (v: number | null) => {
   const delFeedRow = (f: Feed) => {
     askDelete(
       `Delete feed record?`,
-      `This will permanently remove the ${f.bags}-bag feed record for ${f.room} on ${f.date}.`,
+      `This will permanently remove the ${Math.round(f.bags * (farmQ.data?.bag_weight_kg ?? 25) * 10) / 10} kg feed record for ${f.room} on ${f.date}.`,
       runDelete((v: string) => delFeedM.mutateAsync(v), f.id, "Feed record"),
     );
   };
