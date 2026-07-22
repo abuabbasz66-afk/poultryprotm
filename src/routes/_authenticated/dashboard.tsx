@@ -476,7 +476,7 @@ function Dashboard() {
           return (
             <>
               <nav aria-label="Dashboard areas" className="rounded-2xl md:rounded-3xl bg-card border border-border p-1.5 md:p-2 shadow-[var(--shadow-soft)]">
-                <div className="grid grid-cols-3 gap-1 md:gap-1.5">
+                <div className="grid grid-cols-3 gap-1.5 md:gap-2 items-stretch">
                   <AreaTab
                     active={area === "records"} onClick={() => handleClick("records")}
                     num="01" stage="CAPTURE" title="Farm Records" shortLabel="Capture"
