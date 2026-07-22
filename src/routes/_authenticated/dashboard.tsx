@@ -930,10 +930,20 @@ const setBagWeightKg = (v: number | null) => {
                         <Fragment key={g.date}>
                           <tr key={g.date} className="border-t border-border/60 hover:bg-[color:var(--gold)]/5 cursor-pointer" onClick={() => setExpandedFeedDate(isOpen ? null : g.date)}>
                             <td className="py-2 px-3 font-medium whitespace-nowrap">{g.date}</td>
-                            {feedRoomNames.map(rn => (
-                              <td key={rn} className="py-2 px-3 text-right tabular-nums">{g.byRoom[rn] ? g.byRoom[rn] : <span className="text-muted-foreground/50">—</span>}</td>
-                            ))}
-                            <td className="py-2 px-3 text-right font-semibold tabular-nums whitespace-nowrap">{g.total} bags</td>
+                            {feedRoomNames.map(rn => {
+                              const bagsVal = g.byRoom[rn];
+                              return (
+                                <td key={rn} className="py-2 px-3 text-right tabular-nums">
+                                  {bagsVal
+                                    ? <span>{round1(bagsVal * bagKg)}<span className="text-[10px] text-muted-foreground ml-0.5">kg</span></span>
+                                    : <span className="text-muted-foreground/50">—</span>}
+                                </td>
+                              );
+                            })}
+                            <td className="py-2 px-3 text-right font-semibold tabular-nums whitespace-nowrap">
+                              {round1(g.total * bagKg)} kg
+                              <span className="ml-1 text-[10px] font-normal text-muted-foreground">({round1(g.total)} bags)</span>
+                            </td>
                             <td className="py-2 px-2 text-muted-foreground"><ChevronDown className={"h-3.5 w-3.5 transition-transform " + (isOpen ? "rotate-180" : "")} /></td>
                           </tr>
                           {isOpen && (
