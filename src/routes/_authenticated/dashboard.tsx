@@ -703,8 +703,8 @@ function Dashboard() {
           <Card>
             <CardHeader title="Room Overview" subtitle="Current status per room" />
             <div className="mt-4 space-y-2">
-              {rooms.map(r => {
-                const todayR = today ? (r.name === "ROOM 2" ? today.r2 : r.name === "ROOM 3" ? today.r3 : r.name === "ROOM 4" ? today.r4 : 0) : 0;
+              {rooms.map((r, idx) => {
+                const todayR = today ? (idx === 0 ? today.r2 : idx === 1 ? today.r3 : idx === 2 ? today.r4 : 0) : 0;
                 const loss = r.initial - r.current;
                 return (
                   <div key={r.id} className="flex items-center justify-between rounded-2xl bg-secondary/50 px-4 py-3">
