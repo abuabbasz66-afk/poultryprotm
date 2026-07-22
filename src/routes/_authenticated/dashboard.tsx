@@ -560,7 +560,7 @@ const setBagWeightKg = (v: number | null) => {
                 <InsightRow
                   label="Monthly mortality (this month)"
                   value={String(monthlyMortality)}
-                  detail={`Today: ${todayMortality} · All-time: ${allTimeMortality} · ${feedToday} bags fed today`}
+                  detail={`Today: ${todayMortality} · All-time: ${allTimeMortality} · ${feedFmt(feedToday)} fed today`}
                   positive={monthlyMortality <= 5}
                 />
               </div>
