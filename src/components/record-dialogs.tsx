@@ -194,8 +194,12 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
   const upd = useUpdateEgg();
   const pending = add.isPending || upd.isPending;
 
-  const totalCrates = (Number(r2) || 0) + (Number(r3) || 0) + (Number(r4) || 0);
-  const totalExtra = Number(extra) || 0;
+  const roomCrates = (Number(r2) || 0) + (Number(r3) || 0) + (Number(r4) || 0);
+  const rawExtra = Number(extra) || 0;
+  const bonusCrates = Math.floor(rawExtra / 30);
+  const remainderExtra = rawExtra % 30;
+  const totalCrates = roomCrates + bonusCrates;
+  const totalEggs = totalCrates * 30 + remainderExtra;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -240,26 +244,31 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
         {slots.map((s) => (
           <div key={s.key} className="rounded-2xl border border-[color:var(--forest)]/10 bg-background/60 p-3">
             <div className="text-xs font-semibold text-[color:var(--forest)] mb-2">{s.name}</div>
-            <div className="grid grid-cols-2 gap-2">
-              <Field label="Crates">
-                <NumberInput
-                  value={s.getter}
-                  onChange={(e) => s.setter(e.target.value === "" ? "" : Number(e.target.value))}
-                  placeholder="0"
-                />
-              </Field>
-              {s.key === "r4" ? (
-                <Field label="Extra eggs">
-                  <NumberInput
-                    value={extra}
-                    onChange={(e) => setExtra(e.target.value === "" ? "" : Number(e.target.value))}
-                    placeholder="0"
-                  />
-                </Field>
-              ) : <div />}
-            </div>
+            <Field label="Crates">
+              <NumberInput
+                value={s.getter}
+                onChange={(e) => s.setter(e.target.value === "" ? "" : Number(e.target.value))}
+                placeholder="0"
+              />
+            </Field>
           </div>
         ))}
+      </div>
+
+      <div className="rounded-2xl border border-[color:var(--forest)]/10 bg-background/60 p-3">
+        <div className="text-xs font-semibold text-[color:var(--forest)] mb-2">Extra eggs (loose)</div>
+        <Field label="Extra eggs">
+          <NumberInput
+            value={extra}
+            onChange={(e) => setExtra(e.target.value === "" ? "" : Number(e.target.value))}
+            placeholder="0"
+          />
+        </Field>
+        {bonusCrates > 0 && (
+          <div className="mt-2 text-[11px] text-muted-foreground">
+            Auto-converted: {bonusCrates} crate{bonusCrates === 1 ? "" : "s"} + {remainderExtra} extra
+          </div>
+        )}
       </div>
 
       <div className="rounded-2xl bg-[color:var(--forest)]/8 border border-[color:var(--forest)]/15 px-4 py-3">
@@ -270,11 +279,11 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
             <div className="text-[11px] text-muted-foreground">total crates</div>
           </div>
           <div className="text-right">
-            <div className="font-display text-2xl font-semibold text-[color:var(--forest)]">{totalExtra}</div>
+            <div className="font-display text-2xl font-semibold text-[color:var(--forest)]">{remainderExtra}</div>
             <div className="text-[11px] text-muted-foreground">extra eggs</div>
           </div>
           <div className="text-right">
-            <div className="font-display text-2xl font-semibold text-[color:var(--gold)]">{totalCrates * 30 + totalExtra}</div>
+            <div className="font-display text-2xl font-semibold text-[color:var(--gold)]">{totalEggs}</div>
             <div className="text-[11px] text-muted-foreground">total eggs</div>
           </div>
         </div>
@@ -284,6 +293,7 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
     </form>
   );
 }
+
 
 function MortalityForm({ item, onClose, rooms }: { item?: Mortality; onClose: () => void; rooms: Room[] }) {
   const isEdit = !!item;
