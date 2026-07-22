@@ -1094,9 +1094,9 @@ const setBagWeightKg = (v: number | null) => {
                 />
                 <PreviewInsight
                   kicker="Feed vs Production"
-                  metric={`${feedToday} bags`}
-                  metricLabel={`for ${todayEggs.toLocaleString()} eggs today`}
-                  observation={`Today's feed usage is ${feedToday} bags against ${todayEggs.toLocaleString()} eggs produced across ${rooms.length} rooms.`}
+                  metric={`${round1(feedToday * bagKg)} kg`}
+                  metricLabel={`(${round1(feedToday)} bags) for ${todayEggs.toLocaleString()} eggs today`}
+                  observation={`Today's feed usage is ${round1(feedToday * bagKg)} kg (${round1(feedToday)} bags) against ${todayEggs.toLocaleString()} eggs produced across ${rooms.length} rooms.`}
                   action="Watch for feed usage rising while egg output stays flat — an early signal of efficiency change."
                 />
               </div>
