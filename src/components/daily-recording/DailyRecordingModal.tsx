@@ -72,7 +72,11 @@ type DailyRecordingModalProps<TValue extends RoomValue> = {
   }) => Promise<void>;
 };
 
-const todayIso = () => new Date().toISOString().slice(0, 10);
+const todayIso = () => {
+  const d = new Date();
+  const p = (n: number) => (n < 10 ? `0${n}` : String(n));
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+};
 
 const inputBase =
   "w-full rounded-xl border border-[color:var(--forest)]/15 bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-[color:var(--gold)]/40 focus:border-[color:var(--forest)]/40 transition";
