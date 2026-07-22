@@ -1217,11 +1217,12 @@ function KpiCard({ tone, icon: Icon, label, value, hint, trend }: {
   );
 }
 
-function MiniStat({ label, value, tone }: { label: string; value: string; tone: keyof typeof toneMap }) {
+function MiniStat({ label, value, tone, hint }: { label: string; value: string; tone: keyof typeof toneMap; hint?: string }) {
   return (
     <div className={"rounded-xl border p-3 " + toneMap[tone]}>
       <div className="flex items-center gap-2 text-xs text-muted-foreground"><Egg className="h-3.5 w-3.5" /> {label}</div>
       <div className="font-display text-xl font-semibold mt-1">{value}</div>
+      {hint && <div className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">{hint}</div>}
     </div>
   );
 }
