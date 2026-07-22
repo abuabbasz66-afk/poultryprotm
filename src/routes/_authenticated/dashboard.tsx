@@ -575,7 +575,7 @@ const setBagWeightKg = (v: number | null) => {
           <KpiCard tone="plain" icon={Bird} label="Total Birds" value={totalBirds.toLocaleString()} hint={`Across ${rooms.length} rooms`} />
           <KpiCard tone="sky" icon={TrendingUp} label="Production Rate" value={`${productionRate}%`} hint="Target: 80%" />
           <KpiCard tone="peach" icon={Skull} label="Monthly Mortality" value={String(monthlyMortality)} hint="This month" />
-          <KpiCard tone="plain" icon={Wheat} label="Feed Today" value={`${feedToday} bags`} hint="All rooms" />
+          <KpiCard tone="plain" icon={Wheat} label="Feed Today" value={`${round1(feedToday * bagKg)} kg`} hint={`${round1(feedToday)} bags · all rooms`} />
           <KpiCard tone="mint" icon={DollarSign} label="Today's Profit" value={naira(todayProfit)} hint={`Revenue: ${naira(todayRevenue)}`} />
         </div>
 
