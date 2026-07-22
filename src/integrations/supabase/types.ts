@@ -142,6 +142,7 @@ export type Database = {
       farms: {
         Row: {
           auto_renew: boolean
+          bag_weight_kg: number
           bird_count: number | null
           bird_type: string | null
           country: string
@@ -163,6 +164,7 @@ export type Database = {
         }
         Insert: {
           auto_renew?: boolean
+          bag_weight_kg?: number
           bird_count?: number | null
           bird_type?: string | null
           country?: string
@@ -184,6 +186,7 @@ export type Database = {
         }
         Update: {
           auto_renew?: boolean
+          bag_weight_kg?: number
           bird_count?: number | null
           bird_type?: string | null
           country?: string
