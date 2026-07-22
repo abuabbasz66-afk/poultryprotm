@@ -32,6 +32,7 @@ import {
   useWhatsAppStats, useWhatsAppRecent, fetchWhatsAppExport,
   downloadCsv, downloadPdf, type WhatsAppStats, type WhatsAppClickRow,
 } from "@/lib/whatsapp-analytics";
+import { useActivityLog, usePlatformTimeseries } from "@/lib/admin-monitoring";
 
 export const Route = createFileRoute("/super-admin")({
   ssr: false,
@@ -46,14 +47,18 @@ export const Route = createFileRoute("/super-admin")({
 
 type Tab =
   | "overview" | "accounts" | "farms" | "subscriptions"
-  | "activity" | "whatsapp" | "intelligence" | "health" | "audit";
+  | "activity" | "activity-log" | "live-feed" | "analytics"
+  | "whatsapp" | "intelligence" | "health" | "audit";
 
 const NAV: { id: Tab; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "accounts", label: "Accounts", icon: Users },
   { id: "farms", label: "Farms", icon: Warehouse },
   { id: "subscriptions", label: "Subscriptions", icon: CreditCard },
-  { id: "activity", label: "Platform Activity", icon: Activity },
+  { id: "live-feed", label: "Live Feed", icon: Activity },
+  { id: "activity-log", label: "Activity Log", icon: FileText },
+  { id: "analytics", label: "Analytics", icon: LineIcon },
+  { id: "activity", label: "Platform Activity", icon: Zap },
   { id: "whatsapp", label: "WhatsApp Enquiries", icon: MessageCircle },
   { id: "intelligence", label: "AI Intelligence", icon: Brain },
   { id: "health", label: "Platform Health", icon: HeartPulse },
@@ -247,6 +252,9 @@ function SuperAdminPage() {
           {tab === "farms" && <FarmsTab userId={userId} />}
           {tab === "subscriptions" && <SubscriptionsTab userId={userId} />}
           {tab === "activity" && <ActivityTab userId={userId} />}
+          {tab === "activity-log" && <ActivityLogTab userId={userId} />}
+          {tab === "live-feed" && <LiveFeedTab userId={userId} />}
+          {tab === "analytics" && <AnalyticsTab userId={userId} />}
           {tab === "whatsapp" && <WhatsAppTab userId={userId} />}
           {tab === "intelligence" && <IntelligenceTab userId={userId} />}
           {tab === "health" && <HealthTab userId={userId} />}
@@ -1398,12 +1406,21 @@ function FarmsTab({ userId }: { userId: string }) {
                 <Td><Badge className={statusTone(f.status)}>{f.status}</Badge></Td>
                 <Td>{fmtDay(f.created_at)}</Td>
                 <Td>
-                  <button
-                    onClick={() => setOpenFarm(f.farm_id)}
-                    className="text-xs px-2 py-1 rounded border border-[#12281c]/20 hover:bg-[#f6f2e6]"
-                  >
-                    View
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      to="/super-admin/farms/$farmId"
+                      params={{ farmId: f.farm_id }}
+                      className="text-xs px-2 py-1 rounded bg-[#0f1f16] text-white hover:brightness-110"
+                    >
+                      Intelligence
+                    </Link>
+                    <button
+                      onClick={() => setOpenFarm(f.farm_id)}
+                      className="text-xs px-2 py-1 rounded border border-[#12281c]/20 hover:bg-[#f6f2e6]"
+                    >
+                      Summary
+                    </button>
+                  </div>
                 </Td>
               </tr>
             ))}
@@ -1428,12 +1445,21 @@ function FarmsTab({ userId }: { userId: string }) {
               <div><span className="text-[#12281c]/60">Birds / Rooms:</span> {f.bird_count ?? "—"} / {f.rooms_count}</div>
               <div><span className="text-[#12281c]/60">Status:</span> {f.status}</div>
             </div>
-            <button
-              onClick={() => setOpenFarm(f.farm_id)}
-              className="mt-3 w-full text-xs px-3 py-2 rounded border border-[#12281c]/20 hover:bg-[#f6f2e6]"
-            >
-              View support summary
-            </button>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Link
+                to="/super-admin/farms/$farmId"
+                params={{ farmId: f.farm_id }}
+                className="text-center text-xs px-3 py-2 rounded bg-[#0f1f16] text-white"
+              >
+                Intelligence
+              </Link>
+              <button
+                onClick={() => setOpenFarm(f.farm_id)}
+                className="text-xs px-3 py-2 rounded border border-[#12281c]/20 hover:bg-[#f6f2e6]"
+              >
+                Summary
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -2236,6 +2262,250 @@ function BarPanel({ title, data, xKey, color = "#0F5132" }: {
           </BarChart>
         </ResponsiveContainer>
       </div>
+    </div>
+  );
+}
+
+// ============================================================
+// Platform Monitoring — Activity Log / Live Feed / Analytics
+// ============================================================
+function ActivityLogTab({ userId }: { userId: string }) {
+  const [module, setModule] = useState<string>("");
+  const [action, setAction] = useState<string>("");
+  const [q, setQ] = useState("");
+  const filters = useMemo(
+    () => ({ module: module || null, action: action || null, limit: 300 }),
+    [module, action],
+  );
+  
+  const query = useActivityLog(userId, filters, true);
+  const rows = (query.data ?? []).filter((r) => {
+    const s = q.trim().toLowerCase();
+    if (!s) return true;
+    return (r.user_email ?? "").toLowerCase().includes(s)
+      || (r.farm_name ?? "").toLowerCase().includes(s)
+      || r.module.toLowerCase().includes(s)
+      || r.action.toLowerCase().includes(s);
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[220px]">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#12281c]/50" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search user, farm, action…"
+            className="w-full pl-9 pr-3 py-2 rounded-md border border-[#12281c]/20 bg-white text-sm"
+          />
+        </div>
+        <select value={module} onChange={(e) => setModule(e.target.value)}
+          className="px-3 py-2 rounded-md border border-[#12281c]/20 bg-white text-sm">
+          <option value="">All modules</option>
+          <option value="production">Production</option>
+          <option value="feed">Feed</option>
+          <option value="mortality">Mortality</option>
+          <option value="health">Health</option>
+        </select>
+        <select value={action} onChange={(e) => setAction(e.target.value)}
+          className="px-3 py-2 rounded-md border border-[#12281c]/20 bg-white text-sm">
+          <option value="">All actions</option>
+          <option value="production_added">Added</option>
+          <option value="production_updated">Updated</option>
+          <option value="production_deleted">Deleted</option>
+        </select>
+      </div>
+
+      <div className="rounded-xl border border-[#12281c]/10 bg-white overflow-x-auto">
+        <table className="w-full text-sm min-w-[720px]">
+          <thead className="bg-[#f6f2e6] text-[#12281c]/70 text-xs uppercase tracking-wider">
+            <tr>
+              <Th>Time</Th><Th>User</Th><Th>Farm</Th><Th>Module</Th><Th>Action</Th><Th>Status</Th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#12281c]/5">
+            {query.isPending && (
+              <tr><td colSpan={6} className="px-4 py-6 text-center"><Loader2 className="inline h-4 w-4 animate-spin" /></td></tr>
+            )}
+            {!query.isPending && rows.length === 0 && (
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-[#12281c]/60">No activity yet.</td></tr>
+            )}
+            {rows.map((r) => (
+              <tr key={r.id}>
+                <Td className="tabular-nums text-xs">{fmtDT(r.created_at)}</Td>
+                <Td className="text-xs font-mono">{r.user_email ?? "—"}</Td>
+                <Td className="text-xs">{r.farm_name ?? "—"}</Td>
+                <Td><Badge className="bg-slate-100 text-slate-800 border-slate-300 capitalize">{r.module}</Badge></Td>
+                <Td className="text-xs">{r.action}</Td>
+                <Td>
+                  <span className={r.success ? "text-emerald-700" : "text-red-700"}>
+                    {r.success ? "OK" : "Fail"}
+                  </span>
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="text-xs text-[#12281c]/60">
+        Showing {rows.length} of {query.data?.[0]?.total_count ?? rows.length} events
+      </div>
+    </div>
+  );
+}
+
+function LiveFeedTab({ userId }: { userId: string }) {
+  
+  const query = useActivityLog(userId, { limit: 100 }, true);
+  const rows = query.data ?? [];
+
+  useEffect(() => {
+    const ch = supabase.channel("live-activity-feed")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "platform_activity_log" }, () => {
+        query.refetch();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="rounded-2xl border border-[#12281c]/10 bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#12281c]/60">
+          <Activity className="h-3.5 w-3.5" /> Live activity feed
+        </div>
+        <span className="inline-flex items-center gap-1.5 text-xs text-emerald-700">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> Live
+        </span>
+      </div>
+      {query.isPending ? (
+        <div className="grid place-items-center py-10"><Loader2 className="h-5 w-5 animate-spin" /></div>
+      ) : rows.length === 0 ? (
+        <div className="text-sm text-[#12281c]/60">No activity yet. Events will stream in as farms record data.</div>
+      ) : (
+        <div className="divide-y divide-[#12281c]/10 max-h-[70vh] overflow-y-auto">
+          {rows.map((r) => (
+            <div key={r.id} className="py-3 flex items-start gap-3">
+              <div className="shrink-0 mt-0.5 h-8 w-8 rounded-full bg-[#f6f2e6] grid place-items-center">
+                <Activity className="h-4 w-4 text-[#0f7a3f]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm">
+                  <b>{r.farm_name ?? "Platform"}</b>{" "}
+                  <span className="text-[#12281c]/70">{humaniseFeedAction(r.module, r.action)}</span>
+                </div>
+                <div className="text-xs text-[#12281c]/60">
+                  {r.user_email ?? "system"} · {fmtDT(r.created_at)}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function humaniseFeedAction(mod: string, action: string): string {
+  const isDel = action.endsWith("_deleted");
+  const isUpd = action.endsWith("_updated");
+  const verb = isDel ? "deleted a" : isUpd ? "updated a" : "recorded a";
+  const noun: Record<string, string> = {
+    production: "production entry",
+    feed: "feed record",
+    mortality: "mortality event",
+    health: "health record",
+  };
+  return `${verb} ${noun[mod] ?? mod + " event"}.`;
+}
+
+function AnalyticsTab({ userId }: { userId: string }) {
+  
+  const [days, setDays] = useState(90);
+  const q = usePlatformTimeseries(userId, true, days);
+
+  if (q.isPending) return <Loader />;
+  if (!q.data) return <ErrBox message="Could not load analytics." />;
+  const d = q.data;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center gap-2">
+        <div className="text-xs uppercase tracking-widest text-[#12281c]/60">Range</div>
+        {[30, 90, 180, 365].map((n) => (
+          <button
+            key={n}
+            onClick={() => setDays(n)}
+            className={`text-xs px-3 py-1 rounded-full border ${
+              days === n
+                ? "bg-[#0f1f16] text-white border-[#0f1f16]"
+                : "border-[#12281c]/20 hover:bg-white"
+            }`}
+          >{n}d</button>
+        ))}
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <AnalyticsChart title="Farm growth (cumulative)" data={d.farm_growth} color="#0f7a3f" />
+        <AnalyticsChart title="User growth (cumulative)" data={d.user_growth} color="#c9a24a" />
+        <AnalyticsChart title="Daily active users" data={d.dau} color="#0369a1" />
+        <AnalyticsChart title="Eggs recorded" data={d.eggs} color="#0f7a3f" />
+        <AnalyticsChart title="Feed used (bags)" data={d.feed} color="#c9a24a" />
+        <AnalyticsChart title="Mortality" data={d.mortality} color="#b91c1c" />
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <TopList title="Top farms by production" rows={d.top_farms_production.map((r) => ({ label: r.farm_name, value: r.eggs.toLocaleString() + " eggs" }))} />
+        <TopList title="Most active farms" rows={d.most_active_farms.map((r) => ({ label: r.farm_name, value: r.events + " events" }))} />
+      </div>
+    </div>
+  );
+}
+
+function AnalyticsChart({ title, data, color }: { title: string; data: Array<{ d: string; v: number }>; color: string }) {
+  return (
+    <div className="rounded-2xl border border-[#12281c]/10 bg-white p-5 shadow-sm">
+      <div className="text-xs uppercase tracking-widest text-[#12281c]/60 mb-3">{title}</div>
+      <ResponsiveContainer width="100%" height={200}>
+        <AreaChart data={data}>
+          <defs>
+            <linearGradient id={`g-${title}`} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.35} />
+              <stop offset="100%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#12281c22" />
+          <XAxis dataKey="d" hide />
+          <YAxis width={40} tick={{ fontSize: 10 }} />
+          <ReTooltip />
+          <Area dataKey="v" stroke={color} fill={`url(#g-${title})`} />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function TopList({ title, rows }: { title: string; rows: Array<{ label: string; value: string }> }) {
+  return (
+    <div className="rounded-2xl border border-[#12281c]/10 bg-white p-5 shadow-sm">
+      <div className="text-xs uppercase tracking-widest text-[#12281c]/60 mb-3">{title}</div>
+      {rows.length === 0 ? (
+        <div className="text-sm text-[#12281c]/60">Not enough data yet.</div>
+      ) : (
+        <ol className="space-y-2">
+          {rows.map((r, i) => (
+            <li key={i} className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-2 min-w-0">
+                <span className="h-5 w-5 rounded-full bg-[#f6f2e6] text-[10px] font-semibold grid place-items-center shrink-0">{i + 1}</span>
+                <span className="truncate">{r.label}</span>
+              </span>
+              <span className="tabular-nums text-[#12281c]/70 text-xs">{r.value}</span>
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }

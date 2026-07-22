@@ -48,6 +48,10 @@ export type AdminFarm = {
   subscription_plan: string;
   status: string;
   created_at: string;
+  last_activity?: string | null;
+  last_login?: string | null;
+  is_online?: boolean;
+  users_count?: number;
 };
 
 export type AuditEntry = {

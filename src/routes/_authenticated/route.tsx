@@ -1,5 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { usePresenceHeartbeat } from "@/lib/presence";
+import { useAuthUserId } from "@/lib/farm-data";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -21,5 +23,11 @@ export const Route = createFileRoute("/_authenticated")({
     }
     return { user: data.user };
   },
-  component: () => <Outlet />,
+  component: AuthenticatedShell,
 });
+
+function AuthenticatedShell() {
+  const { data: userId } = useAuthUserId();
+  usePresenceHeartbeat(userId ?? null);
+  return <Outlet />;
+}
