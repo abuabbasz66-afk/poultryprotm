@@ -1984,8 +1984,8 @@ function FeedEfficiencyMonitor({
             />
             <ForecastStat
               label="Feed Used — Latest Matched Date"
-              value={`${fmtNum(analysis.latest.bags)} bags`}
-              hint={hasWeight ? `${fmtNum(analysis.latest.bags * (bagWeightKg as number))} kg` : "Configure bag weight for kg"}
+              value={hasWeight ? `${fmtNum(analysis.latest.bags * (bagWeightKg as number))} kg` : `${fmtNum(analysis.latest.bags)} bags`}
+              hint={hasWeight ? `${fmtNum(analysis.latest.bags)} bags (1 bag = ${bagWeightKg} kg)` : "Configure bag weight for kg"}
             />
             <ForecastStat
               label="Egg Output — Latest Matched Date"
