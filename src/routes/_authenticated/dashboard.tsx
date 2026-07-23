@@ -1033,7 +1033,7 @@ const setBagWeightKg = (v: number | null) => {
               </thead>
               <tbody>
                 {prices.map(p => {
-                  const unitLabel = priceUnitLabel(p.item, p.unit, bagWeightKg);
+                  const unitLabel = priceUnitLabel(p.item, p.unit, bagWeightKg ?? 25);
                   const feedMatch = /feed/i.test(p.item) ? /(\d+(?:\.\d+)?)\s*kg/i.exec(unitLabel) : null;
                   const bagKg = feedMatch ? Number(feedMatch[1]) : null;
                   const perKg = bagKg && bagKg > 0 && p.price > 0 ? p.price / bagKg : null;
