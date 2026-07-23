@@ -545,96 +545,195 @@ function FeedDayEditForm({ items, onClose }: { items: Feed[]; onClose: () => voi
   );
 }
 
-function PriceAddForm({ onClose }: { onClose: () => void }) {
-  const [item, setItem] = useState("");
-  const [unit, setUnit] = useState("1");
-  const [price, setPrice] = useState<number | "">("");
-  const m = useAddPrice();
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (m.isPending || !item.trim()) return;
-    const updated = format(new Date(), "d MMM yyyy");
-    m.mutate(
-      { item: item.trim(), unit: unit.trim() || "1", price: Number(price) || 0, updated },
-      {
-        onSuccess: () => { toast.success("Price item added"); onClose(); },
-        onError: (err) => toast.error("Failed to save price", { description: (err as Error).message }),
-      },
-    );
-  };
-  return (
-    <form onSubmit={submit} className="space-y-4">
-      <Field label="Item">
-        <TextInput value={item} onChange={(e) => setItem(e.target.value)} placeholder="Egg" autoFocus required />
-      </Field>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Unit" hint="e.g. crate, bag, kg.">
-          <TextInput value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="crate" />
-        </Field>
-        <Field label="Price (₦)">
-          <NumberInput
-            step="any"
-            value={price}
-            onChange={(e) => setPrice(e.target.value === "" ? "" : Number(e.target.value))}
-            placeholder="0"
-            required
-          />
-        </Field>
-      </div>
-      <Actions onCancel={onClose} submitting={m.isPending} submitLabel="Save Price" disabled={!item.trim()} />
-    </form>
-  );
+/* ---------- Price forms ----------
+ * Prices are captured with an explicit measurement unit so financial
+ * calculations across the platform stay consistent:
+ *   • Eggs are priced per Crate (30 eggs).
+ *   • Feed is priced per bag on the farm's configured bag weight
+ *     (25 / 40 / 50 kg or custom). Cost per kg is derived as
+ *     bagPrice / bagWeightKg and shown live in the form.
+ *   • Everything else is a free-text unit (kg, litre, pack, …).
+ * All feed cost math uses cost-per-kg × feed-used-kg, so switching
+ * bag weight in Farm Settings automatically re-prices every future
+ * calculation without touching historical records.
+ */
+type PriceCategory = "egg" | "feed" | "other";
+
+function detectCategory(name: string): PriceCategory {
+  if (/egg/i.test(name)) return "egg";
+  if (/feed|mash|grower|layer|starter|concentrate/i.test(name)) return "feed";
+  return "other";
 }
 
-function PriceEditForm({ item, onClose }: { item: Price; onClose: () => void }) {
-  const [name, setName] = useState(item.item);
-  const [unit, setUnit] = useState(item.unit);
-  const [price, setPrice] = useState<number | "">(item.price);
+const FEED_BAG_PRESETS = [25, 40, 50] as const;
+
+function PriceForm({
+  mode, initial, onClose,
+}: {
+  mode: "add" | "edit";
+  initial?: Price;
+  onClose: () => void;
+}) {
+  const farmQ = useFarm();
+  const farmBagKg = farmQ.data?.bag_weight_kg ?? 25;
+  const add = useAddPrice();
+  const upd = useUpdatePrice();
+  const pending = add.isPending || upd.isPending;
+
+  const initialCategory = initial ? detectCategory(initial.item) : "egg";
+  const initialBagKg = (() => {
+    if (!initial) return farmBagKg;
+    const m = /(\d+(?:\.\d+)?)\s*kg/i.exec(initial.unit || "");
+    return m ? Number(m[1]) : farmBagKg;
+  })();
+
+  const [name, setName] = useState(initial?.item ?? "");
+  const [category, setCategory] = useState<PriceCategory>(initialCategory);
+  const [bagKg, setBagKg] = useState<number>(initialBagKg);
+  const [customUnit, setCustomUnit] = useState(
+    initial && detectCategory(initial.item) === "other" ? initial.unit : "",
+  );
+  const [price, setPrice] = useState<number | "">(initial?.price ?? "");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const m = useUpdatePrice();
+
+  // Keep category in sync as the user types a name (add mode only).
+  useEffect(() => {
+    if (mode === "add") setCategory(detectCategory(name));
+  }, [name, mode]);
+
+  const resolvedUnit =
+    category === "egg" ? "Crate" :
+    category === "feed" ? `${bagKg} kg Bag` :
+    (customUnit.trim() || "unit");
+
+  const costPerKg =
+    category === "feed" && Number(price) > 0 && bagKg > 0
+      ? Number(price) / bagKg
+      : null;
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (m.isPending || !name.trim()) return;
+    if (pending || !name.trim()) return;
     setErrorMsg(null);
-    const updated = format(new Date(), "d MMM yyyy");
-    m.mutate(
-      { id: item.id, item: name.trim(), unit: unit.trim() || "1", price: Number(price) || 0, updated },
-      {
-        onSuccess: () => { toast.success("Price updated"); onClose(); },
-        onError: (err) => {
-          const msg = (err as Error).message || "Could not update price. Please try again.";
-          setErrorMsg(msg);
-          toast.error("Failed to update price", { description: msg });
-        },
+    const payload = {
+      item: name.trim(),
+      unit: resolvedUnit,
+      price: Number(price) || 0,
+      updated: format(new Date(), "d MMM yyyy"),
+    };
+    const done = {
+      onSuccess: () => { toast.success(mode === "add" ? "Price item added" : "Price updated"); onClose(); },
+      onError: (err: unknown) => {
+        const msg = (err as Error).message || "Could not save price. Please try again.";
+        setErrorMsg(msg);
+        toast.error("Failed to save price", { description: msg });
       },
-    );
+    };
+    if (mode === "add") add.mutate(payload, done);
+    else if (initial) upd.mutate({ id: initial.id, ...payload }, done);
   };
+
   return (
     <form onSubmit={submit} className="space-y-4">
       <Field label="Item">
-        <TextInput value={name} onChange={(e) => setName(e.target.value)} autoFocus required />
+        <TextInput
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Table Eggs, Feed, Vitamins…"
+          autoFocus
+          required
+        />
       </Field>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Unit" hint="e.g. crate, bag, kg.">
-          <TextInput value={unit} onChange={(e) => setUnit(e.target.value)} />
+
+      <Field label="Category" hint="Determines how the unit and cost are measured.">
+        <SelectInput value={category} onChange={(e) => setCategory(e.target.value as PriceCategory)}>
+          <option value="egg">Eggs — priced per Crate</option>
+          <option value="feed">Feed — priced per Bag</option>
+          <option value="other">Other — custom unit</option>
+        </SelectInput>
+      </Field>
+
+      {category === "feed" && (
+        <Field label="Bag weight" hint="Choose the bag size this price is quoted for.">
+          <div className="grid grid-cols-4 gap-2">
+            {FEED_BAG_PRESETS.map(w => (
+              <button
+                key={w}
+                type="button"
+                onClick={() => setBagKg(w)}
+                className={`rounded-lg border px-2 py-2 text-sm font-medium transition ${
+                  bagKg === w
+                    ? "border-[color:var(--forest)] bg-[color:var(--forest)]/10 text-[color:var(--forest)]"
+                    : "border-border hover:border-[color:var(--forest)]/40"
+                }`}
+              >{w} kg</button>
+            ))}
+            <NumberInput
+              step="any"
+              min={1}
+              value={FEED_BAG_PRESETS.includes(bagKg as 25 | 40 | 50) ? "" : bagKg}
+              onChange={(e) => setBagKg(Number(e.target.value) || 0)}
+              placeholder="Custom"
+              className="rounded-lg border border-border px-2 py-2 text-sm"
+            />
+          </div>
         </Field>
-        <Field label="Price (₦)">
-          <NumberInput
-            step="any"
-            value={price}
-            onChange={(e) => setPrice(e.target.value === "" ? "" : Number(e.target.value))}
-            required
+      )}
+
+      {category === "other" && (
+        <Field label="Unit" hint="e.g. kg, litre, pack, sachet.">
+          <TextInput
+            value={customUnit}
+            onChange={(e) => setCustomUnit(e.target.value)}
+            placeholder="kg"
           />
         </Field>
-      </div>
+      )}
+
+      <Field label={`Price (₦ per ${resolvedUnit})`}>
+        <NumberInput
+          step="any"
+          min={0}
+          value={price}
+          onChange={(e) => setPrice(e.target.value === "" ? "" : Number(e.target.value))}
+          placeholder="0"
+          required
+        />
+      </Field>
+
+      {category === "feed" && costPerKg !== null && (
+        <div className="rounded-xl border border-[color:var(--forest)]/30 bg-[color:var(--forest)]/5 px-3 py-2 text-sm">
+          <div className="font-medium text-[color:var(--forest)]">
+            Cost per kg: ₦{costPerKg.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5">
+            ₦{Number(price).toLocaleString()} ÷ {bagKg} kg — used for all feed cost calculations.
+          </div>
+        </div>
+      )}
+
       {errorMsg && (
         <div className="rounded-xl border border-destructive/30 bg-destructive/10 text-destructive text-sm px-3 py-2">
           {errorMsg}
         </div>
       )}
-      <Actions onCancel={onClose} submitting={m.isPending} submitLabel="Save Changes" disabled={!name.trim()} />
+
+      <Actions
+        onCancel={onClose}
+        submitting={pending}
+        submitLabel={mode === "add" ? "Save Price" : "Save Changes"}
+        disabled={!name.trim()}
+      />
     </form>
   );
+}
+
+function PriceAddForm({ onClose }: { onClose: () => void }) {
+  return <PriceForm mode="add" onClose={onClose} />;
+}
+
+function PriceEditForm({ item, onClose }: { item: Price; onClose: () => void }) {
+  return <PriceForm mode="edit" initial={item} onClose={onClose} />;
 }
 
 /* ---------- Confirm dialog (delete) ---------- */
