@@ -73,6 +73,27 @@ function findPrice(prices: Price[], match: RegExp, fallback: number): number {
 export function eggPricePerCrate(prices: Price[]): number { return findPrice(prices, /egg/i, 4900); }
 export function feedPricePerBag(prices: Price[]): number { return findPrice(prices, /feed/i, 13600); }
 
+/**
+ * Cost per kilogram of feed. Feed price is captured PER BAG on a per-farm
+ * configurable bag weight (default 25 kg). Every financial calculation
+ * must derive per-kg cost from this helper so profit math stays consistent
+ * whether the farm uses 25/40/50 kg bags. Formula: bagPrice / bagWeightKg.
+ */
+export function feedPricePerKg(prices: Price[], bagWeightKg: number | null | undefined): number {
+  const bagPrice = feedPricePerBag(prices);
+  const w = Number.isFinite(Number(bagWeightKg)) && Number(bagWeightKg) > 0 ? Number(bagWeightKg) : 25;
+  return bagPrice / w;
+}
+
+/** Unit label helper for the Prices table. */
+export function priceUnitLabel(item: string, unit: string | null | undefined, bagWeightKg: number): string {
+  const u = (unit ?? "").trim();
+  if (u && u !== "1") return u;
+  if (/egg/i.test(item)) return "Crate";
+  if (/feed/i.test(item)) return `${bagWeightKg} kg Bag`;
+  return u || "unit";
+}
+
 // ---------------------------------------------------------------------------
 // Bird population
 // ---------------------------------------------------------------------------

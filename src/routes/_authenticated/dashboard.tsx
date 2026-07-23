@@ -36,7 +36,7 @@ import { Lock } from "lucide-react";
 import { toast } from "sonner";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
 import { toDateKey, toLocalDate } from "@/lib/date-key";
-import { computeDashboardMetrics } from "@/lib/farm-analytics";
+import { computeDashboardMetrics, priceUnitLabel } from "@/lib/farm-analytics";
 import {
   fmtNum, fmtSigned, parseShortDate,
   computeForecast, type ForecastResult,
@@ -1032,18 +1032,31 @@ const setBagWeightKg = (v: number | null) => {
                 </tr>
               </thead>
               <tbody>
-                {prices.map(p => (
-                  <tr key={p.id} className="border-b border-border/50">
-                    <td className="py-3 pr-4">{p.item}</td>
-                    <td className="py-3 pr-4 text-muted-foreground">{p.unit}</td>
-                    <td className="py-3 pr-4 font-semibold">{naira(p.price)}</td>
-                    <td className="py-3 pr-4 text-muted-foreground">{p.updated}</td>
-                    <td className="py-3 pr-4 text-right space-x-3">
-                      <button onClick={() => openDialog({ kind: "price-edit", item: p })} className="text-muted-foreground hover:text-foreground" aria-label={`Edit ${p.item}`}><Pencil className="h-4 w-4 inline" /></button>
-                      <button onClick={() => delPrice(p.id)} className="text-destructive hover:opacity-70"><Trash2 className="h-4 w-4 inline" /></button>
-                    </td>
-                  </tr>
-                ))}
+                {prices.map(p => {
+                  const unitLabel = priceUnitLabel(p.item, p.unit, bagWeightKg ?? 25);
+                  const feedMatch = /feed/i.test(p.item) ? /(\d+(?:\.\d+)?)\s*kg/i.exec(unitLabel) : null;
+                  const bagKg = feedMatch ? Number(feedMatch[1]) : null;
+                  const perKg = bagKg && bagKg > 0 && p.price > 0 ? p.price / bagKg : null;
+                  return (
+                    <tr key={p.id} className="border-b border-border/50">
+                      <td className="py-3 pr-4">{p.item}</td>
+                      <td className="py-3 pr-4 text-muted-foreground">{unitLabel}</td>
+                      <td className="py-3 pr-4 font-semibold">
+                        {naira(p.price)}
+                        {perKg !== null && (
+                          <div className="text-[11px] font-normal text-muted-foreground mt-0.5">
+                            ≈ ₦{perKg.toLocaleString(undefined, { maximumFractionDigits: 2 })}/kg
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3 pr-4 text-muted-foreground">{p.updated}</td>
+                      <td className="py-3 pr-4 text-right space-x-3">
+                        <button onClick={() => openDialog({ kind: "price-edit", item: p })} className="text-muted-foreground hover:text-foreground" aria-label={`Edit ${p.item}`}><Pencil className="h-4 w-4 inline" /></button>
+                        <button onClick={() => delPrice(p.id)} className="text-destructive hover:opacity-70"><Trash2 className="h-4 w-4 inline" /></button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
