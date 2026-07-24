@@ -543,14 +543,24 @@ export type DashboardMetrics = {
   highestRoom: HighestRoom;
   feed: FeedAnalytics;
   healthScore: FarmHealthScore;
+  dailySeriesMonth: DailyFinancialPoint[];   // this-month per-day joined series
+  dailySeriesAllTime: DailyFinancialPoint[]; // full history per-day joined series
   todayMortality: number;
   monthlyMortality: number;
   allTimeMortality: number;
   todayRevenue: number;
   monthlyRevenue: number;
   allTimeRevenue: number;
+  todayFeedCost: number;
+  monthlyFeedCost: number;
+  allTimeFeedCost: number;
+  todayProfit: number;
+  monthlyProfit: number;
+  allTimeProfit: number;
   eggPrice: number;
-  feedPrice: number;
+  feedPrice: number;     // per bag
+  costPerKg: number;     // per kg of feed — the canonical cost basis
+  bagWeightKg: number;
 };
 
 export function computeDashboardMetrics(input: {
@@ -565,22 +575,28 @@ export function computeDashboardMetrics(input: {
 }): DashboardMetrics {
   const eggPrice = eggPricePerCrate(input.prices);
   const feedPrice = feedPricePerBag(input.prices);
+  const bagWeightKg =
+    Number.isFinite(Number(input.bagWeightKg)) && Number(input.bagWeightKg) > 0
+      ? Number(input.bagWeightKg)
+      : 25;
+  const costPerKg = feedPricePerKg(input.prices, bagWeightKg);
   const population = computeBirdPopulation(input.rooms, input.mortality);
 
-  const today = computePeriodMetrics({
-    range: rangeFromPreset("today"),
+  const periodInput = {
     eggs: input.eggs, feed: input.feed, mortality: input.mortality, health: input.health,
-    eggPrice, feedPrice, initialBirds: population.initialBirds,
-  });
-  const month = computePeriodMetrics({
+    eggPrice, costPerKg, bagWeightKg, initialBirds: population.initialBirds,
+  };
+  const today = computePeriodMetrics({ range: rangeFromPreset("today"), ...periodInput });
+  const month = computePeriodMetrics({ range: rangeFromPreset("this_month"), ...periodInput });
+  const allTime = computePeriodMetrics({ range: rangeFromPreset("all"), ...periodInput });
+
+  const dailySeriesMonth = computeDailyFinancialSeries({
     range: rangeFromPreset("this_month"),
-    eggs: input.eggs, feed: input.feed, mortality: input.mortality, health: input.health,
-    eggPrice, feedPrice, initialBirds: population.initialBirds,
+    eggs: input.eggs, feed: input.feed, eggPrice, costPerKg, bagWeightKg,
   });
-  const allTime = computePeriodMetrics({
+  const dailySeriesAllTime = computeDailyFinancialSeries({
     range: rangeFromPreset("all"),
-    eggs: input.eggs, feed: input.feed, mortality: input.mortality, health: input.health,
-    eggPrice, feedPrice, initialBirds: population.initialBirds,
+    eggs: input.eggs, feed: input.feed, eggPrice, costPerKg, bagWeightKg,
   });
 
   const productionRate = computeProductionRate({
@@ -592,7 +608,7 @@ export function computeDashboardMetrics(input: {
   const highestRoom = computeHighestRoom(input.eggs, input.rooms);
   const feed = computeFeedAnalytics({
     feed: input.feed, eggs: input.eggs,
-    totalLiveBirds: population.totalLiveBirds, bagWeightKg: input.bagWeightKg,
+    totalLiveBirds: population.totalLiveBirds, bagWeightKg,
   });
   const healthScore = computeFarmHealthScore({
     productionRate,
@@ -607,13 +623,20 @@ export function computeDashboardMetrics(input: {
     population,
     today, month, allTime,
     productionRate, comparison, highestRoom, feed, healthScore,
+    dailySeriesMonth, dailySeriesAllTime,
     todayMortality: today.mortalityCount,
     monthlyMortality: month.mortalityCount,
     allTimeMortality: allTime.mortalityCount,
     todayRevenue: today.revenue,
     monthlyRevenue: month.revenue,
     allTimeRevenue: allTime.revenue,
-    eggPrice, feedPrice,
+    todayFeedCost: today.feedCost,
+    monthlyFeedCost: month.feedCost,
+    allTimeFeedCost: allTime.feedCost,
+    todayProfit: today.profit,
+    monthlyProfit: month.profit,
+    allTimeProfit: allTime.profit,
+    eggPrice, feedPrice, costPerKg, bagWeightKg,
   };
 }
 
