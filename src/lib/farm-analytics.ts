@@ -144,9 +144,11 @@ export type PeriodMetrics = {
   eggs: number;                    // total eggs
   crates: number;                  // floor(eggs/30)
   extraEggs: number;               // eggs % 30
-  revenue: number;                 // NGN
-  feedBags: number;
-  feedCost: number;                // NGN
+  revenue: number;                 // NGN — (eggs/30) * eggPricePerCrate
+  feedBags: number;                // total bags in range (may be fractional)
+  feedKg: number;                  // total kg in range = feedBags * bagWeightKg
+  feedCost: number;                // NGN — feedKg * costPerKg
+  profit: number;                  // NGN — revenue - feedCost
   mortalityCount: number;
   mortalityPct: number | null;     // vs initial birds
   healthRecords: number;
@@ -160,11 +162,12 @@ export function computePeriodMetrics(input: {
   feed: Feed[];
   mortality: Mortality[];
   health: Health[];
-  eggPrice: number;
-  feedPrice: number;
+  eggPrice: number;                // NGN per crate
+  costPerKg: number;               // NGN per kg of feed
+  bagWeightKg: number;             // kg per bag
   initialBirds: number;
 }): PeriodMetrics {
-  const { range, eggs, feed, mortality, health, eggPrice, feedPrice, initialBirds } = input;
+  const { range, eggs, feed, mortality, health, eggPrice, costPerKg, bagWeightKg, initialBirds } = input;
 
   const eggRows = eggs.filter(e => inRange(toDateKey(e.date), range));
   const feedRows = feed.filter(f => inRange(toDateKey(f.date), range));
@@ -177,7 +180,9 @@ export function computePeriodMetrics(input: {
   const revenue = Math.round((eggsTotal / 30) * eggPrice);
 
   const feedBags = feedRows.reduce((s, f) => s + Number(f.bags || 0), 0);
-  const feedCost = Math.round(feedBags * feedPrice);
+  const feedKg = feedBags * bagWeightKg;
+  const feedCost = Math.round(feedKg * costPerKg);
+  const profit = revenue - feedCost;
 
   const mortalityCount = mortRows.reduce((s, m) => s + Math.abs(m.loss || 0), 0);
   const mortalityPct = initialBirds > 0 ? (mortalityCount / initialBirds) * 100 : null;
@@ -189,13 +194,79 @@ export function computePeriodMetrics(input: {
     extraEggs,
     revenue,
     feedBags,
+    feedKg,
     feedCost,
+    profit,
     mortalityCount,
     mortalityPct,
     healthRecords: healthRows.length,
     productionRecords: eggRows.length,
     feedRecords: feedRows.length,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Daily financial series — the single source of truth for daily/monthly
+// financials on charts, reports, and exports. Joins production and feed by
+// calendar date so revenue, feed cost and profit line up per day.
+// Monthly totals MUST be derived by summing this series so every widget
+// (KPI cards, charts, reports, Super Admin) matches to the naira.
+// ---------------------------------------------------------------------------
+
+export type DailyFinancialPoint = {
+  date: string;         // YYYY-MM-DD
+  label: string;        // human friendly (e.g. "12 Apr")
+  eggs: number;
+  crates: number;
+  revenue: number;      // NGN
+  feedKg: number;
+  feedBags: number;
+  feedCost: number;     // NGN
+  profit: number;       // NGN
+};
+
+export function computeDailyFinancialSeries(input: {
+  range: DateRange;
+  eggs: EggRow[];
+  feed: Feed[];
+  eggPrice: number;
+  costPerKg: number;
+  bagWeightKg: number;
+}): DailyFinancialPoint[] {
+  const { range, eggs, feed, eggPrice, costPerKg, bagWeightKg } = input;
+  const buckets = new Map<string, { eggs: number; feedBags: number }>();
+
+  for (const e of eggs) {
+    const k = toDateKey(e.date); if (!k || !inRange(k, range)) continue;
+    const b = buckets.get(k) ?? { eggs: 0, feedBags: 0 };
+    b.eggs += totalEggsFromRow(e);
+    buckets.set(k, b);
+  }
+  for (const f of feed) {
+    const k = toDateKey(f.date); if (!k || !inRange(k, range)) continue;
+    const b = buckets.get(k) ?? { eggs: 0, feedBags: 0 };
+    b.feedBags += Number(f.bags || 0);
+    buckets.set(k, b);
+  }
+
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const keys = Array.from(buckets.keys()).sort();
+  return keys.map(k => {
+    const b = buckets.get(k)!;
+    const crates = Math.floor(b.eggs / 30);
+    const revenue = Math.round((b.eggs / 30) * eggPrice);
+    const feedKg = b.feedBags * bagWeightKg;
+    const feedCost = Math.round(feedKg * costPerKg);
+    const [, m, d] = k.split("-");
+    const label = `${Number(d)} ${months[Number(m) - 1]}`;
+    return {
+      date: k, label,
+      eggs: b.eggs, crates,
+      revenue,
+      feedKg, feedBags: b.feedBags, feedCost,
+      profit: revenue - feedCost,
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------
