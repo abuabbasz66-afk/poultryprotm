@@ -218,9 +218,12 @@ const setBagWeightKg = (v: number | null) => {
   const todayRevenue = metrics.todayRevenue;
   const monthlyRevenue = metrics.monthlyRevenue;
   const allTimeRevenue = metrics.allTimeRevenue;
-  const todayCost = Math.round(feedToday * feedPrice);
-  const todayProfit = todayRevenue - todayCost;
-  void totalCrates; void allTimeRevenue; void feedAllTime;
+  // Financials come from the shared analytics engine so KPI cards, charts,
+  // reports, exports and Super Admin all agree to the naira. Never recompute
+  // revenue/cost/profit locally — extend the engine instead.
+  const todayCost = metrics.todayFeedCost;
+  const todayProfit = metrics.todayProfit;
+  void totalCrates; void allTimeRevenue; void feedAllTime; void feedPrice; void todayCost;
 
   const chartData = useMemo(
     () => [...eggs].reverse().map(e => ({
@@ -230,14 +233,18 @@ const setBagWeightKg = (v: number | null) => {
     [eggs],
   );
 
+  // Monthly profit chart — one point per calendar day, joining production and
+  // feed by date via the shared engine. Cost is real (not a baseline).
   const profitData = useMemo(
-    () => [...eggs].reverse().map(e => {
-      const rev = ((e.r2 + e.r3 + e.r4) * 30 + e.extra) / 30 * eggPrice;
-      const cost = 19 * feedPrice; // stable ~19 bags/day baseline
-      return { name: e.label.replace(/^[A-Za-z]{3}, /, ""), Revenue: Math.round(rev), Cost: cost, Profit: Math.round(rev - cost) };
-    }),
-    [eggs, eggPrice, feedPrice],
+    () => metrics.dailySeriesMonth.map(d => ({
+      name: d.label,
+      Revenue: d.revenue,
+      Cost: d.feedCost,
+      Profit: d.profit,
+    })),
+    [metrics.dailySeriesMonth],
   );
+
 
   const handleSignOut = async () => {
     // Stop in-flight protected queries so cleared-session 401s don't storm the UI,
