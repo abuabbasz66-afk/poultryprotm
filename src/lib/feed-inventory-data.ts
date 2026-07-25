@@ -182,7 +182,7 @@ export function useFeedStockAnalytics() {
       for (let i = 0; i < days; i++) {
         const d = new Date(now);
         d.setDate(d.getDate() - i);
-        const key = toDateKey(d)!;
+        const key = toDateKey(d) ?? d.toISOString().slice(0, 10);
         total += byDate.get(key) ?? 0;
       }
       return total;
