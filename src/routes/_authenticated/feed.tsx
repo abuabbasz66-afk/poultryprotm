@@ -153,38 +153,149 @@ function OverviewTab() {
         <KpiCard label="Bag Weight" value={`${stats.bagWeightKg} kg`} sub="Farm setting" />
       </section>
 
-      <section className="rounded-3xl border border-border bg-card p-5">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Sparkles className="h-4 w-4 text-[color:var(--gold)]" /> AI Feed Intelligence
+      <FeedIntelligencePanel />
+    </div>
+  );
+}
+
+/* ------------------------- AI Feed Intelligence -------------------------- */
+
+function FeedIntelligencePanel() {
+  const ai = useFeedIntelligence();
+
+  const money = (n: number | null) =>
+    n === null || !Number.isFinite(n) ? "—" : `₦${Math.round(n).toLocaleString()}`;
+  const pct = (n: number | null) =>
+    n === null || !Number.isFinite(n) ? "—" : `${n > 0 ? "+" : ""}${n.toFixed(1)}%`;
+  const kg = (n: number) => `${Math.round(n).toLocaleString()} kg`;
+
+  return (
+    <section className="rounded-3xl border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--gold)]/15 text-[color:var(--gold)]">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          <div>
+            <h2 className="font-display text-lg font-semibold">AI Feed Intelligence</h2>
+            <p className="text-xs text-muted-foreground">Forecasts, efficiency and cost signals derived from your live records.</p>
+          </div>
         </div>
-        <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-          {stats.stockKg <= 0 && (
-            <li className="rounded-2xl border border-destructive/30 bg-destructive/5 p-3 text-destructive">
-              <b>Out of feed.</b> Record a purchase or produced batch to restart tracking.
+        <span className="rounded-full border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-[color:var(--gold)]">
+          Live
+        </span>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <IntelStat
+          label="Feed / bird / day"
+          value={ai.gramsPerBirdPerDay !== null ? `${ai.gramsPerBirdPerDay.toFixed(0)} g` : "—"}
+          sub={ai.efficiencyDeltaPct !== null
+            ? `${pct(ai.efficiencyDeltaPct)} vs ${ai.benchmarkGramsPerBird}g target`
+            : `${ai.totalBirds.toLocaleString()} birds`}
+          tone={ai.efficiencyDeltaPct === null ? "neutral"
+            : Math.abs(ai.efficiencyDeltaPct) > 15 ? "warn"
+            : "good"}
+        />
+        <IntelStat
+          label="Feed conversion"
+          value={ai.kgPerCrate !== null ? `${ai.kgPerCrate.toFixed(2)} kg/crate` : "—"}
+          sub={ai.fcrKgPerEgg !== null ? `${(ai.fcrKgPerEgg * 1000).toFixed(0)} g / egg (30d)` : "Awaiting production data"}
+          tone="neutral"
+        />
+        <IntelStat
+          label="Cost per crate"
+          value={money(ai.costPerCrate)}
+          sub={ai.inventoryUnitCost > 0 ? `Feed @ ${money(ai.inventoryUnitCost)}/kg` : "No priced stock"}
+          tone="neutral"
+        />
+        <IntelStat
+          label="7-day trend"
+          value={pct(ai.trendPct)}
+          sub={`${kg(ai.avg7Kg)}/day avg · prev ${kg(ai.prev7Kg / 7)}/day`}
+          tone={Math.abs(ai.trendPct) < 10 ? "good" : ai.trendPct > 0 ? "warn" : "neutral"}
+        />
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-border bg-secondary/40 p-4">
+          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Reorder planning</div>
+          <div className="mt-1 font-display text-2xl font-semibold">
+            {ai.reorderByDate ? ai.reorderByDate.toLocaleDateString() : "—"}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {ai.daysUntilReorder !== null
+              ? `Order in ${ai.daysUntilReorder} day${ai.daysUntilReorder === 1 ? "" : "s"} (assumes ${ai.leadTimeDays}-day supplier lead time)`
+              : "Log daily feed to generate a reorder date."}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-border bg-secondary/40 p-4">
+          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Buy vs produce</div>
+          <div className="mt-1 font-display text-2xl font-semibold">
+            {ai.buyVsProduceDeltaPct !== null ? pct(ai.buyVsProduceDeltaPct) : "—"}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {ai.activeFormulaCost !== null && ai.marketBuyCost !== null
+              ? `Formula ${money(ai.activeFormulaCost)}/kg · Market ${money(ai.marketBuyCost)}/kg`
+              : "Set a market feed price and active formula to compare."}
+          </div>
+        </div>
+      </div>
+
+      {ai.insights.length > 0 && (
+        <ul className="mt-4 space-y-2">
+          {ai.insights.map((i) => (
+            <li key={i.id} className={"rounded-2xl border p-3 text-sm " + insightTone(i.severity)}>
+              <div className="flex items-start gap-2">
+                <span className="mt-0.5">{insightIcon(i.severity)}</span>
+                <div className="flex-1">
+                  <div className="font-medium">{i.title}</div>
+                  <div className="text-[13px] opacity-90">{i.detail}</div>
+                  {i.action && (
+                    <div className="mt-1 text-[11px] uppercase tracking-widest opacity-75">
+                      Recommended · {i.action}
+                    </div>
+                  )}
+                </div>
+              </div>
             </li>
-          )}
-          {stats.status === "critical" && (
-            <li className="rounded-2xl border border-destructive/30 bg-destructive/5 p-3 text-destructive">
-              <b>Critical — less than 5 days remaining.</b> Purchase {stats.recommendPurchaseBags} bags ({fmtKg(stats.recommendPurchaseKg)}) to restore a 30-day buffer.
-            </li>
-          )}
-          {stats.status === "low" && (
-            <li className="rounded-2xl border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 p-3 text-foreground">
-              <b>Feed running low.</b> Ordering ~{stats.recommendPurchaseBags} bags before {stats.depletion?.toLocaleDateString() ?? "next week"} keeps operations smooth.
-            </li>
-          )}
-          {stats.status === "healthy" && stats.stockKg > 0 && (
-            <li className="rounded-2xl border border-emerald-500/30 bg-emerald-50/50 p-3 text-emerald-900">
-              <b>Stock is healthy.</b> Runway exceeds 10 days at current consumption.
-            </li>
-          )}
-          {stats.avgDailyKg === 0 && (
-            <li className="rounded-2xl border border-border bg-secondary p-3">
-              <Info className="mr-1 inline h-3.5 w-3.5" /> No feed usage recorded in the last 30 days. Recommendations improve as you log daily feed.
-            </li>
-          )}
+          ))}
         </ul>
-      </section>
+      )}
+    </section>
+  );
+}
+
+function IntelStat({
+  label, value, sub, tone,
+}: { label: string; value: string; sub?: string; tone: "good" | "warn" | "neutral" }) {
+  const cls =
+    tone === "good" ? "border-emerald-500/30 bg-emerald-50/40"
+    : tone === "warn" ? "border-amber-500/40 bg-amber-50/40"
+    : "border-border bg-secondary/40";
+  return (
+    <div className={"rounded-2xl border p-3 " + cls}>
+      <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="mt-1 font-display text-xl font-semibold">{value}</div>
+      {sub && <div className="mt-0.5 text-[11px] text-muted-foreground">{sub}</div>}
+    </div>
+  );
+}
+
+function insightTone(s: "critical" | "warning" | "info" | "positive") {
+  switch (s) {
+    case "critical": return "border-destructive/30 bg-destructive/5 text-destructive";
+    case "warning": return "border-amber-500/40 bg-amber-50/50 text-amber-900";
+    case "positive": return "border-emerald-500/30 bg-emerald-50/50 text-emerald-900";
+    default: return "border-border bg-secondary text-foreground";
+  }
+}
+function insightIcon(s: "critical" | "warning" | "info" | "positive") {
+  if (s === "critical") return <AlertTriangle className="h-4 w-4" />;
+  if (s === "warning") return <AlertTriangle className="h-4 w-4" />;
+  if (s === "positive") return <Check className="h-4 w-4" />;
+  return <Info className="h-4 w-4" />;
+}
     </div>
   );
 }
