@@ -1134,11 +1134,23 @@ function IngredientRow({
   const [qty, setQty] = useState<string>(row ? String(row.quantity_kg) : "");
   const [price, setPrice] = useState<string>(row ? String(row.price_per_unit) : "");
   const [unit, setUnit] = useState<"kg" | "bag">(row?.unit ?? "kg");
-  const [unitWt, setUnitWt] = useState<string>(row ? String(row.unit_weight_kg) : "50");
+  const [unitWt, setUnitWt] = useState<string>(
+    row && row.unit === "bag" && row.unit_weight_kg > 0 ? String(row.unit_weight_kg) : "25",
+  );
   const [dirty, setDirty] = useState(false);
 
-  const perKg = unit === "bag" ? (Number(unitWt) > 0 ? Number(price) / Number(unitWt) : 0) : Number(price);
-  const line = Number(qty) * (Number.isFinite(perKg) ? perKg : 0);
+  const qtyNum = Number(qty) || 0;
+  const priceNum = Number(price) || 0;
+  const bagWtNum = Number(unitWt) || 0;
+  const weightKg = unit === "bag" ? qtyNum * bagWtNum : qtyNum;
+  const line = qtyNum * priceNum; // price already matches the chosen unit
+  const perKg = weightKg > 0 ? line / weightKg : 0;
+
+  function changeUnit(next: "kg" | "bag") {
+    setUnit(next);
+    if (next === "bag" && (!(Number(unitWt) > 1))) setUnitWt("25");
+    setDirty(true);
+  }
 
   async function commit() {
     const n = name.trim();
@@ -1150,11 +1162,11 @@ function IngredientRow({
       quantity_kg: q,
       price_per_unit: Number.isFinite(p) ? p : 0,
       unit,
-      unit_weight_kg: unit === "bag" ? Math.max(1, Number(unitWt) || 50) : 1,
+      unit_weight_kg: unit === "bag" ? Math.max(1, Number(unitWt) || 25) : 1,
       position: row?.position ?? index,
     });
     if (isNew) {
-      setName(""); setQty(""); setPrice(""); setUnitWt("50");
+      setName(""); setQty(""); setPrice(""); setUnitWt("25");
     }
     setDirty(false);
   }
