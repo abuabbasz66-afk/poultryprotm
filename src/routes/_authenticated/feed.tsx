@@ -16,9 +16,10 @@ import {
 } from "@/lib/feed-inventory-data";
 import {
   useFeedFormulas, computeFormulaCost, useCreateFormula, useUpdateFormula,
-  useDeleteFormula, useSetActiveFormula, useUpsertIngredient, useDeleteIngredient,
+  useDeleteFormula, useDuplicateFormula, useSetActiveFormula, useUpsertIngredient, useDeleteIngredient,
   useSetFeedSource, type FeedFormulaWithIngredients, type FormulaIngredient,
 } from "@/lib/feed-formulas-data";
+
 import { useFarm } from "@/lib/farm-data";
 import { toDateKey } from "@/lib/date-key";
 
@@ -438,6 +439,11 @@ function LedgerRow({ row }: { row: FeedLedgerEntry }) {
 
 /* ------------------------------ Formulation ------------------------------ */
 
+const DEFAULT_INGREDIENTS = [
+  "Maize", "Soybean Meal", "Wheat Bran", "Layer Concentrate", "Limestone",
+  "DCP", "Salt", "Lysine", "Methionine", "Premix", "Toxin Binder",
+];
+
 function FormulationTab() {
   const farm = useFarm();
   const bagKg = farm.data?.bag_weight_kg && farm.data.bag_weight_kg > 0 ? farm.data.bag_weight_kg : 25;
@@ -446,6 +452,7 @@ function FormulationTab() {
   const create = useCreateFormula();
   const setActive = useSetActiveFormula();
   const del = useDeleteFormula();
+  const dup = useDuplicateFormula();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
@@ -465,6 +472,13 @@ function FormulationTab() {
     setSelectedId(id);
     setNewName("");
   }
+
+  async function handleDuplicate() {
+    if (!selected) return;
+    const id = await dup.mutateAsync(selected);
+    setSelectedId(id);
+  }
+
 
   return (
     <div className="space-y-6">
@@ -556,12 +570,14 @@ function FormulationTab() {
           formula={selected}
           bagKg={bagKg}
           onSetActive={() => setActive.mutate(selected.is_active ? null : selected.id)}
+          onDuplicate={handleDuplicate}
           onDelete={async () => {
             if (!confirm(`Delete formula "${selected.name}"? This cannot be undone.`)) return;
             await del.mutateAsync(selected.id);
             setSelectedId(null);
           }}
         />
+
       ) : (
         <div className="rounded-3xl border border-dashed border-border bg-card/50 p-10 text-center">
           <Beaker className="mx-auto h-10 w-10 text-muted-foreground" />
@@ -602,16 +618,18 @@ function SourceCard({
 }
 
 function FormulaEditor({
-  formula, bagKg, onSetActive, onDelete,
+  formula, bagKg, onSetActive, onDuplicate, onDelete,
 }: {
   formula: FeedFormulaWithIngredients;
   bagKg: number;
   onSetActive: () => void;
+  onDuplicate: () => void;
   onDelete: () => void;
 }) {
   const update = useUpdateFormula();
   const upsertIng = useUpsertIngredient();
   const delIng = useDeleteIngredient();
+
 
   const [name, setName] = useState(formula.name);
   const [notes, setNotes] = useState(formula.notes ?? "");
@@ -666,6 +684,12 @@ function FormulaEditor({
               {formula.is_active ? "Active" : "Set Active"}
             </button>
             <button
+              onClick={onDuplicate}
+              className="inline-flex items-center gap-1 rounded-xl border border-border px-3 py-2 text-xs hover:bg-muted/50"
+            >
+              <Plus className="h-3.5 w-3.5" /> Duplicate
+            </button>
+            <button
               onClick={onDelete}
               className="inline-flex items-center gap-1 rounded-xl border border-destructive/40 px-3 py-2 text-xs text-destructive hover:bg-destructive/5"
             >
@@ -673,6 +697,7 @@ function FormulaEditor({
             </button>
           </div>
         </div>
+
 
         {/* Cost breakdown */}
         <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-2">
@@ -708,6 +733,39 @@ function FormulaEditor({
           </div>
         </div>
 
+        {/* Preset quick-add chips */}
+        {(() => {
+          const existing = new Set(cost.rows.map((r) => r.name.toLowerCase()));
+          const remaining = DEFAULT_INGREDIENTS.filter((n) => !existing.has(n.toLowerCase()));
+          if (!remaining.length) return null;
+          return (
+            <div className="mt-3">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">Quick add</p>
+              <div className="flex flex-wrap gap-1.5">
+                {remaining.map((n, idx) => (
+                  <button
+                    key={n}
+                    onClick={() =>
+                      upsertIng.mutateAsync({
+                        formula_id: formula.id,
+                        name: n,
+                        quantity_kg: 0,
+                        price_per_unit: 0,
+                        unit: "kg",
+                        unit_weight_kg: 1,
+                        position: cost.rows.length + idx + 1,
+                      })
+                    }
+                    className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:border-[color:var(--forest)]/40 hover:bg-[color:var(--forest)]/5"
+                  >
+                    + {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         <div className="mt-3 space-y-2">
           {cost.rows.map((row, i) => (
             <IngredientRow
@@ -727,6 +785,8 @@ function FormulaEditor({
             }
           />
         </div>
+
+
 
         {/* Share bar */}
         {cost.totalCost > 0 && (
@@ -857,7 +917,25 @@ function IngredientRow({
                 className={inputCls}
               />
             </Field>
+            <div className="mt-1 flex gap-1">
+              {[25, 50, 100].map((w) => (
+                <button
+                  key={w}
+                  type="button"
+                  onClick={() => { setUnitWt(String(w)); setDirty(true); commit(); }}
+                  className={
+                    "rounded-md border px-1.5 py-0.5 text-[10px] " +
+                    (Number(unitWt) === w
+                      ? "border-[color:var(--forest)] bg-[color:var(--forest)]/10 text-[color:var(--forest)]"
+                      : "border-border text-muted-foreground hover:bg-muted/50")
+                  }
+                >
+                  {w}kg
+                </button>
+              ))}
+            </div>
           </div>
+
         )}
         <div className={"col-span-" + (unit === "bag" ? "6" : "12") + " md:col-span-2 flex items-center justify-end gap-2"}>
           {!isNew && (
