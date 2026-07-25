@@ -208,6 +208,119 @@ export type Database = {
         }
         Relationships: []
       }
+      feed_inventory: {
+        Row: {
+          batch_number: string | null
+          created_at: string
+          expiry_date: string | null
+          farm_id: string
+          feed_type: string
+          id: string
+          initial_kg: number
+          note: string | null
+          purchase_date: string
+          remaining_kg: number
+          source: string
+          supplier: string | null
+          unit_cost_per_kg: number
+          updated_at: string
+        }
+        Insert: {
+          batch_number?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          farm_id: string
+          feed_type: string
+          id?: string
+          initial_kg: number
+          note?: string | null
+          purchase_date?: string
+          remaining_kg: number
+          source?: string
+          supplier?: string | null
+          unit_cost_per_kg?: number
+          updated_at?: string
+        }
+        Update: {
+          batch_number?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          farm_id?: string
+          feed_type?: string
+          id?: string
+          initial_kg?: number
+          note?: string | null
+          purchase_date?: string
+          remaining_kg?: number
+          source?: string
+          supplier?: string | null
+          unit_cost_per_kg?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_inventory_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feed_ledger: {
+        Row: {
+          action: string
+          balance_after_kg: number
+          created_at: string
+          entry_date: string
+          farm_id: string
+          id: string
+          inventory_id: string | null
+          note: string | null
+          quantity_kg: number
+          source_ref: string | null
+        }
+        Insert: {
+          action: string
+          balance_after_kg?: number
+          created_at?: string
+          entry_date?: string
+          farm_id: string
+          id?: string
+          inventory_id?: string | null
+          note?: string | null
+          quantity_kg: number
+          source_ref?: string | null
+        }
+        Update: {
+          action?: string
+          balance_after_kg?: number
+          created_at?: string
+          entry_date?: string
+          farm_id?: string
+          id?: string
+          inventory_id?: string | null
+          note?: string | null
+          quantity_kg?: number
+          source_ref?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_ledger_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_ledger_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "feed_inventory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feed_usage: {
         Row: {
           bags: number
@@ -827,8 +940,18 @@ export type Database = {
         }
       }
       admin_whatsapp_stats: { Args: never; Returns: Json }
+      consume_feed_fifo: {
+        Args: {
+          _entry_date: string
+          _farm_id: string
+          _kg: number
+          _source_ref: string
+        }
+        Returns: undefined
+      }
       current_farm_id: { Args: never; Returns: string }
       demo_greenfield_data: { Args: never; Returns: Json }
+      farm_feed_stock_kg: { Args: { _farm_id: string }; Returns: number }
       farm_subscription_status: { Args: never; Returns: Json }
       get_super_admin_emails: {
         Args: never
