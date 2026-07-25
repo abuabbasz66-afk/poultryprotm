@@ -436,20 +436,464 @@ function LedgerRow({ row }: { row: FeedLedgerEntry }) {
   );
 }
 
-/* ----------------------------- Formulation stub -------------------------- */
+/* ------------------------------ Formulation ------------------------------ */
 
-function FormulationPlaceholder() {
+function FormulationTab() {
+  const farm = useFarm();
+  const bagKg = farm.data?.bag_weight_kg && farm.data.bag_weight_kg > 0 ? farm.data.bag_weight_kg : 25;
+  const list = useFeedFormulas();
+  const setSource = useSetFeedSource();
+  const create = useCreateFormula();
+  const setActive = useSetActiveFormula();
+  const del = useDeleteFormula();
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [newName, setNewName] = useState("");
+  const formulas = list.data ?? [];
+  const activeFormula = formulas.find((f) => f.is_active) ?? null;
+  const selected = formulas.find((f) => f.id === selectedId) ?? formulas[0] ?? null;
+  useEffect(() => {
+    if (!selectedId && formulas[0]) setSelectedId(formulas[0].id);
+  }, [selectedId, formulas]);
+
+  const source = farm.data?.feed_source ?? "purchased";
+
+  async function handleCreate() {
+    const name = newName.trim();
+    if (!name) return;
+    const id = await create.mutateAsync({ name });
+    setSelectedId(id);
+    setNewName("");
+  }
+
   return (
-    <section className="rounded-3xl border border-dashed border-[color:var(--gold)]/50 bg-gradient-to-br from-[color:var(--gold)]/8 to-transparent p-8 text-center">
-      <Beaker className="mx-auto h-10 w-10 text-[color:var(--gold)]" />
-      <h2 className="mt-3 font-display text-xl font-semibold">Feed Formulation — Coming next</h2>
-      <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-        Build unlimited formulas (Layer, Broiler, Grower…) with automatic ingredient costing, production overheads and cost per 25 kg bag. When active, its cost per kg powers your profit engine automatically.
-      </p>
-      <p className="mt-3 text-[11px] uppercase tracking-widest text-[color:var(--gold)]">Phase 2 · Ships next</p>
-    </section>
+    <div className="space-y-6">
+      {/* Feed Source Selector */}
+      <section className="rounded-3xl border border-border bg-card p-4 md:p-5">
+        <div className="flex items-start gap-3">
+          <div className="rounded-2xl bg-[color:var(--forest)]/10 p-2.5">
+            <Factory className="h-5 w-5 text-[color:var(--forest)]" />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-display text-lg font-semibold">Feed Source</h2>
+            <p className="text-xs text-muted-foreground">Choose how your farm sources feed. This decides which cost powers the profit engine.</p>
+          </div>
+        </div>
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <SourceCard
+            active={source === "purchased"}
+            onClick={() => setSource.mutate("purchased")}
+            icon={ShoppingCart}
+            title="Purchased Feed"
+            desc="Uses the bag price from your Prices module."
+          />
+          <SourceCard
+            active={source === "self_produced"}
+            onClick={() => setSource.mutate("self_produced")}
+            icon={Beaker}
+            title="Self-Produced Feed"
+            desc={activeFormula ? `Uses active formula "${activeFormula.name}".` : "Requires an Active Formula below."}
+            disabled={!activeFormula && source !== "self_produced"}
+          />
+        </div>
+        {source === "self_produced" && !activeFormula && (
+          <div className="mt-3 flex items-start gap-2 rounded-xl border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 p-3 text-xs">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0 text-[color:var(--gold)]" />
+            <p>Select an <strong>Active Formula</strong> below — profit will otherwise fall back to purchased-feed pricing.</p>
+          </div>
+        )}
+      </section>
+
+      {/* Formula picker + create */}
+      <section className="rounded-3xl border border-border bg-card p-4 md:p-5">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <h2 className="font-display text-lg font-semibold">Your Formulas</h2>
+            <p className="text-xs text-muted-foreground">{formulas.length} saved · unlimited ingredients per formula</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="e.g. Layer Mash 18%"
+              className={inputCls + " w-48"}
+              onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+            />
+            <button
+              onClick={handleCreate}
+              disabled={!newName.trim() || create.isPending}
+              className="inline-flex items-center gap-1 rounded-xl bg-[color:var(--forest)] px-3 py-2 text-sm text-primary-foreground disabled:opacity-50"
+            >
+              <Plus className="h-4 w-4" /> New
+            </button>
+          </div>
+        </div>
+        {formulas.length > 0 && (
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            {formulas.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setSelectedId(f.id)}
+                className={
+                  "whitespace-nowrap rounded-xl border px-3 py-2 text-sm flex items-center gap-1.5 " +
+                  (selected?.id === f.id
+                    ? "border-[color:var(--forest)] bg-[color:var(--forest)]/5 text-[color:var(--forest)]"
+                    : "border-border hover:bg-muted/50")
+                }
+              >
+                {f.is_active && <Star className="h-3.5 w-3.5 fill-[color:var(--gold)] text-[color:var(--gold)]" />}
+                {f.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Editor */}
+      {selected ? (
+        <FormulaEditor
+          key={selected.id}
+          formula={selected}
+          bagKg={bagKg}
+          onSetActive={() => setActive.mutate(selected.is_active ? null : selected.id)}
+          onDelete={async () => {
+            if (!confirm(`Delete formula "${selected.name}"? This cannot be undone.`)) return;
+            await del.mutateAsync(selected.id);
+            setSelectedId(null);
+          }}
+        />
+      ) : (
+        <div className="rounded-3xl border border-dashed border-border bg-card/50 p-10 text-center">
+          <Beaker className="mx-auto h-10 w-10 text-muted-foreground" />
+          <p className="mt-3 text-sm text-muted-foreground">Create your first formula to start costing feed production.</p>
+        </div>
+      )}
+    </div>
   );
 }
+
+function SourceCard({
+  active, onClick, icon: Icon, title, desc, disabled,
+}: {
+  active: boolean; onClick: () => void; icon: React.ComponentType<{ className?: string }>;
+  title: string; desc: string; disabled?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={
+        "text-left rounded-2xl border p-3 transition-all " +
+        (active
+          ? "border-[color:var(--forest)] bg-[color:var(--forest)]/5 ring-2 ring-[color:var(--forest)]/20"
+          : disabled
+          ? "border-border opacity-50 cursor-not-allowed"
+          : "border-border hover:border-[color:var(--forest)]/40 hover:bg-muted/40")
+      }
+    >
+      <div className="flex items-center gap-2">
+        <Icon className={"h-4 w-4 " + (active ? "text-[color:var(--forest)]" : "text-muted-foreground")} />
+        <p className="text-sm font-semibold">{title}</p>
+        {active && <Check className="ml-auto h-4 w-4 text-[color:var(--forest)]" />}
+      </div>
+      <p className="mt-1 text-[11px] text-muted-foreground">{desc}</p>
+    </button>
+  );
+}
+
+function FormulaEditor({
+  formula, bagKg, onSetActive, onDelete,
+}: {
+  formula: FeedFormulaWithIngredients;
+  bagKg: number;
+  onSetActive: () => void;
+  onDelete: () => void;
+}) {
+  const update = useUpdateFormula();
+  const upsertIng = useUpsertIngredient();
+  const delIng = useDeleteIngredient();
+
+  const [name, setName] = useState(formula.name);
+  const [notes, setNotes] = useState(formula.notes ?? "");
+  const [bagOverride, setBagOverride] = useState<string>(formula.bag_weight_kg ? String(formula.bag_weight_kg) : "");
+
+  const effectiveBagKg = Number(bagOverride) > 0 ? Number(bagOverride) : bagKg;
+  const cost = useMemo(() => computeFormulaCost(formula, effectiveBagKg), [formula, effectiveBagKg]);
+
+  async function saveMeta() {
+    await update.mutateAsync({
+      id: formula.id,
+      patch: {
+        name: name.trim() || formula.name,
+        notes: notes.trim() || null,
+        bag_weight_kg: bagOverride.trim() === "" ? null : Number(bagOverride),
+      },
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <section className="rounded-3xl border border-border bg-card p-4 md:p-5">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="flex-1 min-w-[220px]">
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={saveMeta}
+              className="w-full bg-transparent font-display text-xl font-semibold focus:outline-none border-b border-transparent focus:border-[color:var(--forest)]/40 pb-1"
+            />
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              onBlur={saveMeta}
+              rows={1}
+              placeholder="Add notes (target birds, mix instructions…)"
+              className="mt-2 w-full resize-none bg-transparent text-xs text-muted-foreground focus:outline-none"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onSetActive}
+              className={
+                "inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium " +
+                (formula.is_active
+                  ? "border-[color:var(--gold)] bg-[color:var(--gold)]/10 text-foreground"
+                  : "border-border hover:bg-muted/50")
+              }
+            >
+              <Star className={"h-3.5 w-3.5 " + (formula.is_active ? "fill-[color:var(--gold)] text-[color:var(--gold)]" : "")} />
+              {formula.is_active ? "Active" : "Set Active"}
+            </button>
+            <button
+              onClick={onDelete}
+              className="inline-flex items-center gap-1 rounded-xl border border-destructive/40 px-3 py-2 text-xs text-destructive hover:bg-destructive/5"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </button>
+          </div>
+        </div>
+
+        {/* Cost breakdown */}
+        <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-2">
+          <KpiCard label="Total Weight" value={fmtKg(cost.totalKg)} sub={`${cost.rows.length} ingredients`} />
+          <KpiCard label="Total Cost" value={"₦" + Math.round(cost.totalCost).toLocaleString()} />
+          <KpiCard label="Cost / kg" value={"₦" + cost.costPerKg.toFixed(2)} />
+          <KpiCard label={`Cost / ${effectiveBagKg}kg bag`} value={"₦" + Math.round(cost.costPerBag).toLocaleString()} />
+          <KpiCard label="Bags Produced" value={cost.bagsProduced.toFixed(1)} sub={`${effectiveBagKg} kg/bag`} />
+        </div>
+
+        <div className="mt-3">
+          <Field label={`Bag weight for this formula (kg) — defaults to farm setting (${bagKg} kg)`}>
+            <input
+              type="number"
+              min={1}
+              step="any"
+              value={bagOverride}
+              onChange={(e) => setBagOverride(e.target.value)}
+              onBlur={saveMeta}
+              placeholder={String(bagKg)}
+              className={inputCls + " max-w-[200px]"}
+            />
+          </Field>
+        </div>
+      </section>
+
+      {/* Ingredients table */}
+      <section className="rounded-3xl border border-border bg-card p-4 md:p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="font-display text-base font-semibold">Ingredients</h3>
+            <p className="text-xs text-muted-foreground">Add any ingredient — maize, soybean, limestone, premix, DCP, lysine…</p>
+          </div>
+        </div>
+
+        <div className="mt-3 space-y-2">
+          {cost.rows.map((row, i) => (
+            <IngredientRow
+              key={row.id}
+              row={row}
+              index={i + 1}
+              onSave={(patch) => upsertIng.mutateAsync({ id: row.id, formula_id: formula.id, ...patch })}
+              onDelete={() => delIng.mutate(row.id)}
+            />
+          ))}
+          <IngredientRow
+            key="new"
+            row={null}
+            index={cost.rows.length + 1}
+            onSave={(patch) =>
+              upsertIng.mutateAsync({ formula_id: formula.id, position: cost.rows.length, ...patch })
+            }
+          />
+        </div>
+
+        {/* Share bar */}
+        {cost.totalCost > 0 && (
+          <div className="mt-4 space-y-1.5">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Cost composition</p>
+            <div className="flex h-2.5 overflow-hidden rounded-full bg-muted">
+              {cost.rows.map((r, i) => (
+                <div
+                  key={r.id}
+                  style={{ width: `${r.sharePct}%`, background: shareColor(i) }}
+                  title={`${r.name}: ${r.sharePct.toFixed(1)}%`}
+                />
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
+              {cost.rows.map((r, i) => (
+                <span key={r.id} className="inline-flex items-center gap-1">
+                  <span className="inline-block h-2 w-2 rounded-full" style={{ background: shareColor(i) }} />
+                  {r.name} {r.sharePct.toFixed(0)}%
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function IngredientRow({
+  row, index, onSave, onDelete,
+}: {
+  row: (FormulaIngredient & { pricePerKg: number; lineCost: number; sharePct: number }) | null;
+  index: number;
+  onSave: (patch: {
+    name: string; quantity_kg: number; price_per_unit: number;
+    unit: "kg" | "bag"; unit_weight_kg: number; position: number;
+  }) => Promise<unknown>;
+  onDelete?: () => void;
+}) {
+  const isNew = !row;
+  const [name, setName] = useState(row?.name ?? "");
+  const [qty, setQty] = useState<string>(row ? String(row.quantity_kg) : "");
+  const [price, setPrice] = useState<string>(row ? String(row.price_per_unit) : "");
+  const [unit, setUnit] = useState<"kg" | "bag">(row?.unit ?? "kg");
+  const [unitWt, setUnitWt] = useState<string>(row ? String(row.unit_weight_kg) : "50");
+  const [dirty, setDirty] = useState(false);
+
+  const perKg = unit === "bag" ? (Number(unitWt) > 0 ? Number(price) / Number(unitWt) : 0) : Number(price);
+  const line = Number(qty) * (Number.isFinite(perKg) ? perKg : 0);
+
+  async function commit() {
+    const n = name.trim();
+    const q = Number(qty);
+    const p = Number(price);
+    if (!n || !Number.isFinite(q) || q <= 0) return;
+    await onSave({
+      name: n,
+      quantity_kg: q,
+      price_per_unit: Number.isFinite(p) ? p : 0,
+      unit,
+      unit_weight_kg: unit === "bag" ? Math.max(1, Number(unitWt) || 50) : 1,
+      position: row?.position ?? index,
+    });
+    if (isNew) {
+      setName(""); setQty(""); setPrice(""); setUnitWt("50");
+    }
+    setDirty(false);
+  }
+
+  return (
+    <div className={"rounded-2xl border p-3 " + (isNew ? "border-dashed border-[color:var(--forest)]/30 bg-[color:var(--forest)]/5" : "border-border")}>
+      <div className="grid grid-cols-12 gap-2 items-end">
+        <div className="col-span-12 md:col-span-3">
+          <Field label={isNew ? "Add ingredient" : `#${index} name`}>
+            <input
+              value={name}
+              onChange={(e) => { setName(e.target.value); setDirty(true); }}
+              onBlur={() => dirty && commit()}
+              placeholder="e.g. Maize"
+              className={inputCls}
+            />
+          </Field>
+        </div>
+        <div className="col-span-4 md:col-span-2">
+          <Field label="Qty (kg)">
+            <input
+              type="number" min={0} step="any"
+              value={qty}
+              onChange={(e) => { setQty(e.target.value); setDirty(true); }}
+              onBlur={() => dirty && commit()}
+              className={inputCls}
+            />
+          </Field>
+        </div>
+        <div className="col-span-4 md:col-span-2">
+          <Field label="Unit">
+            <select
+              value={unit}
+              onChange={(e) => { setUnit(e.target.value as "kg" | "bag"); setDirty(true); }}
+              onBlur={() => dirty && commit()}
+              className={inputCls}
+            >
+              <option value="kg">per kg</option>
+              <option value="bag">per bag</option>
+            </select>
+          </Field>
+        </div>
+        <div className="col-span-4 md:col-span-2">
+          <Field label={unit === "bag" ? "Price / bag (₦)" : "Price / kg (₦)"}>
+            <input
+              type="number" min={0} step="any"
+              value={price}
+              onChange={(e) => { setPrice(e.target.value); setDirty(true); }}
+              onBlur={() => dirty && commit()}
+              className={inputCls}
+            />
+          </Field>
+        </div>
+        {unit === "bag" && (
+          <div className="col-span-6 md:col-span-1">
+            <Field label="Bag kg">
+              <input
+                type="number" min={1} step="any"
+                value={unitWt}
+                onChange={(e) => { setUnitWt(e.target.value); setDirty(true); }}
+                onBlur={() => dirty && commit()}
+                className={inputCls}
+              />
+            </Field>
+          </div>
+        )}
+        <div className={"col-span-" + (unit === "bag" ? "6" : "12") + " md:col-span-2 flex items-center justify-end gap-2"}>
+          {!isNew && (
+            <div className="text-right mr-1">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Line cost</p>
+              <p className="text-sm font-semibold">₦{Math.round(line).toLocaleString()}</p>
+              <p className="text-[10px] text-muted-foreground">₦{perKg.toFixed(2)}/kg · {row?.sharePct.toFixed(0)}%</p>
+            </div>
+          )}
+          {isNew ? (
+            <button
+              onClick={commit}
+              disabled={!name.trim() || !(Number(qty) > 0)}
+              className="inline-flex items-center gap-1 rounded-xl bg-[color:var(--forest)] px-3 py-2 text-xs text-primary-foreground disabled:opacity-40"
+            >
+              <Plus className="h-3.5 w-3.5" /> Add
+            </button>
+          ) : (
+            <button
+              onClick={onDelete}
+              className="rounded-xl border border-border p-2 text-muted-foreground hover:text-destructive hover:border-destructive/40"
+              aria-label="Delete ingredient"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const SHARE_COLORS = ["#0d3520", "#c9a24b", "#4a8f5f", "#8c6c2e", "#2b5c3d", "#d4b25c", "#6a4a1e", "#a5c0a0"];
+function shareColor(i: number) { return SHARE_COLORS[i % SHARE_COLORS.length]; }
+
+
 
 /* --------------------------------- UI bits ------------------------------- */
 
