@@ -20,6 +20,7 @@ import {
   useSetFeedSource, type FeedFormulaWithIngredients, type FormulaIngredient,
 } from "@/lib/feed-formulas-data";
 
+import { useFeedIntelligence } from "@/lib/feed-intelligence";
 import { useFarm } from "@/lib/farm-data";
 import { toDateKey } from "@/lib/date-key";
 
