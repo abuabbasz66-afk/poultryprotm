@@ -733,6 +733,39 @@ function FormulaEditor({
           </div>
         </div>
 
+        {/* Preset quick-add chips */}
+        {(() => {
+          const existing = new Set(cost.rows.map((r) => r.name.toLowerCase()));
+          const remaining = DEFAULT_INGREDIENTS.filter((n) => !existing.has(n.toLowerCase()));
+          if (!remaining.length) return null;
+          return (
+            <div className="mt-3">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">Quick add</p>
+              <div className="flex flex-wrap gap-1.5">
+                {remaining.map((n, idx) => (
+                  <button
+                    key={n}
+                    onClick={() =>
+                      upsertIng.mutateAsync({
+                        formula_id: formula.id,
+                        name: n,
+                        quantity_kg: 0,
+                        price_per_unit: 0,
+                        unit: "kg",
+                        unit_weight_kg: 1,
+                        position: cost.rows.length + idx + 1,
+                      })
+                    }
+                    className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] hover:border-[color:var(--forest)]/40 hover:bg-[color:var(--forest)]/5"
+                  >
+                    + {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         <div className="mt-3 space-y-2">
           {cost.rows.map((row, i) => (
             <IngredientRow
@@ -752,6 +785,8 @@ function FormulaEditor({
             }
           />
         </div>
+
+
 
         {/* Share bar */}
         {cost.totalCost > 0 && (
