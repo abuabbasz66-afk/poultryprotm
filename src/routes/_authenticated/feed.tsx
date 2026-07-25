@@ -1236,7 +1236,23 @@ function IngredientRow({
                 <button
                   key={w}
                   type="button"
-                  onClick={() => { setUnitWt(String(w)); setDirty(true); commit(); }}
+                  onClick={async () => {
+                    setUnitWt(String(w));
+                    setDirty(true);
+                    const n = name.trim();
+                    const q = Number(qty);
+                    const p = Number(price);
+                    if (!n || !Number.isFinite(q) || q <= 0) return;
+                    await onSave({
+                      name: n,
+                      quantity_kg: q,
+                      price_per_unit: Number.isFinite(p) ? p : 0,
+                      unit,
+                      unit_weight_kg: unit === "bag" ? Math.max(1, w) : 1,
+                      position: row?.position ?? index,
+                    });
+                    setDirty(false);
+                  }}
                   className={
                     "rounded-md border px-1.5 py-0.5 text-[10px] " +
                     (Number(unitWt) === w
