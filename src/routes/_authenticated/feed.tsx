@@ -570,12 +570,14 @@ function FormulationTab() {
           formula={selected}
           bagKg={bagKg}
           onSetActive={() => setActive.mutate(selected.is_active ? null : selected.id)}
+          onDuplicate={handleDuplicate}
           onDelete={async () => {
             if (!confirm(`Delete formula "${selected.name}"? This cannot be undone.`)) return;
             await del.mutateAsync(selected.id);
             setSelectedId(null);
           }}
         />
+
       ) : (
         <div className="rounded-3xl border border-dashed border-border bg-card/50 p-10 text-center">
           <Beaker className="mx-auto h-10 w-10 text-muted-foreground" />
