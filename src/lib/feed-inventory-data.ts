@@ -114,7 +114,7 @@ export function useAddInventoryLot() {
         unit_cost_per_kg: input.unit_cost_per_kg ?? 0,
         supplier: input.supplier ?? null,
         batch_number: input.batch_number ?? null,
-        purchase_date: input.purchase_date ?? toDateKey(new Date()),
+        purchase_date: input.purchase_date ?? (toDateKey(new Date()) ?? new Date().toISOString().slice(0, 10)),
         expiry_date: input.expiry_date ?? null,
         note: input.note ?? null,
       };
