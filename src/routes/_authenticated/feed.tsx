@@ -296,9 +296,6 @@ function insightIcon(s: "critical" | "warning" | "info" | "positive") {
   if (s === "positive") return <Check className="h-4 w-4" />;
   return <Info className="h-4 w-4" />;
 }
-    </div>
-  );
-}
 
 /* ------------------------------- Warehouse ------------------------------- */
 
