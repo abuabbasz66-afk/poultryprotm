@@ -216,10 +216,32 @@ const problems = [
   "Health and mortality records are incomplete, making early intervention harder.",
 ];
 
-const timeline = [
-  { phase: "Available Today", items: ["Digital farm records — eggs, feed, health and mortality", "Farm analytics — production, cost and profit views", "Clean dashboard for every room and flock"] },
-  { phase: "Rolling Out (Premium AI)", items: ["Early detection when egg production changes unusually", "Mortality trend monitoring and alerts", "Feed efficiency and cost pattern checks"] },
-  { phase: "Long-Term Vision", items: ["Mobile apps for iOS and Android", "Farmer marketplace and partner integrations", "Africa's leading smart poultry platform"] },
+const liveFeatures: { icon: any; title: string; desc: string }[] = [
+  { icon: LayoutDashboard, title: "Live Farm Dashboard", desc: "Real-time production, mortality, feed, health and financial monitoring." },
+  { icon: Wallet, title: "Profit & Financial Analytics", desc: "Automatic revenue, feed cost, daily, monthly and all-time profit analysis." },
+  { icon: Wheat, title: "Feed Management", desc: "Record daily feed usage, manage feed inventory and calculate feed costs." },
+  { icon: Calculator, title: "Feed Formulation & Cost Calculator", desc: "Create custom feed formulas, calculate ingredient costs, cost per kilogram and cost per bag." },
+  { icon: Sparkles, title: "AI Feed Intelligence", desc: "Monitor feed inventory, estimate remaining days of feed and generate low-feed alerts." },
+  { icon: LineChart, title: "Production Analytics", desc: "Interactive production trends, room performance, historical records and operational insights." },
+  { icon: HeartPulse, title: "Mortality & Health Tracking", desc: "Monitor bird health, mortality trends and treatment history." },
+  { icon: ShieldCheck, title: "Multi-Farm Management", desc: "Secure farm-specific dashboards with complete tenant isolation." },
+  { icon: FileText, title: "Smart Reporting", desc: "Automatically generate operational and financial reports." },
+];
+
+const comingSoon: { icon: any; title: string; desc: string }[] = [
+  { icon: Brain, title: "AI Disease Prediction", desc: "Predict disease outbreaks before symptoms appear." },
+  { icon: Mic, title: "AI Voice Assistant", desc: "Ask PoultryPro questions using natural voice commands." },
+  { icon: TrendingUp, title: "Market Price Intelligence", desc: "Predict future egg and feed prices." },
+  { icon: CloudSun, title: "Weather Integration", desc: "Weather forecasts linked to production recommendations." },
+  { icon: Radio, title: "IoT Sensor Integration", desc: "Connect temperature, humidity, water and feed sensors." },
+  { icon: Camera, title: "Smart Camera Monitoring", desc: "AI vision for bird behaviour and health monitoring." },
+  { icon: Sliders, title: "Automated Feed Optimisation", desc: "Recommend the most profitable feed formulations." },
+  { icon: DollarSign, title: "Profit Forecasting", desc: "Predict farm profitability for future weeks and months." },
+  { icon: Syringe, title: "Smart Vaccination Assistant", desc: "Automatic vaccination schedules and reminders." },
+  { icon: BarChart3, title: "Production Forecasting", desc: "Predict egg production and feed consumption." },
+  { icon: Store, title: "Poultry Marketplace", desc: "Buy and sell feed, chicks, eggs, equipment and other poultry products." },
+  { icon: Handshake, title: "Cooperative & Investor Portal", desc: "Dedicated dashboards for cooperatives, investors and financial institutions." },
+  { icon: Smartphone, title: "Native Android & iOS Apps", desc: "Offline-first mobile applications with synchronisation and push notifications." },
 ];
 
 function Index() {
