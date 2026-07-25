@@ -259,6 +259,47 @@ const setBagWeightKg = (v: number | null) => {
     [metrics.dailySeriesMonth],
   );
 
+  // All-time profit series — cumulative totals from farm's first recorded day
+  // through today. Runs entirely off the shared analytics engine so the
+  // numbers match Monthly Profit Overview and every other financial widget.
+  const allTimeSeries = useMemo(() => {
+    let cumRev = 0, cumCost = 0, cumProfit = 0, cumEggs = 0;
+    return metrics.dailySeriesAllTime.map(d => {
+      cumRev += d.revenue;
+      cumCost += d.feedCost;
+      cumProfit += d.profit;
+      cumEggs += d.eggs;
+      return {
+        name: d.label,
+        date: d.date,
+        dailyRevenue: d.revenue,
+        dailyFeedCost: d.feedCost,
+        dailyProfit: d.profit,
+        Revenue: cumRev,
+        "Feed Cost": cumCost,
+        Profit: cumProfit,
+        lifetimeEggs: cumEggs,
+        lifetimeCrates: Math.floor(cumEggs / 30),
+      };
+    });
+  }, [metrics.dailySeriesAllTime]);
+
+  const allTimeStats = useMemo(() => {
+    const days = allTimeSeries.length;
+    const last = allTimeSeries[days - 1];
+    const totalRevenue = last?.Revenue ?? 0;
+    const totalFeedCost = last?.["Feed Cost"] ?? 0;
+    const totalProfit = last?.Profit ?? 0;
+    const roi = totalFeedCost > 0 ? (totalProfit / totalFeedCost) * 100 : null;
+    const avgDaily = days > 0 ? totalProfit / days : 0;
+    const lifetimeEggs = last?.lifetimeEggs ?? 0;
+    const lifetimeCrates = Math.floor(lifetimeEggs / 30);
+    const startDate = allTimeSeries[0]?.date ?? null;
+    const endDate = last?.date ?? null;
+    return { days, totalRevenue, totalFeedCost, totalProfit, roi, avgDaily, lifetimeEggs, lifetimeCrates, startDate, endDate };
+  }, [allTimeSeries]);
+
+
 
   const handleSignOut = async () => {
     // Stop in-flight protected queries so cleared-session 401s don't storm the UI,
