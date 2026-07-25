@@ -189,20 +189,93 @@ function OverviewTab() {
   );
 }
 
-/* ------------------------------- Inventory ------------------------------- */
+/* ------------------------------- Warehouse ------------------------------- */
+
+const DAY_MS = 86400000;
+function daysUntil(dateStr: string | null): number | null {
+  if (!dateStr) return null;
+  const t = new Date(dateStr + "T00:00:00").getTime();
+  if (!Number.isFinite(t)) return null;
+  return Math.ceil((t - Date.now()) / DAY_MS);
+}
+
+type LotFilter = "all" | "active" | "empty" | "expiring" | "expired";
+type LotSort = "oldest" | "newest" | "remaining_desc" | "remaining_asc" | "value_desc";
 
 function InventoryTab() {
   const inv = useFeedInventory();
   const del = useDeleteInventoryLot();
+  const farm = useFarm();
+  const bagKg = farm.data?.bag_weight_kg ?? 25;
   const lots = inv.data ?? [];
   const [adding, setAdding] = useState(false);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<LotFilter>("all");
+  const [sort, setSort] = useState<LotSort>("oldest");
+
+  const kpis = useMemo(() => {
+    const active = lots.filter((l) => l.remaining_kg > 0);
+    const empty = lots.filter((l) => l.remaining_kg <= 0);
+    const expiring = active.filter((l) => {
+      const d = daysUntil(l.expiry_date);
+      return d !== null && d >= 0 && d <= 14;
+    });
+    const expired = active.filter((l) => {
+      const d = daysUntil(l.expiry_date);
+      return d !== null && d < 0;
+    });
+    const totalKg = active.reduce((s, l) => s + l.remaining_kg, 0);
+    const totalValue = active.reduce((s, l) => s + l.remaining_kg * l.unit_cost_per_kg, 0);
+    const supplierMap = new Map<string, { kg: number; value: number; lots: number }>();
+    for (const l of active) {
+      const key = (l.supplier || "Unknown").trim() || "Unknown";
+      const cur = supplierMap.get(key) ?? { kg: 0, value: 0, lots: 0 };
+      cur.kg += l.remaining_kg;
+      cur.value += l.remaining_kg * l.unit_cost_per_kg;
+      cur.lots += 1;
+      supplierMap.set(key, cur);
+    }
+    const suppliers = Array.from(supplierMap.entries())
+      .map(([name, v]) => ({ name, ...v }))
+      .sort((a, b) => b.kg - a.kg)
+      .slice(0, 5);
+    const feedTypeMap = new Map<string, number>();
+    for (const l of active) feedTypeMap.set(l.feed_type, (feedTypeMap.get(l.feed_type) ?? 0) + l.remaining_kg);
+    const feedTypes = Array.from(feedTypeMap.entries()).sort((a, b) => b[1] - a[1]);
+    return { active, empty, expiring, expired, totalKg, totalValue, suppliers, feedTypes };
+  }, [lots]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    let rows = lots.filter((l) => {
+      if (q && !`${l.feed_type} ${l.supplier ?? ""} ${l.batch_number ?? ""}`.toLowerCase().includes(q)) return false;
+      const d = daysUntil(l.expiry_date);
+      switch (filter) {
+        case "active": return l.remaining_kg > 0;
+        case "empty": return l.remaining_kg <= 0;
+        case "expiring": return l.remaining_kg > 0 && d !== null && d >= 0 && d <= 14;
+        case "expired": return l.remaining_kg > 0 && d !== null && d < 0;
+        default: return true;
+      }
+    });
+    rows = [...rows].sort((a, b) => {
+      switch (sort) {
+        case "newest": return b.purchase_date.localeCompare(a.purchase_date);
+        case "remaining_desc": return b.remaining_kg - a.remaining_kg;
+        case "remaining_asc": return a.remaining_kg - b.remaining_kg;
+        case "value_desc": return b.remaining_kg * b.unit_cost_per_kg - a.remaining_kg * a.unit_cost_per_kg;
+        default: return a.purchase_date.localeCompare(b.purchase_date); // oldest (FIFO)
+      }
+    });
+    return rows;
+  }, [lots, query, filter, sort]);
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="font-display text-lg font-semibold">Feed Inventory</h2>
-          <p className="text-xs text-muted-foreground">FIFO ledger — oldest lot is consumed first.</p>
+          <h2 className="font-display text-lg font-semibold">Feed Warehouse</h2>
+          <p className="text-xs text-muted-foreground">Multi-batch inventory with FIFO consumption, expiry tracking and supplier insights.</p>
         </div>
         <button
           onClick={() => setAdding(true)}
@@ -212,28 +285,139 @@ function InventoryTab() {
         </button>
       </div>
 
+      {/* Warehouse KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+        <WhKpi label="Total Stock" value={fmtKg(kpis.totalKg)} sub={`${fmtBags(kpis.totalKg, bagKg)} bags`} />
+        <WhKpi label="Inventory Value" value={`₦${Math.round(kpis.totalValue).toLocaleString()}`} sub={`${kpis.active.length} active lot${kpis.active.length === 1 ? "" : "s"}`} />
+        <WhKpi
+          label="Expiring ≤14d"
+          value={String(kpis.expiring.length)}
+          sub={kpis.expiring.length ? "Use these first" : "None expiring"}
+          tone={kpis.expiring.length ? "warn" : "ok"}
+        />
+        <WhKpi
+          label="Expired in stock"
+          value={String(kpis.expired.length)}
+          sub={kpis.expired.length ? "Review & discard" : "All fresh"}
+          tone={kpis.expired.length ? "bad" : "ok"}
+        />
+      </div>
+
       {adding && <AddLotForm onClose={() => setAdding(false)} />}
 
+      {/* Filters */}
+      {lots.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[180px]">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search feed type, supplier, batch…"
+              className={inputCls}
+            />
+          </div>
+          <select className={inputCls + " max-w-[160px]"} value={filter} onChange={(e) => setFilter(e.target.value as LotFilter)}>
+            <option value="all">All lots</option>
+            <option value="active">Active</option>
+            <option value="empty">Empty</option>
+            <option value="expiring">Expiring ≤14d</option>
+            <option value="expired">Expired</option>
+          </select>
+          <select className={inputCls + " max-w-[180px]"} value={sort} onChange={(e) => setSort(e.target.value as LotSort)}>
+            <option value="oldest">Oldest first (FIFO)</option>
+            <option value="newest">Newest first</option>
+            <option value="remaining_desc">Most remaining</option>
+            <option value="remaining_asc">Least remaining</option>
+            <option value="value_desc">Highest value</option>
+          </select>
+        </div>
+      )}
+
       {inv.isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading inventory…</p>
+        <p className="text-sm text-muted-foreground">Loading warehouse…</p>
       ) : lots.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-border bg-secondary/40 p-8 text-center">
           <Wheat className="mx-auto h-8 w-8 text-muted-foreground" />
-          <p className="mt-3 text-sm font-medium">No feed in inventory</p>
+          <p className="mt-3 text-sm font-medium">Warehouse is empty</p>
           <p className="text-xs text-muted-foreground">Record a purchase or produced batch to start tracking stock.</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-3xl border border-dashed border-border bg-secondary/40 p-6 text-center text-xs text-muted-foreground">
+          No lots match the current filter.
         </div>
       ) : (
         <ul className="space-y-2">
-          {lots.map((l) => (
-            <LotCard key={l.id} lot={l} onDelete={() => {
+          {filtered.map((l) => (
+            <LotCard key={l.id} lot={l} bagKg={bagKg} onDelete={() => {
               if (confirm(`Delete this ${l.feed_type} lot? This will not restore any usage already recorded.`)) del.mutate(l.id);
             }} />
           ))}
         </ul>
       )}
+
+      {/* Supplier & feed-type breakdown */}
+      {kpis.suppliers.length > 0 && (
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="rounded-3xl border border-border bg-card p-4">
+            <h3 className="font-display text-sm font-semibold">Top Suppliers</h3>
+            <ul className="mt-3 space-y-2">
+              {kpis.suppliers.map((s) => {
+                const pct = kpis.totalKg > 0 ? (s.kg / kpis.totalKg) * 100 : 0;
+                return (
+                  <li key={s.name}>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium truncate">{s.name}</span>
+                      <span className="text-muted-foreground">{fmtKg(s.kg)} · ₦{Math.round(s.value).toLocaleString()}</span>
+                    </div>
+                    <div className="mt-1 h-1.5 rounded-full bg-secondary overflow-hidden">
+                      <div className="h-full bg-[color:var(--forest)]" style={{ width: `${pct}%` }} />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+          <div className="rounded-3xl border border-border bg-card p-4">
+            <h3 className="font-display text-sm font-semibold">Stock by Feed Type</h3>
+            <ul className="mt-3 space-y-2">
+              {kpis.feedTypes.map(([name, kg]) => {
+                const pct = kpis.totalKg > 0 ? (kg / kpis.totalKg) * 100 : 0;
+                return (
+                  <li key={name}>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium truncate">{name}</span>
+                      <span className="text-muted-foreground">{fmtKg(kg)} · {pct.toFixed(0)}%</span>
+                    </div>
+                    <div className="mt-1 h-1.5 rounded-full bg-secondary overflow-hidden">
+                      <div className="h-full bg-[color:var(--gold,#c8a95a)]" style={{ width: `${pct}%` }} />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
+
+function WhKpi({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "ok" | "warn" | "bad" }) {
+  const toneCls =
+    tone === "bad"
+      ? "border-destructive/40 bg-destructive/5"
+      : tone === "warn"
+      ? "border-[color:var(--gold,#c8a95a)]/50 bg-[color:var(--gold,#c8a95a)]/10"
+      : "border-border bg-card";
+  return (
+    <div className={"rounded-2xl border p-3 " + toneCls}>
+      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className="mt-1 font-display text-xl font-semibold">{value}</p>
+      {sub && <p className="text-[11px] text-muted-foreground">{sub}</p>}
+    </div>
+  );
+}
+
 
 function LotCard({ lot, onDelete }: { lot: FeedInventoryLot; onDelete: () => void }) {
   const usedKg = Math.max(0, lot.initial_kg - lot.remaining_kg);
