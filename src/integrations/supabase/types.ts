@@ -148,6 +148,7 @@ export type Database = {
           country: string
           created_at: string
           farm_type: string | null
+          feed_source: string
           id: string
           location: string | null
           name: string
@@ -170,6 +171,7 @@ export type Database = {
           country?: string
           created_at?: string
           farm_type?: string | null
+          feed_source?: string
           id?: string
           location?: string | null
           name?: string
@@ -192,6 +194,7 @@ export type Database = {
           country?: string
           created_at?: string
           farm_type?: string | null
+          feed_source?: string
           id?: string
           location?: string | null
           name?: string
@@ -207,6 +210,104 @@ export type Database = {
           trial_started_at?: string
         }
         Relationships: []
+      }
+      feed_formula_ingredients: {
+        Row: {
+          created_at: string
+          farm_id: string
+          formula_id: string
+          id: string
+          name: string
+          position: number
+          price_per_unit: number
+          quantity_kg: number
+          unit: string
+          unit_weight_kg: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          farm_id: string
+          formula_id: string
+          id?: string
+          name: string
+          position?: number
+          price_per_unit?: number
+          quantity_kg?: number
+          unit?: string
+          unit_weight_kg?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          farm_id?: string
+          formula_id?: string
+          id?: string
+          name?: string
+          position?: number
+          price_per_unit?: number
+          quantity_kg?: number
+          unit?: string
+          unit_weight_kg?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_formula_ingredients_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_formula_ingredients_formula_id_fkey"
+            columns: ["formula_id"]
+            isOneToOne: false
+            referencedRelation: "feed_formulas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feed_formulas: {
+        Row: {
+          bag_weight_kg: number | null
+          created_at: string
+          farm_id: string
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          bag_weight_kg?: number | null
+          created_at?: string
+          farm_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bag_weight_kg?: number | null
+          created_at?: string
+          farm_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_formulas_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       feed_inventory: {
         Row: {
