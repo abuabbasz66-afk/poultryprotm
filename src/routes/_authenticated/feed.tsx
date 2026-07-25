@@ -917,7 +917,25 @@ function IngredientRow({
                 className={inputCls}
               />
             </Field>
+            <div className="mt-1 flex gap-1">
+              {[25, 50, 100].map((w) => (
+                <button
+                  key={w}
+                  type="button"
+                  onClick={() => { setUnitWt(String(w)); setDirty(true); commit(); }}
+                  className={
+                    "rounded-md border px-1.5 py-0.5 text-[10px] " +
+                    (Number(unitWt) === w
+                      ? "border-[color:var(--forest)] bg-[color:var(--forest)]/10 text-[color:var(--forest)]"
+                      : "border-border text-muted-foreground hover:bg-muted/50")
+                  }
+                >
+                  {w}kg
+                </button>
+              ))}
+            </div>
           </div>
+
         )}
         <div className={"col-span-" + (unit === "bag" ? "6" : "12") + " md:col-span-2 flex items-center justify-end gap-2"}>
           {!isNew && (
