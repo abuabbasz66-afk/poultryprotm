@@ -169,7 +169,7 @@ export function useFeedStockAnalytics() {
     const usedKg = Math.max(0, purchasedKg - stockKg);
 
     // Daily usage series (last 30 days) from feed_usage rows
-    const today = toDateKey(new Date())!;
+    const today = toDateKey(new Date()) ?? new Date().toISOString().slice(0, 10);
     const byDate = new Map<string, number>();
     for (const r of usageRows) {
       const key = toDateKey(r.date) ?? r.date;
