@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { useFarm, useFeed, useEggs, useRooms, usePrices } from "@/lib/farm-data";
 import { useFeedInventory, useFeedStockAnalytics } from "@/lib/feed-inventory-data";
 import { useActiveFormulaCostPerKg } from "@/lib/feed-formulas-data";
-import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
+import { totalEggsFromRow } from "@/lib/egg-normalize";
 import { toDateKey } from "@/lib/date-key";
 
 export type Severity = "critical" | "warning" | "info" | "positive";
