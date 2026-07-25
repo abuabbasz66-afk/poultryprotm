@@ -15,6 +15,8 @@ import {
 
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
+import { useActiveFormulaCostPerKg } from "@/lib/feed-formulas-data";
+
 import {
   useRooms, useEggs, useMortality, useHealth, useFeed, usePrices, useFarm, useFarmId,
   useAddRoom, useDeleteRoom,
@@ -168,10 +170,16 @@ const setBagWeightKg = (v: number | null) => {
   // Derived — every figure is calculated from live records via the analytics
   // engine so daily/monthly/all-time counts never leak into each other.
   // ---------------------------------------------------------------------------
+  const activeFormulaCostPerKg = useActiveFormulaCostPerKg();
+  const useFormulaCost = farm?.feed_source === "self_produced" && activeFormulaCostPerKg != null;
   const metrics = useMemo(
-    () => computeDashboardMetrics({ rooms, eggs, feed, mortality, health, prices, bagWeightKg }),
-    [rooms, eggs, feed, mortality, health, prices, bagWeightKg],
+    () => computeDashboardMetrics({
+      rooms, eggs, feed, mortality, health, prices, bagWeightKg,
+      costPerKgOverride: useFormulaCost ? activeFormulaCostPerKg : null,
+    }),
+    [rooms, eggs, feed, mortality, health, prices, bagWeightKg, useFormulaCost, activeFormulaCostPerKg],
   );
+
 
   const totalBirds = metrics.population.totalLiveBirds;
   const totalLoss = metrics.population.totalMortalityAllTime;

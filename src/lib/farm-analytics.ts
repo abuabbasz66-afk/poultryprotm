@@ -572,6 +572,10 @@ export function computeDashboardMetrics(input: {
   prices: Price[];
   bagWeightKg?: number | null;
   targetProductionPct?: number;
+  /** Optional override for the cost per kg of feed (e.g. from an active
+   *  self-produced feed formula). When provided and > 0, this is used
+   *  instead of the purchased-feed price derived from `prices`. */
+  costPerKgOverride?: number | null;
 }): DashboardMetrics {
   const eggPrice = eggPricePerCrate(input.prices);
   const feedPrice = feedPricePerBag(input.prices);
@@ -579,7 +583,11 @@ export function computeDashboardMetrics(input: {
     Number.isFinite(Number(input.bagWeightKg)) && Number(input.bagWeightKg) > 0
       ? Number(input.bagWeightKg)
       : 25;
-  const costPerKg = feedPricePerKg(input.prices, bagWeightKg);
+  const override = Number(input.costPerKgOverride);
+  const costPerKg = Number.isFinite(override) && override > 0
+    ? override
+    : feedPricePerKg(input.prices, bagWeightKg);
+
   const population = computeBirdPopulation(input.rooms, input.mortality);
 
   const periodInput = {

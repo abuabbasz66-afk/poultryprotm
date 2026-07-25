@@ -99,6 +99,7 @@ export type Farm = {
   bird_count: number | null;
   subscription_plan: string | null;
   bag_weight_kg: number | null;
+  feed_source: "purchased" | "self_produced";
 };
 
 export function useFarm() {
@@ -109,16 +110,21 @@ export function useFarm() {
     queryFn: async (): Promise<Farm | null> => {
       const { data, error } = await supabase
         .from("farms")
-        .select("id, name, location, state, country, farm_type, bird_type, rooms_count, owner_name, phone, bird_count, subscription_plan, bag_weight_kg")
+        .select("id, name, location, state, country, farm_type, bird_type, rooms_count, owner_name, phone, bird_count, subscription_plan, bag_weight_kg, feed_source")
         .eq("id", farmId!)
         .maybeSingle();
       if (error) throw error;
       if (!data) return null;
-      return { ...data, bag_weight_kg: data.bag_weight_kg == null ? null : Number(data.bag_weight_kg) } as Farm;
+      return {
+        ...data,
+        bag_weight_kg: data.bag_weight_kg == null ? null : Number(data.bag_weight_kg),
+        feed_source: (data as any).feed_source ?? "purchased",
+      } as Farm;
     },
     staleTime: 60_000,
   });
 }
+
 
 /** Persist per-farm bag weight (kg per bag). Feed is captured in kg;
  *  bag counts are derived by dividing kg by this configurable weight. */
