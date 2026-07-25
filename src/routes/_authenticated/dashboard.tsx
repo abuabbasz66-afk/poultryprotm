@@ -259,6 +259,47 @@ const setBagWeightKg = (v: number | null) => {
     [metrics.dailySeriesMonth],
   );
 
+  // All-time profit series — cumulative totals from farm's first recorded day
+  // through today. Runs entirely off the shared analytics engine so the
+  // numbers match Monthly Profit Overview and every other financial widget.
+  const allTimeSeries = useMemo(() => {
+    let cumRev = 0, cumCost = 0, cumProfit = 0, cumEggs = 0;
+    return metrics.dailySeriesAllTime.map(d => {
+      cumRev += d.revenue;
+      cumCost += d.feedCost;
+      cumProfit += d.profit;
+      cumEggs += d.eggs;
+      return {
+        name: d.label,
+        date: d.date,
+        dailyRevenue: d.revenue,
+        dailyFeedCost: d.feedCost,
+        dailyProfit: d.profit,
+        Revenue: cumRev,
+        "Feed Cost": cumCost,
+        Profit: cumProfit,
+        lifetimeEggs: cumEggs,
+        lifetimeCrates: Math.floor(cumEggs / 30),
+      };
+    });
+  }, [metrics.dailySeriesAllTime]);
+
+  const allTimeStats = useMemo(() => {
+    const days = allTimeSeries.length;
+    const last = allTimeSeries[days - 1];
+    const totalRevenue = last?.Revenue ?? 0;
+    const totalFeedCost = last?.["Feed Cost"] ?? 0;
+    const totalProfit = last?.Profit ?? 0;
+    const roi = totalFeedCost > 0 ? (totalProfit / totalFeedCost) * 100 : null;
+    const avgDaily = days > 0 ? totalProfit / days : 0;
+    const lifetimeEggs = last?.lifetimeEggs ?? 0;
+    const lifetimeCrates = Math.floor(lifetimeEggs / 30);
+    const startDate = allTimeSeries[0]?.date ?? null;
+    const endDate = last?.date ?? null;
+    return { days, totalRevenue, totalFeedCost, totalProfit, roi, avgDaily, lifetimeEggs, lifetimeCrates, startDate, endDate };
+  }, [allTimeSeries]);
+
+
 
   const handleSignOut = async () => {
     // Stop in-flight protected queries so cleared-session 401s don't storm the UI,
@@ -688,7 +729,88 @@ const setBagWeightKg = (v: number | null) => {
           </div>
         </Card>
 
+        {/* All-Time Profit Overview — cumulative view from farm inception */}
+        <Card>
+          <CardHeader
+            title="All-Time Profit Overview"
+            subtitle={
+              allTimeStats.startDate
+                ? `Revenue, feed cost and profit since farm inception · ${formatDayLabel(allTimeStats.startDate)} → Today`
+                : "Revenue, feed cost and profit since farm inception."
+            }
+            right={
+              <div className="text-right">
+                <div className="font-display text-2xl font-semibold text-[color:var(--forest)]">
+                  {naira(allTimeStats.totalProfit)}
+                  <span className="ml-1 text-xs font-sans font-medium text-muted-foreground">Lifetime Profit</span>
+                </div>
+                <div className="text-xs text-muted-foreground">Revenue: {naira(allTimeStats.totalRevenue)}</div>
+                <div className="text-xs text-muted-foreground">Feed Cost: {naira(allTimeStats.totalFeedCost)}</div>
+              </div>
+            }
+          />
+
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+            <MiniStat label="Total Revenue" value={naira(allTimeStats.totalRevenue)} tone="mint" />
+            <MiniStat label="Total Feed Cost" value={naira(allTimeStats.totalFeedCost)} tone="peach" />
+            <MiniStat label="Total Profit" value={naira(allTimeStats.totalProfit)} tone="sky" />
+            <MiniStat label="ROI" value={allTimeStats.roi === null ? "—" : `${allTimeStats.roi.toFixed(1)}%`} tone="plain" />
+            <MiniStat label="Avg Daily Profit" value={naira(Math.round(allTimeStats.avgDaily))} tone="mint" />
+            <MiniStat label="Production Days" value={allTimeStats.days.toLocaleString()} tone="plain" />
+            <MiniStat label="Lifetime Eggs" value={allTimeStats.lifetimeEggs.toLocaleString()} tone="sky" />
+            <MiniStat label="Lifetime Crates" value={allTimeStats.lifetimeCrates.toLocaleString()} tone="peach" />
           </div>
+
+          <div className="h-72 mt-4">
+            {allTimeSeries.length === 0 ? (
+              <div className="h-full grid place-items-center text-sm text-muted-foreground">
+                No production records yet. Start recording to see lifetime analytics.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={allTimeSeries} margin={{ top: 8, right: 12, left: -8, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0.02 85)" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 10 }}
+                    interval={Math.max(0, Math.floor(allTimeSeries.length / 8))}
+                  />
+                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => "₦" + (v / 1000).toFixed(0) + "k"} />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload || payload.length === 0) return null;
+                      const row = payload[0].payload as (typeof allTimeSeries)[number];
+                      return (
+                        <div className="rounded-xl border border-border bg-background/95 backdrop-blur px-3 py-2 text-xs shadow-lg space-y-1">
+                          <div className="font-semibold text-sm">{formatDayLabel(row.date)}</div>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                            <span className="text-muted-foreground">Revenue</span><span className="tabular-nums text-right">{naira(row.dailyRevenue)}</span>
+                            <span className="text-muted-foreground">Feed Cost</span><span className="tabular-nums text-right">{naira(row.dailyFeedCost)}</span>
+                            <span className="text-muted-foreground">Profit</span><span className="tabular-nums text-right">{naira(row.dailyProfit)}</span>
+                          </div>
+                          <div className="mt-1 pt-1 border-t border-border/60 grid grid-cols-2 gap-x-4 gap-y-0.5">
+                            <span className="text-muted-foreground">Running Profit</span><span className="tabular-nums text-right font-medium">{naira(row.Profit)}</span>
+                            <span className="text-muted-foreground">Lifetime Revenue</span><span className="tabular-nums text-right">{naira(row.Revenue)}</span>
+                            <span className="text-muted-foreground">Lifetime Feed Cost</span><span className="tabular-nums text-right">{naira(row["Feed Cost"])}</span>
+                            <span className="text-muted-foreground">Lifetime Eggs</span><span className="tabular-nums text-right">{row.lifetimeEggs.toLocaleString()}</span>
+                            <span className="text-muted-foreground">Lifetime Crates</span><span className="tabular-nums text-right">{row.lifetimeCrates.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Line type="monotone" dataKey="Revenue" name="Revenue" stroke="oklch(0.32 0.06 155)" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="Feed Cost" name="Feed Cost" stroke="oklch(0.78 0.15 78)" strokeWidth={2} strokeDasharray="4 4" dot={false} />
+                  <Line type="monotone" dataKey="Profit" name="Profit" stroke="oklch(0.55 0.18 240)" strokeWidth={2.25} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </Card>
+
+          </div>
+
         )}
 
         {area === "records" && (
