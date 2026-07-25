@@ -79,7 +79,7 @@ function FeedManagementPage() {
         <div className="mx-auto max-w-6xl px-2 md:px-4">
           <div className="flex gap-1 overflow-x-auto">
             <TabBtn active={tab === "overview"} onClick={() => setTab("overview")} icon={Sparkles}>Overview</TabBtn>
-            <TabBtn active={tab === "inventory"} onClick={() => setTab("inventory")} icon={Package}>Inventory</TabBtn>
+            <TabBtn active={tab === "inventory"} onClick={() => setTab("inventory")} icon={Package}>Warehouse</TabBtn>
             <TabBtn active={tab === "ledger"} onClick={() => setTab("ledger")} icon={ClipboardList}>Ledger</TabBtn>
             <TabBtn active={tab === "formulation"} onClick={() => setTab("formulation")} icon={Beaker}>Formulation</TabBtn>
           </div>
