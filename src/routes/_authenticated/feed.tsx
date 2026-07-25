@@ -969,8 +969,6 @@ function AlertBanner({ stats }: { stats: ReturnType<typeof useFeedStockAnalytics
   );
 }
 
-function FormulationTab() { return <FormulationPlaceholder />; }
-void FormulationTab; // reserved for phase 2
 
 /* --------------------------------- utils --------------------------------- */
 
