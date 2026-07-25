@@ -1,6 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { ArrowLeft, Package, TrendingDown, Sparkles, Plus, Trash2, AlertTriangle, Wheat, ClipboardList, Beaker, ArrowDownRight, ArrowUpRight, Info } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeft, Package, TrendingDown, Sparkles, Plus, Trash2, AlertTriangle, Wheat,
+  ClipboardList, Beaker, ArrowDownRight, ArrowUpRight, Info, Check, Star, Pencil, X,
+  ShoppingCart, Factory,
+} from "lucide-react";
 import {
   useFeedInventory,
   useFeedLedger,
@@ -10,8 +14,14 @@ import {
   type FeedInventoryLot,
   type FeedLedgerEntry,
 } from "@/lib/feed-inventory-data";
+import {
+  useFeedFormulas, computeFormulaCost, useCreateFormula, useUpdateFormula,
+  useDeleteFormula, useSetActiveFormula, useUpsertIngredient, useDeleteIngredient,
+  useSetFeedSource, type FeedFormulaWithIngredients, type FormulaIngredient,
+} from "@/lib/feed-formulas-data";
 import { useFarm } from "@/lib/farm-data";
 import { toDateKey } from "@/lib/date-key";
+
 
 export const Route = createFileRoute("/_authenticated/feed")({
   head: () => ({
