@@ -225,12 +225,26 @@ const setBagWeightKg = (v: number | null) => {
   const todayProfit = metrics.todayProfit;
   void totalCrates; void allTimeRevenue; void feedAllTime; void feedPrice; void todayCost;
 
-  const chartData = useMemo(
-    () => [...eggs].reverse().map(e => ({
-      name: e.label.replace(/^[A-Za-z]{3}, /, ""),
-      "ROOM 2": e.r2, "ROOM 3": e.r3, "ROOM 4": e.r4, "Extra Eggs": e.extra,
+  // Rooms are stored positionally in r2/r3/r4 (schema legacy). The chart
+  // series are generated dynamically from the farm's actual rooms so the
+  // legend always reflects real room names — never hardcoded.
+  const roomSeries = useMemo(
+    () => rooms.slice(0, 3).map((r, idx) => ({
+      name: r.name,
+      key: (["r2", "r3", "r4"] as const)[idx],
     })),
-    [eggs],
+    [rooms],
+  );
+  const chartData = useMemo(
+    () => [...eggs].reverse().map(e => {
+      const row: Record<string, string | number> = {
+        name: e.label.replace(/^[A-Za-z]{3}, /, ""),
+        "Extra Eggs": e.extra,
+      };
+      for (const s of roomSeries) row[s.name] = e[s.key];
+      return row;
+    }),
+    [eggs, roomSeries],
   );
 
   // Monthly profit chart — one point per calendar day, joining production and
