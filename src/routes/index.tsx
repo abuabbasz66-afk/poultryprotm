@@ -8,6 +8,8 @@ import eggsImg from "@/assets/eggs.jpg";
 import {
   Egg, Bird, LineChart, HeartPulse, Wheat, Wallet, LayoutDashboard,
   ShieldCheck, Sparkles, ArrowRight, MapPin, Trophy, Cpu, Users, Leaf,
+  Calculator, FileText, Brain, Mic, TrendingUp, CloudSun, Radio, Camera,
+  Sliders, DollarSign, Syringe, BarChart3, Store, Handshake, Smartphone,
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 
