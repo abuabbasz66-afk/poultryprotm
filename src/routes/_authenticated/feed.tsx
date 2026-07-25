@@ -439,6 +439,11 @@ function LedgerRow({ row }: { row: FeedLedgerEntry }) {
 
 /* ------------------------------ Formulation ------------------------------ */
 
+const DEFAULT_INGREDIENTS = [
+  "Maize", "Soybean Meal", "Wheat Bran", "Layer Concentrate", "Limestone",
+  "DCP", "Salt", "Lysine", "Methionine", "Premix", "Toxin Binder",
+];
+
 function FormulationTab() {
   const farm = useFarm();
   const bagKg = farm.data?.bag_weight_kg && farm.data.bag_weight_kg > 0 ? farm.data.bag_weight_kg : 25;
@@ -447,6 +452,7 @@ function FormulationTab() {
   const create = useCreateFormula();
   const setActive = useSetActiveFormula();
   const del = useDeleteFormula();
+  const dup = useDuplicateFormula();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
@@ -466,6 +472,13 @@ function FormulationTab() {
     setSelectedId(id);
     setNewName("");
   }
+
+  async function handleDuplicate() {
+    if (!selected) return;
+    const id = await dup.mutateAsync(selected);
+    setSelectedId(id);
+  }
+
 
   return (
     <div className="space-y-6">
