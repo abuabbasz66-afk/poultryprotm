@@ -762,34 +762,115 @@ function Index() {
       </section>
 
 
-      <section id="roadmap" className="py-24">
-
+      <section id="roadmap" className="py-24 bg-[color:var(--cream)]/40">
         <div className="container-x">
-          <div className="max-w-2xl">
-            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Future Roadmap</span>
+          <div className="max-w-3xl">
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">
+              Step 11 · Product Roadmap
+            </span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Building Africa's leading poultry intelligence platform.
+              Building Africa's Smart Poultry Platform
             </h2>
+            <p className="mt-5 text-lg text-muted-foreground">
+              PoultryPro is continuously evolving. Below are the capabilities available today
+              and the innovations currently on our roadmap.
+            </p>
           </div>
-          <div className="mt-14 grid md:grid-cols-3 gap-5">
-            {timeline.map((t, i) => (
-              <div key={t.phase} className="rounded-3xl border border-border bg-card p-7 relative overflow-hidden">
-                <div className="absolute top-0 right-0 h-20 w-20 rounded-bl-3xl bg-[color:var(--gold)]/20" />
-                <div className="text-xs uppercase tracking-widest text-[color:var(--forest)] font-medium">Phase 0{i + 1}</div>
-                <h3 className="mt-2 font-display text-2xl font-semibold">{t.phase}</h3>
-                <ul className="mt-5 space-y-3">
-                  {t.items.map((it) => (
-                    <li key={it} className="flex items-start gap-3 text-sm">
-                      <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[color:var(--gold)] flex-none" />
-                      <span className="text-muted-foreground">{it}</span>
-                    </li>
-                  ))}
-                </ul>
+
+          {/* Available Today */}
+          <div className="mt-16">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-2 rounded-full bg-[color:var(--forest)] text-primary-foreground px-3 py-1 text-[11px] font-semibold uppercase tracking-widest">
+                <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--gold)] animate-pulse" />
+                Available Today
+              </span>
+              <span className="text-sm text-muted-foreground">Shipping in production now</span>
+            </div>
+            <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {liveFeatures.map((f) => (
+                <div
+                  key={f.title}
+                  className="group relative rounded-3xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+                >
+                  <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-[color:var(--forest)]/5 blur-2xl group-hover:bg-[color:var(--forest)]/10 transition-colors" />
+                  <div className="relative flex items-start justify-between gap-3">
+                    <div className="h-11 w-11 rounded-2xl bg-[color:var(--forest)]/10 text-[color:var(--forest)] flex items-center justify-center">
+                      <f.icon className="h-5 w-5" />
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--forest)]/10 text-[color:var(--forest)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--forest)] animate-pulse" />
+                      Live
+                    </span>
+                  </div>
+                  <h3 className="relative mt-5 font-display text-xl font-semibold">{f.title}</h3>
+                  <p className="relative mt-2 text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Coming Soon */}
+          <div className="mt-20">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-2 rounded-full bg-[color:var(--gold)] text-[color:var(--ink)] px-3 py-1 text-[11px] font-semibold uppercase tracking-widest">
+                <Sparkles className="h-3 w-3" />
+                Coming Soon
+              </span>
+              <span className="text-sm text-muted-foreground">On the roadmap</span>
+            </div>
+            <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {comingSoon.map((f) => (
+                <div
+                  key={f.title}
+                  className="group relative rounded-3xl border border-dashed border-[color:var(--gold)]/50 bg-card/60 p-6 hover:border-[color:var(--gold)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+                >
+                  <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-[color:var(--gold)]/10 blur-2xl" />
+                  <div className="relative flex items-start justify-between gap-3">
+                    <div className="h-11 w-11 rounded-2xl bg-[color:var(--gold)]/15 text-[color:var(--ink)] flex items-center justify-center">
+                      <f.icon className="h-5 w-5" />
+                    </div>
+                    <span className="inline-flex items-center rounded-full bg-[color:var(--gold)]/20 text-[color:var(--ink)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
+                      Coming Soon
+                    </span>
+                  </div>
+                  <h3 className="relative mt-5 font-display text-xl font-semibold">{f.title}</h3>
+                  <p className="relative mt-2 text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Final Vision Card */}
+          <div className="mt-20">
+            <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[color:var(--forest)] via-[color:var(--forest)] to-[#0f3d2e] text-primary-foreground px-8 md:px-16 py-14 md:py-20">
+              <div className="absolute -top-24 -right-24 h-80 w-80 rounded-full bg-[color:var(--gold)]/30 blur-3xl" />
+              <div className="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-[color:var(--gold)]/10 blur-3xl" />
+              <div className="relative max-w-3xl">
+                <Leaf className="h-9 w-9 text-[color:var(--gold)]" />
+                <h3 className="mt-5 font-display text-3xl md:text-5xl font-semibold leading-[1.1]">
+                  The Future of Poultry Farming Starts Here
+                </h3>
+                <p className="mt-5 text-primary-foreground/80 text-base md:text-lg leading-relaxed">
+                  PoultryPro is already helping poultry farmers manage production, feed, health and
+                  profitability. Our vision is to become Africa's leading smart poultry operating system
+                  by combining artificial intelligence, predictive analytics, automation and connected
+                  farm technologies into one integrated platform.
+                </p>
+                <div className="mt-8">
+                  <Link
+                    to="/auth"
+                    className="inline-flex items-center gap-2 rounded-full bg-[color:var(--gold)] text-[color:var(--ink)] px-7 py-4 font-semibold hover:brightness-95 transition"
+                  >
+                    Join the Future of Poultry Farming <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
+
+
 
       <section id="contact" className="pb-24">
         <div className="container-x">
