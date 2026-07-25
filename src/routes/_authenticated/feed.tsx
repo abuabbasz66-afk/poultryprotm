@@ -89,11 +89,8 @@ function FeedManagementPage() {
         {tab === "overview" && <OverviewTab />}
         {tab === "inventory" && <InventoryTab />}
         {tab === "ledger" && <LedgerTab />}
-        {tab === "formulation" && <FormulationPlaceholder />}
-      </main>
-    </div>
-  );
-}
+        {tab === "formulation" && <FormulationTab />}
+
 
 /* -------------------------------- Overview ------------------------------- */
 
