@@ -109,7 +109,7 @@ export function useFeedIntelligence(leadTimeDays = 3): FeedIntelligence {
     for (const [k, v] of dayKg) if (k >= cutKey) feed30 += v;
     for (const r of eggRows) {
       const k = toDateKey(r.date) ?? r.date;
-      if (k >= cutKey) eggs30 += totalEggsFromRow(normaliseEggRow(r));
+      if (k >= cutKey) eggs30 += totalEggsFromRow(r);
     }
     const fcrKgPerEgg = eggs30 > 0 ? feed30 / eggs30 : null;
     const kgPerCrate = fcrKgPerEgg !== null ? fcrKgPerEgg * 30 : null;
