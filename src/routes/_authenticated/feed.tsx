@@ -618,16 +618,18 @@ function SourceCard({
 }
 
 function FormulaEditor({
-  formula, bagKg, onSetActive, onDelete,
+  formula, bagKg, onSetActive, onDuplicate, onDelete,
 }: {
   formula: FeedFormulaWithIngredients;
   bagKg: number;
   onSetActive: () => void;
+  onDuplicate: () => void;
   onDelete: () => void;
 }) {
   const update = useUpdateFormula();
   const upsertIng = useUpsertIngredient();
   const delIng = useDeleteIngredient();
+
 
   const [name, setName] = useState(formula.name);
   const [notes, setNotes] = useState(formula.notes ?? "");
