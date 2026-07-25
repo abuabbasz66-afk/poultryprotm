@@ -723,7 +723,7 @@ function FormulaEditor({
             row={null}
             index={cost.rows.length + 1}
             onSave={(patch) =>
-              upsertIng.mutateAsync({ formula_id: formula.id, position: cost.rows.length, ...patch })
+              upsertIng.mutateAsync({ formula_id: formula.id, ...patch })
             }
           />
         </div>
