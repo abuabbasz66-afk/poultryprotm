@@ -16,9 +16,10 @@ import {
 } from "@/lib/feed-inventory-data";
 import {
   useFeedFormulas, computeFormulaCost, useCreateFormula, useUpdateFormula,
-  useDeleteFormula, useSetActiveFormula, useUpsertIngredient, useDeleteIngredient,
+  useDeleteFormula, useDuplicateFormula, useSetActiveFormula, useUpsertIngredient, useDeleteIngredient,
   useSetFeedSource, type FeedFormulaWithIngredients, type FormulaIngredient,
 } from "@/lib/feed-formulas-data";
+
 import { useFarm } from "@/lib/farm-data";
 import { toDateKey } from "@/lib/date-key";
 
