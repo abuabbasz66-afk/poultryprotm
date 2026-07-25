@@ -638,9 +638,14 @@ const setBagWeightKg = (v: number | null) => {
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--border)" }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="ROOM 2" fill="oklch(0.32 0.06 155)" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="ROOM 3" fill="oklch(0.78 0.15 78)" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="ROOM 4" fill="oklch(0.55 0.15 240)" radius={[3, 3, 0, 0]} />
+                {roomSeries.map((s, i) => (
+                  <Bar
+                    key={s.name}
+                    dataKey={s.name}
+                    fill={["oklch(0.32 0.06 155)", "oklch(0.78 0.15 78)", "oklch(0.55 0.15 240)"][i]}
+                    radius={[3, 3, 0, 0]}
+                  />
+                ))}
                 <Bar dataKey="Extra Eggs" fill="oklch(0.55 0.22 15)" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
