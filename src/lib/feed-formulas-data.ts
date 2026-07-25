@@ -146,6 +146,46 @@ export function useDeleteFormula() {
   });
 }
 
+export function useDuplicateFormula() {
+  const qc = useQueryClient();
+  const { data: farmId } = useFarmId();
+  return useMutation({
+    mutationFn: async (source: FeedFormulaWithIngredients) => {
+      if (!farmId) throw new Error("No farm");
+      const { data: created, error } = await supabase
+        .from("feed_formulas")
+        .insert({
+          farm_id: farmId,
+          name: `${source.name} (copy)`,
+          notes: source.notes,
+          bag_weight_kg: source.bag_weight_kg,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      const newId = created.id as string;
+      if (source.ingredients.length) {
+        const { error: iErr } = await supabase.from("feed_formula_ingredients").insert(
+          source.ingredients.map((i) => ({
+            farm_id: farmId,
+            formula_id: newId,
+            name: i.name,
+            quantity_kg: i.quantity_kg,
+            price_per_unit: i.price_per_unit,
+            unit: i.unit,
+            unit_weight_kg: i.unit_weight_kg,
+            position: i.position,
+          })),
+        );
+        if (iErr) throw iErr;
+      }
+      return newId;
+    },
+    onSuccess: () => invalidateFarm(qc, farmId),
+  });
+}
+
+
 export function useSetActiveFormula() {
   const qc = useQueryClient();
   const { data: farmId } = useFarmId();
