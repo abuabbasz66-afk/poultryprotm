@@ -66,21 +66,25 @@ export function useFeedFormulas() {
   });
 }
 
-/** Cost math for a formula. All prices normalised to kg. */
+/**
+ * Cost math for a formula. All quantities normalised to kg internally.
+ * - For unit="bag": `quantity_kg` is the BAG COUNT and `unit_weight_kg` is the bag size (kg).
+ *   Weight (kg) = bagCount × bagSize.  Line cost = bagCount × price_per_bag.
+ * - For unit="kg":  `quantity_kg` is kilograms.  Line cost = kg × price_per_kg.
+ */
 export function computeFormulaCost(f: FeedFormulaWithIngredients, defaultBagKg: number) {
   const bagKg = f.bag_weight_kg && f.bag_weight_kg > 0 ? f.bag_weight_kg : defaultBagKg;
   let totalKg = 0;
   let totalCost = 0;
   const rows = f.ingredients.map((i) => {
     const qty = Math.max(0, i.quantity_kg);
-    const perKg =
-      i.unit === "bag"
-        ? (i.unit_weight_kg > 0 ? i.price_per_unit / i.unit_weight_kg : 0)
-        : i.price_per_unit;
-    const cost = qty * perKg;
-    totalKg += qty;
+    const ingredientBagKg = i.unit === "bag" ? Math.max(0, i.unit_weight_kg) : 0;
+    const weightKg = i.unit === "bag" ? qty * ingredientBagKg : qty;
+    const cost = qty * i.price_per_unit; // price_per_unit matches the chosen unit
+    const perKg = weightKg > 0 ? cost / weightKg : 0;
+    totalKg += weightKg;
     totalCost += cost;
-    return { ...i, pricePerKg: perKg, lineCost: cost, sharePct: 0 };
+    return { ...i, weightKg, pricePerKg: perKg, lineCost: cost, sharePct: 0 };
   });
   rows.forEach((r) => (r.sharePct = totalCost > 0 ? (r.lineCost / totalCost) * 100 : 0));
   const costPerKg = totalKg > 0 ? totalCost / totalKg : 0;
