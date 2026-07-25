@@ -1278,6 +1278,16 @@ function IngredientRow({
           )}
         </div>
       </div>
+      {qtyNum > 0 && (
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          {unit === "bag"
+            ? `${qtyNum} bag${qtyNum === 1 ? "" : "s"} × ${bagWtNum || 0} kg = ${weightKg.toLocaleString(undefined, { maximumFractionDigits: 2 })} kg`
+            : `${qtyNum.toLocaleString(undefined, { maximumFractionDigits: 2 })} kg`}
+          {priceNum > 0 && weightKg > 0 && (
+            <span> · ₦{perKg.toLocaleString(undefined, { maximumFractionDigits: 2 })}/kg</span>
+          )}
+        </p>
+      )}
     </div>
   );
 }
