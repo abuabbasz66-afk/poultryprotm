@@ -1186,7 +1186,7 @@ function IngredientRow({
           </Field>
         </div>
         <div className="col-span-4 md:col-span-2">
-          <Field label="Qty (kg)">
+          <Field label={unit === "bag" ? "Qty (bags)" : "Qty (kg)"}>
             <input
               type="number" min={0} step="any"
               value={qty}
@@ -1200,7 +1200,7 @@ function IngredientRow({
           <Field label="Unit">
             <select
               value={unit}
-              onChange={(e) => { setUnit(e.target.value as "kg" | "bag"); setDirty(true); }}
+              onChange={(e) => changeUnit(e.target.value as "kg" | "bag")}
               onBlur={() => dirty && commit()}
               className={inputCls}
             >
