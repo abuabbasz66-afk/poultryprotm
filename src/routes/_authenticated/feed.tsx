@@ -684,6 +684,12 @@ function FormulaEditor({
               {formula.is_active ? "Active" : "Set Active"}
             </button>
             <button
+              onClick={onDuplicate}
+              className="inline-flex items-center gap-1 rounded-xl border border-border px-3 py-2 text-xs hover:bg-muted/50"
+            >
+              <Plus className="h-3.5 w-3.5" /> Duplicate
+            </button>
+            <button
               onClick={onDelete}
               className="inline-flex items-center gap-1 rounded-xl border border-destructive/40 px-3 py-2 text-xs text-destructive hover:bg-destructive/5"
             >
@@ -691,6 +697,7 @@ function FormulaEditor({
             </button>
           </div>
         </div>
+
 
         {/* Cost breakdown */}
         <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-2">
