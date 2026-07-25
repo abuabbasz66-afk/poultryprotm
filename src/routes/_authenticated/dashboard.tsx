@@ -635,11 +635,24 @@ const setBagWeightKg = (v: number | null) => {
 
         {/* Monthly Profit */}
         <Card>
-          <CardHeader
-            title="Monthly Profit Overview"
-            subtitle="Revenue vs feed cost (this month)"
-            right={<div className="text-right"><div className="font-display text-2xl font-semibold text-[color:var(--forest)]">{naira(profitData.reduce((s, d) => s + d.Profit, 0))}</div><div className="text-xs text-muted-foreground">from {naira(profitData.reduce((s, d) => s + d.Revenue, 0))} revenue</div></div>}
-          />
+          {(() => {
+            const totalRevenue = profitData.reduce((s, d) => s + d.Revenue, 0);
+            const totalCost = profitData.reduce((s, d) => s + d.Cost, 0);
+            const totalProfit = profitData.reduce((s, d) => s + d.Profit, 0);
+            return (
+              <CardHeader
+                title="Monthly Profit Overview"
+                subtitle="Revenue, feed cost and profit (this month)"
+                right={
+                  <div className="text-right">
+                    <div className="font-display text-2xl font-semibold text-[color:var(--forest)]">{naira(totalProfit)}<span className="ml-1 text-xs font-sans font-medium text-muted-foreground">Profit</span></div>
+                    <div className="text-xs text-muted-foreground">Revenue: {naira(totalRevenue)}</div>
+                    <div className="text-xs text-muted-foreground">Feed Cost: {naira(totalCost)}</div>
+                  </div>
+                }
+              />
+            );
+          })()}
           <div className="h-72 mt-2">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={profitData} margin={{ top: 8, right: 12, left: -8, bottom: 8 }}>
@@ -648,12 +661,14 @@ const setBagWeightKg = (v: number | null) => {
                 <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => "₦" + (v / 1000).toFixed(0) + "k"} />
                 <Tooltip formatter={(v: number) => naira(v)} contentStyle={{ borderRadius: 12 }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Line type="monotone" dataKey="Revenue" stroke="oklch(0.32 0.06 155)" strokeWidth={2} dot={{ r: 2 }} />
-                <Line type="monotone" dataKey="Cost" stroke="oklch(0.78 0.15 78)" strokeWidth={2} strokeDasharray="4 4" dot={{ r: 2 }} />
+                <Line type="monotone" dataKey="Revenue" name="Revenue" stroke="oklch(0.32 0.06 155)" strokeWidth={2} dot={{ r: 2 }} />
+                <Line type="monotone" dataKey="Cost" name="Feed Cost" stroke="oklch(0.78 0.15 78)" strokeWidth={2} strokeDasharray="4 4" dot={{ r: 2 }} />
+                <Line type="monotone" dataKey="Profit" name="Profit" stroke="oklch(0.55 0.18 240)" strokeWidth={2.25} dot={{ r: 2 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </Card>
+
           </div>
         )}
 
