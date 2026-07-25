@@ -1568,6 +1568,9 @@ function MobileMenu({ onSignOut }: { onSignOut: () => void }) {
             <Link to="/" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-secondary">
               <ArrowLeft className="h-4 w-4 text-[color:var(--forest)]" /> Back to site
             </Link>
+            <Link to="/feed" onClick={() => setOpen(false)} className="flex items-center gap-2 border-t border-border px-4 py-3 text-sm hover:bg-secondary">
+              <Wheat className="h-4 w-4 text-[color:var(--forest)]" /> Feed Management
+            </Link>
             <Link to="/import" onClick={() => setOpen(false)} className="flex items-center gap-2 border-t border-border px-4 py-3 text-sm hover:bg-secondary">
               <Upload className="h-4 w-4 text-[color:var(--forest)]" /> Import CSV
             </Link>
