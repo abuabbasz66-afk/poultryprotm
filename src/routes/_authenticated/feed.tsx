@@ -419,23 +419,32 @@ function WhKpi({ label, value, sub, tone }: { label: string; value: string; sub?
 }
 
 
-function LotCard({ lot, onDelete }: { lot: FeedInventoryLot; onDelete: () => void }) {
+function LotCard({ lot, bagKg = 25, onDelete }: { lot: FeedInventoryLot; bagKg?: number; onDelete: () => void }) {
   const usedKg = Math.max(0, lot.initial_kg - lot.remaining_kg);
   const usedPct = lot.initial_kg > 0 ? (usedKg / lot.initial_kg) * 100 : 0;
   const empty = lot.remaining_kg <= 0;
+  const daysLeft = daysUntil(lot.expiry_date);
+  const expiryBadge =
+    daysLeft === null || empty ? null
+    : daysLeft < 0 ? { label: "Expired", cls: "bg-destructive/15 text-destructive" }
+    : daysLeft <= 14 ? { label: `Expires in ${daysLeft}d`, cls: "bg-[color:var(--gold,#c8a95a)]/20 text-[color:var(--gold,#c8a95a)]" }
+    : null;
+  const lotValue = lot.remaining_kg * lot.unit_cost_per_kg;
   return (
-    <li className={"rounded-2xl border p-4 " + (empty ? "border-border bg-secondary/50 opacity-70" : "border-border bg-card")}>
+    <li className={"rounded-2xl border p-4 " + (empty ? "border-border bg-secondary/50 opacity-70" : expiryBadge?.label === "Expired" ? "border-destructive/40 bg-destructive/5" : "border-border bg-card")}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="font-medium truncate">{lot.feed_type}</span>
             <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">{lot.source}</span>
             {empty && <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">Empty</span>}
+            {expiryBadge && <span className={"rounded-full px-2 py-0.5 text-[10px] font-medium " + expiryBadge.cls}>{expiryBadge.label}</span>}
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {new Date(lot.purchase_date).toLocaleDateString()}
             {lot.supplier ? ` · ${lot.supplier}` : ""}
             {lot.batch_number ? ` · #${lot.batch_number}` : ""}
+            {lot.expiry_date ? ` · exp ${new Date(lot.expiry_date).toLocaleDateString()}` : ""}
           </p>
         </div>
         <button onClick={onDelete} className="rounded-full p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label="Delete lot">
@@ -445,13 +454,12 @@ function LotCard({ lot, onDelete }: { lot: FeedInventoryLot; onDelete: () => voi
       <div className="mt-3 flex items-end justify-between">
         <div>
           <p className="font-display text-2xl font-semibold">{fmtKg(lot.remaining_kg)}</p>
-          <p className="text-xs text-muted-foreground">of {fmtKg(lot.initial_kg)} · {fmtBags(lot.remaining_kg, 25)} bags left</p>
+          <p className="text-xs text-muted-foreground">of {fmtKg(lot.initial_kg)} · {fmtBags(lot.remaining_kg, bagKg)} bags left</p>
         </div>
-        {lot.unit_cost_per_kg > 0 && (
-          <p className="text-right text-xs text-muted-foreground">
-            ₦{lot.unit_cost_per_kg.toLocaleString()}/kg
-          </p>
-        )}
+        <div className="text-right text-xs text-muted-foreground">
+          {lot.unit_cost_per_kg > 0 && <p>₦{lot.unit_cost_per_kg.toLocaleString()}/kg</p>}
+          {lotValue > 0 && <p className="text-foreground font-medium">₦{Math.round(lotValue).toLocaleString()}</p>}
+        </div>
       </div>
       <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
         <div className="h-full bg-[color:var(--forest)]" style={{ width: `${Math.min(100, usedPct)}%` }} />
@@ -459,6 +467,7 @@ function LotCard({ lot, onDelete }: { lot: FeedInventoryLot; onDelete: () => voi
     </li>
   );
 }
+
 
 function AddLotForm({ onClose }: { onClose: () => void }) {
   const farm = useFarm();
