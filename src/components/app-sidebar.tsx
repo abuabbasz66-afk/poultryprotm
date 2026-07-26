@@ -110,8 +110,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile drawer */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/50 animate-fade-in" onClick={() => setMobileOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-[86%] max-w-[320px] flex-col bg-gradient-to-b from-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground shadow-[var(--shadow-lift)] animate-slide-in-right">
+          <div className="absolute inset-0 bg-black/50 animate-in fade-in duration-200" onClick={() => setMobileOpen(false)} />
+          <div className="absolute inset-y-0 left-0 flex w-[86%] max-w-[320px] flex-col bg-gradient-to-b from-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground shadow-[var(--shadow-lift)] animate-in slide-in-from-left duration-300">
             <button
               onClick={() => setMobileOpen(false)}
               aria-label="Close navigation menu"
