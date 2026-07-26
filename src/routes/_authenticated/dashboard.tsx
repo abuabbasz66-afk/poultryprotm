@@ -1576,7 +1576,7 @@ function AreaTab({ active, onClick, num, stage, title, shortLabel, state, icon: 
   );
 }
 
-}
+
 
 
 function SectionIntro({ stage, plan, title, body, premium }: {
