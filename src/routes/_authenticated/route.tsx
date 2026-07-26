@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { usePresenceHeartbeat } from "@/lib/presence";
 import { useAuthUserId } from "@/lib/farm-data";
+import { AppShell } from "@/components/app-sidebar";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
