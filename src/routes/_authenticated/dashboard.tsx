@@ -710,6 +710,7 @@ const setBagWeightKg = (v: number | null) => {
           </div>
         </Card>
 
+        <div id="finance" className="scroll-mt-24" />
         {/* Monthly Profit */}
         <Card>
           {(() => {
@@ -746,6 +747,7 @@ const setBagWeightKg = (v: number | null) => {
           </div>
         </Card>
 
+        <div id="all-time-profit" className="scroll-mt-24" />
         {/* All-Time Profit Overview — cumulative view from farm inception */}
         <Card>
           <CardHeader
@@ -837,6 +839,7 @@ const setBagWeightKg = (v: number | null) => {
               body="Digitise daily poultry activities and maintain structured operational records across production, feed, flock health, mortality and farm rooms."
             />
 
+        <div id="production" className="scroll-mt-24" />
         {/* Daily Egg Production table */}
         <Card>
           <CardHeader
@@ -1003,6 +1006,7 @@ const setBagWeightKg = (v: number | null) => {
           </Card>
         </div>
 
+        <div id="health" className="scroll-mt-24" />
         {/* Health */}
         <Card>
           <CardHeader title="Health Records" subtitle="Vaccinations, vitamins & observations" right={<ActionBtn onClick={addHealth} icon={Plus}>Add</ActionBtn>} />
@@ -1044,6 +1048,7 @@ const setBagWeightKg = (v: number | null) => {
           )}
         </Card>
 
+        <div id="rooms" className="scroll-mt-24" />
         {/* Room Management */}
         <Card>
           <CardHeader
@@ -1193,6 +1198,7 @@ const setBagWeightKg = (v: number | null) => {
           )}
         </Card>
 
+        <div id="prices" className="scroll-mt-24" />
         {/* Prices */}
         <Card>
           <CardHeader
@@ -1250,6 +1256,7 @@ const setBagWeightKg = (v: number | null) => {
               stage="PREDICT" plan="Premium" title="PoultryPro AI Intelligence" premium
               body="Progressively applying artificial intelligence to detect abnormal farm patterns, forecast production and support earlier evidence-based decisions."
             />
+            <div id="ai-insights" className="scroll-mt-24" />
             {/* AI-Supported Farm Insights — final summary layer combining PoultryPro modules */}
             <FarmInsightsIntelligence
               eggs={eggs} rooms={rooms} mortality={mortality} feed={feed} health={health} prices={prices}
@@ -1257,9 +1264,11 @@ const setBagWeightKg = (v: number | null) => {
               loading={eggsQ.isLoading || roomsQ.isLoading || mortalityQ.isLoading || feedQ.isLoading || healthQ.isLoading || pricesQ.isLoading}
             />
 
+            <div id="ai-production" className="scroll-mt-24" />
             {/* Production Decline Detection — real-time from farm records */}
             <ProductionDeclineIntelligence eggs={eggs} rooms={rooms} mortality={mortality} feed={feed} health={health} />
 
+            <div id="ai-mortality" className="scroll-mt-24" />
             {/* Mortality Pattern Detection — real-time from farm records */}
             <MortalityPatternIntelligence eggs={eggs} rooms={rooms} mortality={mortality} feed={feed} health={health} />
 
