@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) {
-      throw redirect({ to: "/auth", search: { redirect: location.pathname + location.search } });
+      throw redirect({ to: "/auth", search: { redirect: location.href ?? location.pathname } });
     }
     // If the authenticated user has no farm yet, force them through onboarding.
     if (location.pathname !== "/onboarding") {
