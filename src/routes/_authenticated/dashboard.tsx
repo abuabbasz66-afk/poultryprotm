@@ -532,7 +532,7 @@ const setBagWeightKg = (v: number | null) => {
             </button>
           </div>
 
-          <MobileMenu onSignOut={handleSignOut} />
+
         </div>
         <div className="relative container-x flex flex-col justify-center py-12 md:py-20 min-h-[320px] md:min-h-[420px]">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] md:text-[11px] uppercase tracking-[0.18em] md:tracking-[0.22em] text-[color:var(--gold)]">
@@ -1576,41 +1576,6 @@ function AreaTab({ active, onClick, num, stage, title, shortLabel, state, icon: 
   );
 }
 
-function MobileMenu({ onSignOut }: { onSignOut: () => void }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="md:hidden relative">
-      <button
-        onClick={() => setOpen(v => !v)}
-        aria-label={open ? "Close menu" : "Open menu"}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-primary-foreground hover:bg-white/10"
-      >
-        {open ? <CloseIcon className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-11 z-40 w-56 overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-[var(--shadow-lift)]">
-            <Link to="/" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-secondary">
-              <ArrowLeft className="h-4 w-4 text-[color:var(--forest)]" /> Back to site
-            </Link>
-            <Link to="/feed" onClick={() => setOpen(false)} className="flex items-center gap-2 border-t border-border px-4 py-3 text-sm hover:bg-secondary">
-              <Wheat className="h-4 w-4 text-[color:var(--forest)]" /> Feed Management
-            </Link>
-            <Link to="/import" onClick={() => setOpen(false)} className="flex items-center gap-2 border-t border-border px-4 py-3 text-sm hover:bg-secondary">
-              <Upload className="h-4 w-4 text-[color:var(--forest)]" /> Import CSV
-            </Link>
-            <button
-              onClick={() => { setOpen(false); onSignOut(); }}
-              className="flex w-full items-center gap-2 border-t border-border px-4 py-3 text-sm text-destructive hover:bg-destructive/5"
-            >
-              <LogOut className="h-4 w-4" /> Sign out
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
 }
 
 
