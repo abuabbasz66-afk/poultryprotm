@@ -10,7 +10,7 @@ import {
   Skull, Syringe, Droplets, Pill, Stethoscope, Eye, Plus, Pencil, Trash2, MapPin,
   Sparkles, ArrowLeft, LayoutDashboard, LineChart as LineChartIcon,
   Brain, Activity, AlertTriangle, Gauge, Radar, Lightbulb, ArrowRight, LogOut, Upload,
-  ChevronDown, MoreVertical, Menu, X as CloseIcon,
+  ChevronDown, MoreVertical,
 } from "lucide-react";
 
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
