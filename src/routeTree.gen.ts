@@ -17,6 +17,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSubscriptionsRouteImport } from './routes/_authenticated/subscriptions'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
 import { Route as AuthenticatedFeedRouteImport } from './routes/_authenticated/feed'
@@ -67,6 +68,11 @@ const AuthenticatedSubscriptionsRoute =
     path: '/subscriptions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/feed': typeof AuthenticatedFeedRoute
   '/import': typeof AuthenticatedImportRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
   '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/feed': typeof AuthenticatedFeedRoute
   '/import': typeof AuthenticatedImportRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
   '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
@@ -163,6 +171,7 @@ export interface FileRoutesById {
   '/_authenticated/feed': typeof AuthenticatedFeedRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
   '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
@@ -183,6 +192,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/import'
     | '/onboarding'
+    | '/settings'
     | '/subscriptions'
     | '/api/public/whatsapp-click'
     | '/super-admin/farms/$farmId'
@@ -201,6 +211,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/import'
     | '/onboarding'
+    | '/settings'
     | '/subscriptions'
     | '/api/public/whatsapp-click'
     | '/super-admin/farms/$farmId'
@@ -220,6 +231,7 @@ export interface FileRouteTypes {
     | '/_authenticated/feed'
     | '/_authenticated/import'
     | '/_authenticated/onboarding'
+    | '/_authenticated/settings'
     | '/_authenticated/subscriptions'
     | '/api/public/whatsapp-click'
     | '/super-admin/farms/$farmId'
@@ -300,6 +312,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSubscriptionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
@@ -371,6 +390,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFeedRoute: typeof AuthenticatedFeedRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSubscriptionsRoute: typeof AuthenticatedSubscriptionsRoute
 }
 
@@ -379,6 +399,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFeedRoute: AuthenticatedFeedRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSubscriptionsRoute: AuthenticatedSubscriptionsRoute,
 }
 

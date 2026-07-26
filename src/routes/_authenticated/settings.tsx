@@ -62,7 +62,7 @@ function SettingsPage() {
           state: values.state.trim() || null,
           country: values.country.trim() || null,
           bag_weight_kg: Number.isFinite(weight) && weight > 0 ? weight : 25,
-        })
+        } as never)
         .eq("id", farmId);
       if (error) throw error;
     },
