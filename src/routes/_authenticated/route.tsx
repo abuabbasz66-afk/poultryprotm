@@ -2,13 +2,14 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { usePresenceHeartbeat } from "@/lib/presence";
 import { useAuthUserId } from "@/lib/farm-data";
+import { AppShell } from "@/components/app-sidebar";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ location }) => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) {
-      throw redirect({ to: "/auth", search: { redirect: location.pathname + location.search } });
+      throw redirect({ to: "/auth", search: { redirect: location.href ?? location.pathname } });
     }
     // If the authenticated user has no farm yet, force them through onboarding.
     if (location.pathname !== "/onboarding") {
@@ -29,5 +30,9 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedShell() {
   const { data: userId } = useAuthUserId();
   usePresenceHeartbeat(userId ?? null);
-  return <Outlet />;
+  return (
+    <AppShell>
+      <Outlet />
+    </AppShell>
+  );
 }

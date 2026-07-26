@@ -10,7 +10,7 @@ import {
   Skull, Syringe, Droplets, Pill, Stethoscope, Eye, Plus, Pencil, Trash2, MapPin,
   Sparkles, ArrowLeft, LayoutDashboard, LineChart as LineChartIcon,
   Brain, Activity, AlertTriangle, Gauge, Radar, Lightbulb, ArrowRight, LogOut, Upload,
-  ChevronDown, MoreVertical, Menu, X as CloseIcon,
+  ChevronDown, MoreVertical,
 } from "lucide-react";
 
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
@@ -67,7 +67,13 @@ function birdsLabel(n: number): string {
   return `${abs} ${abs === 1 ? "bird" : "birds"}`;
 }
 
+type DashboardArea = "records" | "analytics" | "ai";
+
 export const Route = createFileRoute("/_authenticated/dashboard")({
+  validateSearch: (search: Record<string, unknown>): { area?: DashboardArea } => {
+    const a = search.area;
+    return a === "analytics" || a === "ai" || a === "records" ? { area: a } : {};
+  },
   head: () => ({
     meta: [
       { title: "Farm Dashboard — PoultryPro" },
@@ -139,7 +145,10 @@ function Dashboard() {
   const updFeedM = useUpdateFeed();
 
   const [feedTab, setFeedTab] = useState<"Usage" | "Formulas">("Usage");
-  const [area, setArea] = useState<"records" | "analytics" | "ai">("records");
+  const search = Route.useSearch();
+  const area: DashboardArea = search.area ?? "records";
+  const setArea = (next: DashboardArea) =>
+    navigate({ to: "/dashboard", search: { area: next }, hash: "" as never });
   const [upgradeTier, setUpgradeTier] = useState<UpgradeTier | null>(null);
   const [forecastOpen, setForecastOpen] = useState(false);
   const [mortalityOpen, setMortalityOpen] = useState(false);
@@ -523,7 +532,7 @@ const setBagWeightKg = (v: number | null) => {
             </button>
           </div>
 
-          <MobileMenu onSignOut={handleSignOut} />
+
         </div>
         <div className="relative container-x flex flex-col justify-center py-12 md:py-20 min-h-[320px] md:min-h-[420px]">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] md:text-[11px] uppercase tracking-[0.18em] md:tracking-[0.22em] text-[color:var(--gold)]">
@@ -701,6 +710,7 @@ const setBagWeightKg = (v: number | null) => {
           </div>
         </Card>
 
+        <div id="finance" className="scroll-mt-24" />
         {/* Monthly Profit */}
         <Card>
           {(() => {
@@ -737,6 +747,7 @@ const setBagWeightKg = (v: number | null) => {
           </div>
         </Card>
 
+        <div id="all-time-profit" className="scroll-mt-24" />
         {/* All-Time Profit Overview — cumulative view from farm inception */}
         <Card>
           <CardHeader
@@ -828,6 +839,7 @@ const setBagWeightKg = (v: number | null) => {
               body="Digitise daily poultry activities and maintain structured operational records across production, feed, flock health, mortality and farm rooms."
             />
 
+        <div id="production" className="scroll-mt-24" />
         {/* Daily Egg Production table */}
         <Card>
           <CardHeader
@@ -994,6 +1006,7 @@ const setBagWeightKg = (v: number | null) => {
           </Card>
         </div>
 
+        <div id="health" className="scroll-mt-24" />
         {/* Health */}
         <Card>
           <CardHeader title="Health Records" subtitle="Vaccinations, vitamins & observations" right={<ActionBtn onClick={addHealth} icon={Plus}>Add</ActionBtn>} />
@@ -1035,6 +1048,7 @@ const setBagWeightKg = (v: number | null) => {
           )}
         </Card>
 
+        <div id="rooms" className="scroll-mt-24" />
         {/* Room Management */}
         <Card>
           <CardHeader
@@ -1184,6 +1198,7 @@ const setBagWeightKg = (v: number | null) => {
           )}
         </Card>
 
+        <div id="prices" className="scroll-mt-24" />
         {/* Prices */}
         <Card>
           <CardHeader
@@ -1241,6 +1256,7 @@ const setBagWeightKg = (v: number | null) => {
               stage="PREDICT" plan="Premium" title="PoultryPro AI Intelligence" premium
               body="Progressively applying artificial intelligence to detect abnormal farm patterns, forecast production and support earlier evidence-based decisions."
             />
+            <div id="ai-insights" className="scroll-mt-24" />
             {/* AI-Supported Farm Insights — final summary layer combining PoultryPro modules */}
             <FarmInsightsIntelligence
               eggs={eggs} rooms={rooms} mortality={mortality} feed={feed} health={health} prices={prices}
@@ -1248,9 +1264,11 @@ const setBagWeightKg = (v: number | null) => {
               loading={eggsQ.isLoading || roomsQ.isLoading || mortalityQ.isLoading || feedQ.isLoading || healthQ.isLoading || pricesQ.isLoading}
             />
 
+            <div id="ai-production" className="scroll-mt-24" />
             {/* Production Decline Detection — real-time from farm records */}
             <ProductionDeclineIntelligence eggs={eggs} rooms={rooms} mortality={mortality} feed={feed} health={health} />
 
+            <div id="ai-mortality" className="scroll-mt-24" />
             {/* Mortality Pattern Detection — real-time from farm records */}
             <MortalityPatternIntelligence eggs={eggs} rooms={rooms} mortality={mortality} feed={feed} health={health} />
 
@@ -1558,42 +1576,7 @@ function AreaTab({ active, onClick, num, stage, title, shortLabel, state, icon: 
   );
 }
 
-function MobileMenu({ onSignOut }: { onSignOut: () => void }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="md:hidden relative">
-      <button
-        onClick={() => setOpen(v => !v)}
-        aria-label={open ? "Close menu" : "Open menu"}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-primary-foreground hover:bg-white/10"
-      >
-        {open ? <CloseIcon className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-11 z-40 w-56 overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-[var(--shadow-lift)]">
-            <Link to="/" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-secondary">
-              <ArrowLeft className="h-4 w-4 text-[color:var(--forest)]" /> Back to site
-            </Link>
-            <Link to="/feed" onClick={() => setOpen(false)} className="flex items-center gap-2 border-t border-border px-4 py-3 text-sm hover:bg-secondary">
-              <Wheat className="h-4 w-4 text-[color:var(--forest)]" /> Feed Management
-            </Link>
-            <Link to="/import" onClick={() => setOpen(false)} className="flex items-center gap-2 border-t border-border px-4 py-3 text-sm hover:bg-secondary">
-              <Upload className="h-4 w-4 text-[color:var(--forest)]" /> Import CSV
-            </Link>
-            <button
-              onClick={() => { setOpen(false); onSignOut(); }}
-              className="flex w-full items-center gap-2 border-t border-border px-4 py-3 text-sm text-destructive hover:bg-destructive/5"
-            >
-              <LogOut className="h-4 w-4" /> Sign out
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+
 
 
 function SectionIntro({ stage, plan, title, body, premium }: {
