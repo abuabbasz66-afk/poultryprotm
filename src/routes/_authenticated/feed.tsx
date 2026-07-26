@@ -163,6 +163,7 @@ function OverviewTab() {
         <KpiCard label="Bag Weight" value={`${stats.bagWeightKg} kg`} sub="Farm setting" />
       </section>
 
+      <div id="feed-intelligence" className="scroll-mt-24" />
       <FeedIntelligencePanel />
     </div>
   );
