@@ -67,7 +67,13 @@ function birdsLabel(n: number): string {
   return `${abs} ${abs === 1 ? "bird" : "birds"}`;
 }
 
+type DashboardArea = "records" | "analytics" | "ai";
+
 export const Route = createFileRoute("/_authenticated/dashboard")({
+  validateSearch: (search: Record<string, unknown>): { area?: DashboardArea } => {
+    const a = search.area;
+    return a === "analytics" || a === "ai" || a === "records" ? { area: a } : {};
+  },
   head: () => ({
     meta: [
       { title: "Farm Dashboard — PoultryPro" },
