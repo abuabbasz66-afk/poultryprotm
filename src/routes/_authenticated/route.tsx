@@ -29,5 +29,9 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedShell() {
   const { data: userId } = useAuthUserId();
   usePresenceHeartbeat(userId ?? null);
-  return <Outlet />;
+  return (
+    <AppShell>
+      <Outlet />
+    </AppShell>
+  );
 }
