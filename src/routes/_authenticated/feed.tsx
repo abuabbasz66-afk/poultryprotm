@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft, Package, TrendingDown, Sparkles, Plus, Trash2, AlertTriangle, Wheat,
@@ -25,7 +25,15 @@ import { useFarm } from "@/lib/farm-data";
 import { toDateKey } from "@/lib/date-key";
 
 
+type Tab = "overview" | "inventory" | "ledger" | "formulation";
+
 export const Route = createFileRoute("/_authenticated/feed")({
+  validateSearch: (search: Record<string, unknown>): { tab?: Tab } => {
+    const t = search.tab;
+    return t === "inventory" || t === "ledger" || t === "formulation" || t === "overview"
+      ? { tab: t }
+      : {};
+  },
   head: () => ({
     meta: [
       { title: "Feed Management — PoultryPro" },
@@ -35,10 +43,11 @@ export const Route = createFileRoute("/_authenticated/feed")({
   component: FeedManagementPage,
 });
 
-type Tab = "overview" | "inventory" | "ledger" | "formulation";
-
 function FeedManagementPage() {
-  const [tab, setTab] = useState<Tab>("overview");
+  const navigate = useNavigate();
+  const { tab: tabParam } = Route.useSearch();
+  const tab: Tab = tabParam ?? "overview";
+  const setTab = (next: Tab) => navigate({ to: "/feed", search: { tab: next }, hash: "" as never });
   const farm = useFarm();
   const stats = useFeedStockAnalytics();
 
