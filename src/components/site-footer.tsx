@@ -203,11 +203,18 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-primary-foreground/10">
-        <div className="container-x py-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between text-xs text-primary-foreground/60">
-          <div className="flex flex-col gap-1 md:flex-row md:items-center md:gap-3">
+        <div className="container-x py-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between text-xs text-primary-foreground/60">
+          <div className="flex flex-col gap-2">
             <span>© {year} PoultryPro™. All rights reserved.</span>
-            <span className="hidden md:inline text-primary-foreground/30">·</span>
-            <span>Developed by GREENFIELD CONTRACTS &amp; AGRO LIMITED</span>
+            <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+              <span className="font-medium text-[color:var(--gold)]">
+                🌍 Built in Nigeria 🇳🇬
+              </span>
+              <span className="hidden sm:inline text-primary-foreground/30">·</span>
+              <span className="text-primary-foreground/70">
+                Empowering Poultry Farmers Across Africa.
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <span
@@ -227,6 +234,7 @@ export function SiteFooter() {
           </div>
         </div>
       </div>
+
     </footer>
   );
 }
