@@ -377,21 +377,24 @@ function Index() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
               { icon: Users, label: "Registered farms", value: fmtStat(live?.registered_farms) },
-              { icon: Bird, label: "Birds managed", value: fmtStat(live?.total_birds ?? platform.birds) },
-              { icon: Egg, label: "Eggs recorded", value: fmtStat(live?.eggs ?? platform.eggs) },
+              { icon: Bird, label: "Birds managed", value: fmtStat(live?.total_birds) },
+              { icon: Egg, label: "Eggs recorded", value: fmtStat(live?.eggs) },
               { icon: LayoutDashboard, label: "Rooms managed", value: fmtStat(live?.rooms) },
             ].map((s) => (
               <div key={s.label} className="flex items-center gap-3">
                 <span className="grid h-11 w-11 place-items-center rounded-full bg-[color:var(--gold)] text-[color:var(--ink)]">
                   <s.icon className="h-5 w-5" />
                 </span>
-                <div>
-                  <div className="font-display text-2xl md:text-3xl font-semibold leading-none">{s.value}</div>
+                <div className="min-w-0">
+                  <div className="font-display text-2xl md:text-3xl font-semibold leading-none break-words">
+                    {statsLoading || !live ? <StatSkeleton /> : s.value}
+                  </div>
                   <div className="text-xs uppercase tracking-wider opacity-70 mt-1">{s.label}</div>
                 </div>
               </div>
             ))}
           </div>
+
         </div>
       </section>
 
