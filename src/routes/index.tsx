@@ -249,8 +249,8 @@ const comingSoon: { icon: any; title: string; desc: string }[] = [
 
 function Index() {
   const authed = useAuthed();
-  const platform = usePlatformStats();
-  const live = useLivePlatformStats();
+  const { data: live, isPending: statsLoading } = useLivePlatformStats();
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/60">
