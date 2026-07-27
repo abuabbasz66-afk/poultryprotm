@@ -505,20 +505,25 @@ function Index() {
                 { k: fmtStat(live?.registered_farms), v: "Registered farms" },
                 { k: fmtStat(live?.registered_users), v: "Registered users" },
                 { k: fmtStat(live?.total_birds), v: "Birds currently managed" },
-                { k: fmtStat(live?.rooms), v: "Rooms being managed" },
+                { k: fmtStat(live?.rooms), v: "Active rooms" },
                 { k: fmtStat(live?.production_records), v: "Production records captured" },
                 { k: fmtStat(live?.feed_records), v: "Feed records logged" },
                 { k: fmtStat(live?.mortality_records), v: "Mortality records logged" },
                 { k: fmtStat(live?.health_records), v: "Health records logged" },
                 { k: fmtStat(live?.eggs), v: "Eggs recorded" },
-                { k: fmtStat(live?.premium_farms), v: "Active premium farms" },
+                { k: fmtStat(live?.premium_farms), v: "Premium farms" },
+                { k: fmtMoney(live?.revenue_tracked), v: "Revenue tracked" },
+                { k: fmtMoney(live?.profit_analysed), v: "Profit analysed" },
               ].map((x) => (
                 <div key={x.v} className="rounded-2xl border border-border bg-card p-5">
-                  <div className="font-display text-3xl font-semibold text-[color:var(--forest)]">{x.k}</div>
+                  <div className="font-display text-2xl sm:text-3xl font-semibold text-[color:var(--forest)] break-words">
+                    {statsLoading || !live ? <StatSkeleton className="w-20" /> : x.k}
+                  </div>
                   <div className="text-xs text-muted-foreground mt-1">{x.v}</div>
                 </div>
               ))}
             </div>
+
             <div className="flex items-center gap-2 pt-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--forest)] animate-pulse" />
               Live platform statistics • Automatically updated
