@@ -34,8 +34,8 @@ const RESOURCES: FooterLink[] = [
 
 const COMPANY: FooterLink[] = [
   { label: "About PoultryPro", to: "/", hash: "about" },
-  { label: "Greenfield Contracts & Agro Limited", to: "/", hash: "about" },
   { label: "Contact", href: "mailto:greenfieldcontractsagroltd@gmail.com", external: true },
+
 ];
 
 function FooterItem({ item }: { item: FooterLink }) {
