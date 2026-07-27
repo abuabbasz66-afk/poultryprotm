@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import heroAsset from "@/assets/hero-layer-birds.jpg.asset.json";
 import founderAsset from "@/assets/founder-abubakar.jpg.asset.json";
