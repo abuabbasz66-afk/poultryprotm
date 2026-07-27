@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import heroAsset from "@/assets/hero-layer-birds.jpg.asset.json";
 import founderAsset from "@/assets/founder-abubakar.jpg.asset.json";
@@ -34,27 +35,6 @@ function useAuthed() {
 
 
 
-function usePlatformStats() {
-  const [s, setS] = useState<{ birds: number; eggs: number; crates: number; revenue: number }>({
-    birds: 0, eggs: 0, crates: 0, revenue: 0,
-  });
-  useEffect(() => {
-    let mounted = true;
-    supabase.rpc("platform_stats").then(({ data, error }) => {
-      if (!mounted || error || !data || !(data as unknown[])[0]) return;
-      const row = (data as Array<{ birds: number | string; eggs: number | string; crates: number | string; revenue: number | string }>)[0];
-      setS({
-        birds: Number(row.birds) || 0,
-        eggs: Number(row.eggs) || 0,
-        crates: Number(row.crates) || 0,
-        revenue: Number(row.revenue) || 0,
-      });
-    });
-    return () => { mounted = false; };
-  }, []);
-  return s;
-}
-
 type LivePlatformStats = {
   registered_farms: number;
   registered_users: number;
@@ -66,38 +46,62 @@ type LivePlatformStats = {
   rooms: number;
   eggs: number;
   premium_farms: number;
+  revenue_tracked: number;
+  profit_analysed: number;
 };
 
+const STAT_KEYS: (keyof LivePlatformStats)[] = [
+  "registered_farms", "registered_users", "total_birds", "production_records",
+  "feed_records", "mortality_records", "health_records", "rooms", "eggs",
+  "premium_farms", "revenue_tracked", "profit_analysed",
+];
+
+async function fetchLivePlatformStats(): Promise<LivePlatformStats> {
+  const { data, error } = await supabase.rpc("landing_platform_stats");
+  if (error) throw error;
+  const row = (data ?? {}) as Record<string, number | string>;
+  const out = {} as LivePlatformStats;
+  for (const k of STAT_KEYS) out[k] = Number(row[k]) || 0;
+  return out;
+}
+
 function useLivePlatformStats() {
-  const [s, setS] = useState<LivePlatformStats | null>(null);
-  useEffect(() => {
-    let mounted = true;
-    supabase.rpc("landing_platform_stats").then(({ data, error }) => {
-      if (!mounted || error || !data) return;
-      const row = data as Record<string, number | string>;
-      setS({
-        registered_farms: Number(row.registered_farms) || 0,
-        registered_users: Number(row.registered_users) || 0,
-        total_birds: Number(row.total_birds) || 0,
-        production_records: Number(row.production_records) || 0,
-        feed_records: Number(row.feed_records) || 0,
-        mortality_records: Number(row.mortality_records) || 0,
-        health_records: Number(row.health_records) || 0,
-        rooms: Number(row.rooms) || 0,
-        eggs: Number(row.eggs) || 0,
-        premium_farms: Number(row.premium_farms) || 0,
-      });
-    });
-    return () => { mounted = false; };
-  }, []);
-  return s;
+  return useQuery({
+    queryKey: ["landing-platform-stats"],
+    queryFn: fetchLivePlatformStats,
+    // Always hit the database on mount so investors never see a stale/empty card.
+    staleTime: 0,
+    gcTime: 60_000,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
+    retry: 5,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 15_000),
+  });
 }
 
 function fmtStat(n: number | undefined | null): string {
-  if (n === undefined || n === null) return "—";
-  if (n <= 0) return "—";
+  if (n === undefined || n === null || Number.isNaN(n)) return "No data available yet";
   return n.toLocaleString("en-US");
 }
+
+function fmtMoney(n: number | undefined | null): string {
+  if (n === undefined || n === null || Number.isNaN(n)) return "No data available yet";
+  return `₦${Math.round(n).toLocaleString("en-US")}`;
+}
+
+function StatSkeleton({ className = "" }: { className?: string }) {
+  return (
+    <span
+      role="status"
+      aria-label="Loading"
+      className={`inline-block h-7 w-24 animate-pulse rounded-md bg-current opacity-20 align-middle ${className}`}
+    />
+  );
+}
+
 
 const architecture = [
   {
@@ -246,8 +250,8 @@ const comingSoon: { icon: any; title: string; desc: string }[] = [
 
 function Index() {
   const authed = useAuthed();
-  const platform = usePlatformStats();
-  const live = useLivePlatformStats();
+  const { data: live, isPending: statsLoading } = useLivePlatformStats();
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/60">
@@ -373,21 +377,24 @@ function Index() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
               { icon: Users, label: "Registered farms", value: fmtStat(live?.registered_farms) },
-              { icon: Bird, label: "Birds managed", value: fmtStat(live?.total_birds ?? platform.birds) },
-              { icon: Egg, label: "Eggs recorded", value: fmtStat(live?.eggs ?? platform.eggs) },
+              { icon: Bird, label: "Birds managed", value: fmtStat(live?.total_birds) },
+              { icon: Egg, label: "Eggs recorded", value: fmtStat(live?.eggs) },
               { icon: LayoutDashboard, label: "Rooms managed", value: fmtStat(live?.rooms) },
             ].map((s) => (
               <div key={s.label} className="flex items-center gap-3">
                 <span className="grid h-11 w-11 place-items-center rounded-full bg-[color:var(--gold)] text-[color:var(--ink)]">
                   <s.icon className="h-5 w-5" />
                 </span>
-                <div>
-                  <div className="font-display text-2xl md:text-3xl font-semibold leading-none">{s.value}</div>
+                <div className="min-w-0">
+                  <div className="font-display text-2xl md:text-3xl font-semibold leading-none break-words">
+                    {statsLoading || !live ? <StatSkeleton /> : s.value}
+                  </div>
                   <div className="text-xs uppercase tracking-wider opacity-70 mt-1">{s.label}</div>
                 </div>
               </div>
             ))}
           </div>
+
         </div>
       </section>
 
@@ -498,20 +505,25 @@ function Index() {
                 { k: fmtStat(live?.registered_farms), v: "Registered farms" },
                 { k: fmtStat(live?.registered_users), v: "Registered users" },
                 { k: fmtStat(live?.total_birds), v: "Birds currently managed" },
-                { k: fmtStat(live?.rooms), v: "Rooms being managed" },
+                { k: fmtStat(live?.rooms), v: "Active rooms" },
                 { k: fmtStat(live?.production_records), v: "Production records captured" },
                 { k: fmtStat(live?.feed_records), v: "Feed records logged" },
                 { k: fmtStat(live?.mortality_records), v: "Mortality records logged" },
                 { k: fmtStat(live?.health_records), v: "Health records logged" },
                 { k: fmtStat(live?.eggs), v: "Eggs recorded" },
-                { k: fmtStat(live?.premium_farms), v: "Active premium farms" },
+                { k: fmtStat(live?.premium_farms), v: "Premium farms" },
+                { k: fmtMoney(live?.revenue_tracked), v: "Revenue tracked" },
+                { k: fmtMoney(live?.profit_analysed), v: "Profit analysed" },
               ].map((x) => (
                 <div key={x.v} className="rounded-2xl border border-border bg-card p-5">
-                  <div className="font-display text-3xl font-semibold text-[color:var(--forest)]">{x.k}</div>
+                  <div className="font-display text-2xl sm:text-3xl font-semibold text-[color:var(--forest)] break-words">
+                    {statsLoading || !live ? <StatSkeleton className="w-20" /> : x.k}
+                  </div>
                   <div className="text-xs text-muted-foreground mt-1">{x.v}</div>
                 </div>
               ))}
             </div>
+
             <div className="flex items-center gap-2 pt-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--forest)] animate-pulse" />
               Live platform statistics • Automatically updated
