@@ -101,7 +101,10 @@ function useDemoData(): { data: DemoData; loading: boolean; reset: () => void } 
     (async () => {
       const { data: res, error } = await supabase.rpc("demo_greenfield_data" as never);
       if (!alive) return;
-      if (!error && res) setData({ ...FALLBACK, ...(res as Partial<DemoData>) });
+      // Single source of truth: all figures come from the demonstration database.
+      // Only the display name is normalised to the verified source farm.
+      if (!error && res) setData({ ...FALLBACK, ...(res as Partial<DemoData>), farm_name: DEMO_FARM_NAME });
+
       setLoading(false);
     })();
     return () => { alive = false; };
