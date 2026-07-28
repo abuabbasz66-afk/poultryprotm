@@ -125,7 +125,7 @@ const STEPS: Step[] = [
   { id: "financials", title: "Financials", subtitle: "Revenue, feed cost and gross profit" },
   { id: "ai", title: "AI Intelligence", subtitle: "Insights derived from the farm's own history" },
   { id: "reports", title: "Reports", subtitle: "Monthly summaries ready to export" },
-  { id: "admin", title: "Platform Administration", subtitle: "Manage thousands of farms from one dashboard" },
+  { id: "admin", title: "Platform Administration", subtitle: `Monitor PoultryPro's ecosystem using real demonstration data collected from ${DEMO_FARM_NAME}.` },
   { id: "mobile", title: "Mobile Experience", subtitle: "PoultryPro works anywhere, anytime" },
   { id: "pricing", title: "Subscription Plans", subtitle: "Simple subscription plans for every farm size" },
   { id: "vision", title: "Future Vision", subtitle: "The AI roadmap" },
