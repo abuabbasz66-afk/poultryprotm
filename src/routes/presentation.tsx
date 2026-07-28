@@ -73,6 +73,8 @@ type DemoData = {
   annual_revenue: number;
 };
 
+const DEMO_FARM_NAME = "ABZ Global Resources";
+
 const FALLBACK: DemoData = {
   farm_name: "ABZ Global Resources",
   location: "Commercial layer operation · Real historical dataset",
