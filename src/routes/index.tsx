@@ -747,29 +747,80 @@ function Index() {
                 </div>
 
                 <div className={`mt-8 pt-6 border-t border-dashed ${t.highlight ? "border-white/15" : "border-border"}`}>
-                  <div className={`text-xs mb-3 ${t.highlight ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
-                    Pricing to be announced
+                  <div className="flex items-baseline gap-2">
+                    <span className={`font-display text-3xl sm:text-4xl font-semibold ${t.highlight ? "text-[color:var(--gold)]" : "text-foreground"}`}>
+                      {t.price}
+                    </span>
+                    <span className={`text-xs ${t.highlight ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                      {t.priceNote}
+                    </span>
                   </div>
-                  <a
-                    href={t.ctaHref}
-                    className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition ${
-                      t.highlight
-                        ? "bg-[color:var(--gold)] text-[color:var(--ink)] hover:brightness-95"
-                        : "bg-primary text-primary-foreground hover:bg-primary/90"
-                    }`}
-                  >
-                    {t.cta} <ArrowRight className="h-4 w-4" />
-                  </a>
+                  {t.ctaHref ? (
+                    <a
+                      href={t.ctaHref}
+                      className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-center transition ${
+                        t.highlight
+                          ? "bg-[color:var(--gold)] text-[color:var(--ink)] hover:brightness-95"
+                          : "bg-primary text-primary-foreground hover:bg-primary/90"
+                      }`}
+                    >
+                      {t.cta} <ArrowRight className="h-4 w-4 flex-none" />
+                    </a>
+                  ) : (
+                    <Link
+                      to="/auth"
+                      search={{ mode: "signup" }}
+                      className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-center transition ${
+                        t.highlight
+                          ? "bg-[color:var(--gold)] text-[color:var(--ink)] hover:brightness-95"
+                          : "bg-primary text-primary-foreground hover:bg-primary/90"
+                      }`}
+                    >
+                      {t.cta} <ArrowRight className="h-4 w-4 flex-none" />
+                    </Link>
+                  )}
                 </div>
               </div>
             ))}
           </div>
 
-          <p className="mt-10 text-xs text-muted-foreground max-w-3xl">
-            Basic (Farm Records) and Standard (Farm Analytics) are working platform capabilities today.
-            Premium (PoultryPro AI Intelligence) features are being rolled out progressively and are
-            clearly labelled inside the product — we never present unfinished capabilities as fully deployed.
+          {/* Trust */}
+          <div className="mt-12 rounded-3xl border border-border bg-card p-6 sm:p-8 text-center">
+            <h3 className="font-display text-2xl font-semibold">Trusted by Poultry Farmers</h3>
+            <p className="mt-3 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
+              PoultryPro helps poultry farmers digitise farm records, monitor production, analyse
+              profitability, and make better management decisions through one secure cloud platform.
+            </p>
+          </div>
+
+          <p className="mt-6 text-xs sm:text-sm text-muted-foreground max-w-3xl">
+            Premium AI features are currently being rolled out. All Basic and Standard features are
+            fully available today.
           </p>
+
+          {/* Final CTA */}
+          <div className="mt-12 rounded-3xl bg-[color:var(--forest)] text-primary-foreground p-8 sm:p-12 text-center">
+            <h3 className="font-display text-2xl sm:text-4xl font-semibold">Ready to Run Your Farm Smarter?</h3>
+            <p className="mt-3 text-sm sm:text-base text-primary-foreground/80 max-w-2xl mx-auto">
+              Join PoultryPro today and start recording your farm operations in minutes.
+            </p>
+            <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                to="/auth"
+                search={{ mode: "signup" }}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[color:var(--gold)] px-6 py-3 text-sm font-semibold text-[color:var(--ink)] hover:brightness-95 transition"
+              >
+                Create Free Account <ArrowRight className="h-4 w-4 flex-none" />
+              </Link>
+              <a
+                href="#features"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 px-6 py-3 text-sm font-semibold hover:bg-white/10 transition"
+              >
+                View Features
+              </a>
+            </div>
+          </div>
+
         </div>
       </section>
 
