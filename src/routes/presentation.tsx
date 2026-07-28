@@ -965,13 +965,13 @@ function StepMobile() {
 }
 
 function StepPricing() {
+  const CTA: Record<string, string> = {
+    basic: "Start Free",
+    standard: "Upgrade to Standard",
+    premium: "Go Premium",
+  };
   return (
     <div className="space-y-4">
-      <div className="flex justify-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--gold)]/15 text-[color:var(--gold)] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em]">
-          Early Access
-        </span>
-      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {PRICING_PLANS.map((p, i) => (
           <div
@@ -990,6 +990,9 @@ function StepPricing() {
             )}
             <div className={`text-xs uppercase tracking-[0.18em] font-semibold ${p.featured ? "text-white/70" : "text-muted-foreground"}`}>{p.tagline}</div>
             <div className={`mt-1 text-xl font-bold ${p.featured ? "!text-white" : ""}`}>{p.name}</div>
+            <div className={`mt-3 text-3xl font-bold tracking-tight ${p.featured ? "!text-white" : "text-foreground"}`}>
+              {p.priceLabel}
+            </div>
             <ul className={`mt-5 space-y-2 text-sm flex-1 ${p.featured ? "text-white/90" : "text-foreground"}`}>
               {p.features.map((f) => (
                 <li key={f} className="flex items-start gap-2">
@@ -1003,17 +1006,18 @@ function StepPricing() {
                 ? "bg-[color:var(--gold)] text-[color:var(--ink)]"
                 : "bg-[color:var(--forest)] text-white"
             }`}>
-              {p.cta}
+              {CTA[p.id] ?? p.cta}
             </div>
           </div>
         ))}
       </div>
       <div className="rounded-xl bg-[color:var(--forest)]/5 border border-[color:var(--forest)]/15 px-4 py-3 text-sm text-muted-foreground text-center">
-        Subscription pricing will be announced soon. Join our early adopters and experience the future of intelligent poultry farm management.
+        Choose the plan that best fits your farm today and upgrade anytime as your business grows.
       </div>
     </div>
   );
 }
+
 
 function StepVision() {
   const items = [
