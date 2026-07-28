@@ -6,8 +6,10 @@ import {
   ShieldCheck, Users, TrendingUp, Bell, Smartphone, Tablet, Monitor,
   Rocket, Play, Pause, SkipForward, RotateCcw, Maximize2, X, ArrowRight,
   Brain, Cpu, Mic, CloudSun, Radio, Camera, Activity, CheckCircle2,
-  Database, Lock,
+  Database, Lock, Info, Server, Cloud, Gauge, RefreshCw, HardDrive,
+  BadgeCheck, Clock,
 } from "lucide-react";
+
 import { PRICING_PLANS } from "@/lib/pricing-plans";
 import { supabase } from "@/integrations/supabase/client";
 
