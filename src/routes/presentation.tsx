@@ -200,12 +200,21 @@ function PresentationMode() {
   return (
     <div ref={rootRef} className="min-h-screen bg-[color:var(--cream)] text-foreground flex flex-col">
       {/* Top banner */}
-      <div className="w-full bg-[color:var(--forest)] text-white px-4 py-2.5 flex items-center justify-between gap-3 text-xs sm:text-sm font-medium">
+      <div className="relative w-full bg-[color:var(--forest)] text-white px-4 py-2.5 flex items-center justify-between gap-3 text-xs sm:text-sm font-medium">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="inline-flex h-2 w-2 rounded-full bg-[color:var(--gold)] animate-pulse" />
+          <span className="inline-flex h-2 w-2 shrink-0 rounded-full bg-[color:var(--gold)] animate-pulse" />
           <span className="truncate">
-            Presentation Mode • Real Farm Records • Read-only Demo Data
+            Presentation Mode • Powered by Real Historical Farm Records from {DEMO_FARM_NAME} • Read-Only Demonstration
           </span>
+          <button
+            type="button"
+            onClick={() => setInfoOpen((v) => !v)}
+            aria-label="About this demonstration"
+            aria-expanded={infoOpen}
+            className="inline-flex shrink-0 items-center justify-center rounded-full p-1 text-white/80 hover:text-white hover:bg-white/15 transition-colors"
+          >
+            <Info className="h-4 w-4" />
+          </button>
         </div>
         <div className="hidden sm:flex items-center gap-3 text-white/80">
           <Lock className="h-3.5 w-3.5" />
@@ -213,7 +222,35 @@ function PresentationMode() {
           <span>•</span>
           <span>{stepIdx + 1} / {STEPS.length}</span>
         </div>
+
+        {infoOpen && (
+          <div
+            role="dialog"
+            aria-label="Demonstration data information"
+            className="absolute left-3 right-3 sm:right-auto sm:max-w-md top-full mt-2 z-50 rounded-2xl border border-border bg-card p-4 text-foreground shadow-[var(--shadow-lift)] animate-in fade-in slide-in-from-top-2 duration-200"
+          >
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
+                <ShieldCheck className="h-4 w-4" />
+              </span>
+              <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
+                This demonstration uses verified historical production, feed, mortality, health and financial
+                records collected from {DEMO_FARM_NAME}, a commercial poultry farm. Presentation Mode is
+                read-only and exists to demonstrate PoultryPro's capabilities using real operational farm data.
+              </p>
+              <button
+                type="button"
+                onClick={() => setInfoOpen(false)}
+                aria-label="Close"
+                className="ml-auto shrink-0 rounded-md p-1 text-muted-foreground hover:bg-secondary"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
 
       <div className="h-1 w-full bg-black/5">
         <div
