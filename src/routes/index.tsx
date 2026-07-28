@@ -155,8 +155,10 @@ const tiers = [
       "Room management",
       "Historical operational records",
     ],
-    cta: "Join the Pilot",
-    ctaHref: "mailto:contact@poultrypro.africa?subject=PoultryPro%20Basic%20Pilot",
+    price: "Free",
+    priceNote: "Up to 500 birds · 1 Farm",
+    cta: "Create Free Account",
+    ctaHref: null as string | null,
     badge: null as string | null,
     highlight: false,
   },
@@ -179,8 +181,10 @@ const tiers = [
       "Farm performance reports",
       "Business intelligence dashboards",
     ],
-    cta: "Request Standard Access",
-    ctaHref: "mailto:contact@poultrypro.africa?subject=PoultryPro%20Standard%20Access",
+    price: "₦950",
+    priceNote: "per month · Unlimited birds",
+    cta: "Start Standard Plan",
+    ctaHref: null as string | null,
     badge: "Most Popular",
     highlight: true,
   },
@@ -203,9 +207,11 @@ const tiers = [
       "AI-supported farm insights & recommendations",
       "PoultryPro Intelligence Dashboard",
     ],
-    cta: "Coming Soon — Join Waitlist",
-    ctaHref: "mailto:contact@poultrypro.africa?subject=PoultryPro%20AI%20Intelligence%20Waitlist",
-    badge: "Progressive Rollout",
+    price: "₦1,950",
+    priceNote: "per month",
+    cta: "Join Premium Waitlist",
+    ctaHref: "mailto:contact@poultrypro.africa?subject=PoultryPro%20AI%20Intelligence%20Waitlist" as string | null,
+    badge: "Coming Soon",
     highlight: false,
   },
 ];
@@ -263,7 +269,6 @@ function Index() {
             </span>
           </a>
           <nav className="hidden md:flex items-center gap-10 text-sm font-medium">
-            <a href="#architecture" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Architecture</a>
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Features</a>
             <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Pricing</a>
             <a href="#founder" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Founder</a>
@@ -275,9 +280,7 @@ function Index() {
             </Link>
           ) : (
             <div className="flex items-center gap-2">
-              <Link to="/pricing" className="hidden md:inline-flex items-center rounded-full px-3 py-2 text-sm font-medium hover:bg-secondary transition-colors">
-                Pricing
-              </Link>
+
               <Link to="/auth" search={{ mode: "signin" }} className="hidden sm:inline-flex items-center rounded-full border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-secondary transition-colors duration-200">
                 Sign In
               </Link>
@@ -696,35 +699,36 @@ function Index() {
             </span>
           </div>
 
-          <div className="mt-8 grid md:grid-cols-3 gap-6 items-stretch">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
             {tiers.map((t) => (
               <div
                 key={t.name}
-                className={`relative rounded-3xl border p-8 flex flex-col ${
+                className={`relative min-w-0 rounded-3xl border p-6 sm:p-8 flex flex-col ${
                   t.highlight
                     ? "bg-[color:var(--forest)] text-primary-foreground border-transparent shadow-[var(--shadow-lift)] md:-translate-y-3"
                     : "bg-card border-border"
                 }`}
               >
                 {t.badge && (
-                  <span className={`absolute -top-3 right-6 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest ${
+                  <span className={`absolute -top-3 right-4 sm:right-6 max-w-[70%] truncate rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest ${
                     t.highlight ? "bg-[color:var(--gold)] text-[color:var(--ink)]" : "bg-secondary text-secondary-foreground border border-border"
                   }`}>
                     {t.badge}
                   </span>
                 )}
-                <div className="flex items-center justify-between">
-                  <span className={`font-display text-4xl font-semibold ${t.highlight ? "text-[color:var(--gold)]" : "text-[color:var(--gold)]"}`}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-display text-4xl font-semibold text-[color:var(--gold)]">
                     {t.stageNum}
                   </span>
                   <span className={`text-[10px] uppercase tracking-widest font-semibold ${t.highlight ? "text-[color:var(--gold)]" : "text-[color:var(--forest)]"}`}>
                     {t.stage}
                   </span>
                 </div>
-                <div className={`mt-5 text-[11px] uppercase tracking-widest font-medium ${t.highlight ? "text-[color:var(--gold)]" : "text-[color:var(--forest)]"}`}>
+                <div className={`mt-5 text-[11px] uppercase tracking-widest font-medium break-words ${t.highlight ? "text-[color:var(--gold)]" : "text-[color:var(--forest)]"}`}>
                   {t.tagline}
                 </div>
-                <h3 className="mt-1 font-display text-3xl font-semibold">{t.name}</h3>
+                <h3 className="mt-1 font-display text-2xl sm:text-3xl font-semibold break-words">{t.name}</h3>
+
                 <p className={`mt-3 text-sm italic ${t.highlight ? "text-primary-foreground/90" : "text-foreground"}`}>
                   "{t.promise}"
                 </p>
@@ -747,29 +751,80 @@ function Index() {
                 </div>
 
                 <div className={`mt-8 pt-6 border-t border-dashed ${t.highlight ? "border-white/15" : "border-border"}`}>
-                  <div className={`text-xs mb-3 ${t.highlight ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
-                    Pricing to be announced
+                  <div className="flex items-baseline gap-2">
+                    <span className={`font-display text-3xl sm:text-4xl font-semibold ${t.highlight ? "text-[color:var(--gold)]" : "text-foreground"}`}>
+                      {t.price}
+                    </span>
+                    <span className={`text-xs ${t.highlight ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                      {t.priceNote}
+                    </span>
                   </div>
-                  <a
-                    href={t.ctaHref}
-                    className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition ${
-                      t.highlight
-                        ? "bg-[color:var(--gold)] text-[color:var(--ink)] hover:brightness-95"
-                        : "bg-primary text-primary-foreground hover:bg-primary/90"
-                    }`}
-                  >
-                    {t.cta} <ArrowRight className="h-4 w-4" />
-                  </a>
+                  {t.ctaHref ? (
+                    <a
+                      href={t.ctaHref}
+                      className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-center transition ${
+                        t.highlight
+                          ? "bg-[color:var(--gold)] text-[color:var(--ink)] hover:brightness-95"
+                          : "bg-primary text-primary-foreground hover:bg-primary/90"
+                      }`}
+                    >
+                      {t.cta} <ArrowRight className="h-4 w-4 flex-none" />
+                    </a>
+                  ) : (
+                    <Link
+                      to="/auth"
+                      search={{ mode: "signup" }}
+                      className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-center transition ${
+                        t.highlight
+                          ? "bg-[color:var(--gold)] text-[color:var(--ink)] hover:brightness-95"
+                          : "bg-primary text-primary-foreground hover:bg-primary/90"
+                      }`}
+                    >
+                      {t.cta} <ArrowRight className="h-4 w-4 flex-none" />
+                    </Link>
+                  )}
                 </div>
               </div>
             ))}
           </div>
 
-          <p className="mt-10 text-xs text-muted-foreground max-w-3xl">
-            Basic (Farm Records) and Standard (Farm Analytics) are working platform capabilities today.
-            Premium (PoultryPro AI Intelligence) features are being rolled out progressively and are
-            clearly labelled inside the product — we never present unfinished capabilities as fully deployed.
+          {/* Trust */}
+          <div className="mt-12 rounded-3xl border border-border bg-card p-6 sm:p-8 text-center">
+            <h3 className="font-display text-2xl font-semibold">Trusted by Poultry Farmers</h3>
+            <p className="mt-3 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
+              PoultryPro helps poultry farmers digitise farm records, monitor production, analyse
+              profitability, and make better management decisions through one secure cloud platform.
+            </p>
+          </div>
+
+          <p className="mt-6 text-xs sm:text-sm text-muted-foreground max-w-3xl">
+            Premium AI features are currently being rolled out. All Basic and Standard features are
+            fully available today.
           </p>
+
+          {/* Final CTA */}
+          <div className="mt-12 rounded-3xl bg-[color:var(--forest)] text-primary-foreground p-8 sm:p-12 text-center">
+            <h3 className="font-display text-2xl sm:text-4xl font-semibold">Ready to Run Your Farm Smarter?</h3>
+            <p className="mt-3 text-sm sm:text-base text-primary-foreground/80 max-w-2xl mx-auto">
+              Join PoultryPro today and start recording your farm operations in minutes.
+            </p>
+            <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                to="/auth"
+                search={{ mode: "signup" }}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[color:var(--gold)] px-6 py-3 text-sm font-semibold text-[color:var(--ink)] hover:brightness-95 transition"
+              >
+                Create Free Account <ArrowRight className="h-4 w-4 flex-none" />
+              </Link>
+              <a
+                href="#features"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 px-6 py-3 text-sm font-semibold hover:bg-white/10 transition"
+              >
+                View Features
+              </a>
+            </div>
+          </div>
+
         </div>
       </section>
 
