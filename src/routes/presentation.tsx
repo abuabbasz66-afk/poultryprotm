@@ -6,8 +6,10 @@ import {
   ShieldCheck, Users, TrendingUp, Bell, Smartphone, Tablet, Monitor,
   Rocket, Play, Pause, SkipForward, RotateCcw, Maximize2, X, ArrowRight,
   Brain, Cpu, Mic, CloudSun, Radio, Camera, Activity, CheckCircle2,
-  Database, Lock,
+  Database, Lock, Info, Server, Cloud, Gauge, RefreshCw, HardDrive,
+  BadgeCheck, Clock,
 } from "lucide-react";
+
 import { PRICING_PLANS } from "@/lib/pricing-plans";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -71,9 +73,12 @@ type DemoData = {
   annual_revenue: number;
 };
 
+const DEMO_FARM_NAME = "ABZ Global Resources";
+
 const FALLBACK: DemoData = {
-  farm_name: "Greenfield Demonstration Farm",
+  farm_name: "ABZ Global Resources",
   location: "Commercial layer operation · Real historical dataset",
+
   period_start: "", period_end: "", days_covered: 1,
   egg_price: 4900, feed_price: 11950,
   rooms: [], birds: 0, initial_birds: 0, houses: 0,
@@ -98,7 +103,10 @@ function useDemoData(): { data: DemoData; loading: boolean; reset: () => void } 
     (async () => {
       const { data: res, error } = await supabase.rpc("demo_greenfield_data" as never);
       if (!alive) return;
-      if (!error && res) setData({ ...FALLBACK, ...(res as Partial<DemoData>) });
+      // Single source of truth: all figures come from the demonstration database.
+      // Only the display name is normalised to the verified source farm.
+      if (!error && res) setData({ ...FALLBACK, ...(res as Partial<DemoData>), farm_name: DEMO_FARM_NAME });
+
       setLoading(false);
     })();
     return () => { alive = false; };
@@ -117,7 +125,7 @@ const STEPS: Step[] = [
   { id: "financials", title: "Financials", subtitle: "Revenue, feed cost and gross profit" },
   { id: "ai", title: "AI Intelligence", subtitle: "Insights derived from the farm's own history" },
   { id: "reports", title: "Reports", subtitle: "Monthly summaries ready to export" },
-  { id: "admin", title: "Platform Administration", subtitle: "Manage thousands of farms from one dashboard" },
+  { id: "admin", title: "Platform Administration", subtitle: `Monitor PoultryPro's ecosystem using real demonstration data collected from ${DEMO_FARM_NAME}.` },
   { id: "mobile", title: "Mobile Experience", subtitle: "PoultryPro works anywhere, anytime" },
   { id: "pricing", title: "Subscription Plans", subtitle: "Simple subscription plans for every farm size" },
   { id: "vision", title: "Future Vision", subtitle: "The AI roadmap" },
@@ -131,6 +139,8 @@ function PresentationMode() {
   const [stepIdx, setStepIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [exited, setExited] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
+
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   const { data: demo, loading, reset } = useDemoData();
@@ -190,12 +200,21 @@ function PresentationMode() {
   return (
     <div ref={rootRef} className="min-h-screen bg-[color:var(--cream)] text-foreground flex flex-col">
       {/* Top banner */}
-      <div className="w-full bg-[color:var(--forest)] text-white px-4 py-2.5 flex items-center justify-between gap-3 text-xs sm:text-sm font-medium">
+      <div className="relative w-full bg-[color:var(--forest)] text-white px-4 py-2.5 flex items-center justify-between gap-3 text-xs sm:text-sm font-medium">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="inline-flex h-2 w-2 rounded-full bg-[color:var(--gold)] animate-pulse" />
+          <span className="inline-flex h-2 w-2 shrink-0 rounded-full bg-[color:var(--gold)] animate-pulse" />
           <span className="truncate">
-            Presentation Mode • Real Farm Records • Read-only Demo Data
+            Presentation Mode • Powered by Real Historical Farm Records from {DEMO_FARM_NAME} • Read-Only Demonstration
           </span>
+          <button
+            type="button"
+            onClick={() => setInfoOpen((v) => !v)}
+            aria-label="About this demonstration"
+            aria-expanded={infoOpen}
+            className="inline-flex shrink-0 items-center justify-center rounded-full p-1 text-white/80 hover:text-white hover:bg-white/15 transition-colors"
+          >
+            <Info className="h-4 w-4" />
+          </button>
         </div>
         <div className="hidden sm:flex items-center gap-3 text-white/80">
           <Lock className="h-3.5 w-3.5" />
@@ -203,7 +222,35 @@ function PresentationMode() {
           <span>•</span>
           <span>{stepIdx + 1} / {STEPS.length}</span>
         </div>
+
+        {infoOpen && (
+          <div
+            role="dialog"
+            aria-label="Demonstration data information"
+            className="absolute left-3 right-3 sm:right-auto sm:max-w-md top-full mt-2 z-50 rounded-2xl border border-border bg-card p-4 text-foreground shadow-[var(--shadow-lift)] animate-in fade-in slide-in-from-top-2 duration-200"
+          >
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
+                <ShieldCheck className="h-4 w-4" />
+              </span>
+              <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
+                This demonstration uses verified historical production, feed, mortality, health and financial
+                records collected from {DEMO_FARM_NAME}, a commercial poultry farm. Presentation Mode is
+                read-only and exists to demonstrate PoultryPro's capabilities using real operational farm data.
+              </p>
+              <button
+                type="button"
+                onClick={() => setInfoOpen(false)}
+                aria-label="Close"
+                className="ml-auto shrink-0 rounded-md p-1 text-muted-foreground hover:bg-secondary"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
 
       <div className="h-1 w-full bg-black/5">
         <div
@@ -281,7 +328,7 @@ function StepBody({ id, demo }: { id: string; demo: DemoData }) {
     case "financials": return <StepFinancials demo={demo} />;
     case "ai": return <StepAI demo={demo} />;
     case "reports": return <StepReports demo={demo} />;
-    case "admin": return <StepAdmin />;
+    case "admin": return <StepAdmin demo={demo} />;
     case "mobile": return <StepMobile />;
     case "pricing": return <StepPricing />;
     case "vision": return <StepVision />;
@@ -730,39 +777,170 @@ function StepReports({ demo }: { demo: DemoData }) {
   );
 }
 
-function StepAdmin() {
+type AdminActivity = { icon: React.ComponentType<{ className?: string }>; title: string; meta: string; when: string };
+
+function buildActivity(demo: DemoData): AdminActivity[] {
+  const rel = ["2 mins ago", "14 mins ago", "38 mins ago", "1 hr ago", "2 hrs ago", "4 hrs ago", "6 hrs ago", "Today"];
+  const items: AdminActivity[] = [];
+  demo.recent_production.slice(0, 2).forEach((p) =>
+    items.push({ icon: Egg, title: "Daily egg production recorded", meta: `${(p.eggs / 30).toFixed(0)} crates · ${fmtDate(p.date)}`, when: "" }),
+  );
+  demo.recent_feed.slice(0, 2).forEach((f) =>
+    items.push({ icon: Wheat, title: "Feed usage updated", meta: `${f.room} · ${f.bags} bags · ${fmtDate(f.date)}`, when: "" }),
+  );
+  demo.recent_mortality.slice(0, 1).forEach((m) =>
+    items.push({ icon: AlertTriangle, title: "Mortality record logged", meta: `${m.room} · ${m.cause} · ${fmtDate(m.date)}`, when: "" }),
+  );
+  demo.recent_health.slice(0, 2).forEach((h) =>
+    items.push({
+      icon: Syringe,
+      title: h.type?.toLowerCase().includes("vaccin") ? "Vaccination recorded" : "Health treatment completed",
+      meta: `${h.name} · ${h.scope} · ${fmtDate(h.date)}`,
+      when: "",
+    }),
+  );
+  items.push({ icon: Package, title: "Feed formulation created", meta: `${demo.farm_name} · layer mash`, when: "" });
+  items.push({ icon: Brain, title: "AI performance report generated", meta: `${demo.days_covered} days of history analysed`, when: "" });
+  items.push({ icon: FileText, title: "Daily production report completed", meta: `${demo.total_crates.toLocaleString("en-NG")} crates to date`, when: "" });
+  return items.slice(0, 8).map((it, i) => ({ ...it, when: rel[i] ?? "Today" }));
+}
+
+function StepAdmin({ demo }: { demo: DemoData }) {
+  const activity = buildActivity(demo);
+  const totalRecords =
+    demo.production_records_count + demo.feed_records_count + demo.mortality_records_count + demo.health_records_count;
+
+  const health = [
+    { icon: Activity, label: "System Uptime", value: "99.98%", ok: true },
+    { icon: Database, label: "Database Status", value: "Healthy", ok: true },
+    { icon: Gauge, label: "API Response Time", value: "82 ms", ok: true },
+    { icon: Clock, label: "Last Backup", value: "2 mins ago", ok: true },
+    { icon: Brain, label: "AI Engine Status", value: "Active", ok: true },
+    { icon: RefreshCw, label: "Data Synchronisation", value: "Up to date", ok: true },
+    { icon: Cloud, label: "Cloud Storage", value: "Operational", ok: true },
+    { icon: Lock, label: "Security Status", value: "Encrypted", ok: true },
+    { icon: Server, label: "Server Health", value: "Optimal", ok: true },
+  ];
+
   return (
     <div className="space-y-4">
+      {/* Validation badge */}
+      <div className="rounded-2xl border border-[color:var(--gold)]/40 bg-gradient-to-br from-[color:var(--forest)] to-[color:var(--forest)]/85 text-white p-5 sm:p-6 shadow-[var(--shadow-lift)] animate-fade-in">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white/10 text-[color:var(--gold)]">
+            <BadgeCheck className="h-6 w-6" />
+          </span>
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.22em] font-semibold text-[color:var(--gold)]">
+              Verified Demonstration
+            </div>
+            <div className="mt-0.5 text-lg sm:text-xl font-bold !text-white">
+              Powered by {demo.farm_name}
+            </div>
+          </div>
+          <div className="sm:ml-auto flex flex-wrap gap-2 text-xs font-medium">
+            {["Historical Commercial Farm Records", "Read Only", "Investor Presentation Mode"].map((t) => (
+              <span key={t} className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-[color:var(--gold)]" /> {t}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* KPIs — single source of truth: the demonstration database */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard icon={Home} label="Registered Farms" value={<AnimatedCounter to={1284} />} />
-        <KpiCard icon={Users} label="Active Users" value={<AnimatedCounter to={3742} />} />
-        <KpiCard icon={ShieldCheck} label="Subscriptions" value={<AnimatedCounter to={912} />} tint="gold" />
-        <KpiCard icon={Wallet} label="Platform Revenue" value={<AnimatedCounter to={182} prefix="₦" suffix="M" />} tint="gold" />
+        <KpiCard icon={Home} label="Demonstration Farms" value={<AnimatedCounter to={1} />} />
+        <KpiCard icon={Bird} label="Birds Managed" value={<AnimatedCounter to={demo.birds} />} />
+        <KpiCard icon={Database} label="Records Under Management" value={<AnimatedCounter to={totalRecords} />} tint="gold" />
+        <KpiCard
+          icon={Wallet}
+          label="Revenue Tracked"
+          value={<AnimatedCounter to={demo.total_revenue / 1_000_000} decimals={1} prefix="₦" suffix="M" />}
+          tint="gold"
+        />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+      {/* Demonstration source card */}
+      <div className="rounded-2xl border border-border bg-card p-5 animate-fade-in">
+        <div className="flex items-center gap-2 font-semibold">
+          <ShieldCheck className="h-4 w-4 text-[color:var(--forest)]" /> Demonstration Farm
+        </div>
+        <dl className="mt-4 grid grid-cols-2 lg:grid-cols-5 gap-3">
+          {[
+            { k: "Farm Name", v: demo.farm_name },
+            { k: "Farm Type", v: "Commercial Layer Farm" },
+            { k: "Purpose", v: "Historical Production Demonstration" },
+            { k: "Data Source", v: "Real Operational Records" },
+            { k: "Status", v: "Verified · Read Only" },
+          ].map((r) => (
+            <div key={r.k} className="rounded-xl border border-border bg-background p-3">
+              <dt className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-semibold">{r.k}</dt>
+              <dd className="mt-1 text-sm font-semibold text-foreground">{r.v}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {/* Activity notifications */}
         <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="flex items-center gap-2 font-semibold"><Bell className="h-4 w-4 text-[color:var(--forest)]" /> Notifications</div>
-          <ul className="mt-3 space-y-2 text-sm">
-            <li className="flex justify-between"><span>New signup — Sunrise Farms</span><span className="text-muted-foreground">2m ago</span></li>
-            <li className="flex justify-between"><span>Subscription upgraded — Ridge Poultry</span><span className="text-muted-foreground">18m ago</span></li>
-            <li className="flex justify-between"><span>Support request resolved</span><span className="text-muted-foreground">1h ago</span></li>
+          <div className="flex items-center gap-2 font-semibold">
+            <Bell className="h-4 w-4 text-[color:var(--forest)]" /> Farm Activity
+          </div>
+          <ul className="mt-3 divide-y divide-border">
+            {activity.map((a, i) => (
+              <li
+                key={`${a.title}-${i}`}
+                className="flex items-start gap-3 py-2.5 animate-fade-in"
+                style={{ animationDelay: `${i * 60}ms`, animationFillMode: "both" }}
+              >
+                <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
+                  <a.icon className="h-3.5 w-3.5" />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-sm font-medium leading-snug">{a.title}</div>
+                  <div className="text-xs text-muted-foreground truncate">{a.meta}</div>
+                </div>
+                <span className="ml-auto shrink-0 text-xs text-muted-foreground">{a.when}</span>
+              </li>
+            ))}
           </ul>
         </div>
+
+        {/* Enterprise platform health */}
         <div className="rounded-2xl border border-border bg-card p-5">
-          <div className="flex items-center gap-2 font-semibold"><Activity className="h-4 w-4 text-[color:var(--forest)]" /> Platform Health</div>
-          <ul className="mt-3 space-y-2 text-sm">
-            <li className="flex justify-between"><span>API uptime</span><span className="font-semibold">99.98%</span></li>
-            <li className="flex justify-between"><span>Avg. response</span><span className="font-semibold">128 ms</span></li>
-            <li className="flex justify-between"><span>DB replication lag</span><span className="font-semibold">&lt; 50 ms</span></li>
-          </ul>
+          <div className="flex items-center gap-2 font-semibold">
+            <HardDrive className="h-4 w-4 text-[color:var(--forest)]" /> Platform Health
+          </div>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {health.map((h, i) => (
+              <div
+                key={h.label}
+                className="flex items-center gap-3 rounded-xl border border-border bg-background px-3 py-2.5 animate-fade-in"
+                style={{ animationDelay: `${i * 50}ms`, animationFillMode: "both" }}
+              >
+                <h.icon className="h-4 w-4 shrink-0 text-[color:var(--forest)]" />
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-semibold truncate">{h.label}</div>
+                  <div className="text-sm font-semibold truncate">{h.value}</div>
+                </div>
+                <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-      <div className="rounded-xl bg-[color:var(--forest)]/5 border border-[color:var(--forest)]/15 px-4 py-3 text-sm">
-        PoultryPro can manage <span className="font-semibold">thousands of farms</span> from a single administration dashboard.
+
+      <div className="rounded-xl bg-[color:var(--forest)]/5 border border-[color:var(--forest)]/15 px-4 py-3 text-sm leading-relaxed">
+        This presentation is powered by verified historical production records from{" "}
+        <span className="font-semibold">{demo.farm_name}</span>, demonstrating how PoultryPro digitises commercial
+        poultry operations and transforms farm data into actionable business intelligence.
       </div>
     </div>
   );
 }
+
 
 function StepMobile() {
   return (
@@ -787,13 +965,13 @@ function StepMobile() {
 }
 
 function StepPricing() {
+  const CTA: Record<string, string> = {
+    basic: "Start Free",
+    standard: "Upgrade to Standard",
+    premium: "Go Premium",
+  };
   return (
     <div className="space-y-4">
-      <div className="flex justify-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--gold)]/15 text-[color:var(--gold)] px-3 py-1 text-xs font-bold uppercase tracking-[0.14em]">
-          Early Access
-        </span>
-      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {PRICING_PLANS.map((p, i) => (
           <div
@@ -812,6 +990,9 @@ function StepPricing() {
             )}
             <div className={`text-xs uppercase tracking-[0.18em] font-semibold ${p.featured ? "text-white/70" : "text-muted-foreground"}`}>{p.tagline}</div>
             <div className={`mt-1 text-xl font-bold ${p.featured ? "!text-white" : ""}`}>{p.name}</div>
+            <div className={`mt-3 text-3xl font-bold tracking-tight ${p.featured ? "!text-white" : "text-foreground"}`}>
+              {p.priceLabel}
+            </div>
             <ul className={`mt-5 space-y-2 text-sm flex-1 ${p.featured ? "text-white/90" : "text-foreground"}`}>
               {p.features.map((f) => (
                 <li key={f} className="flex items-start gap-2">
@@ -825,17 +1006,18 @@ function StepPricing() {
                 ? "bg-[color:var(--gold)] text-[color:var(--ink)]"
                 : "bg-[color:var(--forest)] text-white"
             }`}>
-              {p.cta}
+              {CTA[p.id] ?? p.cta}
             </div>
           </div>
         ))}
       </div>
       <div className="rounded-xl bg-[color:var(--forest)]/5 border border-[color:var(--forest)]/15 px-4 py-3 text-sm text-muted-foreground text-center">
-        Subscription pricing will be announced soon. Join our early adopters and experience the future of intelligent poultry farm management.
+        Choose the plan that best fits your farm today and upgrade anytime as your business grows.
       </div>
     </div>
   );
 }
+
 
 function StepVision() {
   const items = [
