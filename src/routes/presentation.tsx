@@ -328,7 +328,7 @@ function StepBody({ id, demo }: { id: string; demo: DemoData }) {
     case "financials": return <StepFinancials demo={demo} />;
     case "ai": return <StepAI demo={demo} />;
     case "reports": return <StepReports demo={demo} />;
-    case "admin": return <StepAdmin />;
+    case "admin": return <StepAdmin demo={demo} />;
     case "mobile": return <StepMobile />;
     case "pricing": return <StepPricing />;
     case "vision": return <StepVision />;
