@@ -139,6 +139,8 @@ function PresentationMode() {
   const [stepIdx, setStepIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [exited, setExited] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
+
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   const { data: demo, loading, reset } = useDemoData();
