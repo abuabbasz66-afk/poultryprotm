@@ -699,35 +699,36 @@ function Index() {
             </span>
           </div>
 
-          <div className="mt-8 grid md:grid-cols-3 gap-6 items-stretch">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
             {tiers.map((t) => (
               <div
                 key={t.name}
-                className={`relative rounded-3xl border p-8 flex flex-col ${
+                className={`relative min-w-0 rounded-3xl border p-6 sm:p-8 flex flex-col ${
                   t.highlight
                     ? "bg-[color:var(--forest)] text-primary-foreground border-transparent shadow-[var(--shadow-lift)] md:-translate-y-3"
                     : "bg-card border-border"
                 }`}
               >
                 {t.badge && (
-                  <span className={`absolute -top-3 right-6 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest ${
+                  <span className={`absolute -top-3 right-4 sm:right-6 max-w-[70%] truncate rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest ${
                     t.highlight ? "bg-[color:var(--gold)] text-[color:var(--ink)]" : "bg-secondary text-secondary-foreground border border-border"
                   }`}>
                     {t.badge}
                   </span>
                 )}
-                <div className="flex items-center justify-between">
-                  <span className={`font-display text-4xl font-semibold ${t.highlight ? "text-[color:var(--gold)]" : "text-[color:var(--gold)]"}`}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-display text-4xl font-semibold text-[color:var(--gold)]">
                     {t.stageNum}
                   </span>
                   <span className={`text-[10px] uppercase tracking-widest font-semibold ${t.highlight ? "text-[color:var(--gold)]" : "text-[color:var(--forest)]"}`}>
                     {t.stage}
                   </span>
                 </div>
-                <div className={`mt-5 text-[11px] uppercase tracking-widest font-medium ${t.highlight ? "text-[color:var(--gold)]" : "text-[color:var(--forest)]"}`}>
+                <div className={`mt-5 text-[11px] uppercase tracking-widest font-medium break-words ${t.highlight ? "text-[color:var(--gold)]" : "text-[color:var(--forest)]"}`}>
                   {t.tagline}
                 </div>
-                <h3 className="mt-1 font-display text-3xl font-semibold">{t.name}</h3>
+                <h3 className="mt-1 font-display text-2xl sm:text-3xl font-semibold break-words">{t.name}</h3>
+
                 <p className={`mt-3 text-sm italic ${t.highlight ? "text-primary-foreground/90" : "text-foreground"}`}>
                   "{t.promise}"
                 </p>
