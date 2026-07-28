@@ -74,8 +74,9 @@ type DemoData = {
 };
 
 const FALLBACK: DemoData = {
-  farm_name: "Greenfield Demonstration Farm",
+  farm_name: "ABZ Global Resources",
   location: "Commercial layer operation · Real historical dataset",
+
   period_start: "", period_end: "", days_covered: 1,
   egg_price: 4900, feed_price: 11950,
   rooms: [], birds: 0, initial_birds: 0, houses: 0,
