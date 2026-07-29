@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { NAV_SECTIONS, type NavEntry, type NavLeaf } from "@/lib/nav-config";
 import { useFarm } from "@/lib/farm-data";
+import { SyncStatus } from "@/components/sync-status";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { cn } from "@/lib/utils";
 
@@ -98,13 +99,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <img src={logoAsset.url} alt="" width={26} height={26} className="h-6.5 w-6.5 shrink-0 object-contain" />
           <span className="truncate font-display text-[15px] font-semibold">PoultryPro™</span>
         </Link>
-        <button
-          onClick={() => setMobileOpen(true)}
-          aria-label="Open navigation menu"
-          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 transition hover:bg-white/10"
-        >
-          <Menu className="h-4 w-4" />
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <SyncStatus />
+          <button
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open navigation menu"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 transition hover:bg-white/10"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* Mobile drawer */}
@@ -152,11 +156,12 @@ function SidebarBody({
       <div className={cn("flex items-center gap-2 px-4 py-4", collapsed && "justify-center px-0")}>
         <img src={logoAsset.url} alt="" width={30} height={30} className="h-7.5 w-7.5 shrink-0 object-contain" />
         {!collapsed && (
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="truncate font-display text-[16px] font-semibold leading-tight">PoultryPro™</div>
             <div className="truncate text-[11px] text-primary-foreground/60">{farm.data?.name ?? "Your farm"}</div>
           </div>
         )}
+        <SyncStatus compact={collapsed} />
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 pb-4">
