@@ -99,13 +99,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <img src={logoAsset.url} alt="" width={26} height={26} className="h-6.5 w-6.5 shrink-0 object-contain" />
           <span className="truncate font-display text-[15px] font-semibold">PoultryPro™</span>
         </Link>
-        <button
-          onClick={() => setMobileOpen(true)}
-          aria-label="Open navigation menu"
-          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 transition hover:bg-white/10"
-        >
-          <Menu className="h-4 w-4" />
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <SyncStatus />
+          <button
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open navigation menu"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 transition hover:bg-white/10"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* Mobile drawer */}
