@@ -7,6 +7,7 @@
 import path from "node:path";
 import { loadEnv } from "vite";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { VitePWA } from "vite-plugin-pwa";
 
 const serverEnv = loadEnv(process.env.NODE_ENV === "production" ? "production" : "development", process.cwd(), "");
 Object.assign(process.env, serverEnv);
