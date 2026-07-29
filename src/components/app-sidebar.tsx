@@ -152,11 +152,12 @@ function SidebarBody({
       <div className={cn("flex items-center gap-2 px-4 py-4", collapsed && "justify-center px-0")}>
         <img src={logoAsset.url} alt="" width={30} height={30} className="h-7.5 w-7.5 shrink-0 object-contain" />
         {!collapsed && (
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="truncate font-display text-[16px] font-semibold leading-tight">PoultryPro™</div>
             <div className="truncate text-[11px] text-primary-foreground/60">{farm.data?.name ?? "Your farm"}</div>
           </div>
         )}
+        <SyncStatus compact={collapsed} />
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 pb-4">
