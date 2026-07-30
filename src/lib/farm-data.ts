@@ -22,7 +22,24 @@ export function normalizeHealthType(raw: string): HealthType | null {
 }
 export type Health = { id: string; name: string; scope: string; type: HealthType; date: string };
 export type Feed = { id: string; room: string; bags: number; date: string };
-export type Price = { id: string; item: string; unit: string; price: number; updated: string };
+export type PriceCategory = "eggs" | "feed" | "ingredient" | "medicine" | "vaccines" | "other";
+export type Price = {
+  id: string; item: string; unit: string; price: number; updated: string;
+  effective_from?: string | null; category?: string | null; note?: string | null;
+};
+export type PriceHistoryRow = {
+  id: string;
+  item: string;
+  category: string;
+  unit: string;
+  old_price: number | null;
+  new_price: number;
+  effective_from: string;
+  updated_by: string | null;
+  device: string | null;
+  note: string | null;
+  created_at: string;
+};
 
 // ============= QUERY KEY POLICY =============
 // All farm-specific query keys MUST be nested under ["farm", farmId, ...].
