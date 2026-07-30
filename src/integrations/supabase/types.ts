@@ -673,6 +673,7 @@ export type Database = {
           farm_id: string
           id: string
           item: string
+          last_device: string | null
           note: string | null
           price: number
           unit: string
@@ -685,6 +686,7 @@ export type Database = {
           farm_id: string
           id?: string
           item: string
+          last_device?: string | null
           note?: string | null
           price?: number
           unit?: string
@@ -697,6 +699,7 @@ export type Database = {
           farm_id?: string
           id?: string
           item?: string
+          last_device?: string | null
           note?: string | null
           price?: number
           unit?: string
