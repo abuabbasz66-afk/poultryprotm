@@ -162,12 +162,18 @@ export function computePeriodMetrics(input: {
   feed: Feed[];
   mortality: Mortality[];
   health: Health[];
-  eggPrice: number;                // NGN per crate
-  costPerKg: number;               // NGN per kg of feed
+  eggPrice: number;                // NGN per crate (fallback / flat price)
+  costPerKg: number;               // NGN per kg of feed (fallback / flat price)
   bagWeightKg: number;             // kg per bag
   initialBirds: number;
+  /** Effective-dated resolvers. When supplied, every record is valued with
+   *  the price that was active on its own production/usage date. */
+  eggPriceOn?: (dateKey: string | null) => number;
+  costPerKgOn?: (dateKey: string | null) => number;
 }): PeriodMetrics {
   const { range, eggs, feed, mortality, health, eggPrice, costPerKg, bagWeightKg, initialBirds } = input;
+  const eggPriceOn = input.eggPriceOn ?? (() => eggPrice);
+  const costPerKgOn = input.costPerKgOn ?? (() => costPerKg);
 
   const eggRows = eggs.filter(e => inRange(toDateKey(e.date), range));
   const feedRows = feed.filter(f => inRange(toDateKey(f.date), range));
@@ -177,11 +183,15 @@ export function computePeriodMetrics(input: {
   const eggsTotal = eggRows.reduce((s, e) => s + totalEggsFromRow(e), 0);
   const crates = Math.floor(eggsTotal / 30);
   const extraEggs = eggsTotal % 30;
-  const revenue = Math.round((eggsTotal / 30) * eggPrice);
+  const revenue = Math.round(
+    eggRows.reduce((s, e) => s + (totalEggsFromRow(e) / 30) * eggPriceOn(toDateKey(e.date)), 0),
+  );
 
   const feedBags = feedRows.reduce((s, f) => s + Number(f.bags || 0), 0);
   const feedKg = feedBags * bagWeightKg;
-  const feedCost = Math.round(feedKg * costPerKg);
+  const feedCost = Math.round(
+    feedRows.reduce((s, f) => s + Number(f.bags || 0) * bagWeightKg * costPerKgOn(toDateKey(f.date)), 0),
+  );
   const profit = revenue - feedCost;
 
   const mortalityCount = mortRows.reduce((s, m) => s + Math.abs(m.loss || 0), 0);
