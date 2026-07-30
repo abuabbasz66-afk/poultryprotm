@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { History } from "lucide-react";
-import { AppSidebarLayout } from "@/components/app-sidebar";
+import { AppShell } from "@/components/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { PricingDashboard } from "@/components/pricing-dashboard";
 
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/prices")({
 
 function PricesPage() {
   return (
-    <AppSidebarLayout>
+    <AppShell>
       <div className="container-x space-y-8 py-8">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -35,6 +35,6 @@ function PricesPage() {
         </header>
         <PricingDashboard />
       </div>
-    </AppSidebarLayout>
+    </AppShell>
   );
 }
