@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useActiveFormulaCostPerKg } from "@/lib/feed-formulas-data";
 
 import {
-  useRooms, useEggs, useMortality, useHealth, useFeed, usePrices, useFarm, useFarmId,
+  useRooms, useEggs, useMortality, useHealth, useFeed, usePrices, usePriceHistory, useFarm, useFarmId,
   useAddRoom, useDeleteRoom,
   useAddEgg, useAddMortality, useAddHealth, useAddFeed,
   useAddPrice, useDeletePrice, useDeleteMortality, useDeleteFeed,
