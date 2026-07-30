@@ -25,7 +25,7 @@ export type Feed = { id: string; room: string; bags: number; date: string };
 export type PriceCategory = "eggs" | "feed" | "ingredient" | "medicine" | "vaccines" | "other";
 export type Price = {
   id: string; item: string; unit: string; price: number; updated: string;
-  effective_from?: string | null; category?: string | null; note?: string | null;
+  effective_from?: string; category?: string; note?: string | null;
 };
 export type PriceHistoryRow = {
   id: string;
