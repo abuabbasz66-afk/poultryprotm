@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useActiveFormulaCostPerKg } from "@/lib/feed-formulas-data";
 
 import {
-  useRooms, useEggs, useMortality, useHealth, useFeed, usePrices, useFarm, useFarmId,
+  useRooms, useEggs, useMortality, useHealth, useFeed, usePrices, usePriceHistory, useFarm, useFarmId,
   useAddRoom, useDeleteRoom,
   useAddEgg, useAddMortality, useAddHealth, useAddFeed,
   useAddPrice, useDeletePrice, useDeleteMortality, useDeleteFeed,
@@ -181,12 +181,13 @@ const setBagWeightKg = (v: number | null) => {
   // ---------------------------------------------------------------------------
   const activeFormulaCostPerKg = useActiveFormulaCostPerKg();
   const useFormulaCost = farm?.feed_source === "self_produced" && activeFormulaCostPerKg != null;
+  const priceHistory = usePriceHistory().data ?? [];
   const metrics = useMemo(
     () => computeDashboardMetrics({
-      rooms, eggs, feed, mortality, health, prices, bagWeightKg,
+      rooms, eggs, feed, mortality, health, prices, priceHistory, bagWeightKg,
       costPerKgOverride: useFormulaCost ? activeFormulaCostPerKg : null,
     }),
-    [rooms, eggs, feed, mortality, health, prices, bagWeightKg, useFormulaCost, activeFormulaCostPerKg],
+    [rooms, eggs, feed, mortality, health, prices, priceHistory, bagWeightKg, useFormulaCost, activeFormulaCostPerKg],
   );
 
 

@@ -22,7 +22,24 @@ export function normalizeHealthType(raw: string): HealthType | null {
 }
 export type Health = { id: string; name: string; scope: string; type: HealthType; date: string };
 export type Feed = { id: string; room: string; bags: number; date: string };
-export type Price = { id: string; item: string; unit: string; price: number; updated: string };
+export type PriceCategory = "eggs" | "feed" | "ingredient" | "medicine" | "vaccines" | "other";
+export type Price = {
+  id: string; item: string; unit: string; price: number; updated: string;
+  effective_from?: string; category?: string; note?: string | null;
+};
+export type PriceHistoryRow = {
+  id: string;
+  item: string;
+  category: string;
+  unit: string;
+  old_price: number | null;
+  new_price: number;
+  effective_from: string;
+  updated_by: string | null;
+  device: string | null;
+  note: string | null;
+  created_at: string;
+};
 
 // ============= QUERY KEY POLICY =============
 // All farm-specific query keys MUST be nested under ["farm", farmId, ...].
@@ -330,7 +347,7 @@ export function usePrices() {
         fetcher: async () => {
           const { data, error } = await supabase
             .from("prices")
-            .select("id, item, unit, price, updated")
+            .select("id, item, unit, price, updated, effective_from, category, note")
             .eq("farm_id", farmId!)
             .order("created_at");
           if (error) throw error;
@@ -339,6 +356,37 @@ export function usePrices() {
       }),
   });
 }
+
+/** Full immutable price audit trail for the active farm (newest first). */
+export function usePriceHistory() {
+  const { data: userId } = useAuthUserId();
+  const { data: farmId } = useFarmId();
+  return useQuery({
+    queryKey: farmKey(farmId, "price-history"),
+    enabled: !!farmId,
+    networkMode: "always",
+    queryFn: (): Promise<PriceHistoryRow[]> =>
+      offlineList<PriceHistoryRow>({
+        userId,
+        cacheKey: cacheKey(farmId, "price-history"),
+        table: "price_history",
+        fetcher: async () => {
+          const { data, error } = await supabase
+            .from("price_history")
+            .select("id, item, category, unit, old_price, new_price, effective_from, updated_by, device, note, created_at")
+            .eq("farm_id", farmId!)
+            .order("effective_from", { ascending: false });
+          if (error) throw error;
+          return (data ?? []).map(r => ({
+            ...r,
+            old_price: r.old_price == null ? null : Number(r.old_price),
+            new_price: Number(r.new_price),
+          })) as PriceHistoryRow[];
+        },
+      }),
+  });
+}
+
 
 // ============= MUTATIONS =============
 // Each mutation resolves the CURRENT farmId (from the RLS-scoped useFarmId

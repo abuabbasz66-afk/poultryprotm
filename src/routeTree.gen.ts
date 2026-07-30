@@ -18,6 +18,8 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSubscriptionsRouteImport } from './routes/_authenticated/subscriptions'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedPricesRouteImport } from './routes/_authenticated/prices'
+import { Route as AuthenticatedPriceHistoryRouteImport } from './routes/_authenticated/price-history'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
 import { Route as AuthenticatedFeedRouteImport } from './routes/_authenticated/feed'
@@ -73,6 +75,17 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPricesRoute = AuthenticatedPricesRouteImport.update({
+  id: '/prices',
+  path: '/prices',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPriceHistoryRoute =
+  AuthenticatedPriceHistoryRouteImport.update({
+    id: '/price-history',
+    path: '/price-history',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -131,6 +144,8 @@ export interface FileRoutesByFullPath {
   '/feed': typeof AuthenticatedFeedRoute
   '/import': typeof AuthenticatedImportRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/price-history': typeof AuthenticatedPriceHistoryRoute
+  '/prices': typeof AuthenticatedPricesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
@@ -150,6 +165,8 @@ export interface FileRoutesByTo {
   '/feed': typeof AuthenticatedFeedRoute
   '/import': typeof AuthenticatedImportRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/price-history': typeof AuthenticatedPriceHistoryRoute
+  '/prices': typeof AuthenticatedPricesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
@@ -171,6 +188,8 @@ export interface FileRoutesById {
   '/_authenticated/feed': typeof AuthenticatedFeedRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/price-history': typeof AuthenticatedPriceHistoryRoute
+  '/_authenticated/prices': typeof AuthenticatedPricesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
@@ -192,6 +211,8 @@ export interface FileRouteTypes {
     | '/feed'
     | '/import'
     | '/onboarding'
+    | '/price-history'
+    | '/prices'
     | '/settings'
     | '/subscriptions'
     | '/api/public/whatsapp-click'
@@ -211,6 +232,8 @@ export interface FileRouteTypes {
     | '/feed'
     | '/import'
     | '/onboarding'
+    | '/price-history'
+    | '/prices'
     | '/settings'
     | '/subscriptions'
     | '/api/public/whatsapp-click'
@@ -231,6 +254,8 @@ export interface FileRouteTypes {
     | '/_authenticated/feed'
     | '/_authenticated/import'
     | '/_authenticated/onboarding'
+    | '/_authenticated/price-history'
+    | '/_authenticated/prices'
     | '/_authenticated/settings'
     | '/_authenticated/subscriptions'
     | '/api/public/whatsapp-click'
@@ -319,6 +344,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/prices': {
+      id: '/_authenticated/prices'
+      path: '/prices'
+      fullPath: '/prices'
+      preLoaderRoute: typeof AuthenticatedPricesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/price-history': {
+      id: '/_authenticated/price-history'
+      path: '/price-history'
+      fullPath: '/price-history'
+      preLoaderRoute: typeof AuthenticatedPriceHistoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
@@ -390,6 +429,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFeedRoute: typeof AuthenticatedFeedRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedPriceHistoryRoute: typeof AuthenticatedPriceHistoryRoute
+  AuthenticatedPricesRoute: typeof AuthenticatedPricesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSubscriptionsRoute: typeof AuthenticatedSubscriptionsRoute
 }
@@ -399,6 +440,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFeedRoute: AuthenticatedFeedRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedPriceHistoryRoute: AuthenticatedPriceHistoryRoute,
+  AuthenticatedPricesRoute: AuthenticatedPricesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSubscriptionsRoute: AuthenticatedSubscriptionsRoute,
 }

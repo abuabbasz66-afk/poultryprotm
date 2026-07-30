@@ -3,7 +3,8 @@
 // database rows using calendar-date keys. No cumulative sums leak into
 // daily/monthly figures. Empty inputs return safe zeros — never NaN/Infinity.
 
-import type { EggRow, Room, Mortality, Feed, Health, Price } from "@/lib/farm-data";
+import type { EggRow, Room, Mortality, Feed, Health, Price, PriceHistoryRow } from "@/lib/farm-data";
+import { buildFarmTimelines } from "@/lib/price-timeline";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
 import { toDateKey } from "@/lib/date-key";
 
@@ -162,12 +163,18 @@ export function computePeriodMetrics(input: {
   feed: Feed[];
   mortality: Mortality[];
   health: Health[];
-  eggPrice: number;                // NGN per crate
-  costPerKg: number;               // NGN per kg of feed
+  eggPrice: number;                // NGN per crate (fallback / flat price)
+  costPerKg: number;               // NGN per kg of feed (fallback / flat price)
   bagWeightKg: number;             // kg per bag
   initialBirds: number;
+  /** Effective-dated resolvers. When supplied, every record is valued with
+   *  the price that was active on its own production/usage date. */
+  eggPriceOn?: (dateKey: string | null) => number;
+  costPerKgOn?: (dateKey: string | null) => number;
 }): PeriodMetrics {
   const { range, eggs, feed, mortality, health, eggPrice, costPerKg, bagWeightKg, initialBirds } = input;
+  const eggPriceOn = input.eggPriceOn ?? (() => eggPrice);
+  const costPerKgOn = input.costPerKgOn ?? (() => costPerKg);
 
   const eggRows = eggs.filter(e => inRange(toDateKey(e.date), range));
   const feedRows = feed.filter(f => inRange(toDateKey(f.date), range));
@@ -177,11 +184,15 @@ export function computePeriodMetrics(input: {
   const eggsTotal = eggRows.reduce((s, e) => s + totalEggsFromRow(e), 0);
   const crates = Math.floor(eggsTotal / 30);
   const extraEggs = eggsTotal % 30;
-  const revenue = Math.round((eggsTotal / 30) * eggPrice);
+  const revenue = Math.round(
+    eggRows.reduce((s, e) => s + (totalEggsFromRow(e) / 30) * eggPriceOn(toDateKey(e.date)), 0),
+  );
 
   const feedBags = feedRows.reduce((s, f) => s + Number(f.bags || 0), 0);
   const feedKg = feedBags * bagWeightKg;
-  const feedCost = Math.round(feedKg * costPerKg);
+  const feedCost = Math.round(
+    feedRows.reduce((s, f) => s + Number(f.bags || 0) * bagWeightKg * costPerKgOn(toDateKey(f.date)), 0),
+  );
   const profit = revenue - feedCost;
 
   const mortalityCount = mortRows.reduce((s, m) => s + Math.abs(m.loss || 0), 0);
@@ -232,8 +243,12 @@ export function computeDailyFinancialSeries(input: {
   eggPrice: number;
   costPerKg: number;
   bagWeightKg: number;
+  eggPriceOn?: (dateKey: string | null) => number;
+  costPerKgOn?: (dateKey: string | null) => number;
 }): DailyFinancialPoint[] {
   const { range, eggs, feed, eggPrice, costPerKg, bagWeightKg } = input;
+  const eggPriceOn = input.eggPriceOn ?? (() => eggPrice);
+  const costPerKgOn = input.costPerKgOn ?? (() => costPerKg);
   const buckets = new Map<string, { eggs: number; feedBags: number }>();
 
   for (const e of eggs) {
@@ -254,9 +269,9 @@ export function computeDailyFinancialSeries(input: {
   return keys.map(k => {
     const b = buckets.get(k)!;
     const crates = Math.floor(b.eggs / 30);
-    const revenue = Math.round((b.eggs / 30) * eggPrice);
+    const revenue = Math.round((b.eggs / 30) * eggPriceOn(k));
     const feedKg = b.feedBags * bagWeightKg;
-    const feedCost = Math.round(feedKg * costPerKg);
+    const feedCost = Math.round(feedKg * costPerKgOn(k));
     const [, m, d] = k.split("-");
     const label = `${Number(d)} ${months[Number(m) - 1]}`;
     return {
@@ -570,6 +585,8 @@ export function computeDashboardMetrics(input: {
   mortality: Mortality[];
   health: Health[];
   prices: Price[];
+  /** Immutable price audit trail — enables effective-dated valuation. */
+  priceHistory?: PriceHistoryRow[];
   bagWeightKg?: number | null;
   targetProductionPct?: number;
   /** Optional override for the cost per kg of feed (e.g. from an active
@@ -588,11 +605,24 @@ export function computeDashboardMetrics(input: {
     ? override
     : feedPricePerKg(input.prices, bagWeightKg);
 
+  // Effective-dated resolvers: each record is valued with the price that was
+  // active on its own date. Historical financials never move when a price
+  // changes today.
+  const timelines = buildFarmTimelines({
+    prices: input.prices,
+    history: input.priceHistory ?? [],
+    bagWeightKg,
+    costPerKgOverride: input.costPerKgOverride,
+  });
+  const eggPriceOn = timelines.eggPriceOn;
+  const costPerKgOn = timelines.feedPerKgOn;
+
   const population = computeBirdPopulation(input.rooms, input.mortality);
 
   const periodInput = {
     eggs: input.eggs, feed: input.feed, mortality: input.mortality, health: input.health,
     eggPrice, costPerKg, bagWeightKg, initialBirds: population.initialBirds,
+    eggPriceOn, costPerKgOn,
   };
   const today = computePeriodMetrics({ range: rangeFromPreset("today"), ...periodInput });
   const month = computePeriodMetrics({ range: rangeFromPreset("this_month"), ...periodInput });
@@ -600,11 +630,11 @@ export function computeDashboardMetrics(input: {
 
   const dailySeriesMonth = computeDailyFinancialSeries({
     range: rangeFromPreset("this_month"),
-    eggs: input.eggs, feed: input.feed, eggPrice, costPerKg, bagWeightKg,
+    eggs: input.eggs, feed: input.feed, eggPrice, costPerKg, bagWeightKg, eggPriceOn, costPerKgOn,
   });
   const dailySeriesAllTime = computeDailyFinancialSeries({
     range: rangeFromPreset("all"),
-    eggs: input.eggs, feed: input.feed, eggPrice, costPerKg, bagWeightKg,
+    eggs: input.eggs, feed: input.feed, eggPrice, costPerKg, bagWeightKg, eggPriceOn, costPerKgOn,
   });
 
   const productionRate = computeProductionRate({

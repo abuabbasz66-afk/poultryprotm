@@ -617,30 +617,90 @@ export type Database = {
         }
         Relationships: []
       }
-      prices: {
+      price_history: {
         Row: {
+          category: string
           created_at: string
+          device: string | null
+          effective_from: string
           farm_id: string
           id: string
           item: string
+          new_price: number
+          note: string | null
+          old_price: number | null
+          price_id: string | null
+          unit: string
+          updated_by: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          device?: string | null
+          effective_from?: string
+          farm_id: string
+          id?: string
+          item: string
+          new_price: number
+          note?: string | null
+          old_price?: number | null
+          price_id?: string | null
+          unit?: string
+          updated_by?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          device?: string | null
+          effective_from?: string
+          farm_id?: string
+          id?: string
+          item?: string
+          new_price?: number
+          note?: string | null
+          old_price?: number | null
+          price_id?: string | null
+          unit?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      prices: {
+        Row: {
+          category: string
+          created_at: string
+          effective_from: string
+          farm_id: string
+          id: string
+          item: string
+          last_device: string | null
+          note: string | null
           price: number
           unit: string
           updated: string
         }
         Insert: {
+          category?: string
           created_at?: string
+          effective_from?: string
           farm_id: string
           id?: string
           item: string
+          last_device?: string | null
+          note?: string | null
           price?: number
           unit?: string
           updated?: string
         }
         Update: {
+          category?: string
           created_at?: string
+          effective_from?: string
           farm_id?: string
           id?: string
           item?: string
+          last_device?: string | null
+          note?: string | null
           price?: number
           unit?: string
           updated?: string
