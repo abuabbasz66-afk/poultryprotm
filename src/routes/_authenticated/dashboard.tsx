@@ -181,12 +181,13 @@ const setBagWeightKg = (v: number | null) => {
   // ---------------------------------------------------------------------------
   const activeFormulaCostPerKg = useActiveFormulaCostPerKg();
   const useFormulaCost = farm?.feed_source === "self_produced" && activeFormulaCostPerKg != null;
+  const priceHistory = usePriceHistory().data ?? [];
   const metrics = useMemo(
     () => computeDashboardMetrics({
-      rooms, eggs, feed, mortality, health, prices, bagWeightKg,
+      rooms, eggs, feed, mortality, health, prices, priceHistory, bagWeightKg,
       costPerKgOverride: useFormulaCost ? activeFormulaCostPerKg : null,
     }),
-    [rooms, eggs, feed, mortality, health, prices, bagWeightKg, useFormulaCost, activeFormulaCostPerKg],
+    [rooms, eggs, feed, mortality, health, prices, priceHistory, bagWeightKg, useFormulaCost, activeFormulaCostPerKg],
   );
 
 
