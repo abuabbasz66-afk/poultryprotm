@@ -584,6 +584,8 @@ export function computeDashboardMetrics(input: {
   mortality: Mortality[];
   health: Health[];
   prices: Price[];
+  /** Immutable price audit trail — enables effective-dated valuation. */
+  priceHistory?: PriceHistoryRow[];
   bagWeightKg?: number | null;
   targetProductionPct?: number;
   /** Optional override for the cost per kg of feed (e.g. from an active
@@ -602,11 +604,24 @@ export function computeDashboardMetrics(input: {
     ? override
     : feedPricePerKg(input.prices, bagWeightKg);
 
+  // Effective-dated resolvers: each record is valued with the price that was
+  // active on its own date. Historical financials never move when a price
+  // changes today.
+  const timelines = buildFarmTimelines({
+    prices: input.prices,
+    history: input.priceHistory ?? [],
+    bagWeightKg,
+    costPerKgOverride: input.costPerKgOverride,
+  });
+  const eggPriceOn = timelines.eggPriceOn;
+  const costPerKgOn = timelines.feedPerKgOn;
+
   const population = computeBirdPopulation(input.rooms, input.mortality);
 
   const periodInput = {
     eggs: input.eggs, feed: input.feed, mortality: input.mortality, health: input.health,
     eggPrice, costPerKg, bagWeightKg, initialBirds: population.initialBirds,
+    eggPriceOn, costPerKgOn,
   };
   const today = computePeriodMetrics({ range: rangeFromPreset("today"), ...periodInput });
   const month = computePeriodMetrics({ range: rangeFromPreset("this_month"), ...periodInput });
@@ -614,11 +629,11 @@ export function computeDashboardMetrics(input: {
 
   const dailySeriesMonth = computeDailyFinancialSeries({
     range: rangeFromPreset("this_month"),
-    eggs: input.eggs, feed: input.feed, eggPrice, costPerKg, bagWeightKg,
+    eggs: input.eggs, feed: input.feed, eggPrice, costPerKg, bagWeightKg, eggPriceOn, costPerKgOn,
   });
   const dailySeriesAllTime = computeDailyFinancialSeries({
     range: rangeFromPreset("all"),
-    eggs: input.eggs, feed: input.feed, eggPrice, costPerKg, bagWeightKg,
+    eggs: input.eggs, feed: input.feed, eggPrice, costPerKg, bagWeightKg, eggPriceOn, costPerKgOn,
   });
 
   const productionRate = computeProductionRate({
