@@ -3,7 +3,8 @@
 // database rows using calendar-date keys. No cumulative sums leak into
 // daily/monthly figures. Empty inputs return safe zeros — never NaN/Infinity.
 
-import type { EggRow, Room, Mortality, Feed, Health, Price } from "@/lib/farm-data";
+import type { EggRow, Room, Mortality, Feed, Health, Price, PriceHistoryRow } from "@/lib/farm-data";
+import { buildFarmTimelines } from "@/lib/price-timeline";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
 import { toDateKey } from "@/lib/date-key";
 
