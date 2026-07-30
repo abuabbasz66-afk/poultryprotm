@@ -242,8 +242,12 @@ export function computeDailyFinancialSeries(input: {
   eggPrice: number;
   costPerKg: number;
   bagWeightKg: number;
+  eggPriceOn?: (dateKey: string | null) => number;
+  costPerKgOn?: (dateKey: string | null) => number;
 }): DailyFinancialPoint[] {
   const { range, eggs, feed, eggPrice, costPerKg, bagWeightKg } = input;
+  const eggPriceOn = input.eggPriceOn ?? (() => eggPrice);
+  const costPerKgOn = input.costPerKgOn ?? (() => costPerKg);
   const buckets = new Map<string, { eggs: number; feedBags: number }>();
 
   for (const e of eggs) {
@@ -264,9 +268,9 @@ export function computeDailyFinancialSeries(input: {
   return keys.map(k => {
     const b = buckets.get(k)!;
     const crates = Math.floor(b.eggs / 30);
-    const revenue = Math.round((b.eggs / 30) * eggPrice);
+    const revenue = Math.round((b.eggs / 30) * eggPriceOn(k));
     const feedKg = b.feedBags * bagWeightKg;
-    const feedCost = Math.round(feedKg * costPerKg);
+    const feedCost = Math.round(feedKg * costPerKgOn(k));
     const [, m, d] = k.split("-");
     const label = `${Number(d)} ${months[Number(m) - 1]}`;
     return {
