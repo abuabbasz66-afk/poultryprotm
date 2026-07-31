@@ -13,7 +13,7 @@ import {
   ChevronDown, MoreVertical,
 } from "lucide-react";
 
-import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveFormulaCostPerKg } from "@/lib/feed-formulas-data";
 
