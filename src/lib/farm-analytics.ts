@@ -71,8 +71,9 @@ function findPrice(prices: Price[], match: RegExp, fallback: number): number {
   return hit && Number.isFinite(hit.price) ? Number(hit.price) : fallback;
 }
 
-export function eggPricePerCrate(prices: Price[]): number { return findPrice(prices, /egg/i, 4900); }
-export function feedPricePerBag(prices: Price[]): number { return findPrice(prices, /feed/i, 13600); }
+// No hard-coded prices: an unpriced item resolves to 0 rather than a guess.
+export function eggPricePerCrate(prices: Price[]): number { return findPrice(prices, /egg/i, 0); }
+export function feedPricePerBag(prices: Price[]): number { return findPrice(prices, /feed/i, 0); }
 
 /**
  * Cost per kilogram of feed. Feed price is captured PER BAG on a per-farm

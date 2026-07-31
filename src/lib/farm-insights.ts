@@ -1,4 +1,6 @@
-import type { EggRow, Room, Mortality, Feed, Health, Price } from "@/lib/farm-data";
+import type { EggRow, Room, Mortality, Feed, Health, Price, PriceHistoryRow } from "@/lib/farm-data";
+import { buildFarmTimelines, latestPrice } from "@/lib/price-timeline";
+import { toDateKey } from "@/lib/date-key";
 import { detectProductionDecline, type DeclineEvent } from "@/lib/production-decline";
 import { detectMortalityPatterns, type MortalityEvent } from "@/lib/mortality-pattern";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
@@ -185,6 +187,7 @@ export function buildFarmIntelligenceContext(input: {
   feed: Feed[];
   health: Health[];
   prices: Price[];
+  priceHistory?: PriceHistoryRow[];
   bagWeightKg?: number | null;
 }): FarmIntelligenceContext {
   const { eggs, rooms, mortality, feed, health, prices } = input;
@@ -255,11 +258,29 @@ export function buildFarmIntelligenceContext(input: {
     .slice(0, 20)
     .map(h => ({ type: h.type, name: h.name, date: h.date, scope: h.scope }));
 
-  const eggPrice = prices.find(p => /egg/i.test(p.item))?.price ?? null;
-  const feedPrice = prices.find(p => /feed/i.test(p.item))?.price ?? null;
+  // Financials resolve through the centralised effective-price service so each
+  // record is valued with the price that was active on its own date.
+  const priceHistory = input.priceHistory ?? [];
+  const timelines = buildFarmTimelines({
+    prices,
+    history: priceHistory,
+    bagWeightKg: input.bagWeightKg ?? 25,
+  });
+  const eggPrice = latestPrice(timelines.eggPerCrate) || null;
+  const feedPrice = latestPrice(timelines.feedPerBag) || null;
   const cratesRecent = recent7.reduce((s, e) => s + totalEggsFromRow(e) / CRATE, 0);
-  const weeklyRevenueNaira = eggPrice && cratesRecent > 0 ? Math.round(cratesRecent * eggPrice) : null;
-  const weeklyFeedCostNaira = feedPrice && feedRecent !== null && feedRecent > 0 ? Math.round(feedRecent * feedPrice) : null;
+  const weeklyRevenueNaira = cratesRecent > 0
+    ? Math.round(recent7.reduce(
+        (s, e) => s + (totalEggsFromRow(e) / CRATE) * timelines.eggPriceOn(toDateKey(e.date)), 0))
+    : null;
+  const weeklyFeedCostNaira = feedRecent !== null && feedRecent > 0
+    ? Math.round(feed
+        .filter(f => recent7Dates.has(f.date))
+        .reduce((s, f) => {
+          const k = toDateKey(f.date);
+          return s + Number(f.bags || 0) * (input.bagWeightKg ?? 25) * timelines.feedPerKgOn(k);
+        }, 0))
+    : null;
   const weeklyProfitNaira =
     weeklyRevenueNaira !== null && weeklyFeedCostNaira !== null
       ? weeklyRevenueNaira - weeklyFeedCostNaira
@@ -952,6 +973,7 @@ export function buildFarmInsights(input: {
   feed: Feed[];
   health: Health[];
   prices: Price[];
+  priceHistory?: PriceHistoryRow[];
   bagWeightKg?: number | null;
 }): FarmInsightsReport {
   const context = buildFarmIntelligenceContext(input);
