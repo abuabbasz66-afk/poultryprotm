@@ -165,3 +165,31 @@ export function deviceLabel(): string {
     : "Browser";
   return `${kind} · ${browser}`;
 }
+
+// ---------------------------------------------------------------------------
+// Centralised price lookup service
+// ---------------------------------------------------------------------------
+//
+// Single source of truth for "what did this item cost on this date?".
+// Every module must resolve prices through this function (or the
+// `useEffectivePrice()` hook in src/lib/effective-price.ts) instead of
+// keeping its own copy of an egg / feed / ingredient price.
+
+/**
+ * Price of `item` that was in force on `dateKey` (YYYY-MM-DD).
+ * Falls back to the latest known price when the date is omitted, and to 0
+ * when the farm has never priced that item.
+ */
+export function getEffectivePrice(
+  input: { prices: Price[]; history: PriceHistoryRow[] },
+  item: string,
+  dateKey?: string | null,
+): number {
+  const name = item.trim();
+  if (!name) return 0;
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = new RegExp(escaped, "i");
+  const current = input.prices.find(p => match.test(p.item));
+  const timeline = buildTimeline(input.history, match, 0, current?.price, current?.effective_from);
+  return priceOn(timeline, dateKey ?? null);
+}
