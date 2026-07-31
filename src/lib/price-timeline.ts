@@ -106,8 +106,10 @@ export function buildFarmTimelines(input: {
   const eggRow = prices.find(p => /egg/i.test(p.item));
   const feedRow = prices.find(p => /feed/i.test(p.item));
 
-  const eggPerCrate = buildTimeline(history, /egg/i, 4900, eggRow?.price, eggRow?.effective_from);
-  const feedPerBag = buildTimeline(history, /feed/i, 13600, feedRow?.price, feedRow?.effective_from);
+  // No hard-coded prices anywhere: when a farm has never set a price the
+  // fallback is 0 so the UI shows "not set" instead of inventing revenue.
+  const eggPerCrate = buildTimeline(history, /egg/i, 0, eggRow?.price, eggRow?.effective_from);
+  const feedPerBag = buildTimeline(history, /feed/i, 0, feedRow?.price, feedRow?.effective_from);
 
   const override = Number(input.costPerKgOverride);
   const hasOverride = Number.isFinite(override) && override > 0;
