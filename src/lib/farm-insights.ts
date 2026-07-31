@@ -1,4 +1,6 @@
-import type { EggRow, Room, Mortality, Feed, Health, Price } from "@/lib/farm-data";
+import type { EggRow, Room, Mortality, Feed, Health, Price, PriceHistoryRow } from "@/lib/farm-data";
+import { buildFarmTimelines, latestPrice } from "@/lib/price-timeline";
+import { toDateKey } from "@/lib/date-key";
 import { detectProductionDecline, type DeclineEvent } from "@/lib/production-decline";
 import { detectMortalityPatterns, type MortalityEvent } from "@/lib/mortality-pattern";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
@@ -185,6 +187,7 @@ export function buildFarmIntelligenceContext(input: {
   feed: Feed[];
   health: Health[];
   prices: Price[];
+  priceHistory?: PriceHistoryRow[];
   bagWeightKg?: number | null;
 }): FarmIntelligenceContext {
   const { eggs, rooms, mortality, feed, health, prices } = input;
@@ -970,6 +973,7 @@ export function buildFarmInsights(input: {
   feed: Feed[];
   health: Health[];
   prices: Price[];
+  priceHistory?: PriceHistoryRow[];
   bagWeightKg?: number | null;
 }): FarmInsightsReport {
   const context = buildFarmIntelligenceContext(input);
