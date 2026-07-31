@@ -503,20 +503,11 @@ const setBagWeightKg = (v: number | null) => {
       <header className="relative overflow-hidden bg-gradient-to-br from-[color:var(--forest)] via-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground">
         <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.08),transparent_55%),radial-gradient(circle_at_80%_60%,rgba(212,175,55,0.12),transparent_60%)]" />
         <div className="relative container-x flex items-center justify-between py-3 md:py-4">
-          {/* Mobile: logo left, menu right. Desktop: back-link left, actions right. */}
-          <Link to="/" className="hidden md:inline-flex items-center gap-2 text-sm text-primary-foreground/80 hover:text-primary-foreground">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm text-primary-foreground/80 hover:text-primary-foreground">
             <ArrowLeft className="h-4 w-4" /> Back to site
           </Link>
-          <div className="md:hidden flex items-center gap-2">
-            <img src={logoAsset.url} alt="" width={28} height={28} className="h-7 w-7 object-contain" />
-            <span className="font-display font-semibold text-[15px]">PoultryPro™</span>
-          </div>
 
-          <div className="hidden md:flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <img src={logoAsset.url} alt="" width={28} height={28} className="h-7 w-7 object-contain" />
-              <span className="font-display font-semibold">PoultryPro™</span>
-            </div>
+          <div className="flex items-center gap-3">
             <Link
               to="/import"
               className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1 text-xs text-primary-foreground/90 hover:bg-white/10"
@@ -532,8 +523,6 @@ const setBagWeightKg = (v: number | null) => {
               <LogOut className="h-3.5 w-3.5" /> Sign out
             </button>
           </div>
-
-
         </div>
         <div className="relative container-x flex flex-col justify-center py-12 md:py-20 min-h-[320px] md:min-h-[420px]">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] md:text-[11px] uppercase tracking-[0.18em] md:tracking-[0.22em] text-[color:var(--gold)]">
