@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Sparkles, Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
 import type { EggRow, Room, Mortality, Feed, Health, Price } from "@/lib/farm-data";
+import { usePriceHistory } from "@/lib/farm-data";
 import { buildFarmInsights, insightStatusStyle, type FarmInsight } from "@/lib/farm-insights";
 
 type Props = {
@@ -16,10 +17,11 @@ type Props = {
 
 export function FarmInsightsIntelligence(props: Props) {
   const { eggs, rooms, mortality, feed, health, prices, bagWeightKg, loading } = props;
+  const priceHistory = usePriceHistory().data ?? [];
 
   const report = useMemo(
-    () => buildFarmInsights({ eggs, rooms, mortality, feed, health, prices, bagWeightKg: bagWeightKg ?? null }),
-    [eggs, rooms, mortality, feed, health, prices, bagWeightKg],
+    () => buildFarmInsights({ eggs, rooms, mortality, feed, health, prices, priceHistory, bagWeightKg: bagWeightKg ?? null }),
+    [eggs, rooms, mortality, feed, health, prices, priceHistory, bagWeightKg],
   );
 
   return (
