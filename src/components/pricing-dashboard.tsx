@@ -289,39 +289,43 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
             const perKg = /feed/i.test(r.item) && bagKg > 0 ? r.price / bagKg : null;
             return (
               <div key={r.id}
-                className="group rounded-[20px] border bg-card p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_28px_rgba(20,60,40,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_24px_48px_rgba(20,60,40,0.12)]">
+                className="group relative overflow-hidden rounded-[22px] border bg-card p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_28px_rgba(20,60,40,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_24px_48px_rgba(20,60,40,0.12)]">
+                <span className="absolute inset-x-0 top-0 h-1 bg-[color:var(--forest)]/70" aria-hidden />
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2.5">
-                    <span className="grid h-9 w-9 place-items-center rounded-2xl bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
-                      <Icon className="h-4.5 w-4.5" />
+                    <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
+                      <Icon className="h-5 w-5" />
                     </span>
                     <div>
-                      <div className="font-medium leading-tight">{r.item}</div>
+                      <div className="font-semibold leading-tight">{r.item}</div>
                       <div className="text-xs capitalize text-muted-foreground">{r.category}</div>
                     </div>
                   </div>
-                  <DeltaBadge delta={r.delta} />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" /> Active
+                  </span>
                 </div>
 
                 <div className="mt-5">
                   <div className="text-xs uppercase tracking-wide text-muted-foreground">Current price</div>
                   <div className="mt-1 font-[var(--font-display)] text-[2.25rem] font-bold leading-none tracking-tight">{naira(r.price)}</div>
                   <div className="mt-1.5 text-sm text-muted-foreground">
-                    {unit}{perKg ? ` · ≈ ${naira(perKg)}/kg` : ""}
+                    {unit}{perKg ? ` · ${naira(perKg)}/kg` : ""}
                   </div>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-3 rounded-2xl bg-muted/50 p-3 text-xs">
-                  <div>
-                    <div className="text-muted-foreground">Effective since</div>
-                    <div className="mt-0.5 font-medium">{r.effective ? formatEffective(r.effective) : "—"}</div>
+                <div className="mt-3"><DeltaBadge delta={r.delta} /></div>
+
+                <div className="mt-4 space-y-2 rounded-2xl bg-muted/50 p-3.5 text-xs">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-muted-foreground">Effective since</span>
+                    <span className="font-medium">{r.effective ? formatEffective(r.effective) : "—"}</span>
                   </div>
-                  <div>
-                    <div className="text-muted-foreground">Previous price</div>
-                    <div className="mt-0.5 font-medium">
-                      {r.prev ? naira(r.prev.price) : "—"}
-                      {r.prev ? <span className="block text-muted-foreground">changed {formatEffective(r.prev.at).split(",")[0]}</span> : null}
-                    </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-muted-foreground">Previous price</span>
+                    <span className="font-medium">
+                      {r.prev ? `${naira(r.prev.price)} · until ${formatEffective(r.prev.at).split(",")[0]}` : "No earlier price"}
+                    </span>
                   </div>
                 </div>
 
@@ -331,7 +335,7 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
                   </Button>
                   <Button asChild variant="ghost" size="sm" className="rounded-full">
                     <Link to="/price-history" search={{ item: r.item }}>
-                      <HistoryIcon className="mr-1 h-3.5 w-3.5" /> History
+                      <HistoryIcon className="mr-1 h-3.5 w-3.5" /> View history
                     </Link>
                   </Button>
                   <Button variant="ghost" size="sm" className="ml-auto rounded-full text-destructive hover:text-destructive"
