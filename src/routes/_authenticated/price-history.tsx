@@ -4,7 +4,7 @@ import { AppShell } from "@/components/app-sidebar";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePriceHistory, useFarm } from "@/lib/farm-data";
-import { formatEffective } from "@/lib/price-timeline";
+import { formatEffective, priceKeyOf } from "@/lib/price-timeline";
 import { naira } from "@/components/pricing-dashboard";
 
 type Search = { item?: string };
@@ -34,13 +34,26 @@ function PriceHistoryPage() {
 
   const rows = useMemo(() => {
     const list = historyQ.data ?? [];
-    return list.filter(h => {
-      if (item.trim() && !h.item.toLowerCase().includes(item.trim().toLowerCase())) return false;
+    const wanted = item.trim() ? priceKeyOf(item.trim()) : null;
+    const filtered = list.filter(h => {
+      // Filter by logical item: every egg price belongs to one timeline, so
+      // "Table Egg" and "Egg" show together as a single continuous history.
+      if (wanted && priceKeyOf(h.item, h.category) !== wanted &&
+          !h.item.toLowerCase().includes(item.trim().toLowerCase())) return false;
       const day = String(h.effective_from).slice(0, 10);
       if (from && day < from) return false;
       if (to && day > to) return false;
       return true;
     });
+    const sorted = filtered.slice().sort((a, b) => (a.effective_from < b.effective_from ? 1 : -1));
+    // The newest entry per logical item is the price currently in force.
+    const currentIds = new Set<string>();
+    const seen = new Set<string>();
+    for (const h of sorted) {
+      const k = priceKeyOf(h.item, h.category);
+      if (!seen.has(k)) { seen.add(k); currentIds.add(h.id); }
+    }
+    return sorted.map(h => ({ ...h, isCurrent: currentIds.has(h.id) }));
   }, [historyQ.data, item, from, to]);
 
   return (
@@ -75,6 +88,7 @@ function PriceHistoryPage() {
                     <th className="px-4 py-3">New price</th>
                     <th className="px-4 py-3">Change</th>
                     <th className="px-4 py-3">Effective from</th>
+                    <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3">Device</th>
                   </tr>
                 </thead>
@@ -91,6 +105,15 @@ function PriceHistoryPage() {
                           {delta === 0 ? "—" : `${delta > 0 ? "+" : "-"}${naira(Math.abs(delta))}`}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">{formatEffective(h.effective_from)}</td>
+                        <td className="px-4 py-3">
+                          {h.isCurrent ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" /> Current
+                            </span>
+                          ) : (
+                            <span className="inline-flex rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">Historical</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-muted-foreground">{h.device ?? "—"}</td>
                       </tr>
                     );

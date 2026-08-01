@@ -18,7 +18,7 @@ import {
   usePrices, usePriceHistory, useFarm, useUpdatePrice, useAddPrice, useDeletePrice,
   useEggs, useFeed, type Price, type PriceHistoryRow,
 } from "@/lib/farm-data";
-import { categoryOf, formatEffective, previousPriceFor, deviceLabel } from "@/lib/price-timeline";
+import { categoryOf, formatEffective, previousPriceFor, deviceLabel, priceKeyOf } from "@/lib/price-timeline";
 import { priceUnitLabel } from "@/lib/farm-analytics";
 import { totalEggsFromRow } from "@/lib/egg-normalize";
 import { toDateKey } from "@/lib/date-key";
@@ -92,9 +92,17 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
   const [creating, setCreating] = useState(false);
 
   const rows = useMemo(() => {
-    const list = prices.map(p => {
+    // One active price per logical item — collapse anything that shares a key
+    // (defensive: the database also enforces this with a unique index).
+    const byKey = new Map<string, Price>();
+    for (const p of prices) {
+      const k = priceKeyOf(p.item, p.category);
+      const existing = byKey.get(k);
+      if (!existing || String(p.effective_from ?? "") > String(existing.effective_from ?? "")) byKey.set(k, p);
+    }
+    const list = Array.from(byKey.values()).map(p => {
       const category = categoryOf(p.item, p.category);
-      const prev = previousPriceFor(history, p.item);
+      const prev = previousPriceFor(history, p.item, p.category);
       return {
         ...p,
         category,
@@ -116,10 +124,24 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
     return sorted;
   }, [prices, history, cat, query, sort]);
 
-  const eggRow = prices.find(p => /egg/i.test(p.item));
-  const feedRow = prices.find(p => /feed/i.test(p.item));
-  const ingredientCount = new Set(history.filter(h => h.category === "ingredient").map(h => h.item.toLowerCase())).size;
-  const lastUpdated = history[0]?.effective_from ?? null;
+  const activePrices = useMemo(() => {
+    const byKey = new Map<string, Price>();
+    for (const p of prices) {
+      const k = priceKeyOf(p.item, p.category);
+      const existing = byKey.get(k);
+      if (!existing || String(p.effective_from ?? "") > String(existing.effective_from ?? "")) byKey.set(k, p);
+    }
+    return Array.from(byKey.values());
+  }, [prices]);
+
+  const eggRow = activePrices.find(p => priceKeyOf(p.item, p.category) === "eggs");
+  const feedRow = activePrices.find(p => priceKeyOf(p.item, p.category) === "feed");
+  const trackedCount = activePrices.length;
+  const lastUpdated = useMemo(() => {
+    const fromPrices = activePrices.map(p => p.effective_from).filter(Boolean) as string[];
+    const all = [...fromPrices, ...history.map(h => h.effective_from)].filter(Boolean);
+    return all.length ? all.slice().sort().pop()! : null;
+  }, [activePrices, history]);
 
   // ----- price analytics series -----
   const seriesFor = (match: RegExp) => {
@@ -157,8 +179,8 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
     const feedDays = new Set(feed.map(f => toDateKey(f.date)).filter(Boolean)).size || 1;
     const avgBagsPerDay = feed.reduce((s, f) => s + Number(f.bags || 0), 0) / feedDays;
 
-    const eggPrev = eggRow ? previousPriceFor(history, eggRow.item) : null;
-    const feedPrev = feedRow ? previousPriceFor(history, feedRow.item) : null;
+    const eggPrev = eggRow ? previousPriceFor(history, eggRow.item, eggRow.category) : null;
+    const feedPrev = feedRow ? previousPriceFor(history, feedRow.item, feedRow.category) : null;
     const eggDelta = eggRow && eggPrev ? eggRow.price - eggPrev.price : 0;
     const feedDelta = feedRow && feedPrev ? feedRow.price - feedPrev.price : 0;
 
@@ -196,12 +218,15 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {loading ? [0, 1, 2, 3].map(i => <Skeleton key={i} className="h-[118px] rounded-[20px]" />) : (
           <>
-            <Kpi icon={Egg} label="Egg Price" value={eggRow ? naira(eggRow.price) : "—"} sub={eggRow ? `per ${priceUnitLabel(eggRow.item, eggRow.unit, bagKg)}` : "Not set"} />
-            <Kpi icon={Wheat} label="Feed Price" value={feedRow ? naira(feedRow.price) : "—"}
-              sub={feedRow ? `per ${bagKg}kg · ≈ ${naira(feedRow.price / bagKg)}/kg` : "Not set"} />
-            <Kpi icon={Leaf} label="Ingredients" value={String(ingredientCount)} sub="active tracked items" />
-            <Kpi icon={Clock} label="Last Updated" value={lastUpdated ? formatEffective(lastUpdated).split(",")[0] : "—"}
-              sub={lastUpdated ? formatEffective(lastUpdated) : "No changes recorded"} />
+            <Kpi icon={Egg} label="Current Egg Price" value={eggRow ? naira(eggRow.price) : "—"}
+              sub={eggRow
+                ? `per ${priceUnitLabel(eggRow.item, eggRow.unit, bagKg)}${eggRow.effective_from ? ` · effective since ${formatEffective(eggRow.effective_from).split(",")[0]}` : ""}`
+                : "Not set"} />
+            <Kpi icon={Wheat} label="Current Feed Price" value={feedRow ? naira(feedRow.price) : "—"}
+              sub={feedRow ? `per ${bagKg}kg bag · ${naira(feedRow.price / bagKg)}/kg` : "Not set"} />
+            <Kpi icon={Leaf} label="Tracked Items" value={String(trackedCount)} sub={`${trackedCount === 1 ? "1 active price" : `${trackedCount} active prices`} · one per item`} />
+            <Kpi icon={Clock} label="Last Price Update" value={lastUpdated ? formatEffective(lastUpdated).split(",")[0] : "—"}
+              sub={lastUpdated ? formatEffective(lastUpdated).split(", ").slice(1).join(", ") || formatEffective(lastUpdated) : "No changes recorded"} />
           </>
         )}
       </div>
@@ -264,39 +289,43 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
             const perKg = /feed/i.test(r.item) && bagKg > 0 ? r.price / bagKg : null;
             return (
               <div key={r.id}
-                className="group rounded-[20px] border bg-card p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_28px_rgba(20,60,40,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_24px_48px_rgba(20,60,40,0.12)]">
+                className="group relative overflow-hidden rounded-[22px] border bg-card p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_28px_rgba(20,60,40,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_24px_48px_rgba(20,60,40,0.12)]">
+                <span className="absolute inset-x-0 top-0 h-1 bg-[color:var(--forest)]/70" aria-hidden />
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2.5">
-                    <span className="grid h-9 w-9 place-items-center rounded-2xl bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
-                      <Icon className="h-4.5 w-4.5" />
+                    <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
+                      <Icon className="h-5 w-5" />
                     </span>
                     <div>
-                      <div className="font-medium leading-tight">{r.item}</div>
+                      <div className="font-semibold leading-tight">{r.item}</div>
                       <div className="text-xs capitalize text-muted-foreground">{r.category}</div>
                     </div>
                   </div>
-                  <DeltaBadge delta={r.delta} />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" /> Active
+                  </span>
                 </div>
 
                 <div className="mt-5">
                   <div className="text-xs uppercase tracking-wide text-muted-foreground">Current price</div>
                   <div className="mt-1 font-[var(--font-display)] text-[2.25rem] font-bold leading-none tracking-tight">{naira(r.price)}</div>
                   <div className="mt-1.5 text-sm text-muted-foreground">
-                    {unit}{perKg ? ` · ≈ ${naira(perKg)}/kg` : ""}
+                    {unit}{perKg ? ` · ${naira(perKg)}/kg` : ""}
                   </div>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-3 rounded-2xl bg-muted/50 p-3 text-xs">
-                  <div>
-                    <div className="text-muted-foreground">Effective since</div>
-                    <div className="mt-0.5 font-medium">{r.effective ? formatEffective(r.effective) : "—"}</div>
+                <div className="mt-3"><DeltaBadge delta={r.delta} /></div>
+
+                <div className="mt-4 space-y-2 rounded-2xl bg-muted/50 p-3.5 text-xs">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-muted-foreground">Effective since</span>
+                    <span className="font-medium">{r.effective ? formatEffective(r.effective) : "—"}</span>
                   </div>
-                  <div>
-                    <div className="text-muted-foreground">Previous price</div>
-                    <div className="mt-0.5 font-medium">
-                      {r.prev ? naira(r.prev.price) : "—"}
-                      {r.prev ? <span className="block text-muted-foreground">changed {formatEffective(r.prev.at).split(",")[0]}</span> : null}
-                    </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-muted-foreground">Previous price</span>
+                    <span className="font-medium">
+                      {r.prev ? `${naira(r.prev.price)} · until ${formatEffective(r.prev.at).split(",")[0]}` : "No earlier price"}
+                    </span>
                   </div>
                 </div>
 
@@ -306,7 +335,7 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
                   </Button>
                   <Button asChild variant="ghost" size="sm" className="rounded-full">
                     <Link to="/price-history" search={{ item: r.item }}>
-                      <HistoryIcon className="mr-1 h-3.5 w-3.5" /> History
+                      <HistoryIcon className="mr-1 h-3.5 w-3.5" /> View history
                     </Link>
                   </Button>
                   <Button variant="ghost" size="sm" className="ml-auto rounded-full text-destructive hover:text-destructive"
@@ -398,24 +427,30 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
         bagKg={bagKg}
         onClose={() => { setEditing(null); setCreating(false); }}
         onSave={async ({ item, unit, price, category, note, effectiveFrom }) => {
-          if (editing) {
+          const updated = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+          // There is exactly ONE active price per item. If the item being saved
+          // resolves to an existing key, we update that record — the previous
+          // value is archived into Price History by the database trigger.
+          const key = priceKeyOf(item, category);
+          const target = editing ?? activePrices.find(p => priceKeyOf(p.item, p.category) === key) ?? null;
+          const replaced = !editing && !!target;
+
+          if (target) {
             await updateM.mutateAsync({
-              id: editing.id, item, unit, price, category, note,
-              effective_from: effectiveFrom,
-              updated: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
-              last_device: deviceLabel(),
+              id: target.id, item, unit, price, category, note,
+              effective_from: effectiveFrom, updated, last_device: deviceLabel(),
             } as never);
           } else {
             await addM.mutateAsync({
               item, unit, price, category, note,
-              effective_from: effectiveFrom,
-              updated: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
-              last_device: deviceLabel(),
+              effective_from: effectiveFrom, updated, last_device: deviceLabel(),
             } as never);
           }
           setEditing(null); setCreating(false);
-          toast.success("Price updated successfully", {
-            description: "This price will automatically be used for all new records from today onward. Historical records remain unchanged.",
+          toast.success(replaced ? `${item} price updated` : "Price updated successfully", {
+            description: replaced
+              ? "This item already had an active price — the old value has been archived to Price History instead of creating a duplicate."
+              : "This price will automatically be used for all new records from today onward. Historical records remain unchanged.",
           });
         }}
       />
