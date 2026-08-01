@@ -26,6 +26,29 @@ export const PRICE_CATEGORY_MATCH: Record<string, RegExp> = {
   feed: /feed/i,
 };
 
+/**
+ * Canonical key that identifies one logical priced item.
+ * There is exactly ONE active price per key on a farm: every egg price is the
+ * same item, every feed price is the same item, and everything else is keyed
+ * by its normalised name. Mirrors public.price_key() in the database.
+ */
+export function priceKeyOf(item: string, category?: string | null): string {
+  const c = (category ?? "").trim().toLowerCase();
+  const name = (item ?? "").trim();
+  if (c === "eggs" || /egg/i.test(name)) return "eggs";
+  if (c === "feed" || /feed/i.test(name)) return "feed";
+  return name.toLowerCase().replace(/\s+/g, " ");
+}
+
+/** All audit-trail rows belonging to one logical item, newest first. */
+export function historyForKey(history: PriceHistoryRow[], item: string, category?: string | null): PriceHistoryRow[] {
+  const key = priceKeyOf(item, category);
+  return history
+    .filter(h => priceKeyOf(h.item, h.category) === key)
+    .slice()
+    .sort((a, b) => (a.effective_from < b.effective_from ? 1 : -1));
+}
+
 export function categoryOf(item: string, category?: string | null): string {
   const c = (category ?? "").trim().toLowerCase();
   if (c && c !== "other") return c;
