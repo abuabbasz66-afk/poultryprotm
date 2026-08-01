@@ -423,24 +423,30 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
         bagKg={bagKg}
         onClose={() => { setEditing(null); setCreating(false); }}
         onSave={async ({ item, unit, price, category, note, effectiveFrom }) => {
-          if (editing) {
+          const updated = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+          // There is exactly ONE active price per item. If the item being saved
+          // resolves to an existing key, we update that record — the previous
+          // value is archived into Price History by the database trigger.
+          const key = priceKeyOf(item, category);
+          const target = editing ?? activePrices.find(p => priceKeyOf(p.item, p.category) === key) ?? null;
+          const replaced = !editing && !!target;
+
+          if (target) {
             await updateM.mutateAsync({
-              id: editing.id, item, unit, price, category, note,
-              effective_from: effectiveFrom,
-              updated: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
-              last_device: deviceLabel(),
+              id: target.id, item, unit, price, category, note,
+              effective_from: effectiveFrom, updated, last_device: deviceLabel(),
             } as never);
           } else {
             await addM.mutateAsync({
               item, unit, price, category, note,
-              effective_from: effectiveFrom,
-              updated: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
-              last_device: deviceLabel(),
+              effective_from: effectiveFrom, updated, last_device: deviceLabel(),
             } as never);
           }
           setEditing(null); setCreating(false);
-          toast.success("Price updated successfully", {
-            description: "This price will automatically be used for all new records from today onward. Historical records remain unchanged.",
+          toast.success(replaced ? `${item} price updated` : "Price updated successfully", {
+            description: replaced
+              ? "This item already had an active price — the old value has been archived to Price History instead of creating a duplicate."
+              : "This price will automatically be used for all new records from today onward. Historical records remain unchanged.",
           });
         }}
       />
