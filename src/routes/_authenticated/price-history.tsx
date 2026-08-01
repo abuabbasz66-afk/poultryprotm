@@ -34,13 +34,26 @@ function PriceHistoryPage() {
 
   const rows = useMemo(() => {
     const list = historyQ.data ?? [];
-    return list.filter(h => {
-      if (item.trim() && !h.item.toLowerCase().includes(item.trim().toLowerCase())) return false;
+    const wanted = item.trim() ? priceKeyOf(item.trim()) : null;
+    const filtered = list.filter(h => {
+      // Filter by logical item: every egg price belongs to one timeline, so
+      // "Table Egg" and "Egg" show together as a single continuous history.
+      if (wanted && priceKeyOf(h.item, h.category) !== wanted &&
+          !h.item.toLowerCase().includes(item.trim().toLowerCase())) return false;
       const day = String(h.effective_from).slice(0, 10);
       if (from && day < from) return false;
       if (to && day > to) return false;
       return true;
     });
+    const sorted = filtered.slice().sort((a, b) => (a.effective_from < b.effective_from ? 1 : -1));
+    // The newest entry per logical item is the price currently in force.
+    const currentIds = new Set<string>();
+    const seen = new Set<string>();
+    for (const h of sorted) {
+      const k = priceKeyOf(h.item, h.category);
+      if (!seen.has(k)) { seen.add(k); currentIds.add(h.id); }
+    }
+    return sorted.map(h => ({ ...h, isCurrent: currentIds.has(h.id) }));
   }, [historyQ.data, item, from, to]);
 
   return (
