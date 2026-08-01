@@ -156,14 +156,22 @@ export function latestIngredientPrice(history: PriceHistoryRow[], name: string):
   return hit && Number.isFinite(hit.new_price) ? Number(hit.new_price) : null;
 }
 
-/** Previous price for an item (the value before the latest change). */
-export function previousPriceFor(history: PriceHistoryRow[], item: string): { price: number; at: string } | null {
-  const rows = history
-    .filter(h => h.item.trim().toLowerCase() === item.trim().toLowerCase())
-    .sort((a, b) => (a.effective_from < b.effective_from ? 1 : -1));
+/**
+ * Previous price for a logical item (the value active before the current one).
+ * Resolved across the whole item timeline, so renaming "Table Egg" to "Egg"
+ * still shows the correct previous price.
+ */
+export function previousPriceFor(
+  history: PriceHistoryRow[],
+  item: string,
+  category?: string | null,
+): { price: number; at: string } | null {
+  const rows = historyForKey(history, item, category);
   const latest = rows[0];
-  if (!latest || latest.old_price == null) return null;
-  return { price: Number(latest.old_price), at: latest.effective_from };
+  if (!latest) return null;
+  if (latest.old_price != null) return { price: Number(latest.old_price), at: latest.effective_from };
+  const prior = rows[1];
+  return prior ? { price: Number(prior.new_price), at: prior.effective_from } : null;
 }
 
 export function formatEffective(iso: string | null | undefined): string {
