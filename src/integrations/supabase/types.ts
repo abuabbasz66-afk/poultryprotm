@@ -1139,6 +1139,7 @@ export type Database = {
         }[]
       }
       presentation_demo_data: { Args: never; Returns: Json }
+      price_key: { Args: { _category: string; _item: string }; Returns: string }
     }
     Enums: {
       app_role: "user" | "super_admin"
