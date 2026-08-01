@@ -18,7 +18,7 @@ import {
   usePrices, usePriceHistory, useFarm, useUpdatePrice, useAddPrice, useDeletePrice,
   useEggs, useFeed, type Price, type PriceHistoryRow,
 } from "@/lib/farm-data";
-import { categoryOf, formatEffective, previousPriceFor, deviceLabel } from "@/lib/price-timeline";
+import { categoryOf, formatEffective, previousPriceFor, deviceLabel, priceKeyOf } from "@/lib/price-timeline";
 import { priceUnitLabel } from "@/lib/farm-analytics";
 import { totalEggsFromRow } from "@/lib/egg-normalize";
 import { toDateKey } from "@/lib/date-key";
