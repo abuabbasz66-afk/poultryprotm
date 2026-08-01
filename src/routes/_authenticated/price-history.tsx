@@ -4,7 +4,7 @@ import { AppShell } from "@/components/app-sidebar";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePriceHistory, useFarm } from "@/lib/farm-data";
-import { formatEffective } from "@/lib/price-timeline";
+import { formatEffective, priceKeyOf } from "@/lib/price-timeline";
 import { naira } from "@/components/pricing-dashboard";
 
 type Search = { item?: string };
