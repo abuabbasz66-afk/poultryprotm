@@ -179,8 +179,8 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
     const feedDays = new Set(feed.map(f => toDateKey(f.date)).filter(Boolean)).size || 1;
     const avgBagsPerDay = feed.reduce((s, f) => s + Number(f.bags || 0), 0) / feedDays;
 
-    const eggPrev = eggRow ? previousPriceFor(history, eggRow.item) : null;
-    const feedPrev = feedRow ? previousPriceFor(history, feedRow.item) : null;
+    const eggPrev = eggRow ? previousPriceFor(history, eggRow.item, eggRow.category) : null;
+    const feedPrev = feedRow ? previousPriceFor(history, feedRow.item, feedRow.category) : null;
     const eggDelta = eggRow && eggPrev ? eggRow.price - eggPrev.price : 0;
     const feedDelta = feedRow && feedPrev ? feedRow.price - feedPrev.price : 0;
 
