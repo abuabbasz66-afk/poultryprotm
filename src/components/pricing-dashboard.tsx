@@ -218,12 +218,15 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {loading ? [0, 1, 2, 3].map(i => <Skeleton key={i} className="h-[118px] rounded-[20px]" />) : (
           <>
-            <Kpi icon={Egg} label="Egg Price" value={eggRow ? naira(eggRow.price) : "—"} sub={eggRow ? `per ${priceUnitLabel(eggRow.item, eggRow.unit, bagKg)}` : "Not set"} />
-            <Kpi icon={Wheat} label="Feed Price" value={feedRow ? naira(feedRow.price) : "—"}
-              sub={feedRow ? `per ${bagKg}kg · ≈ ${naira(feedRow.price / bagKg)}/kg` : "Not set"} />
-            <Kpi icon={Leaf} label="Ingredients" value={String(ingredientCount)} sub="active tracked items" />
-            <Kpi icon={Clock} label="Last Updated" value={lastUpdated ? formatEffective(lastUpdated).split(",")[0] : "—"}
-              sub={lastUpdated ? formatEffective(lastUpdated) : "No changes recorded"} />
+            <Kpi icon={Egg} label="Current Egg Price" value={eggRow ? naira(eggRow.price) : "—"}
+              sub={eggRow
+                ? `per ${priceUnitLabel(eggRow.item, eggRow.unit, bagKg)}${eggRow.effective_from ? ` · effective since ${formatEffective(eggRow.effective_from).split(",")[0]}` : ""}`
+                : "Not set"} />
+            <Kpi icon={Wheat} label="Current Feed Price" value={feedRow ? naira(feedRow.price) : "—"}
+              sub={feedRow ? `per ${bagKg}kg bag · ${naira(feedRow.price / bagKg)}/kg` : "Not set"} />
+            <Kpi icon={Leaf} label="Tracked Items" value={String(trackedCount)} sub={`${trackedCount === 1 ? "1 active price" : `${trackedCount} active prices`} · one per item`} />
+            <Kpi icon={Clock} label="Last Price Update" value={lastUpdated ? formatEffective(lastUpdated).split(",")[0] : "—"}
+              sub={lastUpdated ? formatEffective(lastUpdated).split(", ").slice(1).join(", ") || formatEffective(lastUpdated) : "No changes recorded"} />
           </>
         )}
       </div>
