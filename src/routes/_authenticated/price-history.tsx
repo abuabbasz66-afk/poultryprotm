@@ -88,6 +88,7 @@ function PriceHistoryPage() {
                     <th className="px-4 py-3">New price</th>
                     <th className="px-4 py-3">Change</th>
                     <th className="px-4 py-3">Effective from</th>
+                    <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3">Device</th>
                   </tr>
                 </thead>
@@ -104,6 +105,15 @@ function PriceHistoryPage() {
                           {delta === 0 ? "—" : `${delta > 0 ? "+" : "-"}${naira(Math.abs(delta))}`}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">{formatEffective(h.effective_from)}</td>
+                        <td className="px-4 py-3">
+                          {h.isCurrent ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" /> Current
+                            </span>
+                          ) : (
+                            <span className="inline-flex rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">Historical</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-muted-foreground">{h.device ?? "—"}</td>
                       </tr>
                     );
