@@ -92,9 +92,17 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
   const [creating, setCreating] = useState(false);
 
   const rows = useMemo(() => {
-    const list = prices.map(p => {
+    // One active price per logical item — collapse anything that shares a key
+    // (defensive: the database also enforces this with a unique index).
+    const byKey = new Map<string, Price>();
+    for (const p of prices) {
+      const k = priceKeyOf(p.item, p.category);
+      const existing = byKey.get(k);
+      if (!existing || String(p.effective_from ?? "") > String(existing.effective_from ?? "")) byKey.set(k, p);
+    }
+    const list = Array.from(byKey.values()).map(p => {
       const category = categoryOf(p.item, p.category);
-      const prev = previousPriceFor(history, p.item);
+      const prev = previousPriceFor(history, p.item, p.category);
       return {
         ...p,
         category,
@@ -116,10 +124,24 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
     return sorted;
   }, [prices, history, cat, query, sort]);
 
-  const eggRow = prices.find(p => /egg/i.test(p.item));
-  const feedRow = prices.find(p => /feed/i.test(p.item));
-  const ingredientCount = new Set(history.filter(h => h.category === "ingredient").map(h => h.item.toLowerCase())).size;
-  const lastUpdated = history[0]?.effective_from ?? null;
+  const activePrices = useMemo(() => {
+    const byKey = new Map<string, Price>();
+    for (const p of prices) {
+      const k = priceKeyOf(p.item, p.category);
+      const existing = byKey.get(k);
+      if (!existing || String(p.effective_from ?? "") > String(existing.effective_from ?? "")) byKey.set(k, p);
+    }
+    return Array.from(byKey.values());
+  }, [prices]);
+
+  const eggRow = activePrices.find(p => priceKeyOf(p.item, p.category) === "eggs");
+  const feedRow = activePrices.find(p => priceKeyOf(p.item, p.category) === "feed");
+  const trackedCount = activePrices.length;
+  const lastUpdated = useMemo(() => {
+    const fromPrices = activePrices.map(p => p.effective_from).filter(Boolean) as string[];
+    const all = [...fromPrices, ...history.map(h => h.effective_from)].filter(Boolean);
+    return all.length ? all.slice().sort().pop()! : null;
+  }, [activePrices, history]);
 
   // ----- price analytics series -----
   const seriesFor = (match: RegExp) => {
