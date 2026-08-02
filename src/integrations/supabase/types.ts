@@ -1245,6 +1245,30 @@ export type Database = {
         }[]
       }
       farm_feed_stock_kg: { Args: { _farm_id: string }; Returns: number }
+      farm_staff_list: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          last_login_at: string
+          must_change_password: boolean
+          phone: string
+          role_key: string
+          role_label: string
+          status: string
+          user_id: string
+        }[]
+      }
+      farm_staff_set_role: {
+        Args: { _member_id: string; _role: string }
+        Returns: Json
+      }
+      farm_staff_set_status: {
+        Args: { _member_id: string; _status: string }
+        Returns: Json
+      }
       farm_subscription_status: { Args: never; Returns: Json }
       get_super_admin_emails: {
         Args: never
