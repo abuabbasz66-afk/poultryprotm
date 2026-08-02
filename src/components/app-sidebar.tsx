@@ -146,6 +146,20 @@ function SidebarBody({
 }) {
   const navigate = useNavigate();
   const farm = useFarm();
+  const { can, role, roleLabel } = usePermissions();
+  const rs = roleStyle(role);
+
+  // Permission-driven navigation: an entry appears only when the signed-in
+  // user's role grants it (or when the entry declares no permission at all).
+  const sections = useMemo(() => {
+    const allowed = (entry: NavLeaf) => !entry.permission || can(entry.permission);
+    return NAV_SECTIONS.map((section) => ({
+      heading: section.heading,
+      items: section.items
+        .filter(allowed)
+        .map((item) => ({ ...item, children: item.children?.filter(allowed) })),
+    })).filter((section) => section.items.length > 0);
+  }, [can]);
 
   const handleSignOut = async () => {
     const { supabase } = await import("@/integrations/supabase/client");
@@ -166,8 +180,17 @@ function SidebarBody({
         <SyncStatus compact={collapsed} />
       </div>
 
+      {!collapsed && (
+        <div className="px-4 pb-3">
+          <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]", rs.badge)}>
+            <span className={cn("h-1.5 w-1.5 rounded-full", rs.dot)} />
+            {roleLabel}
+          </span>
+        </div>
+      )}
+
       <nav className="flex-1 overflow-y-auto px-2 pb-4">
-        {NAV_SECTIONS.map((section) => (
+        {sections.map((section) => (
           <div key={section.heading} className="mb-3">
             {!collapsed && (
               <div className="px-3 pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-foreground/45">
@@ -181,6 +204,7 @@ function SidebarBody({
             </div>
           </div>
         ))}
+
 
         <div className="mt-2 space-y-0.5 border-t border-white/10 pt-3">
           <Link
