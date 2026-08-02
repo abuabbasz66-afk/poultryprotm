@@ -139,6 +139,96 @@ export type Database = {
           },
         ]
       }
+      farm_members: {
+        Row: {
+          created_at: string
+          email: string | null
+          farm_id: string
+          full_name: string
+          id: string
+          invited_by: string | null
+          last_login_at: string | null
+          must_change_password: boolean
+          phone: string | null
+          role_key: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          farm_id: string
+          full_name?: string
+          id?: string
+          invited_by?: string | null
+          last_login_at?: string | null
+          must_change_password?: boolean
+          phone?: string | null
+          role_key: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          farm_id?: string
+          full_name?: string
+          id?: string
+          invited_by?: string | null
+          last_login_at?: string | null
+          must_change_password?: boolean
+          phone?: string | null
+          role_key?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_members_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "farm_members_role_key_fkey"
+            columns: ["role_key"]
+            isOneToOne: false
+            referencedRelation: "farm_roles"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      farm_roles: {
+        Row: {
+          created_at: string
+          description: string | null
+          is_system: boolean
+          key: string
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          is_system?: boolean
+          key: string
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          is_system?: boolean
+          key?: string
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       farms: {
         Row: {
           auto_renew: boolean
@@ -715,6 +805,29 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          permission: string
+          role_key: string
+        }
+        Insert: {
+          permission: string
+          role_key: string
+        }
+        Update: {
+          permission?: string
+          role_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_role_key_fkey"
+            columns: ["role_key"]
+            isOneToOne: false
+            referencedRelation: "farm_roles"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       rooms: {
         Row: {
           created_at: string
@@ -1101,6 +1214,8 @@ export type Database = {
         }
       }
       admin_whatsapp_stats: { Args: never; Returns: Json }
+      can: { Args: { _farm: string; _perm: string }; Returns: boolean }
+      complete_password_change: { Args: never; Returns: undefined }
       consume_feed_fifo: {
         Args: {
           _entry_date: string
@@ -1112,6 +1227,23 @@ export type Database = {
       }
       current_farm_id: { Args: never; Returns: string }
       demo_greenfield_data: { Args: never; Returns: Json }
+      farm_activity_log: {
+        Args: { _limit?: number }
+        Returns: {
+          action: string
+          actor_email: string
+          actor_name: string
+          actor_role: string
+          browser: string
+          created_at: string
+          device: string
+          entity_id: string
+          id: string
+          ip_address: string
+          module: string
+          success: boolean
+        }[]
+      }
       farm_feed_stock_kg: { Args: { _farm_id: string }; Returns: number }
       farm_subscription_status: { Args: never; Returns: Json }
       get_super_admin_emails: {
@@ -1129,6 +1261,8 @@ export type Database = {
       }
       is_super_admin: { Args: never; Returns: boolean }
       landing_platform_stats: { Args: never; Returns: Json }
+      my_farm_context: { Args: never; Returns: Json }
+      my_farm_ids: { Args: never; Returns: string[] }
       platform_stats: {
         Args: never
         Returns: {
@@ -1140,6 +1274,8 @@ export type Database = {
       }
       presentation_demo_data: { Args: never; Returns: Json }
       price_key: { Args: { _category: string; _item: string }; Returns: string }
+      resolve_login_email: { Args: { _identifier: string }; Returns: string }
+      touch_member_login: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "user" | "super_admin"
