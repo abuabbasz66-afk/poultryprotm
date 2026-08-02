@@ -19,6 +19,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSubscriptionsRouteImport } from './routes/_authenticated/subscriptions'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
 import { Route as AuthenticatedPricesRouteImport } from './routes/_authenticated/prices'
 import { Route as AuthenticatedPriceHistoryRouteImport } from './routes/_authenticated/price-history'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -79,6 +80,11 @@ const AuthenticatedStaffRoute = AuthenticatedStaffRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSalesRoute = AuthenticatedSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPricesRoute = AuthenticatedPricesRouteImport.update({
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/price-history': typeof AuthenticatedPriceHistoryRoute
   '/prices': typeof AuthenticatedPricesRoute
+  '/sales': typeof AuthenticatedSalesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/price-history': typeof AuthenticatedPriceHistoryRoute
   '/prices': typeof AuthenticatedPricesRoute
+  '/sales': typeof AuthenticatedSalesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/price-history': typeof AuthenticatedPriceHistoryRoute
   '/_authenticated/prices': typeof AuthenticatedPricesRoute
+  '/_authenticated/sales': typeof AuthenticatedSalesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/_authenticated/subscriptions': typeof AuthenticatedSubscriptionsRoute
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/price-history'
     | '/prices'
+    | '/sales'
     | '/settings'
     | '/staff'
     | '/subscriptions'
@@ -244,6 +254,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/price-history'
     | '/prices'
+    | '/sales'
     | '/settings'
     | '/staff'
     | '/subscriptions'
@@ -267,6 +278,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/price-history'
     | '/_authenticated/prices'
+    | '/_authenticated/sales'
     | '/_authenticated/settings'
     | '/_authenticated/staff'
     | '/_authenticated/subscriptions'
@@ -363,6 +375,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sales': {
+      id: '/_authenticated/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof AuthenticatedSalesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/prices': {
       id: '/_authenticated/prices'
       path: '/prices'
@@ -450,6 +469,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPriceHistoryRoute: typeof AuthenticatedPriceHistoryRoute
   AuthenticatedPricesRoute: typeof AuthenticatedPricesRoute
+  AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
   AuthenticatedSubscriptionsRoute: typeof AuthenticatedSubscriptionsRoute
@@ -462,6 +482,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPriceHistoryRoute: AuthenticatedPriceHistoryRoute,
   AuthenticatedPricesRoute: AuthenticatedPricesRoute,
+  AuthenticatedSalesRoute: AuthenticatedSalesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
   AuthenticatedSubscriptionsRoute: AuthenticatedSubscriptionsRoute,

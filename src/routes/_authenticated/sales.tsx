@@ -35,10 +35,11 @@ function SalesPage() {
 
   const totals = useMemo(() => {
     const rows = eggsQ.data ?? [];
-    const today = toDateKey(new Date());
+    const today = toDateKey(new Date()) ?? "";
     const now = new Date();
-    const weekStart = toDateKey(new Date(now.getTime() - 6 * 86_400_000));
+    const weekStart = toDateKey(new Date(now.getTime() - 6 * 86_400_000)) ?? "";
     const monthStart = `${today.slice(0, 7)}-01`;
+
 
     const value = (fromKey: string) =>
       rows
