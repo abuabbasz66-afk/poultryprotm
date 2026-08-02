@@ -17,6 +17,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSubscriptionsRouteImport } from './routes/_authenticated/subscriptions'
+import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedPricesRouteImport } from './routes/_authenticated/prices'
 import { Route as AuthenticatedPriceHistoryRouteImport } from './routes/_authenticated/price-history'
@@ -70,6 +71,11 @@ const AuthenticatedSubscriptionsRoute =
     path: '/subscriptions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedStaffRoute = AuthenticatedStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/price-history': typeof AuthenticatedPriceHistoryRoute
   '/prices': typeof AuthenticatedPricesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/staff': typeof AuthenticatedStaffRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
   '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByTo {
   '/price-history': typeof AuthenticatedPriceHistoryRoute
   '/prices': typeof AuthenticatedPricesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/staff': typeof AuthenticatedStaffRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
   '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   '/_authenticated/price-history': typeof AuthenticatedPriceHistoryRoute
   '/_authenticated/prices': typeof AuthenticatedPricesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/_authenticated/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
   '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
@@ -214,6 +223,7 @@ export interface FileRouteTypes {
     | '/price-history'
     | '/prices'
     | '/settings'
+    | '/staff'
     | '/subscriptions'
     | '/api/public/whatsapp-click'
     | '/super-admin/farms/$farmId'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/price-history'
     | '/prices'
     | '/settings'
+    | '/staff'
     | '/subscriptions'
     | '/api/public/whatsapp-click'
     | '/super-admin/farms/$farmId'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/_authenticated/price-history'
     | '/_authenticated/prices'
     | '/_authenticated/settings'
+    | '/_authenticated/staff'
     | '/_authenticated/subscriptions'
     | '/api/public/whatsapp-click'
     | '/super-admin/farms/$farmId'
@@ -335,6 +347,13 @@ declare module '@tanstack/react-router' {
       path: '/subscriptions'
       fullPath: '/subscriptions'
       preLoaderRoute: typeof AuthenticatedSubscriptionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/staff': {
+      id: '/_authenticated/staff'
+      path: '/staff'
+      fullPath: '/staff'
+      preLoaderRoute: typeof AuthenticatedStaffRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
@@ -432,6 +451,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPriceHistoryRoute: typeof AuthenticatedPriceHistoryRoute
   AuthenticatedPricesRoute: typeof AuthenticatedPricesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
   AuthenticatedSubscriptionsRoute: typeof AuthenticatedSubscriptionsRoute
 }
 
@@ -443,6 +463,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPriceHistoryRoute: AuthenticatedPriceHistoryRoute,
   AuthenticatedPricesRoute: AuthenticatedPricesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedStaffRoute: AuthenticatedStaffRoute,
   AuthenticatedSubscriptionsRoute: AuthenticatedSubscriptionsRoute,
 }
 
