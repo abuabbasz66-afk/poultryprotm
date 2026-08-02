@@ -5,9 +5,11 @@ import {
 } from "lucide-react";
 import { NAV_SECTIONS, type NavEntry, type NavLeaf } from "@/lib/nav-config";
 import { useFarm } from "@/lib/farm-data";
+import { usePermissions, roleStyle } from "@/lib/rbac";
 import { SyncStatus } from "@/components/sync-status";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { cn } from "@/lib/utils";
+
 
 const COLLAPSE_KEY = "pp.sidebar.collapsed";
 
