@@ -118,14 +118,14 @@ export function useFarmId() {
           // Membership first: owners AND staff (manager, sales, future roles)
           // all resolve their farm through farm_members. Owner-only lookups
           // left staff accounts with no farm id at all.
-          const { data: member, error: memberErr } = await supabase
+          const { data: members, error: memberErr } = await supabase
             .from("farm_members")
-            .select("farm_id, role_key, status")
+            .select("farm_id, role_key, status, created_at")
             .eq("user_id", userId!)
             .eq("status", "active")
-            .order("role_key", { ascending: true })
-            .limit(1)
-            .maybeSingle();
+            .order("created_at", { ascending: true });
+          const member =
+            members?.find((m) => m.role_key === "owner") ?? members?.[0] ?? null;
           if (memberErr) {
             console.error("[farm] membership lookup failed", { userId, error: memberErr.message });
             throw memberErr;
