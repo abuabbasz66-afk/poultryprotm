@@ -139,11 +139,28 @@ function AuthPage() {
         toast.success("Account created. Let's set up your farm.");
         navigate({ to: "/onboarding" });
       } else if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        // Members may sign in with either their email address or the phone
+        // number their farm owner registered. The database resolves the
+        // identifier to the login email; anything unknown falls through to
+        // Supabase so the error message stays generic.
+        const identifier = email.trim();
+        let loginEmail = identifier;
+        if (identifier && !identifier.includes("@")) {
+          const { data: resolved } = await supabase.rpc("resolve_login_email", { _identifier: identifier });
+          if (typeof resolved === "string" && resolved) loginEmail = resolved;
+        }
+        const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
         if (error) throw error;
+        await supabase.rpc("touch_member_login").catch?.(() => undefined);
         await qc.cancelQueries();
         qc.clear();
-        navigate({ to: redirectTo });
+        let destination = redirectTo;
+        if (!search.redirect) {
+          const { data: ctx } = await supabase.rpc("my_farm_context");
+          const role = (ctx as { role?: string } | null)?.role ?? "owner";
+          destination = homeRouteForRole(role);
+        }
+        navigate({ to: destination });
       } else {
         const trimmed = email.trim().toLowerCase();
         if (!trimmed) throw new Error("Please enter your email address.");
