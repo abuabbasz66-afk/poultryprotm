@@ -32,10 +32,17 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedShell() {
   const { data: userId } = useAuthUserId();
+  const { data: ctx } = useFarmContext();
   usePresenceHeartbeat(userId ?? null);
+
+  if (ctx?.mustChangePassword) {
+    return <ForcePasswordChange fullName={ctx.fullName} />;
+  }
+
   return (
     <AppShell>
       <Outlet />
     </AppShell>
   );
 }
+
