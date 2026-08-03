@@ -3,6 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePresenceHeartbeat } from "@/lib/presence";
 import { useAuthUserId } from "@/lib/farm-data";
 import { AppShell } from "@/components/app-sidebar";
+import { useFarmContext } from "@/lib/rbac";
+import { ForcePasswordChange } from "@/components/force-password-change";
+
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -29,10 +32,17 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedShell() {
   const { data: userId } = useAuthUserId();
+  const { data: ctx } = useFarmContext();
   usePresenceHeartbeat(userId ?? null);
+
+  if (ctx?.mustChangePassword) {
+    return <ForcePasswordChange fullName={ctx.fullName} />;
+  }
+
   return (
     <AppShell>
       <Outlet />
     </AppShell>
   );
 }
+
