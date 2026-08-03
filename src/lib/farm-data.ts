@@ -109,17 +109,45 @@ export function useFarmId() {
     queryKey: FARM_ID_KEY(userId),
     enabled: !userPending && !!userId,
     networkMode: "always",
+    retry: 1,
     queryFn: async (): Promise<string | null> => {
       const value = await offlineValue<string | null>({
         userId,
         cacheKey: `user:${userId}:farm-id`,
         fetcher: async () => {
+          // Membership first: owners AND staff (manager, sales, future roles)
+          // all resolve their farm through farm_members. Owner-only lookups
+          // left staff accounts with no farm id at all.
+          const { data: members, error: memberErr } = await supabase
+            .from("farm_members")
+            .select("farm_id, role_key, status, created_at")
+            .eq("user_id", userId!)
+            .eq("status", "active")
+            .order("created_at", { ascending: true });
+          const member =
+            members?.find((m) => m.role_key === "owner") ?? members?.[0] ?? null;
+          if (memberErr) {
+            console.error("[farm] membership lookup failed", { userId, error: memberErr.message });
+            throw memberErr;
+          }
+          if (member?.farm_id) {
+            console.info("[farm] resolved via membership", {
+              userId, farmId: member.farm_id, role: member.role_key,
+            });
+            return member.farm_id;
+          }
+
+          // Fallback for legacy owners without a roster row yet.
           const { data, error } = await supabase
             .from("farms")
             .select("id")
             .eq("owner_id", userId!)
             .maybeSingle();
-          if (error) throw error;
+          if (error) {
+            console.error("[farm] owner lookup failed", { userId, error: error.message });
+            throw error;
+          }
+          console.info("[farm] resolved via ownership", { userId, farmId: data?.id ?? null });
           return data?.id ?? null;
         },
       });

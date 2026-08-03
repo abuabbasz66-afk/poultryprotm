@@ -496,20 +496,42 @@ const setBagWeightKg = (v: number | null) => {
   const round1 = (n: number) => Math.round(n * 10) / 10;
   const feedFmt = (bags: number) => `${round1(bags * bagKg)} kg (${round1(bags)} bags)`;
 
-  // Do not render any farm-scoped UI until the current user's farm id has
-  // resolved. This prevents a moment where cached "Your Farm" fallbacks or
-  // empty-array derivations render before farm-specific queries begin.
-  const farmContextReady = !farmIdQ.isPending && !!farmIdQ.data && !farmQ.isPending;
-  if (!farmContextReady) {
+  // Farm context must resolve (or fail loudly) before any farm-scoped UI.
+  // A loading state must always terminate: success, or a clear message.
+  const farmLoading = farmIdQ.isPending || (!!farmIdQ.data && farmQ.isPending);
+  const farmError =
+    (farmIdQ.isError && "Unable to load your farm. Please check your connection and try again.") ||
+    (farmQ.isError && "Unable to load dashboard. Please contact your farm owner.") ||
+    (!farmIdQ.isPending && !farmIdQ.data && "This account is not linked to a farm. Please contact your farm owner.") ||
+    (!!farmIdQ.data && !farmQ.isPending && !farmQ.data && "Farm not found, or you do not have permission to access this farm.") ||
+    null;
+
+  if (farmLoading || farmError) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 rounded-full border-2 border-[color:var(--forest)]/30 border-t-[color:var(--forest)] animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading your farm…</p>
+        <div className="text-center max-w-sm">
+          {farmError ? (
+            <>
+              <p className="text-sm font-medium text-foreground mb-2">Dashboard unavailable</p>
+              <p className="text-sm text-muted-foreground mb-4">{farmError}</p>
+              <button
+                onClick={() => { farmIdQ.refetch(); farmQ.refetch(); }}
+                className="rounded-md border border-border px-4 py-2 text-sm hover:bg-muted"
+              >
+                Try again
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="mx-auto mb-4 h-8 w-8 rounded-full border-2 border-[color:var(--forest)]/30 border-t-[color:var(--forest)] animate-spin" />
+              <p className="text-sm text-muted-foreground">Loading your farm…</p>
+            </>
+          )}
         </div>
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-14 overflow-x-hidden">
