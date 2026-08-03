@@ -1,4 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, Navigate } from "@tanstack/react-router";
+import { usePermissions, homeRouteForRole } from "@/lib/rbac";
+import { PermissionDenied } from "@/components/permission-denied";
 import { useQueryClient } from "@tanstack/react-query";
 import { Fragment, useMemo, useState } from "react";
 import {
@@ -82,7 +84,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       { property: "og:description", content: "Real-time visibility into every bird, egg, and naira." },
     ],
   }),
-  component: Dashboard,
+  component: DashboardRouter,
 });
 
 // ---------- Helpers ----------
@@ -104,6 +106,18 @@ function todayLabel() {
 }
 function todayShortLabel() {
   return new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+function DashboardRouter() {
+  // Roles without dashboard access (e.g. Sales Officer) land on the surface
+  // their permissions actually cover instead of an empty owner dashboard.
+  const { can, loading, role } = usePermissions();
+  if (loading) return null;
+  if (!can("dashboard.view")) {
+    if (can("sales.read")) return <Navigate to={homeRouteForRole(role)} replace />;
+    return <PermissionDenied hint="Your role does not include the farm dashboard." />;
+  }
+  return <Dashboard />;
 }
 
 function Dashboard() {
