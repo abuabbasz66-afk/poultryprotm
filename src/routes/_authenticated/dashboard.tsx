@@ -1275,6 +1275,8 @@ const setBagWeightKg = (v: number | null) => {
             </table>
           </div>
         </Card>
+        </>)}
+
           </div>
         )}
 
