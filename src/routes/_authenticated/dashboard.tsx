@@ -159,10 +159,19 @@ function Dashboard() {
   const updFeedM = useUpdateFeed();
 
   const [feedTab, setFeedTab] = useState<"Usage" | "Formulas">("Usage");
+  // Role gates. Managers record operations only: no pricing, no analytics,
+  // no AI, no audit. Everything below is additionally enforced by RLS.
+  const { can } = usePermissions();
+  const canPrices = can("prices.read");
+  const canAnalyticsArea = can("reports.read") || can("financials.read");
+  const canAIArea = can("ai.view");
+  const canAudit = can("audit.read");
   const search = Route.useSearch();
-  const area: DashboardArea = search.area ?? "records";
+  const requestedArea: DashboardArea = search.area ?? "records";
+  const area: DashboardArea = requestedArea;
   const setArea = (next: DashboardArea) =>
     navigate({ to: "/dashboard", search: { area: next }, hash: "" as never });
+
   const [upgradeTier, setUpgradeTier] = useState<UpgradeTier | null>(null);
   const [forecastOpen, setForecastOpen] = useState(false);
   const [mortalityOpen, setMortalityOpen] = useState(false);
