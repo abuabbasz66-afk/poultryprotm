@@ -601,8 +601,10 @@ const setBagWeightKg = (v: number | null) => {
 
       <main className="container-x mt-8 space-y-6 md:space-y-8">
         <TrialBanner />
-        {/* Product-area navigation: Capture → Understand → Predict */}
-        {(() => {
+        {/* Product-area navigation: Capture → Understand → Predict.
+            Analytics and AI are owner-grade surfaces; operational roles only
+            ever see Capture. */}
+        {(canAnalyticsArea || canAIArea) && (() => {
           const plan = subscription?.effectivePlan ?? "basic";
           const canAnalytics = plan === "standard" || plan === "premium";
           const canAI = plan === "premium";
@@ -650,9 +652,15 @@ const setBagWeightKg = (v: number | null) => {
           );
         })()}
 
+        {/* Direct-URL protection: a restricted area never renders its content. */}
+        {((area === "analytics" && !canAnalyticsArea) || (area === "ai" && !canAIArea)) && (
+          <PermissionDenied hint="Analytics, financials and AI insights are available to the Farm Owner only." />
+        )}
 
+        {canAudit && area === "records" && <RecentStaffActivity />}
 
-        {area === "analytics" && (
+        {area === "analytics" && canAnalyticsArea && (
+
           <div className="space-y-6">
             <SectionIntro
               stage="UNDERSTAND" plan="Standard" title="Farm Analytics"
