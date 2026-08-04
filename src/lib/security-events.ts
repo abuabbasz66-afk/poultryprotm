@@ -84,13 +84,14 @@ export async function logSecurityEvent(
     const net = await lookupNetwork();
     await supabase.rpc("log_security_event", {
       _event_type: eventType,
-      _identifier: opts.identifier ?? null,
-      _detail: opts.detail ?? null,
+      _identifier: opts.identifier ?? undefined,
+      _detail: opts.detail ?? undefined,
       _device: client.device,
       _browser: client.browser,
       _os: client.os,
-      _ip: net.ip,
-      _location: net.location,
+      _ip: net.ip ?? undefined,
+      _location: net.location ?? undefined,
+
       _metadata: (opts.metadata ?? {}) as never,
     });
   } catch {
