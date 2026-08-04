@@ -1297,7 +1297,7 @@ const setBagWeightKg = (v: number | null) => {
           </div>
         )}
 
-        {area === "ai" && (
+        {area === "ai" && canAIArea && (
           <div className="space-y-6">
             <SectionIntro
               stage="PREDICT" plan="Premium" title="PoultryPro AI Intelligence" premium
