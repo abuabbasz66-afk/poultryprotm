@@ -1224,8 +1224,10 @@ const setBagWeightKg = (v: number | null) => {
           )}
         </Card>
 
+        {/* Prices — owner-only. Managers never see or change pricing. */}
+        {canPrices && (<>
         <div id="prices" className="scroll-mt-24" />
-        {/* Prices */}
+
         <Card>
           <CardHeader
             title={<span className="inline-flex items-center gap-2"><DollarSign className="h-5 w-5 text-[color:var(--forest)]" /> Current Prices</span>}
