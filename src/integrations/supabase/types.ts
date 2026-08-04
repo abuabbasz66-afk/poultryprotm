@@ -863,6 +863,68 @@ export type Database = {
           },
         ]
       }
+      security_events: {
+        Row: {
+          actor_email: string | null
+          actor_name: string | null
+          actor_role: string | null
+          browser: string | null
+          created_at: string
+          detail: string | null
+          device: string | null
+          event_type: string
+          farm_id: string | null
+          id: string
+          ip_address: string | null
+          location: string | null
+          metadata: Json
+          os: string | null
+          user_id: string | null
+        }
+        Insert: {
+          actor_email?: string | null
+          actor_name?: string | null
+          actor_role?: string | null
+          browser?: string | null
+          created_at?: string
+          detail?: string | null
+          device?: string | null
+          event_type: string
+          farm_id?: string | null
+          id?: string
+          ip_address?: string | null
+          location?: string | null
+          metadata?: Json
+          os?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          actor_email?: string | null
+          actor_name?: string | null
+          actor_role?: string | null
+          browser?: string | null
+          created_at?: string
+          detail?: string | null
+          device?: string | null
+          event_type?: string
+          farm_id?: string | null
+          id?: string
+          ip_address?: string | null
+          location?: string | null
+          metadata?: Json
+          os?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "security_events_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_sessions: {
         Row: {
           actions_taken: Json | null
@@ -1215,6 +1277,10 @@ export type Database = {
       }
       admin_whatsapp_stats: { Args: never; Returns: Json }
       can: { Args: { _farm: string; _perm: string }; Returns: boolean }
+      can_edit_recent: {
+        Args: { _created: string; _farm: string; _perm: string }
+        Returns: boolean
+      }
       complete_password_change: { Args: never; Returns: undefined }
       consume_feed_fifo: {
         Args: {
@@ -1245,6 +1311,39 @@ export type Database = {
         }[]
       }
       farm_feed_stock_kg: { Args: { _farm_id: string }; Returns: number }
+      farm_security_events: {
+        Args: {
+          _event_type?: string
+          _from?: string
+          _limit?: number
+          _role?: string
+          _to?: string
+          _user_id?: string
+        }
+        Returns: {
+          actor_email: string | null
+          actor_name: string | null
+          actor_role: string | null
+          browser: string | null
+          created_at: string
+          detail: string | null
+          device: string | null
+          event_type: string
+          farm_id: string | null
+          id: string
+          ip_address: string | null
+          location: string | null
+          metadata: Json
+          os: string | null
+          user_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "security_events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       farm_staff_list: {
         Args: never
         Returns: {
@@ -1285,6 +1384,20 @@ export type Database = {
       }
       is_super_admin: { Args: never; Returns: boolean }
       landing_platform_stats: { Args: never; Returns: Json }
+      log_security_event: {
+        Args: {
+          _browser?: string
+          _detail?: string
+          _device?: string
+          _event_type: string
+          _identifier?: string
+          _ip?: string
+          _location?: string
+          _metadata?: Json
+          _os?: string
+        }
+        Returns: undefined
+      }
       my_farm_context: { Args: never; Returns: Json }
       my_farm_ids: { Args: never; Returns: string[] }
       platform_stats: {

@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate, Navigate } from "@tanstack/react-router";
 import { usePermissions, homeRouteForRole } from "@/lib/rbac";
 import { PermissionDenied } from "@/components/permission-denied";
+import { RecentStaffActivity } from "@/components/recent-staff-activity";
+
 import { useQueryClient } from "@tanstack/react-query";
 import { Fragment, useMemo, useState } from "react";
 import {
@@ -159,10 +161,19 @@ function Dashboard() {
   const updFeedM = useUpdateFeed();
 
   const [feedTab, setFeedTab] = useState<"Usage" | "Formulas">("Usage");
+  // Role gates. Managers record operations only: no pricing, no analytics,
+  // no AI, no audit. Everything below is additionally enforced by RLS.
+  const { can } = usePermissions();
+  const canPrices = can("prices.read");
+  const canAnalyticsArea = can("reports.read") || can("financials.read");
+  const canAIArea = can("ai.view");
+  const canAudit = can("audit.read");
   const search = Route.useSearch();
-  const area: DashboardArea = search.area ?? "records";
+  const requestedArea: DashboardArea = search.area ?? "records";
+  const area: DashboardArea = requestedArea;
   const setArea = (next: DashboardArea) =>
     navigate({ to: "/dashboard", search: { area: next }, hash: "" as never });
+
   const [upgradeTier, setUpgradeTier] = useState<UpgradeTier | null>(null);
   const [forecastOpen, setForecastOpen] = useState(false);
   const [mortalityOpen, setMortalityOpen] = useState(false);
@@ -592,8 +603,10 @@ const setBagWeightKg = (v: number | null) => {
 
       <main className="container-x mt-8 space-y-6 md:space-y-8">
         <TrialBanner />
-        {/* Product-area navigation: Capture → Understand → Predict */}
-        {(() => {
+        {/* Product-area navigation: Capture → Understand → Predict.
+            Analytics and AI are owner-grade surfaces; operational roles only
+            ever see Capture. */}
+        {(canAnalyticsArea || canAIArea) && (() => {
           const plan = subscription?.effectivePlan ?? "basic";
           const canAnalytics = plan === "standard" || plan === "premium";
           const canAI = plan === "premium";
@@ -641,9 +654,15 @@ const setBagWeightKg = (v: number | null) => {
           );
         })()}
 
+        {/* Direct-URL protection: a restricted area never renders its content. */}
+        {((area === "analytics" && !canAnalyticsArea) || (area === "ai" && !canAIArea)) && (
+          <PermissionDenied hint="Analytics, financials and AI insights are available to the Farm Owner only." />
+        )}
 
+        {canAudit && area === "records" && <RecentStaffActivity />}
 
-        {area === "analytics" && (
+        {area === "analytics" && canAnalyticsArea && (
+
           <div className="space-y-6">
             <SectionIntro
               stage="UNDERSTAND" plan="Standard" title="Farm Analytics"
@@ -1224,8 +1243,10 @@ const setBagWeightKg = (v: number | null) => {
           )}
         </Card>
 
+        {/* Prices — owner-only. Managers never see or change pricing. */}
+        {canPrices && (<>
         <div id="prices" className="scroll-mt-24" />
-        {/* Prices */}
+
         <Card>
           <CardHeader
             title={<span className="inline-flex items-center gap-2"><DollarSign className="h-5 w-5 text-[color:var(--forest)]" /> Current Prices</span>}
@@ -1273,10 +1294,12 @@ const setBagWeightKg = (v: number | null) => {
             </table>
           </div>
         </Card>
+        </>)}
+
           </div>
         )}
 
-        {area === "ai" && (
+        {area === "ai" && canAIArea && (
           <div className="space-y-6">
             <SectionIntro
               stage="PREDICT" plan="Premium" title="PoultryPro AI Intelligence" premium
