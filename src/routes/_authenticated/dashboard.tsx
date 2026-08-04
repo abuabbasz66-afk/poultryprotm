@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate, Navigate } from "@tanstack/react-router";
 import { usePermissions, homeRouteForRole } from "@/lib/rbac";
 import { PermissionDenied } from "@/components/permission-denied";
+import { RecentStaffActivity } from "@/components/recent-staff-activity";
+
 import { useQueryClient } from "@tanstack/react-query";
 import { Fragment, useMemo, useState } from "react";
 import {
