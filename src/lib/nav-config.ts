@@ -61,7 +61,7 @@ export const NAV_SECTIONS: NavSection[] = [
     heading: "Business",
     items: [
       {
-      {
+
         label: "Finance", icon: DollarSign, to: "/finance", search: { tab: "overview" }, permission: "financials.read",
         children: [
           { label: "Overview", icon: TrendingUp, to: "/finance", search: { tab: "overview" }, permission: "financials.read" },
