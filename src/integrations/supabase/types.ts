@@ -139,6 +139,68 @@ export type Database = {
           },
         ]
       }
+      farm_expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string | null
+          entry_date: string
+          farm_id: string
+          id: string
+          notes: string | null
+          payment_method: string
+          receipt_path: string | null
+          recorded_by: string | null
+          recorded_by_name: string | null
+          subcategory: string
+          supplier: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          description?: string | null
+          entry_date?: string
+          farm_id: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          receipt_path?: string | null
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          subcategory: string
+          supplier?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          entry_date?: string
+          farm_id?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          receipt_path?: string | null
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          subcategory?: string
+          supplier?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_expenses_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farm_members: {
         Row: {
           created_at: string
@@ -199,6 +261,71 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "farm_roles"
             referencedColumns: ["key"]
+          },
+        ]
+      }
+      farm_revenue: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          customer: string | null
+          entry_date: string
+          farm_id: string
+          id: string
+          item: string
+          notes: string | null
+          payment_method: string
+          quantity: number
+          recorded_by: string | null
+          recorded_by_name: string | null
+          unit: string
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          customer?: string | null
+          entry_date?: string
+          farm_id: string
+          id?: string
+          item: string
+          notes?: string | null
+          payment_method?: string
+          quantity?: number
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          unit?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          customer?: string | null
+          entry_date?: string
+          farm_id?: string
+          id?: string
+          item?: string
+          notes?: string | null
+          payment_method?: string
+          quantity?: number
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          unit?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_revenue_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
           },
         ]
       }
