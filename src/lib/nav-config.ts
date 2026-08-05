@@ -61,7 +61,20 @@ export const NAV_SECTIONS: NavSection[] = [
     heading: "Business",
     items: [
       {
-        label: "Finance", icon: DollarSign, to: "/dashboard", search: { area: "analytics" }, hash: "finance", permission: "financials.read",
+      {
+        label: "Finance", icon: DollarSign, to: "/finance", search: { tab: "overview" }, permission: "financials.read",
+        children: [
+          { label: "Overview", icon: TrendingUp, to: "/finance", search: { tab: "overview" }, permission: "financials.read" },
+          { label: "Expenses", icon: Receipt, to: "/finance", search: { tab: "expenses" }, permission: "financials.read" },
+          { label: "Revenue", icon: PiggyBank, to: "/finance", search: { tab: "revenue" }, permission: "financials.read" },
+          { label: "Financial Reports", icon: ClipboardList, to: "/finance", search: { tab: "reports" }, permission: "financials.read" },
+          { label: "Current Prices", icon: Tags, to: "/prices", permission: "prices.read" },
+          { label: "Price History", icon: ClipboardList, to: "/price-history", permission: "prices.read" },
+        ],
+      },
+      {
+        label: "Farm Profit", icon: PiggyBank, to: "/dashboard", search: { area: "analytics" }, hash: "finance", permission: "financials.read",
+
         children: [
           { label: "Revenue", icon: TrendingUp, to: "/dashboard", search: { area: "analytics" }, hash: "finance", permission: "financials.read" },
           { label: "Expenses", icon: Receipt, to: "/dashboard", search: { area: "analytics" }, hash: "finance", permission: "financials.read" },
