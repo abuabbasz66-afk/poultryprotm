@@ -97,12 +97,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Mobile top bar */}
       <div className="lg:hidden sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-white/10 bg-[color:var(--forest)] px-4 py-2.5 text-primary-foreground">
-        <Link to="/dashboard" className="flex min-w-0 items-center gap-2">
-          <img src={logoAsset.url} alt="" width={26} height={26} className="h-6.5 w-6.5 shrink-0 object-contain" />
-          <span className="truncate font-display text-[15px] font-semibold">PoultryPro™</span>
-        </Link>
-        <div className="flex shrink-0 items-center gap-2">
-          <SyncStatus />
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           <button
             onClick={() => setMobileOpen(true)}
             aria-label="Open navigation menu"
@@ -110,7 +105,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             <Menu className="h-4 w-4" />
           </button>
+          <Link to="/dashboard" className="flex min-w-0 items-center gap-2">
+            <img src={logoAsset.url} alt="" width={26} height={26} className="h-6.5 w-6.5 shrink-0 object-contain" />
+            <span className="truncate font-display text-[15px] font-semibold">PoultryPro™</span>
+          </Link>
         </div>
+        <SyncStatus />
       </div>
 
       {/* Mobile drawer */}
