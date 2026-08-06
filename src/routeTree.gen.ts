@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SuperAdminRouteImport } from './routes/super-admin'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PresentationRouteImport } from './routes/presentation'
@@ -37,6 +38,11 @@ import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/em
 const SuperAdminRoute = SuperAdminRouteImport.update({
   id: '/super-admin',
   path: '/super-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/presentation': typeof PresentationRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRouteWithChildren
   '/activity': typeof AuthenticatedActivityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -188,6 +195,7 @@ export interface FileRoutesByTo {
   '/presentation': typeof PresentationRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRouteWithChildren
   '/activity': typeof AuthenticatedActivityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -215,6 +223,7 @@ export interface FileRoutesById {
   '/presentation': typeof PresentationRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRouteWithChildren
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -242,6 +251,7 @@ export interface FileRouteTypes {
     | '/presentation'
     | '/pricing'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/super-admin'
     | '/activity'
     | '/dashboard'
@@ -267,6 +277,7 @@ export interface FileRouteTypes {
     | '/presentation'
     | '/pricing'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/super-admin'
     | '/activity'
     | '/dashboard'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/presentation'
     | '/pricing'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/super-admin'
     | '/_authenticated/activity'
     | '/_authenticated/dashboard'
@@ -320,6 +332,7 @@ export interface RootRouteChildren {
   PresentationRoute: typeof PresentationRoute
   PricingRoute: typeof PricingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
   ApiPublicWhatsappClickRoute: typeof ApiPublicWhatsappClickRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -334,6 +347,13 @@ declare module '@tanstack/react-router' {
       path: '/super-admin'
       fullPath: '/super-admin'
       preLoaderRoute: typeof SuperAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -552,6 +572,7 @@ const rootRouteChildren: RootRouteChildren = {
   PresentationRoute: PresentationRoute,
   PricingRoute: PricingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuperAdminRoute: SuperAdminRouteWithChildren,
   ApiPublicWhatsappClickRoute: ApiPublicWhatsappClickRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
