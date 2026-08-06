@@ -18,6 +18,8 @@ export const Route = createFileRoute("/presentation")({
     meta: [
       { title: "PoultryPro™ — Greenfield Demonstration Farm" },
       { name: "description", content: "Guided investor demonstration of PoultryPro using real historical records from a live commercial poultry farm — read-only demo dataset." },
+      { property: "og:title", content: "PoultryPro™ Investor Demonstration — Real Commercial Farm Data" },
+      { property: "og:description", content: "A guided walkthrough of PoultryPro built on verified historical records from a working commercial poultry farm." },
       { name: "robots", content: "noindex" },
     ],
   }),

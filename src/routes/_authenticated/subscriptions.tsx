@@ -11,7 +11,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/subscriptions")({
   head: () => ({
     meta: [
-      { title: "Subscriptions — PoultryPro" },
+      { title: "Subscriptions & Billing — PoultryPro" },
+      { name: "description", content: "Review your PoultryPro plan, trial status, invoices and payment history, and upgrade between Basic, Standard and Premium." },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

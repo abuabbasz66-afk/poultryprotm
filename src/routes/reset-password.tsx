@@ -8,7 +8,10 @@ export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
       { title: "Reset password — PoultryPro" },
-      { name: "description", content: "Set a new password for your PoultryPro account." },
+      { name: "description", content: "Choose a new password for your PoultryPro farm account and restore access to your production, feed and financial records." },
+      { property: "og:title", content: "Reset Your PoultryPro Password" },
+      { property: "og:description", content: "Set a new password and regain access to your PoultryPro farm account." },
+      { name: "robots", content: "noindex" },
     ],
   }),
   component: ResetPasswordPage,

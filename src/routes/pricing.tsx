@@ -7,10 +7,13 @@ export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
       { title: "Pricing — PoultryPro™" },
-      { name: "description", content: "PoultryPro subscription plans for small, commercial and enterprise poultry farms. Pricing announced soon." },
-      { property: "og:title", content: "Pricing — PoultryPro™" },
-      { property: "og:description", content: "PoultryPro subscription plans for poultry farms of every size." },
+      { name: "description", content: "PoultryPro plans for poultry farms: free Basic for up to 500 birds, Standard at ₦950/month and Premium at ₦1,950/month with AI insights." },
+      { property: "og:title", content: "PoultryPro™ Pricing — Free, Standard and Premium Farm Plans" },
+      { property: "og:description", content: "Compare PoultryPro plans: free Basic, Standard at ₦950/month, and Premium at ₦1,950/month with AI farm intelligence." },
+      { property: "og:url", content: "https://poultrypro.life/pricing" },
+      { property: "og:type", content: "website" },
     ],
+    links: [{ rel: "canonical", href: "https://poultrypro.life/pricing" }],
   }),
   component: PricingPage,
 });

@@ -14,9 +14,49 @@ import {
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 
+const HOME_TITLE = "PoultryPro™ — Smart Poultry Farm Management Software";
+const HOME_DESC =
+  "PoultryPro helps African poultry farmers record production, feed, health, mortality and finances daily, then turns those records into profit analytics and AI insights.";
+
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: HOME_TITLE },
+      { name: "description", content: HOME_DESC },
+      { property: "og:title", content: HOME_TITLE },
+      { property: "og:description", content: HOME_DESC },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://poultrypro.life/" },
+    ],
+    links: [{ rel: "canonical", href: "https://poultrypro.life/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "PoultryPro",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web, Android, iOS",
+          url: "https://poultrypro.life/",
+          description: HOME_DESC,
+          offers: [
+            { "@type": "Offer", name: "Basic", price: "0", priceCurrency: "NGN" },
+            { "@type": "Offer", name: "Standard", price: "950", priceCurrency: "NGN" },
+            { "@type": "Offer", name: "Premium", price: "1950", priceCurrency: "NGN" },
+          ],
+          provider: {
+            "@type": "Organization",
+            name: "Greenfield Contracts & Agro Limited",
+            url: "https://poultrypro.life/",
+          },
+        }),
+      },
+    ],
+  }),
   component: Index,
 });
+
 
 function useAuthed() {
   const [authed, setAuthed] = useState<boolean | null>(null);

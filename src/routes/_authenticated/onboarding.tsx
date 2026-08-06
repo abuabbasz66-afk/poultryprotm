@@ -12,7 +12,10 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
     meta: [
       { title: "Create Your Farm Profile — PoultryPro" },
-      { name: "description", content: "Set up your poultry farm profile to start using PoultryPro." },
+      { name: "description", content: "Set up your poultry farm profile — farm name, location, bird types and rooms — to start recording with PoultryPro." },
+      { property: "og:title", content: "Create Your Farm Profile — PoultryPro" },
+      { property: "og:description", content: "A two-minute setup that prepares your farm for daily production, feed and financial recording." },
+      { name: "robots", content: "noindex" },
     ],
   }),
   component: OnboardingPage,

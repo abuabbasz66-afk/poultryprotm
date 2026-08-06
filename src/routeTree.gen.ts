@@ -9,9 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PresentationRouteImport } from './routes/presentation'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -35,6 +37,11 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SuperAdminRoute = SuperAdminRouteImport.update({
   id: '/super-admin',
   path: '/super-admin',
@@ -48,6 +55,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -168,9 +180,11 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/presentation': typeof PresentationRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRouteWithChildren
+  '/terms': typeof TermsRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/feed': typeof AuthenticatedFeedRoute
@@ -194,9 +208,11 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/presentation': typeof PresentationRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRouteWithChildren
+  '/terms': typeof TermsRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/feed': typeof AuthenticatedFeedRoute
@@ -222,9 +238,11 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/presentation': typeof PresentationRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRouteWithChildren
+  '/terms': typeof TermsRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/feed': typeof AuthenticatedFeedRoute
@@ -250,9 +268,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/presentation'
     | '/pricing'
+    | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
     | '/super-admin'
+    | '/terms'
     | '/activity'
     | '/dashboard'
     | '/feed'
@@ -276,9 +296,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/presentation'
     | '/pricing'
+    | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
     | '/super-admin'
+    | '/terms'
     | '/activity'
     | '/dashboard'
     | '/feed'
@@ -303,9 +325,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/presentation'
     | '/pricing'
+    | '/privacy'
     | '/reset-password'
     | '/sitemap.xml'
     | '/super-admin'
+    | '/terms'
     | '/_authenticated/activity'
     | '/_authenticated/dashboard'
     | '/_authenticated/feed'
@@ -331,9 +355,11 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   PresentationRoute: typeof PresentationRoute
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
+  TermsRoute: typeof TermsRoute
   ApiPublicWhatsappClickRoute: typeof ApiPublicWhatsappClickRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -342,6 +368,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/super-admin': {
       id: '/super-admin'
       path: '/super-admin'
@@ -361,6 +394,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -571,9 +611,11 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   PresentationRoute: PresentationRoute,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuperAdminRoute: SuperAdminRouteWithChildren,
+  TermsRoute: TermsRoute,
   ApiPublicWhatsappClickRoute: ApiPublicWhatsappClickRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,

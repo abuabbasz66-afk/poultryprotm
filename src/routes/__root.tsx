@@ -101,6 +101,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" },
       { rel: "icon", type: "image/png", href: "/favicon.png" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "@id": "https://poultrypro.life/#organization",
+              name: "PoultryPro",
+              legalName: "Greenfield Contracts & Agro Limited",
+              url: "https://poultrypro.life/",
+              logo: "https://poultrypro.life/favicon.png",
+              areaServed: "Africa",
+              email: "greenfieldcontractsagroltd@gmail.com",
+              address: { "@type": "PostalAddress", addressCountry: "NG" },
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://poultrypro.life/#website",
+              name: "PoultryPro™",
+              url: "https://poultrypro.life/",
+              publisher: { "@id": "https://poultrypro.life/#organization" },
+              inLanguage: "en",
+            },
+          ],
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
