@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { AppShell } from "@/components/app-sidebar";
+
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePriceHistory, useFarm } from "@/lib/farm-data";
@@ -57,8 +57,7 @@ function PriceHistoryPage() {
   }, [historyQ.data, item, from, to]);
 
   return (
-    <AppShell>
-      <div className="container-x space-y-8 py-8">
+    <div className="container-x space-y-8 py-8">
         <header>
           <h1 className="text-3xl">Price History</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
@@ -123,7 +122,6 @@ function PriceHistoryPage() {
             </div>
           )}
         </div>
-      </div>
-    </AppShell>
+    </div>
   );
 }
