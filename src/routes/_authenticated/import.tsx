@@ -6,7 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRooms, normalizeHealthType } from "@/lib/farm-data";
 
 export const Route = createFileRoute("/_authenticated/import")({
-  head: () => ({ meta: [{ title: "Import Farm Records — PoultryPro" }] }),
+  head: () => ({
+    meta: [
+      { title: "Import Farm Records — PoultryPro" },
+      { name: "description", content: "Bulk import historical production, feed, mortality and health records into PoultryPro from CSV files with validation before saving." },
+      { property: "og:title", content: "Import Farm Records — PoultryPro" },
+      { property: "og:description", content: "Move years of notebook or spreadsheet records into PoultryPro with a validated CSV import." },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: ImportPage,
 });
 

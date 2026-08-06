@@ -37,7 +37,10 @@ export const Route = createFileRoute("/_authenticated/feed")({
   head: () => ({
     meta: [
       { title: "Feed Management — PoultryPro" },
-      { name: "description", content: "Track feed inventory, ledger movements and AI-powered stock intelligence for your farm." },
+      { name: "description", content: "Track feed inventory in kilograms, record daily usage, build feed formulas and get AI stock intelligence for your poultry farm." },
+      { property: "og:title", content: "Feed Management & Formulation — PoultryPro" },
+      { property: "og:description", content: "Feed inventory, usage ledger, formulation cost calculator and low-stock intelligence in one place." },
+      { name: "robots", content: "noindex" },
     ],
   }),
   component: FeedManagementPage,

@@ -39,6 +39,7 @@ export const Route = createFileRoute("/super-admin")({
   head: () => ({
     meta: [
       { title: "Super Admin — PoultryPro Platform" },
+      { name: "description", content: "Platform administration console for PoultryPro: farm accounts, subscriptions, live activity monitoring and revenue analytics." },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

@@ -32,9 +32,13 @@ export const Route = createFileRoute("/auth")({
   },
   head: () => ({
     meta: [
-      { title: "Sign in — PoultryPro" },
-      { name: "description", content: "Sign in or create your PoultryPro account to manage your farm." },
+      { title: "Sign in or Create Your Farm Account — PoultryPro™" },
+      { name: "description", content: "Sign in to PoultryPro or create a free farm account to record production, feed, health and finances for your poultry business." },
+      { property: "og:title", content: "Sign in or Create Your Farm Account — PoultryPro™" },
+      { property: "og:description", content: "Access your PoultryPro farm dashboard, or start free and begin recording production, feed and finances today." },
+      { property: "og:url", content: "https://poultrypro.life/auth" },
     ],
+    links: [{ rel: "canonical", href: "https://poultrypro.life/auth" }],
   }),
   component: AuthPage,
 });

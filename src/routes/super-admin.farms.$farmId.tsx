@@ -25,6 +25,7 @@ export const Route = createFileRoute("/super-admin/farms/$farmId")({
   head: () => ({
     meta: [
       { title: "Farm Intelligence — PoultryPro Admin" },
+      { name: "description", content: "Administrator drill-down into a single farm's production, feed, mortality, health, finance and activity history." },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
