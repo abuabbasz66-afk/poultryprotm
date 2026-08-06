@@ -28,8 +28,8 @@ const RESOURCES: FooterLink[] = [
   { label: "CSV Import Guide", to: "/import" },
   { label: "Farm Data Guide", comingSoon: true },
   { label: "AI Intelligence Guide", comingSoon: true },
-  { label: "Privacy Policy", comingSoon: true },
-  { label: "Terms of Service", comingSoon: true },
+  { label: "Privacy Policy", to: "/privacy" },
+  { label: "Terms of Service", to: "/terms" },
 ];
 
 const COMPANY: FooterLink[] = [
@@ -217,20 +217,18 @@ export function SiteFooter() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <span
-              aria-disabled="true"
-              className="text-primary-foreground/40 cursor-not-allowed"
-              title="Coming soon"
+            <Link
+              to="/privacy"
+              className="text-primary-foreground/70 hover:text-[color:var(--gold)] transition-colors"
             >
               Privacy Policy
-            </span>
-            <span
-              aria-disabled="true"
-              className="text-primary-foreground/40 cursor-not-allowed"
-              title="Coming soon"
+            </Link>
+            <Link
+              to="/terms"
+              className="text-primary-foreground/70 hover:text-[color:var(--gold)] transition-colors"
             >
               Terms of Service
-            </span>
+            </Link>
           </div>
         </div>
       </div>
