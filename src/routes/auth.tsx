@@ -6,6 +6,7 @@ import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import heroAsset from "@/assets/hero-layer-birds.jpg.asset.json";
 import { toast } from "sonner";
 import { homeRouteForRole } from "@/lib/rbac";
+import { logSecurityEvent } from "@/lib/security-events";
 import {
   ArrowLeft, Eye, EyeOff, Check, ShieldCheck, Lock, CloudUpload,
   Headphones, ClipboardList, LineChart, Sparkles,
@@ -151,8 +152,13 @@ function AuthPage() {
           if (typeof resolved === "string" && resolved) loginEmail = resolved;
         }
         const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
-        if (error) throw error;
+        if (error) {
+          // Failed attempts are attributed by identifier so owners see them too.
+          void logSecurityEvent("login_failed", { identifier: loginEmail, detail: error.message });
+          throw error;
+        }
         try { await supabase.rpc("touch_member_login"); } catch { /* non-blocking */ }
+        void logSecurityEvent("login", { identifier: loginEmail });
         await qc.cancelQueries();
         qc.clear();
         let destination = redirectTo;
