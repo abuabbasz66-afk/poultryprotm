@@ -163,6 +163,8 @@ function SidebarBody({
 
   const handleSignOut = async () => {
     const { supabase } = await import("@/integrations/supabase/client");
+    const { logSecurityEvent } = await import("@/lib/security-events");
+    await logSecurityEvent("logout");
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   };
