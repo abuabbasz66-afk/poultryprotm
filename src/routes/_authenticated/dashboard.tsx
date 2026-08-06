@@ -19,6 +19,7 @@ import {
 
 
 import { supabase } from "@/integrations/supabase/client";
+import { logSecurityEvent } from "@/lib/security-events";
 import { useActiveFormulaCostPerKg } from "@/lib/feed-formulas-data";
 
 import {
