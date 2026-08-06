@@ -348,6 +348,7 @@ const setBagWeightKg = (v: number | null) => {
     // Stop in-flight protected queries so cleared-session 401s don't storm the UI,
     // drop cached farm data so Back can't restore the previous farm's dashboard,
     // then sign out and REPLACE history so /dashboard is off the back stack.
+    await logSecurityEvent("logout");
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
