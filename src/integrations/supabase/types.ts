@@ -957,28 +957,61 @@ export type Database = {
       }
       rooms: {
         Row: {
+          age_weeks: number | null
+          batch_number: string | null
+          bird_type: string | null
+          breed: string | null
           created_at: string
+          culled_birds_sold: number | null
+          culled_notes: string | null
+          culled_on: string | null
+          culled_revenue: number | null
+          culled_unit_price: number | null
           current: number
+          date_stocked: string | null
           farm_id: string
           id: string
           initial: number
           name: string
+          status: string
         }
         Insert: {
+          age_weeks?: number | null
+          batch_number?: string | null
+          bird_type?: string | null
+          breed?: string | null
           created_at?: string
+          culled_birds_sold?: number | null
+          culled_notes?: string | null
+          culled_on?: string | null
+          culled_revenue?: number | null
+          culled_unit_price?: number | null
           current?: number
+          date_stocked?: string | null
           farm_id: string
           id?: string
           initial?: number
           name: string
+          status?: string
         }
         Update: {
+          age_weeks?: number | null
+          batch_number?: string | null
+          bird_type?: string | null
+          breed?: string | null
           created_at?: string
+          culled_birds_sold?: number | null
+          culled_notes?: string | null
+          culled_on?: string | null
+          culled_revenue?: number | null
+          culled_unit_price?: number | null
           current?: number
+          date_stocked?: string | null
           farm_id?: string
           id?: string
           initial?: number
           name?: string
+          status?: string
         }
         Relationships: [
           {
