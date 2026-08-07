@@ -11,6 +11,7 @@ import {
   type Room,
 } from "@/lib/farm-data";
 import { toDateKey } from "@/lib/date-key";
+import { productionRooms } from "@/lib/rooms";
 
 type FeedRoomValue = { kg: number | "" };
 
