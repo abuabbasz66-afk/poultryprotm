@@ -17,7 +17,9 @@ export type SecurityEventType =
   | "staff_created"
   | "role_changed"
   | "account_suspended"
-  | "account_reactivated";
+  | "account_reactivated"
+  | "room_created"
+  | "room_culled";
 
 export const EVENT_LABELS: Record<string, string> = {
   login: "Staff login",
@@ -28,6 +30,8 @@ export const EVENT_LABELS: Record<string, string> = {
   role_changed: "Role changed",
   account_suspended: "Account suspended",
   account_reactivated: "Account reactivated",
+  room_created: "Room created",
+  room_culled: "Room culled",
 };
 
 type Client = {
