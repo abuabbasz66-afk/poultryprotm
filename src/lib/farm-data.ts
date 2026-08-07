@@ -3,7 +3,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { offlineList, offlineValue, readCache, runOrQueue } from "@/lib/offline/data";
 import { isOnline } from "@/lib/offline/status";
 
-export type Room = { id: string; name: string; current: number; initial: number };
+export type Room = {
+  id: string; name: string; current: number; initial: number;
+  /** Lifecycle status — see src/lib/rooms.ts. Legacy rows default to "active". */
+  status?: string | null;
+  bird_type?: string | null;
+  breed?: string | null;
+  age_weeks?: number | null;
+  batch_number?: string | null;
+  date_stocked?: string | null;
+  culled_on?: string | null;
+  culled_birds_sold?: number | null;
+  culled_unit_price?: number | null;
+  culled_revenue?: number | null;
+  culled_notes?: string | null;
+};
 export type EggRow = { id: string; date: string; label: string; r2: number; r3: number; r4: number; extra: number };
 export type Mortality = { id: string; room: string; cause: string; date: string; loss: number };
 export const HEALTH_TYPES = ["Vaccination", "Vitamin", "Medication", "Treatment", "Observation"] as const;
@@ -250,7 +264,7 @@ export function useRooms() {
         fetcher: async () => {
           const { data, error } = await supabase
             .from("rooms")
-            .select("id, name, current, initial")
+            .select("id, name, current, initial, status, bird_type, breed, age_weeks, batch_number, date_stocked, culled_on, culled_birds_sold, culled_unit_price, culled_revenue, culled_notes")
             .eq("farm_id", farmId!)
             .order("name");
           if (error) throw error;
@@ -439,10 +453,20 @@ export function useAddRoom() {
   const { userId, farmId } = useWriteCtx();
   return useMutation({
     networkMode: "always",
-    mutationFn: async (input: { name: string; initial: number }) => {
+    mutationFn: async (input: {
+      name: string; initial: number;
+      bird_type?: string | null; breed?: string | null; age_weeks?: number | null;
+      batch_number?: string | null; date_stocked?: string | null;
+    }) => {
       if (!farmId) throw new Error("No farm found for this user.");
       const row = {
         farm_id: farmId, name: input.name.toUpperCase(), initial: input.initial, current: input.initial,
+        status: "active",
+        bird_type: input.bird_type ?? null,
+        breed: input.breed ?? null,
+        age_weeks: input.age_weeks ?? null,
+        batch_number: input.batch_number ?? null,
+        date_stocked: input.date_stocked ?? null,
       };
       return runOrQueue({
         userId, farmId, table: "rooms", op: "insert", payload: row,
@@ -478,7 +502,13 @@ export function useUpdateRoom() {
   const { userId, farmId } = useWriteCtx();
   return useMutation({
     networkMode: "always",
-    mutationFn: async (input: { id: string; current?: number; initial?: number; name?: string }) => {
+    mutationFn: async (input: {
+      id: string; current?: number; initial?: number; name?: string; status?: string;
+      bird_type?: string | null; breed?: string | null; age_weeks?: number | null;
+      batch_number?: string | null; date_stocked?: string | null;
+      culled_on?: string | null; culled_birds_sold?: number | null;
+      culled_unit_price?: number | null; culled_revenue?: number | null; culled_notes?: string | null;
+    }) => {
       const { id, ...patch } = input;
       const base = await findCached<Room>(userId, cacheKey(farmId, "rooms"), id);
       return runOrQueue({

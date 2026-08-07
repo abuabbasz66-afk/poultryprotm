@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { X, Loader2, CalendarDays } from "lucide-react";
 import { format, parse } from "date-fns";
 import {
-  useAddRoom,
+  useAddRoom, useUpdateRoom,
   useAddEgg, useUpdateEgg,
   useAddMortality, useUpdateMortality,
   useAddHealth, useUpdateHealth,
@@ -15,9 +15,14 @@ import {
 } from "@/lib/farm-data";
 import { toDateKey } from "@/lib/date-key";
 import { FeedRecordingModal } from "@/components/daily-recording/FeedRecordingModal";
+import { eggSlots, productionRooms, ROOM_STATUSES, ROOM_STATUS_LABELS, roomStatus, type RoomStatus } from "@/lib/rooms";
+import { useSaveRevenue } from "@/lib/finance-data";
+import { logSecurityEvent } from "@/lib/security-events";
 
 export type RecordDialogState =
   | { kind: "room-add" }
+  | { kind: "room-edit"; item: Room }
+  | { kind: "room-cull"; item: Room }
   | { kind: "egg-add" }
   | { kind: "egg-edit"; item: EggRow }
   | { kind: "mortality-add" }
@@ -152,37 +157,240 @@ const isoToShort = (iso: string) => {
 function RoomAddForm({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState("");
   const [initial, setInitial] = useState<number | "">("");
+  const [birdType, setBirdType] = useState("Layers");
+  const [breed, setBreed] = useState("");
+  const [age, setAge] = useState<number | "">("");
+  const [batch, setBatch] = useState("");
+  const [stocked, setStocked] = useState(todayIso());
   const m = useAddRoom();
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || m.isPending) return;
     m.mutate(
-      { name: name.trim(), initial: Number(initial) || 0 },
       {
-        onSuccess: () => { toast.success("Room added successfully"); onClose(); },
+        name: name.trim(),
+        initial: Number(initial) || 0,
+        bird_type: birdType.trim() || null,
+        breed: breed.trim() || null,
+        age_weeks: age === "" ? null : Number(age),
+        batch_number: batch.trim() || null,
+        date_stocked: stocked || null,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Room added", { description: `${name.trim().toUpperCase()} is now active.` });
+          void logSecurityEvent("room_created", {
+            detail: `${name.trim().toUpperCase()} stocked with ${Number(initial) || 0} birds`,
+            metadata: { room: name.trim().toUpperCase(), birds: Number(initial) || 0, breed, batch },
+          });
+          onClose();
+        },
         onError: (err) => toast.error("Failed to add room", { description: (err as Error).message }),
       },
     );
   };
   return (
     <form onSubmit={submit} className="space-y-4">
-      <Field label="Room name" hint="Uppercase names are recommended, e.g. ROOM 5.">
-        <TextInput
-          value={name}
-          onChange={(e) => setName(e.target.value.toUpperCase())}
-          placeholder="ROOM 5"
-          autoFocus
-          required
-        />
+      <Field label="Room name" hint="Room numbers are permanent — existing rooms are never renumbered.">
+        <TextInput value={name} onChange={(e) => setName(e.target.value.toUpperCase())} placeholder="ROOM 5" autoFocus required />
       </Field>
-      <Field label="Initial bird count">
-        <NumberInput
-          value={initial}
-          onChange={(e) => setInitial(e.target.value === "" ? "" : Number(e.target.value))}
-          placeholder="0"
-        />
-      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Bird type">
+          <SelectInput value={birdType} onChange={(e) => setBirdType(e.target.value)}>
+            {["Layers", "Broilers", "Pullets", "Cockerels", "Noiler", "Turkey", "Other"].map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </SelectInput>
+        </Field>
+        <Field label="Number of birds">
+          <NumberInput value={initial} onChange={(e) => setInitial(e.target.value === "" ? "" : Number(e.target.value))} placeholder="0" required />
+        </Field>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Date stocked">
+          <DateInput value={stocked} onChange={(e) => setStocked(e.target.value)} />
+        </Field>
+        <Field label="Breed">
+          <TextInput value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="ISA Brown" />
+        </Field>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Age (weeks)">
+          <NumberInput value={age} onChange={(e) => setAge(e.target.value === "" ? "" : Number(e.target.value))} placeholder="18" />
+        </Field>
+        <Field label="Batch number" hint="Optional.">
+          <TextInput value={batch} onChange={(e) => setBatch(e.target.value)} placeholder="B-2026-05" />
+        </Field>
+      </div>
       <Actions onCancel={onClose} submitting={m.isPending} submitLabel="Save Room" disabled={!name.trim()} />
+    </form>
+  );
+}
+
+function RoomEditForm({ item, onClose }: { item: Room; onClose: () => void }) {
+  const [name, setName] = useState(item.name);
+  const [status, setStatus] = useState<RoomStatus>(roomStatus(item));
+  const [current, setCurrent] = useState<number | "">(item.current);
+  const [birdType, setBirdType] = useState(item.bird_type ?? "");
+  const [breed, setBreed] = useState(item.breed ?? "");
+  const [age, setAge] = useState<number | "">(item.age_weeks ?? "");
+  const [batch, setBatch] = useState(item.batch_number ?? "");
+  const [stocked, setStocked] = useState(item.date_stocked ?? "");
+  const m = useUpdateRoom();
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || m.isPending) return;
+    m.mutate(
+      {
+        id: item.id,
+        name: name.trim().toUpperCase(),
+        status,
+        current: Number(current) || 0,
+        bird_type: birdType.trim() || null,
+        breed: breed.trim() || null,
+        age_weeks: age === "" ? null : Number(age),
+        batch_number: batch.trim() || null,
+        date_stocked: stocked || null,
+      },
+      {
+        onSuccess: () => { toast.success("Room updated"); onClose(); },
+        onError: (err) => toast.error("Failed to update room", { description: (err as Error).message }),
+      },
+    );
+  };
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Room name" hint="Keep the original number — history stays linked to it.">
+          <TextInput value={name} onChange={(e) => setName(e.target.value.toUpperCase())} required />
+        </Field>
+        <Field label="Status">
+          <SelectInput value={status} onChange={(e) => setStatus(e.target.value as RoomStatus)}>
+            {ROOM_STATUSES.map((s) => (<option key={s} value={s}>{ROOM_STATUS_LABELS[s]}</option>))}
+          </SelectInput>
+        </Field>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Current birds">
+          <NumberInput value={current} onChange={(e) => setCurrent(e.target.value === "" ? "" : Number(e.target.value))} />
+        </Field>
+        <Field label="Bird type">
+          <TextInput value={birdType} onChange={(e) => setBirdType(e.target.value)} placeholder="Layers" />
+        </Field>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Breed">
+          <TextInput value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="ISA Brown" />
+        </Field>
+        <Field label="Age (weeks)">
+          <NumberInput value={age} onChange={(e) => setAge(e.target.value === "" ? "" : Number(e.target.value))} />
+        </Field>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Batch number">
+          <TextInput value={batch} onChange={(e) => setBatch(e.target.value)} />
+        </Field>
+        <Field label="Date stocked">
+          <DateInput value={stocked} onChange={(e) => setStocked(e.target.value)} />
+        </Field>
+      </div>
+      <Actions onCancel={onClose} submitting={m.isPending} submitLabel="Save Changes" disabled={!name.trim()} />
+    </form>
+  );
+}
+
+function RoomCullForm({ item, onClose }: { item: Room; onClose: () => void }) {
+  const [date, setDate] = useState(todayIso());
+  const [birds, setBirds] = useState<number | "">(item.current || "");
+  const [unitPrice, setUnitPrice] = useState<number | "">("");
+  const [total, setTotal] = useState<number | "">("");
+  const [touchedTotal, setTouchedTotal] = useState(false);
+  const [notes, setNotes] = useState("");
+  const update = useUpdateRoom();
+  const revenue = useSaveRevenue();
+  const pending = update.isPending || revenue.isPending;
+
+  const computed = (Number(birds) || 0) * (Number(unitPrice) || 0);
+  const totalValue = touchedTotal ? Number(total) || 0 : computed;
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pending || !birds) return;
+    try {
+      await update.mutateAsync({
+        id: item.id,
+        status: "culled",
+        current: 0,
+        culled_on: date,
+        culled_birds_sold: Number(birds) || 0,
+        culled_unit_price: Number(unitPrice) || 0,
+        culled_revenue: totalValue,
+        culled_notes: notes.trim() || null,
+      });
+      if (totalValue > 0) {
+        await revenue.mutateAsync({
+          values: {
+            entry_date: date,
+            category: "birds",
+            item: "Spent Layers",
+            quantity: Number(birds) || 0,
+            unit: "bird",
+            unit_price: (Number(birds) || 0) > 0 ? totalValue / (Number(birds) || 1) : 0,
+            amount: totalValue,
+            customer: null,
+            payment_method: "cash",
+            notes: `Culling of ${item.name}${notes.trim() ? ` — ${notes.trim()}` : ""}`,
+          },
+        });
+      }
+      void logSecurityEvent("room_culled", {
+        detail: `${item.name} culled — ${Number(birds) || 0} birds sold for ₦${totalValue.toLocaleString()}`,
+        metadata: { room: item.name, room_id: item.id, date, birds: Number(birds) || 0, revenue: totalValue },
+      });
+      toast.success(`${item.name} marked as culled`, {
+        description: "Birds set to zero, revenue recorded under Spent Layers. History is preserved.",
+      });
+      onClose();
+    } catch (err) {
+      toast.error("Failed to mark room as culled", { description: (err as Error).message });
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      <div className="rounded-2xl border border-[color:var(--forest)]/10 bg-background/60 px-4 py-3 text-xs text-muted-foreground">
+        {item.name} will stop accepting new production, feed and medication records. All existing
+        history stays available in reports and analytics.
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Date of culling">
+          <DateInput value={date} onChange={(e) => setDate(e.target.value)} required />
+        </Field>
+        <Field label="Birds sold">
+          <NumberInput value={birds} onChange={(e) => setBirds(e.target.value === "" ? "" : Number(e.target.value))} required />
+        </Field>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Average selling price (₦)">
+          <NumberInput value={unitPrice} onChange={(e) => setUnitPrice(e.target.value === "" ? "" : Number(e.target.value))} placeholder="0" />
+        </Field>
+        <Field label="Total revenue (₦)" hint="Auto-calculated — override if needed.">
+          <NumberInput
+            value={touchedTotal ? total : (computed || "")}
+            onChange={(e) => { setTouchedTotal(true); setTotal(e.target.value === "" ? "" : Number(e.target.value)); }}
+            placeholder="0"
+          />
+        </Field>
+      </div>
+      <Field label="Notes" hint="Optional — buyer, transport, condition of birds.">
+        <TextInput value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Sold to Kano market buyer" />
+      </Field>
+      <div className="rounded-2xl bg-[color:var(--forest)]/8 border border-[color:var(--forest)]/15 px-4 py-3 text-sm">
+        <span className="text-muted-foreground">Recorded revenue: </span>
+        <span className="font-semibold text-[color:var(--forest)]">₦{totalValue.toLocaleString()}</span>
+        <span className="text-muted-foreground"> under Bird Sales · Spent Layers</span>
+      </div>
+      <Actions onCancel={onClose} submitting={pending} submitLabel="Mark as Culled" disabled={!birds} />
     </form>
   );
 }
@@ -225,18 +433,19 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
     else add.mutate(payload, done);
   };
 
-  // Dynamic room inputs — map current rooms; fall back to fixed slots when farm has none yet.
+  // Egg production columns r2/r3/r4 belong to ROOM 2/3/4. Map by room number,
+  // never by list position, and skip rooms that are no longer in production.
   const slots = useMemo(() => {
-    const assigned: { name: string; getter: number | ""; setter: (v: number | "") => void; key: "r2" | "r3" | "r4" }[] = [];
-    const state: [number | "", (v: number | "") => void, "r2" | "r3" | "r4"][] = [
-      [r2, setR2, "r2"], [r3, setR3, "r3"], [r4, setR4, "r4"],
-    ];
-    const names = rooms.length ? rooms.slice(0, 3).map((r) => r.name) : ["ROOM 2", "ROOM 3", "ROOM 4"];
-    names.forEach((n, i) => {
-      const [g, s, k] = state[i];
-      assigned.push({ name: n, getter: g, setter: s, key: k });
-    });
-    return assigned;
+    const state: Record<"r2" | "r3" | "r4", [number | "", (v: number | "") => void]> = {
+      r2: [r2, setR2], r3: [r3, setR3], r4: [r4, setR4],
+    };
+    const mapped = eggSlots(rooms).map((s) => ({
+      name: s.room.name, key: s.key, getter: state[s.key][0], setter: state[s.key][1],
+    }));
+    if (mapped.length) return mapped;
+    return (["r2", "r3", "r4"] as const).map((k, i) => ({
+      name: ["ROOM 2", "ROOM 3", "ROOM 4"][i], key: k, getter: state[k][0], setter: state[k][1],
+    }));
   }, [rooms, r2, r3, r4]);
 
   return (
@@ -361,7 +570,8 @@ function MortalityForm({ item, onClose, rooms }: { item?: Mortality; onClose: ()
   );
 }
 
-function HealthForm({ item, onClose, rooms }: { item?: Health; onClose: () => void; rooms: Room[] }) {
+function HealthForm({ item, onClose, rooms: allRooms }: { item?: Health; onClose: () => void; rooms: Room[] }) {
+  const rooms = useMemo(() => productionRooms(allRooms), [allRooms]);
   const isEdit = !!item;
   const [name, setName] = useState(item?.name ?? "");
   const [type, setType] = useState<HealthType>((item?.type as HealthType) ?? "Vitamin");
@@ -412,7 +622,8 @@ function HealthForm({ item, onClose, rooms }: { item?: Health; onClose: () => vo
   );
 }
 
-function FeedForm({ item, onClose, rooms }: { item?: Feed; onClose: () => void; rooms: Room[] }) {
+function FeedForm({ item, onClose, rooms: allRooms }: { item?: Feed; onClose: () => void; rooms: Room[] }) {
+  const rooms = useMemo(() => productionRooms(allRooms), [allRooms]);
   const isEdit = !!item;
   const farmQ = useFarm();
   const bagWeightKg = farmQ.data?.bag_weight_kg ?? 25;
@@ -791,6 +1002,10 @@ export function RecordDialogs({
   switch (state.kind) {
     case "room-add":
       return <Modal {...common} title="Add Room" subtitle="Create a new laying room for your farm."><RoomAddForm onClose={onClose} /></Modal>;
+    case "room-edit":
+      return <Modal {...common} title={`Edit ${state.item.name}`} subtitle="Update room details and lifecycle status."><RoomEditForm item={state.item} onClose={onClose} /></Modal>;
+    case "room-cull":
+      return <Modal {...common} title={`Mark ${state.item.name} as Culled`} subtitle="Close out this flock and record the sale."><RoomCullForm item={state.item} onClose={onClose} /></Modal>;
     case "egg-add":
       return <Modal {...common} title="Record Production" subtitle="Add today's egg production for your farm."><EggForm onClose={onClose} rooms={rooms} /></Modal>;
     case "egg-edit":
