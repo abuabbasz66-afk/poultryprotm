@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate, Navigate } from "@tanstack/react-router";
 import { usePermissions, homeRouteForRole } from "@/lib/rbac";
+import { eggSlots, productionRooms, roomStatus, ROOM_STATUS_LABELS, ROOM_STATUS_TONES } from "@/lib/rooms";
 import { PermissionDenied } from "@/components/permission-denied";
 import { RecentStaffActivity } from "@/components/recent-staff-activity";
 
@@ -24,7 +25,7 @@ import { useActiveFormulaCostPerKg } from "@/lib/feed-formulas-data";
 
 import {
   useRooms, useEggs, useMortality, useHealth, useFeed, usePrices, usePriceHistory, useFarm, useFarmId,
-  useAddRoom, useDeleteRoom,
+  useAddRoom, useDeleteRoom, useUpdateRoom,
   useAddEgg, useAddMortality, useAddHealth, useAddFeed,
   useAddPrice, useDeletePrice, useDeleteMortality, useDeleteFeed,
   useDeleteEgg, useUpdateEgg, useUpdateMortality, useUpdateHealth, useUpdateFeed,
@@ -146,6 +147,7 @@ function Dashboard() {
 
   const addRoomM = useAddRoom();
   const delRoomM = useDeleteRoom();
+  const updRoomM = useUpdateRoom();
   const addEggM = useAddEgg();
   const addMortalityM = useAddMortality();
   const addHealthM = useAddHealth();
@@ -272,12 +274,12 @@ const setBagWeightKg = (v: number | null) => {
   // Rooms are stored positionally in r2/r3/r4 (schema legacy). The chart
   // series are generated dynamically from the farm's actual rooms so the
   // legend always reflects real room names — never hardcoded.
+  // Egg columns r2/r3/r4 belong to ROOM 2/3/4 — mapped by room number, never
+  // by list position, and limited to rooms still in production.
+  const eggRoomSlots = useMemo(() => eggSlots(rooms), [rooms]);
   const roomSeries = useMemo(
-    () => rooms.slice(0, 3).map((r, idx) => ({
-      name: r.name,
-      key: (["r2", "r3", "r4"] as const)[idx],
-    })),
-    [rooms],
+    () => eggRoomSlots.map((s) => ({ name: s.room.name, key: s.key })),
+    [eggRoomSlots],
   );
   const chartData = useMemo(
     () => [...eggs].reverse().map(e => {
@@ -367,6 +369,18 @@ const setBagWeightKg = (v: number | null) => {
 
   // Actions (modal dialogs)
   const addRoom = () => openDialog({ kind: "room-add" });
+  const editRoom = (r: Room) => openDialog({ kind: "room-edit", item: r });
+  const cullRoom = (r: Room) => openDialog({ kind: "room-cull", item: r });
+  const archiveRoom = (r: Room) => {
+    const next = roomStatus(r) === "inactive" ? "active" : "inactive";
+    updRoomM.mutate(
+      { id: r.id, status: next },
+      {
+        onSuccess: () => toast.success(next === "active" ? `${r.name} restored` : `${r.name} archived`),
+        onError: (err) => toast.error("Failed to update room", { description: (err as Error).message }),
+      },
+    );
+  };
   const delRoom = (id: string) => {
     const r = rooms.find(x => x.id === id);
     askDelete("Delete room?", `This will permanently remove ${r?.name ?? "this room"} and cannot be undone.`,
@@ -904,8 +918,8 @@ const setBagWeightKg = (v: number | null) => {
               <thead>
                 <tr className="text-left text-muted-foreground border-b border-border">
                   <th className="py-2 pr-4 font-medium">Date</th>
-                  {rooms.map(r => (
-                    <th key={r.id} className="py-2 pr-4 font-medium whitespace-nowrap">{r.name.replace(/^ROOM\s*/i, "R")}</th>
+                  {eggRoomSlots.map(s => (
+                    <th key={s.room.id} className="py-2 pr-4 font-medium whitespace-nowrap">{s.room.name.replace(/^ROOM\s*/i, "R")}</th>
                   ))}
                   <th className="py-2 pr-4 font-medium">Total</th>
                   <th className="py-2 pr-4 font-medium">Extra</th>
@@ -914,27 +928,13 @@ const setBagWeightKg = (v: number | null) => {
               </thead>
               <tbody>
                 {(eggShowAll ? eggs : eggs.slice(0, 7)).map(e => {
-                  // Rooms are stored positionally in r2/r3/r4 (schema legacy).
-                  // Map by ORDER in the farm's rooms list, not by name string,
-                  // so "ROOM 1" / "House A" / any label displays correctly.
-                  const roomVal = (idx: number): number | null => {
-                    if (idx === 0) return e.r2;
-                    if (idx === 1) return e.r3;
-                    if (idx === 2) return e.r4;
-                    return null;
-                  };
                   const norm = normaliseEggRow(e);
                   return (
                     <tr key={e.id ?? e.date + e.label} className="border-b border-border/50">
                       <td className="py-2.5 pr-4 whitespace-nowrap">{e.label}</td>
-                      {rooms.map((r, idx) => {
-                        const v = roomVal(idx);
-                        return (
-                          <td key={r.id} className="py-2.5 pr-4 tabular-nums">
-                            {v === null ? <span className="text-muted-foreground/50" title="Not recorded">—</span> : v}
-                          </td>
-                        );
-                      })}
+                      {eggRoomSlots.map(s => (
+                        <td key={s.room.id} className="py-2.5 pr-4 tabular-nums">{e[s.key]}</td>
+                      ))}
                       <td className="py-2.5 pr-4">
                         <span className="inline-flex items-center rounded-full bg-[color:var(--forest)] text-primary-foreground px-2.5 py-0.5 text-xs font-medium">
                           {norm.crates}
@@ -947,7 +947,7 @@ const setBagWeightKg = (v: number | null) => {
                 })}
 
                 {eggs.length === 0 && (
-                  <tr><td colSpan={rooms.length + 4} className="py-4 text-center text-muted-foreground text-xs">
+                  <tr><td colSpan={eggRoomSlots.length + 4} className="py-4 text-center text-muted-foreground text-xs">
                     <span className="font-medium">Pending entry</span> — no production records yet.
                   </td></tr>
                 )}
@@ -968,20 +968,27 @@ const setBagWeightKg = (v: number | null) => {
           <Card>
             <CardHeader title="Room Overview" subtitle="Current status per room" />
             <div className="mt-4 space-y-2">
-              {rooms.map((r, idx) => {
-                const todayR = today ? (idx === 0 ? today.r2 : idx === 1 ? today.r3 : idx === 2 ? today.r4 : 0) : 0;
+              {rooms.map((r) => {
+                const slot = eggRoomSlots.find(s => s.room.id === r.id);
+                const todayR = today && slot ? today[slot.key] : 0;
                 const loss = r.initial - r.current;
+                const st = roomStatus(r);
                 return (
                   <div key={r.id} className="flex items-center justify-between rounded-2xl bg-secondary/50 px-4 py-3">
                     <div className="flex items-center gap-3">
                       <span className="grid h-9 w-9 place-items-center rounded-lg bg-[color:var(--forest)]/10 text-[color:var(--forest)]"><Bird className="h-4 w-4" /></span>
                       <div>
-                        <div className="font-semibold text-sm">{r.name}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm">{r.name}</span>
+                          <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium ${ROOM_STATUS_TONES[st]}`}>{ROOM_STATUS_LABELS[st]}</span>
+                        </div>
                         <div className="text-xs text-muted-foreground">{r.current.toLocaleString()} birds</div>
                       </div>
                     </div>
                     <div className="text-right text-sm">
-                      <div className="inline-flex items-center gap-1 text-[color:var(--forest)]"><Egg className="h-3.5 w-3.5" /> {todayR} <span className="text-muted-foreground text-xs">crates</span></div>
+                      {slot
+                        ? <div className="inline-flex items-center gap-1 text-[color:var(--forest)]"><Egg className="h-3.5 w-3.5" /> {todayR} <span className="text-muted-foreground text-xs">crates</span></div>
+                        : <div className="text-xs text-muted-foreground">No active production</div>}
                       {loss > 0 && <div className="text-xs text-destructive flex items-center gap-1 justify-end mt-0.5"><TrendingDown className="h-3 w-3" /> {loss}</div>}
                     </div>
                   </div>
@@ -1105,7 +1112,7 @@ const setBagWeightKg = (v: number | null) => {
           />
           <div className="grid grid-cols-3 gap-3 mt-4">
             <MiniStat label="Total Birds" value={totalBirds.toLocaleString()} tone="sky" />
-            <MiniStat label="Active Rooms" value={String(rooms.length)} tone="mint" />
+            <MiniStat label="Active Rooms" value={`${productionRooms(rooms).length} of ${rooms.length}`} tone="mint" />
             <MiniStat label="Total Loss" value={String(totalLoss)} tone="peach" />
           </div>
           <div className="mt-5 overflow-x-auto">
@@ -1124,15 +1131,32 @@ const setBagWeightKg = (v: number | null) => {
                 {rooms.map(r => {
                   const loss = r.initial - r.current;
                   const pct = ((loss / (r.initial || 1)) * 100).toFixed(1);
+                  const st = roomStatus(r);
                   return (
                     <tr key={r.id} className="border-b border-border/50">
-                      <td className="py-3 pr-4 flex items-center gap-2"><Bird className="h-4 w-4 text-[color:var(--forest)]" />{r.name}</td>
+                      <td className="py-3 pr-4">
+                        <span className="flex items-center gap-2"><Bird className="h-4 w-4 text-[color:var(--forest)]" />{r.name}</span>
+                        {st === "culled" && r.culled_on && (
+                          <span className="mt-0.5 block text-[11px] text-muted-foreground">Culled {r.culled_on}{r.culled_birds_sold ? ` · ${r.culled_birds_sold} birds sold` : ""}</span>
+                        )}
+                      </td>
                       <td className="py-3 pr-4">{r.current.toLocaleString()}</td>
                       <td className="py-3 pr-4 text-muted-foreground">{r.initial.toLocaleString()}</td>
                       <td className="py-3 pr-4 text-destructive">-{loss} <span className="text-xs">({pct}%)</span></td>
-                      <td className="py-3 pr-4"><span className="inline-flex rounded-full bg-[color:var(--forest)] text-primary-foreground px-2.5 py-0.5 text-xs font-medium">Healthy</span></td>
-                      <td className="py-3 pr-4 text-right">
-                        <button onClick={() => delRoom(r.id)} className="text-destructive hover:opacity-70"><Trash2 className="h-4 w-4 inline" /></button>
+                      <td className="py-3 pr-4">
+                        <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${ROOM_STATUS_TONES[st]}`}>{ROOM_STATUS_LABELS[st]}</span>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+                          <button onClick={() => editRoom(r)} className="rounded-full border border-border px-2.5 py-1 text-xs font-medium hover:bg-secondary">Edit</button>
+                          {st !== "culled" && (
+                            <button onClick={() => cullRoom(r)} className="rounded-full border border-destructive/40 px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/10">Mark as Culled</button>
+                          )}
+                          <button onClick={() => archiveRoom(r)} className="rounded-full border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary">
+                            {st === "inactive" ? "Restore" : "Archive"}
+                          </button>
+                          <button onClick={() => delRoom(r.id)} aria-label={`Delete ${r.name}`} className="text-destructive hover:opacity-70"><Trash2 className="h-4 w-4 inline" /></button>
+                        </div>
                       </td>
                     </tr>
                   );
