@@ -66,7 +66,8 @@ export function FeedRecordingModal({ open, onClose }: { open: boolean; onClose: 
   const add = useAddFeed();
   const upd = useUpdateFeed();
 
-  const rooms: Room[] = roomsQ.data ?? [];
+  // Culled / inactive rooms never accept new feed records.
+  const rooms: Room[] = productionRooms(roomsQ.data ?? []);
   const all: Feed[] = feedQ.data ?? [];
   const bagWeightKg = farmQ.data?.bag_weight_kg ?? 25;
 
