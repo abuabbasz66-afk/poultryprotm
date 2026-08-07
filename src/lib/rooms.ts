@@ -40,12 +40,7 @@ export function roomStatusLabel(room: Pick<Room, "status">) {
 
 /** Rooms that may receive NEW production / feed / medication records. */
 export function productionRooms(rooms: Room[]): Room[] {
-  return rooms.filter((r) => roomStatus(r) === "active" && !r.archived);
-}
-
-/** Rooms visible in Room Management (archived ones are hidden by default). */
-export function visibleRooms(rooms: Room[]): Room[] {
-  return rooms.filter((r) => !r.archived);
+  return rooms.filter((r) => roomStatus(r) === "active");
 }
 
 export type EggColumn = "r2" | "r3" | "r4";
