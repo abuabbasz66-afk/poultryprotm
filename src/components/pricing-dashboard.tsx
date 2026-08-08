@@ -57,19 +57,6 @@ function Kpi({ icon: Icon, label, value, sub }: { icon: typeof Egg; label: strin
   );
 }
 
-function DeltaBadge({ delta }: { delta: number }) {
-  if (!delta) return null;
-  const up = delta > 0;
-  return (
-    <span className={cn(
-      "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium backdrop-blur",
-      up ? "bg-emerald-500/12 text-emerald-700" : "bg-destructive/12 text-destructive",
-    )}>
-      {up ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-      {up ? "Increased by " : "Reduced by "}{naira(Math.abs(delta))}
-    </span>
-  );
-}
 
 /** Percentage movement against the previous recorded price. */
 function TrendChip({ pct }: { pct: number }) {
