@@ -48,33 +48,34 @@ const EGG_COLUMNS: EggColumn[] = ["r2", "r3", "r4"];
 
 /**
  * Egg production is stored in the fixed columns r2 / r3 / r4, which literally
- * belong to ROOM 2, ROOM 3 and ROOM 4 — the farm's production rooms. Mapping
- * them positionally (first room in the list -> r2) shifted every figure down
- * by one room once ROOM 1 existed. Map by the number in the room name instead,
- * and only fall back to positional slots for farms whose room names carry no
- * matching number.
+ * belong to ROOM 2, ROOM 3 and ROOM 4 — the farm's production rooms.
+ *
+ * Name-based mapping is only safe when EVERY eligible room carries a distinct
+ * number that matches one of those columns (e.g. ROOM 2/3/4). On any other
+ * farm — including one with an active ROOM 1 — a partial name match would
+ * shuffle historical figures under the wrong room, so we keep the original
+ * positional mapping (first eligible room -> r2, and so on).
  */
 export function eggSlots(rooms: Room[]): { room: Room; key: EggColumn }[] {
   const eligible = productionRooms(rooms);
+
   const taken = new Set<EggColumn>();
-  const byName: { room: Room; key: EggColumn | null }[] = eligible.map((room) => {
+  const named: { room: Room; key: EggColumn }[] = [];
+  for (const room of eligible) {
     const m = room.name.match(/(\d+)\s*$/);
     const key = m ? (`r${m[1]}` as EggColumn) : null;
-    if (key && EGG_COLUMNS.includes(key) && !taken.has(key)) {
-      taken.add(key);
-      return { room, key };
-    }
-    return { room, key: null };
-  });
-
-  const free = EGG_COLUMNS.filter((k) => !taken.has(k));
-  const out: { room: Room; key: EggColumn }[] = [];
-  for (const entry of byName) {
-    if (entry.key) out.push({ room: entry.room, key: entry.key });
-    else {
-      const k = free.shift();
-      if (k) out.push({ room: entry.room, key: k });
-    }
+    if (!key || !EGG_COLUMNS.includes(key) || taken.has(key)) break;
+    taken.add(key);
+    named.push({ room, key });
   }
-  return out.sort((a, b) => EGG_COLUMNS.indexOf(a.key) - EGG_COLUMNS.indexOf(b.key));
+
+  if (named.length === eligible.length) {
+    return named.sort((a, b) => EGG_COLUMNS.indexOf(a.key) - EGG_COLUMNS.indexOf(b.key));
+  }
+
+  // Fallback: legacy positional mapping.
+  return eligible
+    .slice(0, EGG_COLUMNS.length)
+    .map((room, i) => ({ room, key: EGG_COLUMNS[i] }));
 }
+
