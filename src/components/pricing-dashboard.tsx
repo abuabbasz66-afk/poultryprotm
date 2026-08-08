@@ -57,19 +57,69 @@ function Kpi({ icon: Icon, label, value, sub }: { icon: typeof Egg; label: strin
   );
 }
 
-function DeltaBadge({ delta }: { delta: number }) {
-  if (!delta) return null;
-  const up = delta > 0;
+
+/** Percentage movement against the previous recorded price. */
+function TrendChip({ pct }: { pct: number }) {
+  const rounded = Math.round(pct * 10) / 10;
+  if (!rounded) {
+    return <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">No change</span>;
+  }
+  const up = rounded > 0;
   return (
     <span className={cn(
-      "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium backdrop-blur",
+      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
       up ? "bg-emerald-500/12 text-emerald-700" : "bg-destructive/12 text-destructive",
     )}>
-      {up ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-      {up ? "Increased by " : "Reduced by "}{naira(Math.abs(delta))}
+      {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+      {up ? "+" : ""}{rounded}%
     </span>
   );
 }
+
+/** Tiny inline price-history sparkline (pure SVG, no chart runtime). */
+function Sparkline({ points, up }: { points: number[]; up: boolean }) {
+  if (points.length < 2) {
+    return <div className="h-8 rounded-lg bg-muted/40" aria-hidden />;
+  }
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const span = max - min || 1;
+  const w = 100, h = 32;
+  const d = points
+    .map((p, i) => `${i === 0 ? "M" : "L"}${(i / (points.length - 1)) * w},${h - ((p - min) / span) * (h - 4) - 2}`)
+    .join(" ");
+  const stroke = up ? "var(--color-emerald-600, #059669)" : "var(--destructive)";
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-8 w-full" aria-hidden>
+      <path d={d} fill="none" stroke={stroke} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
+function IconAction({
+  label, children, onClick, destructive, asChild,
+}: {
+  label: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+  destructive?: boolean;
+  asChild?: boolean;
+}) {
+  return (
+    <Button
+      asChild={asChild}
+      variant="ghost"
+      size="icon"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className={cn("h-8 w-8 rounded-full text-muted-foreground hover:bg-muted", destructive && "text-destructive hover:text-destructive")}
+    >
+      {children}
+    </Button>
+  );
+}
+
 
 export function PricingDashboard({ compact = false }: { compact?: boolean }) {
   const pricesQ = usePrices();
@@ -90,6 +140,9 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
   const [sort, setSort] = useState<SortKey>("recent");
   const [editing, setEditing] = useState<Price | null>(null);
   const [creating, setCreating] = useState(false);
+  const [inlineId, setInlineId] = useState<string | null>(null);
+  const [inlineValue, setInlineValue] = useState("");
+
 
   const rows = useMemo(() => {
     // One active price per logical item — collapse anything that shares a key
@@ -103,14 +156,26 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
     const list = Array.from(byKey.values()).map(p => {
       const category = categoryOf(p.item, p.category);
       const prev = previousPriceFor(history, p.item, p.category);
+      const key = priceKeyOf(p.item, p.category);
+      // Sparkline: this item's own recorded price points, oldest → newest.
+      const points = history
+        .filter(h => priceKeyOf(h.item, h.category) === key)
+        .slice()
+        .sort((a, b) => a.effective_from.localeCompare(b.effective_from))
+        .map(h => Number(h.new_price));
+      const spark = [...points, Number(p.price)].filter(n => Number.isFinite(n)).slice(-12);
+      const delta = prev ? p.price - prev.price : 0;
       return {
         ...p,
         category,
         prev,
-        delta: prev ? p.price - prev.price : 0,
+        delta,
+        pct: prev && prev.price > 0 ? (delta / prev.price) * 100 : 0,
+        spark,
         effective: p.effective_from ?? null,
       };
     });
+
     const filtered = list.filter(r =>
       (cat === "all" || r.category === cat) &&
       (!query.trim() || r.item.toLowerCase().includes(query.trim().toLowerCase())));
@@ -206,7 +271,23 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
 
   const loading = pricesQ.isLoading || historyQ.isLoading;
 
+  // Inline price edit — same save path as the sheet, just fewer clicks.
+  const saveInline = async (p: Price) => {
+    const next = Number(inlineValue);
+    if (!Number.isFinite(next) || next <= 0) { toast.error("Enter a valid price."); return; }
+    if (next === Number(p.price)) { setInlineId(null); return; }
+    await updateM.mutateAsync({
+      id: p.id, item: p.item, unit: p.unit, price: next, category: p.category, note: p.note,
+      effective_from: new Date().toISOString(),
+      updated: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+      last_device: deviceLabel(),
+    } as never);
+    setInlineId(null);
+    toast.success(`${p.item} price updated to ${naira(next)}`);
+  };
+
   const onDelete = async (p: Price) => {
+
     if (!window.confirm(`Delete ${p.item} from the price list?`)) return;
     await delM.mutateAsync(p.id);
     toast.success(`${p.item} removed from the price list.`);
@@ -266,9 +347,11 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
             <option value="low">Lowest price</option>
             <option value="alpha">Alphabetically</option>
           </select>
-          <Button onClick={() => setCreating(true)} className="h-9 rounded-full" size="sm">
-            <Plus className="mr-1 h-4 w-4" /> Add item
+          <Button onClick={() => setCreating(true)} size="sm"
+            className="h-9 rounded-full px-4 shadow-[0_6px_16px_rgba(20,60,40,0.18)]">
+            <Plus className="mr-1 h-4 w-4" /> Add Price
           </Button>
+
         </div>
       </div>
 
@@ -287,65 +370,75 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
             const Icon = CAT_ICON[r.category] ?? Sparkles;
             const unit = priceUnitLabel(r.item, r.unit, bagKg);
             const perKg = /feed/i.test(r.item) && bagKg > 0 ? r.price / bagKg : null;
+            const isInline = inlineId === r.id;
             return (
               <div key={r.id}
-                className="group relative overflow-hidden rounded-[22px] border bg-card p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_28px_rgba(20,60,40,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_24px_48px_rgba(20,60,40,0.12)]">
-                <span className="absolute inset-x-0 top-0 h-1 bg-[color:var(--forest)]/70" aria-hidden />
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
-                      <Icon className="h-5 w-5" />
+                className="group relative overflow-hidden rounded-[18px] border bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_10px_24px_rgba(20,60,40,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_24px_48px_rgba(20,60,40,0.12)]">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
+                      <Icon className="h-5 w-5" strokeWidth={1.6} />
                     </span>
-                    <div>
-                      <div className="font-semibold leading-tight">{r.item}</div>
-                      <div className="text-xs capitalize text-muted-foreground">{r.category}</div>
+                    <div className="min-w-0">
+                      <div className="truncate font-semibold leading-tight">{r.item}</div>
+                      <div className="truncate text-xs text-muted-foreground">{unit}</div>
                     </div>
                   </div>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/12 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" /> Active
-                  </span>
-                </div>
-
-                <div className="mt-5">
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground">Current price</div>
-                  <div className="mt-1 font-[var(--font-display)] text-[2.25rem] font-bold leading-none tracking-tight">{naira(r.price)}</div>
-                  <div className="mt-1.5 text-sm text-muted-foreground">
-                    {unit}{perKg ? ` · ${naira(perKg)}/kg` : ""}
+                  <div className="flex shrink-0 items-center gap-1 opacity-100 transition-opacity duration-200 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
+                    <IconAction label={`Edit ${r.item}`} onClick={() => setEditing(r)}><Pencil className="h-3.5 w-3.5" /></IconAction>
+                    <IconAction label={`Price history for ${r.item}`} asChild>
+                      <Link to="/price-history" search={{ item: r.item }}><HistoryIcon className="h-3.5 w-3.5" /></Link>
+                    </IconAction>
+                    <IconAction label={`Delete ${r.item}`} destructive onClick={() => onDelete(r)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </IconAction>
                   </div>
                 </div>
 
-                <div className="mt-3"><DeltaBadge delta={r.delta} /></div>
-
-                <div className="mt-4 space-y-2 rounded-2xl bg-muted/50 p-3.5 text-xs">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-muted-foreground">Effective since</span>
-                    <span className="font-medium">{r.effective ? formatEffective(r.effective) : "—"}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-muted-foreground">Previous price</span>
-                    <span className="font-medium">
-                      {r.prev ? `${naira(r.prev.price)} · until ${formatEffective(r.prev.at).split(",")[0]}` : "No earlier price"}
-                    </span>
+                <div className="mt-4">
+                  {isInline ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        autoFocus
+                        type="number"
+                        inputMode="decimal"
+                        value={inlineValue}
+                        onChange={e => setInlineValue(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") saveInline(r);
+                          if (e.key === "Escape") setInlineId(null);
+                        }}
+                        className="h-11 max-w-[9rem] rounded-xl text-lg font-semibold"
+                      />
+                      <Button size="sm" className="rounded-full" onClick={() => saveInline(r)}>Save</Button>
+                      <Button size="sm" variant="ghost" className="rounded-full" onClick={() => setInlineId(null)}>Cancel</Button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setInlineId(r.id); setInlineValue(String(r.price)); }}
+                      title="Click to edit the price"
+                      className="-mx-1 rounded-lg px-1 text-left transition-colors hover:bg-muted/60"
+                    >
+                      <span className="block font-[var(--font-display)] text-[2rem] font-bold leading-none tracking-tight">{naira(r.price)}</span>
+                    </button>
+                  )}
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    {perKg ? <span>{naira(perKg)}/kg</span> : <span>per {unit.toLowerCase()}</span>}
+                    <TrendChip pct={r.pct} />
                   </div>
                 </div>
 
-                <div className="mt-5 flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="rounded-full" onClick={() => setEditing(r)}>
-                    <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
-                  </Button>
-                  <Button asChild variant="ghost" size="sm" className="rounded-full">
-                    <Link to="/price-history" search={{ item: r.item }}>
-                      <HistoryIcon className="mr-1 h-3.5 w-3.5" /> View history
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" size="sm" className="ml-auto rounded-full text-destructive hover:text-destructive"
-                    onClick={() => onDelete(r)}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                <div className="mt-4"><Sparkline points={r.spark} up={r.pct >= 0} /></div>
+
+                <div className="mt-3 flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+                  <span>Last updated {r.effective ? formatEffective(r.effective).split(",")[0] : "—"}</span>
+                  <span>{r.prev ? `was ${naira(r.prev.price)}` : "First price"}</span>
                 </div>
               </div>
             );
           })}
+
         </div>
       )}
 
