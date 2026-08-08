@@ -72,17 +72,8 @@ export const NAV_SECTIONS: NavSection[] = [
           { label: "Price History", icon: ClipboardList, to: "/price-history", permission: "prices.read" },
         ],
       },
-      {
-        label: "Farm Profit", icon: PiggyBank, to: "/dashboard", search: { area: "analytics" }, hash: "finance", permission: "financials.read",
+      { label: "Farm Profit", icon: PiggyBank, to: "/dashboard", search: { area: "analytics" }, hash: "all-time-profit", permission: "financials.read" },
 
-        children: [
-          { label: "Revenue", icon: TrendingUp, to: "/dashboard", search: { area: "analytics" }, hash: "finance", permission: "financials.read" },
-          { label: "Expenses", icon: Receipt, to: "/dashboard", search: { area: "analytics" }, hash: "finance", permission: "financials.read" },
-          { label: "Profit", icon: PiggyBank, to: "/dashboard", search: { area: "analytics" }, hash: "all-time-profit", permission: "financials.read" },
-          { label: "Current Prices", icon: Tags, to: "/prices", permission: "prices.read" },
-          { label: "Price History", icon: ClipboardList, to: "/price-history", permission: "prices.read" },
-        ],
-      },
       { label: "Analytics & Reports", icon: LineChart, to: "/dashboard", search: { area: "analytics" }, permission: "reports.read" },
       {
         label: "AI Insights", icon: Brain, to: "/dashboard", search: { area: "ai" }, premium: true, permission: "ai.view",
