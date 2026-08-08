@@ -103,14 +103,26 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
     const list = Array.from(byKey.values()).map(p => {
       const category = categoryOf(p.item, p.category);
       const prev = previousPriceFor(history, p.item, p.category);
+      const key = priceKeyOf(p.item, p.category);
+      // Sparkline: this item's own recorded price points, oldest → newest.
+      const points = history
+        .filter(h => priceKeyOf(h.item, h.category) === key)
+        .slice()
+        .sort((a, b) => a.effective_from.localeCompare(b.effective_from))
+        .map(h => Number(h.new_price));
+      const spark = [...points, Number(p.price)].filter(n => Number.isFinite(n)).slice(-12);
+      const delta = prev ? p.price - prev.price : 0;
       return {
         ...p,
         category,
         prev,
-        delta: prev ? p.price - prev.price : 0,
+        delta,
+        pct: prev && prev.price > 0 ? (delta / prev.price) * 100 : 0,
+        spark,
         effective: p.effective_from ?? null,
       };
     });
+
     const filtered = list.filter(r =>
       (cat === "all" || r.category === cat) &&
       (!query.trim() || r.item.toLowerCase().includes(query.trim().toLowerCase())));
