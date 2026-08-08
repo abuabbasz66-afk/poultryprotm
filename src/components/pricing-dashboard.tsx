@@ -284,7 +284,23 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
 
   const loading = pricesQ.isLoading || historyQ.isLoading;
 
+  // Inline price edit — same save path as the sheet, just fewer clicks.
+  const saveInline = async (p: Price) => {
+    const next = Number(inlineValue);
+    if (!Number.isFinite(next) || next <= 0) { toast.error("Enter a valid price."); return; }
+    if (next === Number(p.price)) { setInlineId(null); return; }
+    await updateM.mutateAsync({
+      id: p.id, item: p.item, unit: p.unit, price: next, category: p.category, note: p.note,
+      effective_from: new Date().toISOString(),
+      updated: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+      last_device: deviceLabel(),
+    } as never);
+    setInlineId(null);
+    toast.success(`${p.item} price updated to ${naira(next)}`);
+  };
+
   const onDelete = async (p: Price) => {
+
     if (!window.confirm(`Delete ${p.item} from the price list?`)) return;
     await delM.mutateAsync(p.id);
     toast.success(`${p.item} removed from the price list.`);
