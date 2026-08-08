@@ -71,6 +71,69 @@ function DeltaBadge({ delta }: { delta: number }) {
   );
 }
 
+/** Percentage movement against the previous recorded price. */
+function TrendChip({ pct }: { pct: number }) {
+  const rounded = Math.round(pct * 10) / 10;
+  if (!rounded) {
+    return <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">No change</span>;
+  }
+  const up = rounded > 0;
+  return (
+    <span className={cn(
+      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+      up ? "bg-emerald-500/12 text-emerald-700" : "bg-destructive/12 text-destructive",
+    )}>
+      {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+      {up ? "+" : ""}{rounded}%
+    </span>
+  );
+}
+
+/** Tiny inline price-history sparkline (pure SVG, no chart runtime). */
+function Sparkline({ points, up }: { points: number[]; up: boolean }) {
+  if (points.length < 2) {
+    return <div className="h-8 rounded-lg bg-muted/40" aria-hidden />;
+  }
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const span = max - min || 1;
+  const w = 100, h = 32;
+  const d = points
+    .map((p, i) => `${i === 0 ? "M" : "L"}${(i / (points.length - 1)) * w},${h - ((p - min) / span) * (h - 4) - 2}`)
+    .join(" ");
+  const stroke = up ? "var(--color-emerald-600, #059669)" : "var(--destructive)";
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-8 w-full" aria-hidden>
+      <path d={d} fill="none" stroke={stroke} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
+function IconAction({
+  label, children, onClick, destructive, asChild,
+}: {
+  label: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+  destructive?: boolean;
+  asChild?: boolean;
+}) {
+  return (
+    <Button
+      asChild={asChild}
+      variant="ghost"
+      size="icon"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className={cn("h-8 w-8 rounded-full text-muted-foreground hover:bg-muted", destructive && "text-destructive hover:text-destructive")}
+    >
+      {children}
+    </Button>
+  );
+}
+
+
 export function PricingDashboard({ compact = false }: { compact?: boolean }) {
   const pricesQ = usePrices();
   const historyQ = usePriceHistory();
@@ -90,6 +153,9 @@ export function PricingDashboard({ compact = false }: { compact?: boolean }) {
   const [sort, setSort] = useState<SortKey>("recent");
   const [editing, setEditing] = useState<Price | null>(null);
   const [creating, setCreating] = useState(false);
+  const [inlineId, setInlineId] = useState<string | null>(null);
+  const [inlineValue, setInlineValue] = useState("");
+
 
   const rows = useMemo(() => {
     // One active price per logical item — collapse anything that shares a key
