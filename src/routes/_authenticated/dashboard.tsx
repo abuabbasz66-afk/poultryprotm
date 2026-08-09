@@ -679,7 +679,10 @@ const setBagWeightKg = (v: number | null) => {
           <PermissionDenied hint="Analytics, financials and AI insights are available to the Farm Owner only." />
         )}
 
+        {area === "records" && <BrokenEggsCard eggs={eggs} rooms={rooms} />}
+
         {canAudit && area === "records" && <RecentStaffActivity />}
+
 
         {area === "analytics" && canAnalyticsArea && (
 
