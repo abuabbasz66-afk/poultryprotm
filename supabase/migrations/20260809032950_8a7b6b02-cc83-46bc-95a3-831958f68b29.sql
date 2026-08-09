@@ -1,0 +1,5 @@
+ALTER TABLE public.egg_production
+  ADD COLUMN IF NOT EXISTS broken_r2 integer NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS broken_r3 integer NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS broken_r4 integer NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS broken_extra integer NOT NULL DEFAULT 0;

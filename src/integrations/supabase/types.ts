@@ -97,6 +97,10 @@ export type Database = {
       }
       egg_production: {
         Row: {
+          broken_extra: number
+          broken_r2: number
+          broken_r3: number
+          broken_r4: number
           created_at: string
           date: string
           extra: number
@@ -108,6 +112,10 @@ export type Database = {
           r4: number
         }
         Insert: {
+          broken_extra?: number
+          broken_r2?: number
+          broken_r3?: number
+          broken_r4?: number
           created_at?: string
           date: string
           extra?: number
@@ -119,6 +127,10 @@ export type Database = {
           r4?: number
         }
         Update: {
+          broken_extra?: number
+          broken_r2?: number
+          broken_r3?: number
+          broken_r4?: number
           created_at?: string
           date?: string
           extra?: number
