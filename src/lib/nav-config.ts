@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Egg, Wheat, HeartPulse, Syringe, Bird, Package, DollarSign,
   LineChart, Brain, Upload, Settings, UserCircle, CreditCard, Sparkles,
   ClipboardList, Beaker, TrendingUp, Receipt, PiggyBank, Tags, AlertTriangle,
-  Activity, Gauge, Users, ShoppingCart, type LucideIcon,
+  Activity, Gauge, Users, ShoppingCart, Bell, type LucideIcon,
 } from "lucide-react";
 
 export type NavLeaf = {

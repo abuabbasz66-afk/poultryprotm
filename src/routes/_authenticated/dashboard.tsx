@@ -3,6 +3,8 @@ import { usePermissions, homeRouteForRole } from "@/lib/rbac";
 import { eggSlots, productionRooms, roomStatus, ROOM_STATUS_LABELS, ROOM_STATUS_TONES } from "@/lib/rooms";
 import { PermissionDenied } from "@/components/permission-denied";
 import { RecentStaffActivity } from "@/components/recent-staff-activity";
+import { AlertsBanner } from "@/components/alerts-banner";
+
 
 import { useQueryClient } from "@tanstack/react-query";
 import { Fragment, useMemo, useState } from "react";
