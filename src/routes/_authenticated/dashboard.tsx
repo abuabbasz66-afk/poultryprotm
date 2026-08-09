@@ -620,7 +620,9 @@ const setBagWeightKg = (v: number | null) => {
       </header>
 
       <main className="container-x mt-8 space-y-6 md:space-y-8">
+        <AlertsBanner />
         <TrialBanner />
+
         {/* Product-area navigation: Capture → Understand → Predict.
             Analytics and AI are owner-grade surfaces; operational roles only
             ever see Capture. */}
