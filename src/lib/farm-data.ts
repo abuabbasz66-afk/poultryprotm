@@ -18,7 +18,12 @@ export type Room = {
   culled_revenue?: number | null;
   culled_notes?: string | null;
 };
-export type EggRow = { id: string; date: string; label: string; r2: number; r3: number; r4: number; extra: number };
+export type EggRow = {
+  id: string; date: string; label: string; r2: number; r3: number; r4: number; extra: number;
+  /** Broken eggs recorded per production room (counts, not crates). */
+  broken_r2?: number; broken_r3?: number; broken_r4?: number; broken_extra?: number;
+};
+
 export type Mortality = { id: string; room: string; cause: string; date: string; loss: number };
 export const HEALTH_TYPES = ["Vaccination", "Vitamin", "Medication", "Treatment", "Observation"] as const;
 export type HealthType = typeof HEALTH_TYPES[number];
