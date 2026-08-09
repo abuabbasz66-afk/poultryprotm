@@ -294,7 +294,7 @@ export function useEggs() {
         fetcher: async () => {
           const { data, error } = await supabase
             .from("egg_production")
-            .select("id, date, label, r2, r3, r4, extra")
+            .select("id, date, label, r2, r3, r4, extra, broken_r2, broken_r3, broken_r4, broken_extra")
             .eq("farm_id", farmId!)
             .order("date", { ascending: false });
           if (error) throw error;
