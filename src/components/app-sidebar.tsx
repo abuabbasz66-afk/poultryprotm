@@ -110,7 +110,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="truncate font-display text-[15px] font-semibold">PoultryPro™</span>
           </Link>
         </div>
-        <SyncStatus />
+        <div className="flex shrink-0 items-center gap-2">
+          <AlertsBell />
+          <SyncStatus />
+        </div>
+
       </div>
 
       {/* Mobile drawer */}
