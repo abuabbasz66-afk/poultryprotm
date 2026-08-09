@@ -7,6 +7,8 @@ import { NAV_SECTIONS, type NavEntry, type NavLeaf } from "@/lib/nav-config";
 import { useFarm } from "@/lib/farm-data";
 import { usePermissions, roleStyle } from "@/lib/rbac";
 import { SyncStatus } from "@/components/sync-status";
+import { AlertsBell } from "@/components/alerts-bell";
+
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { cn } from "@/lib/utils";
 
