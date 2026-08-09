@@ -3,6 +3,10 @@ import { usePermissions, homeRouteForRole } from "@/lib/rbac";
 import { eggSlots, productionRooms, roomStatus, ROOM_STATUS_LABELS, ROOM_STATUS_TONES } from "@/lib/rooms";
 import { PermissionDenied } from "@/components/permission-denied";
 import { RecentStaffActivity } from "@/components/recent-staff-activity";
+import { BrokenEggsCard } from "@/components/broken-eggs-card";
+
+import { AlertsBanner } from "@/components/alerts-banner";
+
 
 import { useQueryClient } from "@tanstack/react-query";
 import { Fragment, useMemo, useState } from "react";
@@ -618,7 +622,9 @@ const setBagWeightKg = (v: number | null) => {
       </header>
 
       <main className="container-x mt-8 space-y-6 md:space-y-8">
+        <AlertsBanner />
         <TrialBanner />
+
         {/* Product-area navigation: Capture → Understand → Predict.
             Analytics and AI are owner-grade surfaces; operational roles only
             ever see Capture. */}
@@ -675,7 +681,10 @@ const setBagWeightKg = (v: number | null) => {
           <PermissionDenied hint="Analytics, financials and AI insights are available to the Farm Owner only." />
         )}
 
+        {area === "records" && <BrokenEggsCard eggs={eggs} rooms={rooms} />}
+
         {canAudit && area === "records" && <RecentStaffActivity />}
+
 
         {area === "analytics" && canAnalyticsArea && (
 

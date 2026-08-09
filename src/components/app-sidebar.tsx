@@ -7,6 +7,8 @@ import { NAV_SECTIONS, type NavEntry, type NavLeaf } from "@/lib/nav-config";
 import { useFarm } from "@/lib/farm-data";
 import { usePermissions, roleStyle } from "@/lib/rbac";
 import { SyncStatus } from "@/components/sync-status";
+import { AlertsBell } from "@/components/alerts-bell";
+
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { cn } from "@/lib/utils";
 
@@ -110,7 +112,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="truncate font-display text-[15px] font-semibold">PoultryPro™</span>
           </Link>
         </div>
-        <SyncStatus />
+        <div className="flex shrink-0 items-center gap-2">
+          <AlertsBell />
+          <SyncStatus />
+        </div>
+
       </div>
 
       {/* Mobile drawer */}
@@ -179,7 +185,9 @@ function SidebarBody({
             <div className="truncate text-[11px] text-primary-foreground/60">{farm.data?.name ?? "Your farm"}</div>
           </div>
         )}
+        {!collapsed && <AlertsBell />}
         <SyncStatus compact={collapsed} />
+
       </div>
 
       {!collapsed && (

@@ -6,7 +6,25 @@
 //
 // This normalisation is display-only; underlying farm records are never modified.
 
-export type EggRowLike = { r2: number; r3: number; r4: number; extra: number };
+export type EggRowLike = {
+  r2: number; r3: number; r4: number; extra: number;
+  // Broken eggs are excluded from every usable/sellable figure.
+  broken_r2?: number; broken_r3?: number; broken_r4?: number; broken_extra?: number;
+};
+
+/** Broken eggs recorded on a row (all rooms + loose). */
+export function brokenFromRow(r: EggRowLike): number {
+  return (
+    (Number(r.broken_r2) || 0) + (Number(r.broken_r3) || 0) +
+    (Number(r.broken_r4) || 0) + (Number(r.broken_extra) || 0)
+  );
+}
+
+/** Eggs collected before breakage. */
+export function collectedFromRow(r: EggRowLike): number {
+  return (r.r2 + r.r3 + r.r4) * 30 + r.extra;
+}
+
 
 export type NormalisedEggs = {
   /** Complete crates after rolling extras into crates. */
@@ -26,10 +44,12 @@ export function normaliseEggs(recordedCrates: number, extraEggs: number): Normal
   return { crates, extra, totalEggs };
 }
 
+/** Usable (good) eggs on a row — collected minus broken. */
 export function totalEggsFromRow(r: EggRowLike): number {
-  return (r.r2 + r.r3 + r.r4) * 30 + r.extra;
+  return Math.max(0, collectedFromRow(r) - brokenFromRow(r));
 }
 
 export function normaliseEggRow(r: EggRowLike): NormalisedEggs {
-  return normaliseEggs(r.r2 + r.r3 + r.r4, r.extra);
+  return normaliseEggs(0, totalEggsFromRow(r));
+
 }

@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Egg, Wheat, HeartPulse, Syringe, Bird, Package, DollarSign,
   LineChart, Brain, Upload, Settings, UserCircle, CreditCard, Sparkles,
   ClipboardList, Beaker, TrendingUp, Receipt, PiggyBank, Tags, AlertTriangle,
-  Activity, Gauge, Users, ShoppingCart, type LucideIcon,
+  Activity, Gauge, Users, ShoppingCart, Bell, type LucideIcon,
 } from "lucide-react";
 
 export type NavLeaf = {
@@ -34,6 +34,8 @@ export const NAV_SECTIONS: NavSection[] = [
     heading: "Operations",
     items: [
       { label: "Dashboard", icon: LayoutDashboard, to: "/dashboard", search: { area: "records" }, permission: "dashboard.view" },
+      { label: "Alerts", icon: Bell, to: "/alerts", permission: "dashboard.view" },
+
       { label: "Production", icon: Egg, to: "/dashboard", search: { area: "records" }, hash: "production", permission: "production.read" },
       {
         label: "Feed Management", icon: Wheat, to: "/feed", search: { tab: "overview" }, permission: "feed.read",

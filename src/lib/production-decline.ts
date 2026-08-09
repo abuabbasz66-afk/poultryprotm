@@ -48,18 +48,21 @@ function mean(xs: number[]): number {
 function round1(n: number): number { return Math.round(n * 10) / 10; }
 
 function farmEggs(e: EggRow): number {
-  return (e.r2 + e.r3 + e.r4) * CRATE + e.extra;
+  const broken =
+    (e.broken_r2 ?? 0) + (e.broken_r3 ?? 0) + (e.broken_r4 ?? 0) + (e.broken_extra ?? 0);
+  return Math.max(0, (e.r2 + e.r3 + e.r4) * CRATE + e.extra - broken);
 }
-/** Eggs recorded for a specific room name like "ROOM 2". Returns null if room name has no matching field. */
+/** Usable eggs recorded for a specific room name like "ROOM 2". Returns null if room name has no matching field. */
 function roomEggs(name: string, e: EggRow): number | null {
   const m = name.match(/(\d+)/);
   if (!m) return null;
   const n = m[1];
-  if (n === "2") return e.r2 * CRATE;
-  if (n === "3") return e.r3 * CRATE;
-  if (n === "4") return e.r4 * CRATE;
+  if (n === "2") return Math.max(0, e.r2 * CRATE - (e.broken_r2 ?? 0));
+  if (n === "3") return Math.max(0, e.r3 * CRATE - (e.broken_r3 ?? 0));
+  if (n === "4") return Math.max(0, e.r4 * CRATE - (e.broken_r4 ?? 0));
   return null;
 }
+
 
 type Point = { date: string; eggs: number; pct: number };
 
