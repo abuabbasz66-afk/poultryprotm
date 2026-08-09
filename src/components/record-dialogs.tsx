@@ -403,20 +403,27 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
   const [r3, setR3] = useState<number | "">(item?.r3 ?? 0);
   const [r4, setR4] = useState<number | "">(item?.r4 ?? 0);
   const [extra, setExtra] = useState<number | "">(item?.extra ?? 0);
+  const [b2, setB2] = useState<number | "">(item?.broken_r2 ?? 0);
+  const [b3, setB3] = useState<number | "">(item?.broken_r3 ?? 0);
+  const [b4, setB4] = useState<number | "">(item?.broken_r4 ?? 0);
+  const [bExtra, setBExtra] = useState<number | "">(item?.broken_extra ?? 0);
   const add = useAddEgg();
   const upd = useUpdateEgg();
   const pending = add.isPending || upd.isPending;
 
   const roomCrates = (Number(r2) || 0) + (Number(r3) || 0) + (Number(r4) || 0);
   const rawExtra = Number(extra) || 0;
-  const bonusCrates = Math.floor(rawExtra / 30);
-  const remainderExtra = rawExtra % 30;
-  const totalCrates = roomCrates + bonusCrates;
-  const totalEggs = totalCrates * 30 + remainderExtra;
+  const collected = roomCrates * 30 + rawExtra;
+  const broken = (Number(b2) || 0) + (Number(b3) || 0) + (Number(b4) || 0) + (Number(bExtra) || 0);
+  const good = Math.max(0, collected - broken);
+  const totalCrates = Math.floor(good / 30);
+  const remainderExtra = good % 30;
+  const breakagePct = collected > 0 ? (broken / collected) * 100 : 0;
+  const overBroken = broken > collected;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pending) return;
+    if (pending || overBroken) return;
     const payload = {
       date,
       label: isoToLabel(date),
@@ -424,6 +431,10 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
       r3: Number(r3) || 0,
       r4: Number(r4) || 0,
       extra: Number(extra) || 0,
+      broken_r2: Number(b2) || 0,
+      broken_r3: Number(b3) || 0,
+      broken_r4: Number(b4) || 0,
+      broken_extra: Number(bExtra) || 0,
     };
     const done = {
       onSuccess: () => { toast.success(isEdit ? "Production record updated" : "Production record saved successfully"); onClose(); },
@@ -439,14 +450,18 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
     const state: Record<"r2" | "r3" | "r4", [number | "", (v: number | "") => void]> = {
       r2: [r2, setR2], r3: [r3, setR3], r4: [r4, setR4],
     };
-    const mapped = eggSlots(rooms).map((s) => ({
-      name: s.room.name, key: s.key, getter: state[s.key][0], setter: state[s.key][1],
-    }));
+    const broke: Record<"r2" | "r3" | "r4", [number | "", (v: number | "") => void]> = {
+      r2: [b2, setB2], r3: [b3, setB3], r4: [b4, setB4],
+    };
+    const build = (name: string, k: "r2" | "r3" | "r4") => ({
+      name, key: k,
+      getter: state[k][0], setter: state[k][1],
+      broken: broke[k][0], setBroken: broke[k][1],
+    });
+    const mapped = eggSlots(rooms).map((s) => build(s.room.name, s.key));
     if (mapped.length) return mapped;
-    return (["r2", "r3", "r4"] as const).map((k, i) => ({
-      name: ["ROOM 2", "ROOM 3", "ROOM 4"][i], key: k, getter: state[k][0], setter: state[k][1],
-    }));
-  }, [rooms, r2, r3, r4]);
+    return (["r2", "r3", "r4"] as const).map((k, i) => build(["ROOM 2", "ROOM 3", "ROOM 4"][i], k));
+  }, [rooms, r2, r3, r4, b2, b3, b4]);
 
   return (
     <form onSubmit={submit} className="space-y-4">
@@ -455,34 +470,55 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
       </Field>
 
       <div className="space-y-3">
-        {slots.map((s) => (
-          <div key={s.key} className="rounded-2xl border border-[color:var(--forest)]/10 bg-background/60 p-3">
-            <div className="text-xs font-semibold text-[color:var(--forest)] mb-2">{s.name}</div>
-            <Field label="Crates">
-              <NumberInput
-                value={s.getter}
-                onChange={(e) => s.setter(e.target.value === "" ? "" : Number(e.target.value))}
-                placeholder="0"
-              />
-            </Field>
-          </div>
-        ))}
+        {slots.map((s) => {
+          const roomCollected = (Number(s.getter) || 0) * 30;
+          const roomBroken = Number(s.broken) || 0;
+          return (
+            <div key={s.key} className="rounded-2xl border border-[color:var(--forest)]/10 bg-background/60 p-3">
+              <div className="text-xs font-semibold text-[color:var(--forest)] mb-2">{s.name}</div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Crates">
+                  <NumberInput
+                    value={s.getter}
+                    onChange={(e) => s.setter(e.target.value === "" ? "" : Number(e.target.value))}
+                    placeholder="0"
+                  />
+                </Field>
+                <Field label="Broken eggs">
+                  <NumberInput
+                    value={s.broken}
+                    onChange={(e) => s.setBroken(e.target.value === "" ? "" : Number(e.target.value))}
+                    placeholder="0"
+                  />
+                </Field>
+              </div>
+              <div className="mt-1.5 text-[11px] text-muted-foreground">
+                Net usable: {Math.max(0, roomCollected - roomBroken)} eggs
+                {roomCollected > 0 && roomBroken > 0 && ` · ${((roomBroken / roomCollected) * 100).toFixed(1)}% breakage`}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="rounded-2xl border border-[color:var(--forest)]/10 bg-background/60 p-3">
         <div className="text-xs font-semibold text-[color:var(--forest)] mb-2">Extra eggs (loose)</div>
-        <Field label="Extra eggs">
-          <NumberInput
-            value={extra}
-            onChange={(e) => setExtra(e.target.value === "" ? "" : Number(e.target.value))}
-            placeholder="0"
-          />
-        </Field>
-        {bonusCrates > 0 && (
-          <div className="mt-2 text-[11px] text-muted-foreground">
-            Auto-converted: {bonusCrates} crate{bonusCrates === 1 ? "" : "s"} + {remainderExtra} extra
-          </div>
-        )}
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Extra eggs">
+            <NumberInput
+              value={extra}
+              onChange={(e) => setExtra(e.target.value === "" ? "" : Number(e.target.value))}
+              placeholder="0"
+            />
+          </Field>
+          <Field label="Broken (loose)">
+            <NumberInput
+              value={bExtra}
+              onChange={(e) => setBExtra(e.target.value === "" ? "" : Number(e.target.value))}
+              placeholder="0"
+            />
+          </Field>
+        </div>
       </div>
 
       <div className="rounded-2xl bg-[color:var(--forest)]/8 border border-[color:var(--forest)]/15 px-4 py-3">
@@ -490,23 +526,32 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
         <div className="mt-1 flex items-baseline justify-between gap-4">
           <div>
             <div className="font-display text-2xl font-semibold text-[color:var(--forest)]">{totalCrates}</div>
-            <div className="text-[11px] text-muted-foreground">total crates</div>
+            <div className="text-[11px] text-muted-foreground">good crates</div>
           </div>
           <div className="text-right">
             <div className="font-display text-2xl font-semibold text-[color:var(--forest)]">{remainderExtra}</div>
             <div className="text-[11px] text-muted-foreground">extra eggs</div>
           </div>
           <div className="text-right">
-            <div className="font-display text-2xl font-semibold text-[color:var(--gold)]">{totalEggs}</div>
-            <div className="text-[11px] text-muted-foreground">total eggs</div>
+            <div className="font-display text-2xl font-semibold text-[color:var(--gold)]">{good}</div>
+            <div className="text-[11px] text-muted-foreground">good eggs</div>
           </div>
         </div>
+        <div className="mt-2 border-t border-[color:var(--forest)]/15 pt-2 text-[11.5px] text-muted-foreground">
+          Collected {collected} · Broken {broken} · Breakage {breakagePct.toFixed(1)}%
+        </div>
+        {overBroken && (
+          <div className="mt-2 text-[11.5px] font-medium text-destructive">
+            Broken eggs cannot be more than the eggs collected.
+          </div>
+        )}
       </div>
 
-      <Actions onCancel={onClose} submitting={pending} submitLabel={isEdit ? "Save Changes" : "Save Production"} />
+      <Actions onCancel={onClose} submitting={pending} submitLabel={isEdit ? "Save Changes" : "Save Production"} disabled={overBroken} />
     </form>
   );
 }
+
 
 
 function MortalityForm({ item, onClose, rooms }: { item?: Mortality; onClose: () => void; rooms: Room[] }) {
