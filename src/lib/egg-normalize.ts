@@ -44,10 +44,12 @@ export function normaliseEggs(recordedCrates: number, extraEggs: number): Normal
   return { crates, extra, totalEggs };
 }
 
+/** Usable (good) eggs on a row — collected minus broken. */
 export function totalEggsFromRow(r: EggRowLike): number {
-  return (r.r2 + r.r3 + r.r4) * 30 + r.extra;
+  return Math.max(0, collectedFromRow(r) - brokenFromRow(r));
 }
 
 export function normaliseEggRow(r: EggRowLike): NormalisedEggs {
-  return normaliseEggs(r.r2 + r.r3 + r.r4, r.extra);
+  return normaliseEggs(0, totalEggsFromRow(r));
+
 }
