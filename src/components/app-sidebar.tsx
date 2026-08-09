@@ -185,7 +185,9 @@ function SidebarBody({
             <div className="truncate text-[11px] text-primary-foreground/60">{farm.data?.name ?? "Your farm"}</div>
           </div>
         )}
+        {!collapsed && <AlertsBell />}
         <SyncStatus compact={collapsed} />
+
       </div>
 
       {!collapsed && (
