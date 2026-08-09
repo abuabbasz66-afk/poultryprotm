@@ -34,6 +34,8 @@ export const NAV_SECTIONS: NavSection[] = [
     heading: "Operations",
     items: [
       { label: "Dashboard", icon: LayoutDashboard, to: "/dashboard", search: { area: "records" }, permission: "dashboard.view" },
+      { label: "Alerts", icon: Bell, to: "/alerts", permission: "dashboard.view" },
+
       { label: "Production", icon: Egg, to: "/dashboard", search: { area: "records" }, hash: "production", permission: "production.read" },
       {
         label: "Feed Management", icon: Wheat, to: "/feed", search: { tab: "overview" }, permission: "feed.read",
