@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS broiler_daily_batch_date_key ON public.broiler_daily (batch_id, entry_date);
