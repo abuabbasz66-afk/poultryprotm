@@ -30,6 +30,7 @@ import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedFinanceRouteImport } from './routes/_authenticated/finance'
 import { Route as AuthenticatedFeedRouteImport } from './routes/_authenticated/feed'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedBroilersRouteImport } from './routes/_authenticated/broilers'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as SuperAdminFarmsFarmIdRouteImport } from './routes/super-admin.farms.$farmId'
@@ -144,6 +145,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBroilersRoute = AuthenticatedBroilersRouteImport.update({
+  id: '/broilers',
+  path: '/broilers',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAlertsRoute = AuthenticatedAlertsRouteImport.update({
   id: '/alerts',
   path: '/alerts',
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/alerts': typeof AuthenticatedAlertsRoute
+  '/broilers': typeof AuthenticatedBroilersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/feed': typeof AuthenticatedFeedRoute
   '/finance': typeof AuthenticatedFinanceRoute
@@ -222,6 +229,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/alerts': typeof AuthenticatedAlertsRoute
+  '/broilers': typeof AuthenticatedBroilersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/feed': typeof AuthenticatedFeedRoute
   '/finance': typeof AuthenticatedFinanceRoute
@@ -253,6 +261,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
+  '/_authenticated/broilers': typeof AuthenticatedBroilersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/feed': typeof AuthenticatedFeedRoute
   '/_authenticated/finance': typeof AuthenticatedFinanceRoute
@@ -284,6 +293,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/activity'
     | '/alerts'
+    | '/broilers'
     | '/dashboard'
     | '/feed'
     | '/finance'
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/activity'
     | '/alerts'
+    | '/broilers'
     | '/dashboard'
     | '/feed'
     | '/finance'
@@ -343,6 +354,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/_authenticated/activity'
     | '/_authenticated/alerts'
+    | '/_authenticated/broilers'
     | '/_authenticated/dashboard'
     | '/_authenticated/feed'
     | '/_authenticated/finance'
@@ -527,6 +539,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/broilers': {
+      id: '/_authenticated/broilers'
+      path: '/broilers'
+      fullPath: '/broilers'
+      preLoaderRoute: typeof AuthenticatedBroilersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/alerts': {
       id: '/_authenticated/alerts'
       path: '/alerts'
@@ -582,6 +601,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
+  AuthenticatedBroilersRoute: typeof AuthenticatedBroilersRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFeedRoute: typeof AuthenticatedFeedRoute
   AuthenticatedFinanceRoute: typeof AuthenticatedFinanceRoute
@@ -598,6 +618,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
+  AuthenticatedBroilersRoute: AuthenticatedBroilersRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFeedRoute: AuthenticatedFeedRoute,
   AuthenticatedFinanceRoute: AuthenticatedFinanceRoute,

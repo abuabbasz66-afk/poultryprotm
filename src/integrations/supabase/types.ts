@@ -95,6 +95,197 @@ export type Database = {
         }
         Relationships: []
       }
+      broiler_batches: {
+        Row: {
+          birds_placed: number
+          breed: string | null
+          chick_unit_cost: number
+          created_at: string
+          current_birds: number
+          date_placed: string
+          farm_id: string
+          house: string | null
+          id: string
+          name: string
+          notes: string | null
+          status: string
+          target_weight_kg: number
+          updated_at: string
+        }
+        Insert: {
+          birds_placed?: number
+          breed?: string | null
+          chick_unit_cost?: number
+          created_at?: string
+          current_birds?: number
+          date_placed?: string
+          farm_id: string
+          house?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          status?: string
+          target_weight_kg?: number
+          updated_at?: string
+        }
+        Update: {
+          birds_placed?: number
+          breed?: string | null
+          chick_unit_cost?: number
+          created_at?: string
+          current_birds?: number
+          date_placed?: string
+          farm_id?: string
+          house?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          status?: string
+          target_weight_kg?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broiler_batches_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      broiler_daily: {
+        Row: {
+          avg_weight_g: number | null
+          batch_id: string
+          created_at: string
+          deaths: number
+          entry_date: string
+          farm_id: string
+          feed_kg: number
+          id: string
+          notes: string | null
+          recorded_by: string | null
+          recorded_by_name: string | null
+          updated_at: string
+          water_litres: number | null
+        }
+        Insert: {
+          avg_weight_g?: number | null
+          batch_id: string
+          created_at?: string
+          deaths?: number
+          entry_date?: string
+          farm_id: string
+          feed_kg?: number
+          id?: string
+          notes?: string | null
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          updated_at?: string
+          water_litres?: number | null
+        }
+        Update: {
+          avg_weight_g?: number | null
+          batch_id?: string
+          created_at?: string
+          deaths?: number
+          entry_date?: string
+          farm_id?: string
+          feed_kg?: number
+          id?: string
+          notes?: string | null
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          updated_at?: string
+          water_litres?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broiler_daily_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "broiler_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "broiler_daily_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      broiler_sales: {
+        Row: {
+          amount: number
+          batch_id: string
+          birds: number
+          created_at: string
+          customer: string | null
+          entry_date: string
+          farm_id: string
+          id: string
+          notes: string | null
+          payment_method: string
+          price_per_kg: number
+          recorded_by: string | null
+          recorded_by_name: string | null
+          total_weight_kg: number
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          batch_id: string
+          birds?: number
+          created_at?: string
+          customer?: string | null
+          entry_date?: string
+          farm_id: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          price_per_kg?: number
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          total_weight_kg?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          batch_id?: string
+          birds?: number
+          created_at?: string
+          customer?: string | null
+          entry_date?: string
+          farm_id?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          price_per_kg?: number
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          total_weight_kg?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broiler_sales_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "broiler_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "broiler_sales_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       egg_production: {
         Row: {
           broken_extra: number
