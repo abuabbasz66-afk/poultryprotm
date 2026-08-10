@@ -50,6 +50,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Health Records", icon: HeartPulse, to: "/dashboard", search: { area: "records" }, hash: "health", permission: "health.read" },
       { label: "Medication & Vaccination", icon: Syringe, to: "/dashboard", search: { area: "records" }, hash: "health", permission: "health.read" },
       { label: "Bird Management", icon: Bird, to: "/dashboard", search: { area: "records" }, hash: "rooms", permission: "rooms.read" },
+      { label: "Broilers", icon: Drumstick, to: "/broilers", permission: "rooms.read" },
       { label: "Inventory", icon: Package, to: "/feed", search: { tab: "inventory" }, permission: "inventory.read" },
     ],
   },
