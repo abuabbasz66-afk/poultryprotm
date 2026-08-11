@@ -527,14 +527,14 @@ function NewBatchDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-function DailyDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) {
+function DailyDialog({ m, editing, onClose }: { m: BatchMetrics; editing?: BroilerDaily | null; onClose: () => void }) {
   const rec = useRecordBroilerDaily();
-  const [date, setDate] = useState(todayKey());
-  const [deaths, setDeaths] = useState("0");
-  const [feed, setFeed] = useState("");
-  const [weight, setWeight] = useState("");
-  const [water, setWater] = useState("");
-  const [notes, setNotes] = useState("");
+  const [date, setDate] = useState(editing?.entry_date ?? todayKey());
+  const [deaths, setDeaths] = useState(String(editing?.deaths ?? 0));
+  const [feed, setFeed] = useState(editing ? String(editing.feed_kg) : "");
+  const [weight, setWeight] = useState(editing?.avg_weight_g != null ? String(editing.avg_weight_g) : "");
+  const [water, setWater] = useState(editing?.water_litres != null ? String(editing.water_litres) : "");
+  const [notes, setNotes] = useState(editing?.notes ?? "");
 
   const submit = () => {
     rec.mutate({
@@ -545,9 +545,11 @@ function DailyDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) {
       avg_weight_g: weight.trim() ? Number(weight) : null,
       water_litres: water.trim() ? Number(water) : null,
       notes,
-      current_birds: m.batch.current_birds,
+      // When editing, add back the deaths already applied so the head-count
+      // reflects the corrected figure rather than double-counting.
+      current_birds: m.batch.current_birds + (editing?.deaths ?? 0),
     }, {
-      onSuccess: () => { toast.success("Day recorded"); onClose(); },
+      onSuccess: () => { toast.success(editing ? "Record updated" : "Day recorded"); onClose(); },
       onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save"),
     });
   };
@@ -556,9 +558,10 @@ function DailyDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) {
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Record day — {m.batch.name}</DialogTitle>
+          <DialogTitle>{editing ? "Edit day" : "Record day"} — {m.batch.name}</DialogTitle>
           <DialogDescription>Deaths, feed and weight for one day. Saving twice for the same day updates that day.</DialogDescription>
         </DialogHeader>
+
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Date"><input type="date" className={inputCls} value={date} onChange={(e) => setDate(e.target.value)} /></Field>
