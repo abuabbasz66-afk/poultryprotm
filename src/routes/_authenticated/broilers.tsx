@@ -585,39 +585,46 @@ function DailyDialog({ m, editing, onClose }: { m: BatchMetrics; editing?: Broil
   );
 }
 
-function SaleDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) {
+function SaleDialog({ m, editing, onClose }: { m: BatchMetrics; editing?: BroilerSale | null; onClose: () => void }) {
   const rec = useRecordBroilerSale();
-  const [date, setDate] = useState(todayKey());
-  const [birds, setBirds] = useState("");
-  const [weightKg, setWeightKg] = useState("");
-  const [pricePerKg, setPricePerKg] = useState("");
-  const [customer, setCustomer] = useState("");
-  const [method, setMethod] = useState("Cash");
+  const upd = useUpdateBroilerSale();
+  const [date, setDate] = useState(editing?.entry_date ?? todayKey());
+  const [birds, setBirds] = useState(editing ? String(editing.birds) : "");
+  const [weightKg, setWeightKg] = useState(editing ? String(editing.total_weight_kg) : "");
+  const [pricePerKg, setPricePerKg] = useState(editing ? String(editing.price_per_kg) : "");
+  const [customer, setCustomer] = useState(editing?.customer ?? "");
+  const [method, setMethod] = useState(editing?.payment_method ?? "Cash");
   const amount = (Number(weightKg) || 0) * (Number(pricePerKg) || 0);
+  const maxBirds = m.birdsAlive + (editing?.birds ?? 0);
+  const pending = rec.isPending || upd.isPending;
 
   const submit = () => {
     const count = parseInt(birds, 10);
     if (!count || count <= 0) { toast.error("Enter how many birds were sold"); return; }
-    if (count > m.birdsAlive) { toast.error(`Only ${m.birdsAlive} birds are alive in this batch`); return; }
-    rec.mutate({
+    if (count > maxBirds) { toast.error(`Only ${maxBirds} birds are available in this batch`); return; }
+    const common = {
       batch_id: m.batch.id, entry_date: date, birds: count,
       total_weight_kg: Number(weightKg) || 0,
       price_per_kg: Number(pricePerKg) || 0,
       customer, payment_method: method,
       current_birds: m.batch.current_birds,
-    }, {
-      onSuccess: () => { toast.success("Sale recorded"); onClose(); },
-      onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save sale"),
-    });
+    };
+    const handlers = {
+      onSuccess: () => { toast.success(editing ? "Sale updated" : "Sale recorded"); onClose(); },
+      onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not save sale"),
+    };
+    if (editing) upd.mutate({ ...common, id: editing.id, previous_birds: editing.birds }, handlers);
+    else rec.mutate(common, handlers);
   };
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Record sale — {m.batch.name}</DialogTitle>
+          <DialogTitle>{editing ? "Edit sale" : "Record sale"} — {m.batch.name}</DialogTitle>
           <DialogDescription>{num(m.birdsAlive)} birds are currently alive in this batch.</DialogDescription>
         </DialogHeader>
+
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Date"><input type="date" className={inputCls} value={date} onChange={(e) => setDate(e.target.value)} /></Field>
