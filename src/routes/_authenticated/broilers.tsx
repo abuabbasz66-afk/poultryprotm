@@ -401,10 +401,19 @@ function BatchDetail({ m, daily, sales, onBack, onRecord, onSell, canWrite, canS
                       <td>{naira(Number(s.amount))}</td>
                       <td className="text-right">
                         {canSell && (
-                          <button className="text-muted-foreground hover:text-destructive"
-                            onClick={() => delSale.mutate(s.id, { onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed") })}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          <span className="inline-flex items-center gap-2">
+                            <button className="text-muted-foreground hover:text-foreground"
+                              onClick={() => setEditSale(s)} aria-label="Edit sale">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button className="text-muted-foreground hover:text-destructive" aria-label="Delete sale"
+                              onClick={() => {
+                                if (!confirm(`Delete the sale recorded on ${s.entry_date}?`)) return;
+                                delSale.mutate(s.id, { onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed") });
+                              }}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </span>
                         )}
                       </td>
                     </tr>
@@ -415,9 +424,16 @@ function BatchDetail({ m, daily, sales, onBack, onRecord, onSell, canWrite, canS
           )}
         </div>
       </div>
+
+      {/* Vaccination & medication register */}
+      <BroilerHealthPanel batch={m.batch} canWrite={canHealthWrite} canDelete={canHealthDelete} />
+
+      {editDaily && <DailyDialog m={m} editing={editDaily} onClose={() => setEditDaily(null)} />}
+      {editSale && <SaleDialog m={m} editing={editSale} onClose={() => setEditSale(null)} />}
     </section>
   );
 }
+
 
 function GrowthChart({ points, targetG }: { points: { day: number; weightG: number }[]; targetG: number }) {
   const w = 640, h = 200, pad = 28;
