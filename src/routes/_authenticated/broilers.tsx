@@ -108,6 +108,8 @@ function BroilersPage() {
         <Stat icon={TrendingUp} label="Cycle profit" value={naira(summary.profit)} sub={`${naira(summary.revenue)} sales · ${naira(summary.totalCost)} cost`} tone={summary.profit >= 0 ? "good" : "bad"} />
       </section>
 
+      <BroilerAgeAlerts batches={batchesQ.data ?? []} />
+
       {current ? (
         <BatchDetail
           m={current}
@@ -118,7 +120,10 @@ function BroilersPage() {
           onSell={() => setSaleFor(current)}
           canWrite={can("production.write")}
           canSell={can("sales.write")}
+          canHealthWrite={can("health.write")}
+          canHealthDelete={can("health.delete")}
         />
+
       ) : (
         <section className="mt-8">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Batches</h2>
