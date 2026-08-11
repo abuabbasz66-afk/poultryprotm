@@ -248,18 +248,22 @@ function Metric({ label, value, tone }: { label: string; value: string; tone?: "
 
 /* --------------------------------- detail --------------------------------- */
 
-function BatchDetail({ m, daily, sales, onBack, onRecord, onSell, canWrite, canSell }: {
+function BatchDetail({ m, daily, sales, onBack, onRecord, onSell, canWrite, canSell, canHealthWrite, canHealthDelete }: {
   m: BatchMetrics;
-  daily: ReturnType<typeof useBroilerDaily>["data"] extends (infer T)[] | undefined ? T[] : never;
-  sales: ReturnType<typeof useBroilerSales>["data"] extends (infer T)[] | undefined ? T[] : never;
+  daily: BroilerDaily[];
+  sales: BroilerSale[];
   onBack: () => void; onRecord: () => void; onSell: () => void;
   canWrite: boolean; canSell: boolean;
+  canHealthWrite: boolean; canHealthDelete: boolean;
 }) {
   const delBatch = useDeleteBroilerBatch();
   const delDaily = useDeleteBroilerDaily();
   const delSale = useDeleteBroilerSale();
+  const [editDaily, setEditDaily] = useState<BroilerDaily | null>(null);
+  const [editSale, setEditSale] = useState<BroilerSale | null>(null);
   const curve = useMemo(() => growthCurve(m.batch, daily), [m.batch, daily]);
   const insights = useMemo(() => batchInsights(m), [m]);
+
 
   return (
     <section className="mt-8">
