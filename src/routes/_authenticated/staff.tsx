@@ -141,6 +141,7 @@ function PeopleTab() {
   const qc = useQueryClient();
   const [showInvite, setShowInvite] = useState(false);
   const [resetFor, setResetFor] = useState<StaffRow | null>(null);
+  const [accessFor, setAccessFor] = useState<StaffRow | null>(null);
   const [deleteFor, setDeleteFor] = useState<StaffRow | null>(null);
 
   const staffQ = useQuery({
