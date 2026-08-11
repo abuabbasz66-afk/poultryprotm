@@ -1,3 +1,4 @@
+import { RequirePermission } from "@/components/require-permission";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowLeft, CheckCircle2, Sparkles, CreditCard, Calendar,

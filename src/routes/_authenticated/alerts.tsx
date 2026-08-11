@@ -1,3 +1,4 @@
+import { RequirePermission } from "@/components/require-permission";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, CheckCheck, Loader2 } from "lucide-react";
