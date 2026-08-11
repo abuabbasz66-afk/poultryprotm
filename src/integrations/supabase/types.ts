@@ -217,6 +217,69 @@ export type Database = {
           },
         ]
       }
+      broiler_medications: {
+        Row: {
+          batch_id: string
+          created_at: string
+          dosage: string | null
+          drug_name: string
+          end_date: string | null
+          farm_id: string
+          id: string
+          notes: string | null
+          purpose: string | null
+          recorded_by: string | null
+          recorded_by_name: string | null
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          dosage?: string | null
+          drug_name: string
+          end_date?: string | null
+          farm_id: string
+          id?: string
+          notes?: string | null
+          purpose?: string | null
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          dosage?: string | null
+          drug_name?: string
+          end_date?: string | null
+          farm_id?: string
+          id?: string
+          notes?: string | null
+          purpose?: string | null
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broiler_medications_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "broiler_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "broiler_medications_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       broiler_sales: {
         Row: {
           amount: number
@@ -279,6 +342,66 @@ export type Database = {
           },
           {
             foreignKeyName: "broiler_sales_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      broiler_vaccinations: {
+        Row: {
+          administered_by: string | null
+          age_days: number | null
+          batch_id: string
+          created_at: string
+          date_given: string
+          farm_id: string
+          id: string
+          notes: string | null
+          recorded_by: string | null
+          recorded_by_name: string | null
+          updated_at: string
+          vaccine_name: string
+        }
+        Insert: {
+          administered_by?: string | null
+          age_days?: number | null
+          batch_id: string
+          created_at?: string
+          date_given: string
+          farm_id: string
+          id?: string
+          notes?: string | null
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          updated_at?: string
+          vaccine_name: string
+        }
+        Update: {
+          administered_by?: string | null
+          age_days?: number | null
+          batch_id?: string
+          created_at?: string
+          date_given?: string
+          farm_id?: string
+          id?: string
+          notes?: string | null
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          updated_at?: string
+          vaccine_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broiler_vaccinations_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "broiler_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "broiler_vaccinations_farm_id_fkey"
             columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "farms"
@@ -404,9 +527,49 @@ export type Database = {
           },
         ]
       }
+      farm_member_permissions: {
+        Row: {
+          created_at: string
+          farm_id: string
+          id: string
+          member_id: string
+          permission: string
+        }
+        Insert: {
+          created_at?: string
+          farm_id: string
+          id?: string
+          member_id: string
+          permission: string
+        }
+        Update: {
+          created_at?: string
+          farm_id?: string
+          id?: string
+          member_id?: string
+          permission?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_member_permissions_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "farm_member_permissions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "farm_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farm_members: {
         Row: {
           created_at: string
+          custom_permissions: boolean
           email: string | null
           farm_id: string
           full_name: string
@@ -422,6 +585,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          custom_permissions?: boolean
           email?: string | null
           farm_id: string
           full_name?: string
@@ -437,6 +601,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          custom_permissions?: boolean
           email?: string | null
           farm_id?: string
           full_name?: string
@@ -1707,6 +1872,10 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      farm_staff_get_permissions: {
+        Args: { _member_id: string }
+        Returns: Json
+      }
       farm_staff_list: {
         Args: never
         Returns: {
@@ -1722,6 +1891,10 @@ export type Database = {
           status: string
           user_id: string
         }[]
+      }
+      farm_staff_set_permissions: {
+        Args: { _custom: boolean; _member_id: string; _permissions: string[] }
+        Returns: Json
       }
       farm_staff_set_role: {
         Args: { _member_id: string; _role: string }
@@ -1760,6 +1933,10 @@ export type Database = {
           _os?: string
         }
         Returns: undefined
+      }
+      member_effective_permissions: {
+        Args: { _member_id: string }
+        Returns: string[]
       }
       my_farm_context: { Args: never; Returns: Json }
       my_farm_ids: { Args: never; Returns: string[] }

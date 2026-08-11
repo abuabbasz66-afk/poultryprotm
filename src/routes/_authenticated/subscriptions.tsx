@@ -1,3 +1,4 @@
+import { RequirePermission } from "@/components/require-permission";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowLeft, CheckCircle2, Sparkles, CreditCard, Calendar,
@@ -16,7 +17,11 @@ export const Route = createFileRoute("/_authenticated/subscriptions")({
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  component: SubscriptionsPage,
+  component: () => (
+    <RequirePermission permission="subscription.manage" hint="Billing is available to the Farm Owner.">
+      <SubscriptionsPage />
+    </RequirePermission>
+  ),
 });
 
 function fmtDay(iso: string | null | undefined): string {

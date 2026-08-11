@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
-  Bird, Plus, Loader2, Scale, Wheat, Skull, TrendingUp, Trash2,
+  Bird, Plus, Loader2, Scale, Wheat, Skull, TrendingUp, Trash2, Pencil,
   ShoppingCart, ClipboardList, Target, Sparkles, ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -17,13 +17,15 @@ import { Button } from "@/components/ui/button";
 import {
   useBroilerBatches, useBroilerDaily, useBroilerSales,
   useAddBroilerBatch, useDeleteBroilerBatch, useRecordBroilerDaily,
-  useRecordBroilerSale, useDeleteBroilerDaily, useDeleteBroilerSale,
-  batchStatus, BROILER_STATUS_LABELS, BROILER_STATUS_TONES,
-  type BroilerBatch,
+  useRecordBroilerSale, useUpdateBroilerSale, useDeleteBroilerDaily, useDeleteBroilerSale,
+  batchStatus, ageLabel, batchAgeDays, BROILER_STATUS_LABELS, BROILER_STATUS_TONES,
+  type BroilerBatch, type BroilerDaily, type BroilerSale,
 } from "@/lib/broiler-data";
+import { BroilerAgeAlerts, BroilerHealthPanel } from "@/components/broiler-health";
 import {
   computeBatchMetrics, summarise, growthCurve, batchInsights, type BatchMetrics,
 } from "@/lib/broiler-analytics";
+
 
 export const Route = createFileRoute("/_authenticated/broilers")({
   head: () => ({
@@ -106,6 +108,8 @@ function BroilersPage() {
         <Stat icon={TrendingUp} label="Cycle profit" value={naira(summary.profit)} sub={`${naira(summary.revenue)} sales · ${naira(summary.totalCost)} cost`} tone={summary.profit >= 0 ? "good" : "bad"} />
       </section>
 
+      <BroilerAgeAlerts batches={batchesQ.data ?? []} />
+
       {current ? (
         <BatchDetail
           m={current}
@@ -116,7 +120,10 @@ function BroilersPage() {
           onSell={() => setSaleFor(current)}
           canWrite={can("production.write")}
           canSell={can("sales.write")}
+          canHealthWrite={can("health.write")}
+          canHealthDelete={can("health.delete")}
         />
+
       ) : (
         <section className="mt-8">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Batches</h2>
@@ -241,18 +248,22 @@ function Metric({ label, value, tone }: { label: string; value: string; tone?: "
 
 /* --------------------------------- detail --------------------------------- */
 
-function BatchDetail({ m, daily, sales, onBack, onRecord, onSell, canWrite, canSell }: {
+function BatchDetail({ m, daily, sales, onBack, onRecord, onSell, canWrite, canSell, canHealthWrite, canHealthDelete }: {
   m: BatchMetrics;
-  daily: ReturnType<typeof useBroilerDaily>["data"] extends (infer T)[] | undefined ? T[] : never;
-  sales: ReturnType<typeof useBroilerSales>["data"] extends (infer T)[] | undefined ? T[] : never;
+  daily: BroilerDaily[];
+  sales: BroilerSale[];
   onBack: () => void; onRecord: () => void; onSell: () => void;
   canWrite: boolean; canSell: boolean;
+  canHealthWrite: boolean; canHealthDelete: boolean;
 }) {
   const delBatch = useDeleteBroilerBatch();
   const delDaily = useDeleteBroilerDaily();
   const delSale = useDeleteBroilerSale();
+  const [editDaily, setEditDaily] = useState<BroilerDaily | null>(null);
+  const [editSale, setEditSale] = useState<BroilerSale | null>(null);
   const curve = useMemo(() => growthCurve(m.batch, daily), [m.batch, daily]);
   const insights = useMemo(() => batchInsights(m), [m]);
+
 
   return (
     <section className="mt-8">
@@ -282,7 +293,7 @@ function BatchDetail({ m, daily, sales, onBack, onRecord, onSell, canWrite, canS
       </div>
 
       <h2 className="mt-3 font-display text-xl font-semibold text-foreground">
-        {m.batch.name} <span className="text-sm font-normal text-muted-foreground">· Day {m.ageDays}</span>
+        {m.batch.name} <span className="text-sm font-normal text-muted-foreground">· {ageLabel(batchAgeDays(m.batch.date_placed))}</span>
       </h2>
 
       <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -347,12 +358,22 @@ function BatchDetail({ m, daily, sales, onBack, onRecord, onSell, canWrite, canS
                       <td>{d.avg_weight_g ? `${num(Number(d.avg_weight_g))} g` : "—"}</td>
                       <td className="text-right">
                         {canWrite && (
-                          <button className="text-muted-foreground hover:text-destructive"
-                            onClick={() => delDaily.mutate(d.id, { onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed") })}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          <span className="inline-flex items-center gap-2">
+                            <button className="text-muted-foreground hover:text-foreground"
+                              onClick={() => setEditDaily(d)} aria-label="Edit daily record">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button className="text-muted-foreground hover:text-destructive" aria-label="Delete daily record"
+                              onClick={() => {
+                                if (!confirm(`Delete the record for ${d.entry_date}?`)) return;
+                                delDaily.mutate(d.id, { onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed") });
+                              }}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </span>
                         )}
                       </td>
+
                     </tr>
                   ))}
                 </tbody>
@@ -380,10 +401,19 @@ function BatchDetail({ m, daily, sales, onBack, onRecord, onSell, canWrite, canS
                       <td>{naira(Number(s.amount))}</td>
                       <td className="text-right">
                         {canSell && (
-                          <button className="text-muted-foreground hover:text-destructive"
-                            onClick={() => delSale.mutate(s.id, { onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed") })}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          <span className="inline-flex items-center gap-2">
+                            <button className="text-muted-foreground hover:text-foreground"
+                              onClick={() => setEditSale(s)} aria-label="Edit sale">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button className="text-muted-foreground hover:text-destructive" aria-label="Delete sale"
+                              onClick={() => {
+                                if (!confirm(`Delete the sale recorded on ${s.entry_date}?`)) return;
+                                delSale.mutate(s.id, { onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed") });
+                              }}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </span>
                         )}
                       </td>
                     </tr>
@@ -394,9 +424,16 @@ function BatchDetail({ m, daily, sales, onBack, onRecord, onSell, canWrite, canS
           )}
         </div>
       </div>
+
+      {/* Vaccination & medication register */}
+      <BroilerHealthPanel batch={m.batch} canWrite={canHealthWrite} canDelete={canHealthDelete} />
+
+      {editDaily && <DailyDialog m={m} editing={editDaily} onClose={() => setEditDaily(null)} />}
+      {editSale && <SaleDialog m={m} editing={editSale} onClose={() => setEditSale(null)} />}
     </section>
   );
 }
+
 
 function GrowthChart({ points, targetG }: { points: { day: number; weightG: number }[]; targetG: number }) {
   const w = 640, h = 200, pad = 28;
@@ -490,14 +527,14 @@ function NewBatchDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-function DailyDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) {
+function DailyDialog({ m, editing, onClose }: { m: BatchMetrics; editing?: BroilerDaily | null; onClose: () => void }) {
   const rec = useRecordBroilerDaily();
-  const [date, setDate] = useState(todayKey());
-  const [deaths, setDeaths] = useState("0");
-  const [feed, setFeed] = useState("");
-  const [weight, setWeight] = useState("");
-  const [water, setWater] = useState("");
-  const [notes, setNotes] = useState("");
+  const [date, setDate] = useState(editing?.entry_date ?? todayKey());
+  const [deaths, setDeaths] = useState(String(editing?.deaths ?? 0));
+  const [feed, setFeed] = useState(editing ? String(editing.feed_kg) : "");
+  const [weight, setWeight] = useState(editing?.avg_weight_g != null ? String(editing.avg_weight_g) : "");
+  const [water, setWater] = useState(editing?.water_litres != null ? String(editing.water_litres) : "");
+  const [notes, setNotes] = useState(editing?.notes ?? "");
 
   const submit = () => {
     rec.mutate({
@@ -508,9 +545,11 @@ function DailyDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) {
       avg_weight_g: weight.trim() ? Number(weight) : null,
       water_litres: water.trim() ? Number(water) : null,
       notes,
-      current_birds: m.batch.current_birds,
+      // When editing, add back the deaths already applied so the head-count
+      // reflects the corrected figure rather than double-counting.
+      current_birds: m.batch.current_birds + (editing?.deaths ?? 0),
     }, {
-      onSuccess: () => { toast.success("Day recorded"); onClose(); },
+      onSuccess: () => { toast.success(editing ? "Record updated" : "Day recorded"); onClose(); },
       onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save"),
     });
   };
@@ -519,9 +558,10 @@ function DailyDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) {
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Record day — {m.batch.name}</DialogTitle>
+          <DialogTitle>{editing ? "Edit day" : "Record day"} — {m.batch.name}</DialogTitle>
           <DialogDescription>Deaths, feed and weight for one day. Saving twice for the same day updates that day.</DialogDescription>
         </DialogHeader>
+
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Date"><input type="date" className={inputCls} value={date} onChange={(e) => setDate(e.target.value)} /></Field>
@@ -545,39 +585,46 @@ function DailyDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) {
   );
 }
 
-function SaleDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) {
+function SaleDialog({ m, editing, onClose }: { m: BatchMetrics; editing?: BroilerSale | null; onClose: () => void }) {
   const rec = useRecordBroilerSale();
-  const [date, setDate] = useState(todayKey());
-  const [birds, setBirds] = useState("");
-  const [weightKg, setWeightKg] = useState("");
-  const [pricePerKg, setPricePerKg] = useState("");
-  const [customer, setCustomer] = useState("");
-  const [method, setMethod] = useState("Cash");
+  const upd = useUpdateBroilerSale();
+  const [date, setDate] = useState(editing?.entry_date ?? todayKey());
+  const [birds, setBirds] = useState(editing ? String(editing.birds) : "");
+  const [weightKg, setWeightKg] = useState(editing ? String(editing.total_weight_kg) : "");
+  const [pricePerKg, setPricePerKg] = useState(editing ? String(editing.price_per_kg) : "");
+  const [customer, setCustomer] = useState(editing?.customer ?? "");
+  const [method, setMethod] = useState(editing?.payment_method ?? "Cash");
   const amount = (Number(weightKg) || 0) * (Number(pricePerKg) || 0);
+  const maxBirds = m.birdsAlive + (editing?.birds ?? 0);
+  const pending = rec.isPending || upd.isPending;
 
   const submit = () => {
     const count = parseInt(birds, 10);
     if (!count || count <= 0) { toast.error("Enter how many birds were sold"); return; }
-    if (count > m.birdsAlive) { toast.error(`Only ${m.birdsAlive} birds are alive in this batch`); return; }
-    rec.mutate({
+    if (count > maxBirds) { toast.error(`Only ${maxBirds} birds are available in this batch`); return; }
+    const common = {
       batch_id: m.batch.id, entry_date: date, birds: count,
       total_weight_kg: Number(weightKg) || 0,
       price_per_kg: Number(pricePerKg) || 0,
       customer, payment_method: method,
       current_birds: m.batch.current_birds,
-    }, {
-      onSuccess: () => { toast.success("Sale recorded"); onClose(); },
-      onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save sale"),
-    });
+    };
+    const handlers = {
+      onSuccess: () => { toast.success(editing ? "Sale updated" : "Sale recorded"); onClose(); },
+      onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not save sale"),
+    };
+    if (editing) upd.mutate({ ...common, id: editing.id, previous_birds: editing.birds }, handlers);
+    else rec.mutate(common, handlers);
   };
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Record sale — {m.batch.name}</DialogTitle>
+          <DialogTitle>{editing ? "Edit sale" : "Record sale"} — {m.batch.name}</DialogTitle>
           <DialogDescription>{num(m.birdsAlive)} birds are currently alive in this batch.</DialogDescription>
         </DialogHeader>
+
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Date"><input type="date" className={inputCls} value={date} onChange={(e) => setDate(e.target.value)} /></Field>
@@ -601,7 +648,7 @@ function SaleDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) {
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={submit} disabled={rec.isPending}>{rec.isPending ? "Saving…" : "Record sale"}</Button>
+          <Button onClick={submit} disabled={pending}>{pending ? "Saving…" : editing ? "Save changes" : "Record sale"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -1,3 +1,4 @@
+import { RequirePermission } from "@/components/require-permission";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,7 +16,11 @@ export const Route = createFileRoute("/_authenticated/import")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: ImportPage,
+  component: () => (
+    <RequirePermission permission="production.write" hint="Importing records is not part of your access.">
+      <ImportPage />
+    </RequirePermission>
+  ),
 });
 
 // ------------ CSV parser (RFC-4180-ish) ------------

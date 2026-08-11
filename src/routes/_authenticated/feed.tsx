@@ -1,3 +1,4 @@
+import { RequirePermission } from "@/components/require-permission";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -43,7 +44,11 @@ export const Route = createFileRoute("/_authenticated/feed")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: FeedManagementPage,
+  component: () => (
+    <RequirePermission permission="feed.read" hint="Feed management is not part of your access.">
+      <FeedManagementPage />
+    </RequirePermission>
+  ),
 });
 
 function FeedManagementPage() {
