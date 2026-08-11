@@ -8,7 +8,11 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/alerts")({
-  component: AlertsPage,
+  component: () => (
+    <RequirePermission permission="dashboard.view" hint="Alerts are not part of your access.">
+      <AlertsPage />
+    </RequirePermission>
+  ),
   head: () => ({
     meta: [
       { title: "Alerts & Notifications — PoultryPro" },

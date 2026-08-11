@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { RequirePermission } from "@/components/require-permission";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,11 @@ type Search = { item?: string };
 
 export const Route = createFileRoute("/_authenticated/price-history")({
   validateSearch: (s: Record<string, unknown>): Search => ({ item: typeof s.item === "string" ? s.item : undefined }),
-  component: PriceHistoryPage,
+  component: () => (
+    <RequirePermission permission="prices.read" hint="Price history is not part of your access.">
+      <PriceHistoryPage />
+    </RequirePermission>
+  ),
   head: () => ({
     meta: [
       { title: "Price History | PoultryPro" },

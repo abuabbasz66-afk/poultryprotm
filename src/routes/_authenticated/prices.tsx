@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button";
 import { PricingDashboard } from "@/components/pricing-dashboard";
 
 export const Route = createFileRoute("/_authenticated/prices")({
-  component: PricesPage,
+  component: () => (
+    <RequirePermission permission="prices.read" hint="Price management is not part of your access.">
+      <PricesPage />
+    </RequirePermission>
+  ),
   head: () => ({
     meta: [
       { title: "Pricing Control Centre | PoultryPro" },

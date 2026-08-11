@@ -16,7 +16,11 @@ export const Route = createFileRoute("/_authenticated/subscriptions")({
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  component: SubscriptionsPage,
+  component: () => (
+    <RequirePermission permission="subscription.manage" hint="Billing is available to the Farm Owner.">
+      <SubscriptionsPage />
+    </RequirePermission>
+  ),
 });
 
 function fmtDay(iso: string | null | undefined): string {

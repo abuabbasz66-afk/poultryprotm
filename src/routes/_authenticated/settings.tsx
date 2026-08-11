@@ -1,3 +1,4 @@
+import { RequirePermission } from "@/components/require-permission";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -15,7 +16,11 @@ export const Route = createFileRoute("/_authenticated/settings")({
       { property: "og:description", content: "Manage your farm profile, contact details and measurement preferences." },
     ],
   }),
-  component: SettingsPage,
+  component: () => (
+    <RequirePermission permission="settings.write" hint="Farm settings are available to the Farm Owner.">
+      <SettingsPage />
+    </RequirePermission>
+  ),
 });
 
 type FormState = {

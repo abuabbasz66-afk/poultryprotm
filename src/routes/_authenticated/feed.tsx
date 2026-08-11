@@ -43,7 +43,11 @@ export const Route = createFileRoute("/_authenticated/feed")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: FeedManagementPage,
+  component: () => (
+    <RequirePermission permission="feed.read" hint="Feed management is not part of your access.">
+      <FeedManagementPage />
+    </RequirePermission>
+  ),
 });
 
 function FeedManagementPage() {
