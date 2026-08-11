@@ -286,3 +286,217 @@ export function useDeleteBroilerSale() {
     onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
+
+// ============= HEALTH: VACCINATION & MEDICATION =============
+
+export type BroilerVaccination = {
+  id: string;
+  batch_id: string;
+  vaccine_name: string;
+  date_given: string;
+  age_days: number | null;
+  administered_by: string | null;
+  notes: string | null;
+};
+
+export type BroilerMedication = {
+  id: string;
+  batch_id: string;
+  drug_name: string;
+  dosage: string | null;
+  start_date: string;
+  end_date: string | null;
+  purpose: string | null;
+  notes: string | null;
+};
+
+export function useBroilerVaccinations() {
+  const { data: farmId } = useFarmId();
+  return useQuery({
+    queryKey: [...farmScope(farmId), "broiler-vaccinations"],
+    enabled: !!farmId,
+    networkMode: "always",
+    queryFn: async (): Promise<BroilerVaccination[]> => {
+      const { data, error } = await supabase
+        .from("broiler_vaccinations")
+        .select("id, batch_id, vaccine_name, date_given, age_days, administered_by, notes")
+        .eq("farm_id", farmId!)
+        .order("date_given", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as BroilerVaccination[];
+    },
+  });
+}
+
+export function useBroilerMedications() {
+  const { data: farmId } = useFarmId();
+  return useQuery({
+    queryKey: [...farmScope(farmId), "broiler-medications"],
+    enabled: !!farmId,
+    networkMode: "always",
+    queryFn: async (): Promise<BroilerMedication[]> => {
+      const { data, error } = await supabase
+        .from("broiler_medications")
+        .select("id, batch_id, drug_name, dosage, start_date, end_date, purpose, notes")
+        .eq("farm_id", farmId!)
+        .order("start_date", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as BroilerMedication[];
+    },
+  });
+}
+
+export function useSaveBroilerVaccination() {
+  const qc = useQueryClient();
+  const { farmId } = useCtx();
+  return useMutation({
+    networkMode: "always",
+    mutationFn: async (input: {
+      id?: string; batch_id: string; vaccine_name: string; date_given: string;
+      age_days?: number | null; administered_by?: string | null; notes?: string | null;
+    }) => {
+      if (!farmId) throw new Error("No farm found for this user.");
+      const payload = {
+        farm_id: farmId,
+        batch_id: input.batch_id,
+        vaccine_name: input.vaccine_name.trim(),
+        date_given: input.date_given,
+        age_days: input.age_days ?? null,
+        administered_by: input.administered_by?.trim() || null,
+        notes: input.notes?.trim() || null,
+      };
+      const { error } = input.id
+        ? await supabase.from("broiler_vaccinations").update(payload).eq("id", input.id)
+        : await supabase.from("broiler_vaccinations").insert(payload);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateFarm(qc, farmId),
+  });
+}
+
+export function useDeleteBroilerVaccination() {
+  const qc = useQueryClient();
+  const { farmId } = useCtx();
+  return useMutation({
+    networkMode: "always",
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("broiler_vaccinations").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateFarm(qc, farmId),
+  });
+}
+
+export function useSaveBroilerMedication() {
+  const qc = useQueryClient();
+  const { farmId } = useCtx();
+  return useMutation({
+    networkMode: "always",
+    mutationFn: async (input: {
+      id?: string; batch_id: string; drug_name: string; dosage?: string | null;
+      start_date: string; end_date?: string | null; purpose?: string | null; notes?: string | null;
+    }) => {
+      if (!farmId) throw new Error("No farm found for this user.");
+      const payload = {
+        farm_id: farmId,
+        batch_id: input.batch_id,
+        drug_name: input.drug_name.trim(),
+        dosage: input.dosage?.trim() || null,
+        start_date: input.start_date,
+        end_date: input.end_date || null,
+        purpose: input.purpose?.trim() || null,
+        notes: input.notes?.trim() || null,
+      };
+      const { error } = input.id
+        ? await supabase.from("broiler_medications").update(payload).eq("id", input.id)
+        : await supabase.from("broiler_medications").insert(payload);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateFarm(qc, farmId),
+  });
+}
+
+export function useDeleteBroilerMedication() {
+  const qc = useQueryClient();
+  const { farmId } = useCtx();
+  return useMutation({
+    networkMode: "always",
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("broiler_medications").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateFarm(qc, farmId),
+  });
+}
+
+// ============= AGE & WEEKLY MILESTONES =============
+
+/** Age of a batch in whole days on a given day. */
+export function batchAgeDays(datePlaced: string, on: Date = new Date()) {
+  const start = new Date(`${datePlaced}T00:00:00`);
+  const today = new Date(on.getFullYear(), on.getMonth(), on.getDate());
+  return Math.max(0, Math.floor((today.getTime() - start.getTime()) / 86_400_000));
+}
+
+export function ageLabel(days: number) {
+  const weeks = Math.floor(days / 7);
+  const rem = days % 7;
+  if (days < 7) return `Day ${days}`;
+  return `Week ${weeks}${rem ? ` + ${rem}d` : ""} · Day ${days}`;
+}
+
+/**
+ * Standard broiler programme. Purely advisory — farms may vaccinate on their
+ * own schedule, we only surface what is due and what looks missed.
+ */
+export const BROILER_PROGRAMME: { day: number; name: string; note: string }[] = [
+  { day: 1, name: "Marek's / hatchery check", note: "Confirm hatchery vaccination and brooding temperature." },
+  { day: 7, name: "Newcastle (Lasota) + IB", note: "First Newcastle dose, usually via drinking water or eye drop." },
+  { day: 14, name: "Gumboro (IBD)", note: "Infectious bursal disease — first dose." },
+  { day: 21, name: "Gumboro booster", note: "Second Gumboro dose." },
+  { day: 28, name: "Newcastle booster (Lasota)", note: "Repeat Newcastle before finishing phase." },
+  { day: 35, name: "Weight & withdrawal review", note: "Check target weight and start drug withdrawal planning." },
+];
+
+export type BroilerHealthAlert = {
+  batchId: string;
+  batchName: string;
+  day: number;
+  name: string;
+  note: string;
+  tone: "due" | "overdue" | "upcoming";
+};
+
+/** Age-based vaccination reminders for every active batch. */
+export function broilerHealthAlerts(
+  batches: BroilerBatch[],
+  vaccinations: BroilerVaccination[],
+  today: Date = new Date(),
+): BroilerHealthAlert[] {
+  const out: BroilerHealthAlert[] = [];
+  for (const b of batches) {
+    if (batchStatus(b) !== "active") continue;
+    const age = batchAgeDays(b.date_placed, today);
+    const done = vaccinations.filter((v) => v.batch_id === b.id);
+    for (const step of BROILER_PROGRAMME) {
+      const already = done.some(
+        (v) =>
+          v.vaccine_name.toLowerCase().includes(step.name.split(" ")[0].toLowerCase()) ||
+          (v.age_days != null && Math.abs(v.age_days - step.day) <= 2),
+      );
+      if (already) continue;
+      const diff = step.day - age;
+      if (diff > 3) continue;                 // too far ahead to matter
+      if (diff < -7) continue;                // long past, stop nagging
+      out.push({
+        batchId: b.id,
+        batchName: b.name,
+        day: step.day,
+        name: step.name,
+        note: step.note,
+        tone: diff > 0 ? "upcoming" : diff === 0 ? "due" : "overdue",
+      });
+    }
+  }
+  return out.sort((a, b) => (a.tone === "overdue" ? -1 : 1) - (b.tone === "overdue" ? -1 : 1));
+}
