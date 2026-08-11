@@ -293,7 +293,7 @@ function BatchDetail({ m, daily, sales, onBack, onRecord, onSell, canWrite, canS
       </div>
 
       <h2 className="mt-3 font-display text-xl font-semibold text-foreground">
-        {m.batch.name} <span className="text-sm font-normal text-muted-foreground">· Day {m.ageDays}</span>
+        {m.batch.name} <span className="text-sm font-normal text-muted-foreground">· {ageLabel(batchAgeDays(m.batch.date_placed))}</span>
       </h2>
 
       <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -648,7 +648,7 @@ function SaleDialog({ m, editing, onClose }: { m: BatchMetrics; editing?: Broile
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={submit} disabled={rec.isPending}>{rec.isPending ? "Saving…" : "Record sale"}</Button>
+          <Button onClick={submit} disabled={pending}>{pending ? "Saving…" : editing ? "Save changes" : "Record sale"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
