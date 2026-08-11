@@ -358,12 +358,22 @@ function BatchDetail({ m, daily, sales, onBack, onRecord, onSell, canWrite, canS
                       <td>{d.avg_weight_g ? `${num(Number(d.avg_weight_g))} g` : "—"}</td>
                       <td className="text-right">
                         {canWrite && (
-                          <button className="text-muted-foreground hover:text-destructive"
-                            onClick={() => delDaily.mutate(d.id, { onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed") })}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          <span className="inline-flex items-center gap-2">
+                            <button className="text-muted-foreground hover:text-foreground"
+                              onClick={() => setEditDaily(d)} aria-label="Edit daily record">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button className="text-muted-foreground hover:text-destructive" aria-label="Delete daily record"
+                              onClick={() => {
+                                if (!confirm(`Delete the record for ${d.entry_date}?`)) return;
+                                delDaily.mutate(d.id, { onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed") });
+                              }}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </span>
                         )}
                       </td>
+
                     </tr>
                   ))}
                 </tbody>
