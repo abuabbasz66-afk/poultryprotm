@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
-  Bird, Plus, Loader2, Scale, Wheat, Skull, TrendingUp, Trash2,
+  Bird, Plus, Loader2, Scale, Wheat, Skull, TrendingUp, Trash2, Pencil,
   ShoppingCart, ClipboardList, Target, Sparkles, ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -17,13 +17,15 @@ import { Button } from "@/components/ui/button";
 import {
   useBroilerBatches, useBroilerDaily, useBroilerSales,
   useAddBroilerBatch, useDeleteBroilerBatch, useRecordBroilerDaily,
-  useRecordBroilerSale, useDeleteBroilerDaily, useDeleteBroilerSale,
-  batchStatus, BROILER_STATUS_LABELS, BROILER_STATUS_TONES,
-  type BroilerBatch,
+  useRecordBroilerSale, useUpdateBroilerSale, useDeleteBroilerDaily, useDeleteBroilerSale,
+  batchStatus, ageLabel, batchAgeDays, BROILER_STATUS_LABELS, BROILER_STATUS_TONES,
+  type BroilerBatch, type BroilerDaily, type BroilerSale,
 } from "@/lib/broiler-data";
+import { BroilerAgeAlerts, BroilerHealthPanel } from "@/components/broiler-health";
 import {
   computeBatchMetrics, summarise, growthCurve, batchInsights, type BatchMetrics,
 } from "@/lib/broiler-analytics";
+
 
 export const Route = createFileRoute("/_authenticated/broilers")({
   head: () => ({
