@@ -500,3 +500,41 @@ export function broilerHealthAlerts(
   }
   return out.sort((a, b) => (a.tone === "overdue" ? -1 : 1) - (b.tone === "overdue" ? -1 : 1));
 }
+
+/**
+ * Edit an existing sale. The batch head-count is corrected by the difference
+ * between the old and the new bird count so totals never drift.
+ */
+export function useUpdateBroilerSale() {
+  const qc = useQueryClient();
+  const { farmId } = useCtx();
+  return useMutation({
+    networkMode: "always",
+    mutationFn: async (input: {
+      id: string; batch_id: string; entry_date: string; birds: number;
+      total_weight_kg: number; price_per_kg: number; customer?: string | null;
+      payment_method: string; notes?: string | null;
+      previous_birds: number; current_birds: number;
+    }) => {
+      const { error } = await supabase.from("broiler_sales").update({
+        entry_date: input.entry_date,
+        birds: input.birds,
+        total_weight_kg: input.total_weight_kg,
+        price_per_kg: input.price_per_kg,
+        amount: input.total_weight_kg * input.price_per_kg,
+        customer: input.customer?.trim() || null,
+        payment_method: input.payment_method,
+        notes: input.notes?.trim() || null,
+      }).eq("id", input.id);
+      if (error) throw error;
+
+      const next = Math.max(0, input.current_birds + input.previous_birds - input.birds);
+      const { error: upErr } = await supabase
+        .from("broiler_batches")
+        .update({ current_birds: next, status: next === 0 ? "sold" : "active" })
+        .eq("id", input.batch_id);
+      if (upErr) throw upErr;
+    },
+    onSuccess: () => invalidateFarm(qc, farmId),
+  });
+}
