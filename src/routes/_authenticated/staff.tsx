@@ -4,13 +4,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Users, UserPlus, ShieldCheck, KeyRound, Ban, CheckCircle2, Trash2, Mail,
-  Phone, Clock, X, History, Loader2, Copy,
+  Phone, Clock, X, History, Loader2, Copy, SlidersHorizontal,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePermissions, roleStyle } from "@/lib/rbac";
 import { PermissionDenied } from "@/components/permission-denied";
 import { createStaffMember, resetStaffPassword, deleteStaffMember } from "@/lib/staff.functions";
 import { cn } from "@/lib/utils";
+import { ManageAccessDialog } from "@/components/manage-access-dialog";
 
 export const Route = createFileRoute("/_authenticated/staff")({
   head: () => ({
@@ -255,6 +256,7 @@ function PeopleTab() {
                           <option key={role.key} value={role.key}>{role.label}</option>
                         ))}
                       </select>
+                      <IconBtn title="Manage access" onClick={() => setAccessFor(r)}><SlidersHorizontal className="h-4 w-4" /></IconBtn>
                       <IconBtn title="Reset password" onClick={() => setResetFor(r)}><KeyRound className="h-4 w-4" /></IconBtn>
                       <IconBtn
                         title={r.status === "active" ? "Suspend" : "Reactivate"}
@@ -277,6 +279,12 @@ function PeopleTab() {
           roles={(rolesQ.data ?? []).filter((r) => r.key !== "owner")}
           onClose={() => setShowInvite(false)}
           onDone={() => { setShowInvite(false); refresh(); }}
+        />
+      )}
+      {accessFor && (
+        <ManageAccessDialog
+          member={{ id: accessFor.id, full_name: accessFor.full_name, role_key: accessFor.role_key, role_label: accessFor.role_label }}
+          onClose={() => setAccessFor(null)}
         />
       )}
       {resetFor && <ResetDialog member={resetFor} onClose={() => setResetFor(null)} onDone={() => { setResetFor(null); refresh(); }} />}
