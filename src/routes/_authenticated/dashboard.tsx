@@ -1,3 +1,4 @@
+import * as React from "react";
 import { createFileRoute, Link, useNavigate, Navigate } from "@tanstack/react-router";
 import { usePermissions, homeRouteForRole } from "@/lib/rbac";
 import { eggSlots, productionRooms, roomStatus, ROOM_STATUS_LABELS, ROOM_STATUS_TONES } from "@/lib/rooms";
@@ -1556,9 +1557,38 @@ function ActionBtn({ onClick, icon: Icon, children }: { onClick: () => void; ico
 
 function RowActions({ onEdit, onDelete, extra }: { onEdit: () => void; onDelete: () => void; extra?: { label: string; onClick: () => void } }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const btnRef = React.useRef<HTMLButtonElement>(null);
+
+  const place = React.useCallback(() => {
+    const el = btnRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const width = 180;
+    const height = extra ? 132 : 92;
+    let left = r.right - width;
+    left = Math.min(Math.max(12, left), window.innerWidth - width - 12);
+    let top = r.bottom + 6;
+    if (top + height > window.innerHeight - 12) top = Math.max(12, r.top - height - 6);
+    setPos({ top, left });
+  }, [extra]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    place();
+    const onScroll = () => setOpen(false);
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [open, place]);
+
   return (
     <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
       <button
+        ref={btnRef}
         type="button"
         aria-label="Row actions"
         onClick={() => setOpen(v => !v)}
@@ -1566,19 +1596,22 @@ function RowActions({ onEdit, onDelete, extra }: { onEdit: () => void; onDelete:
       >
         <MoreVertical className="h-4 w-4" />
       </button>
-      {open && (
+      {open && pos && (
         <>
-          <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-8 z-30 min-w-[160px] rounded-xl border border-border bg-background shadow-lg overflow-hidden">
+          <div className="fixed inset-0 z-[90]" onClick={() => setOpen(false)} />
+          <div
+            className="fixed z-[100] w-[180px] rounded-xl border border-border bg-background shadow-xl overflow-hidden"
+            style={{ top: pos.top, left: pos.left }}
+          >
             {extra && (
-              <button onClick={() => { setOpen(false); extra.onClick(); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs text-left hover:bg-secondary">
+              <button onClick={() => { setOpen(false); extra.onClick(); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-left hover:bg-secondary">
                 <Pencil className="h-3.5 w-3.5" /> {extra.label}
               </button>
             )}
-            <button onClick={() => { setOpen(false); onEdit(); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs text-left hover:bg-secondary">
+            <button onClick={() => { setOpen(false); onEdit(); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-left hover:bg-secondary">
               <Pencil className="h-3.5 w-3.5" /> Edit
             </button>
-            <button onClick={() => { setOpen(false); onDelete(); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs text-left text-destructive hover:bg-destructive/10">
+            <button onClick={() => { setOpen(false); onDelete(); }} className="flex w-full items-center gap-2 px-3 py-2.5 text-xs text-left text-destructive hover:bg-destructive/10">
               <Trash2 className="h-3.5 w-3.5" /> Delete
             </button>
           </div>
@@ -1587,6 +1620,7 @@ function RowActions({ onEdit, onDelete, extra }: { onEdit: () => void; onDelete:
     </div>
   );
 }
+
 
 
 
