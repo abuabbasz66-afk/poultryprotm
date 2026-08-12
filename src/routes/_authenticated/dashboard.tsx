@@ -1,3 +1,4 @@
+import * as React from "react";
 import { createFileRoute, Link, useNavigate, Navigate } from "@tanstack/react-router";
 import { usePermissions, homeRouteForRole } from "@/lib/rbac";
 import { eggSlots, productionRooms, roomStatus, ROOM_STATUS_LABELS, ROOM_STATUS_TONES } from "@/lib/rooms";
