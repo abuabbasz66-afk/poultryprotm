@@ -9,6 +9,8 @@ export function AlertsBell({ tone = "light" }: { tone?: "light" | "dark" }) {
   const { alerts, unread, count, isRead, markRead, markAllRead, loading } = useUnreadAlerts();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -19,7 +21,28 @@ export function AlertsBell({ tone = "light" }: { tone?: "light" | "dark" }) {
     return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const b = btnRef.current?.getBoundingClientRect();
+      if (!b) return;
+      const gap = 12;
+      const width = Math.min(380, window.innerWidth - gap * 2);
+      let left = b.right - width;
+      left = Math.min(Math.max(left, gap), window.innerWidth - width - gap);
+      setPos({ top: b.bottom + 8, left, width });
+    };
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open]);
+
   const top = alerts.slice(0, 6);
+
 
   return (
     <div ref={ref} className="relative">
