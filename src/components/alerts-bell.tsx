@@ -127,7 +127,7 @@ export function AlertsBell({ tone = "light" }: { tone?: "light" | "dark" }) {
           <Link
             to="/alerts"
             onClick={() => setOpen(false)}
-            className="block border-t border-border px-4 py-2.5 text-center text-[12px] font-medium text-[color:var(--forest)] hover:bg-muted"
+            className="block shrink-0 border-t border-border px-4 py-2.5 text-center text-[12px] font-medium text-[color:var(--forest)] hover:bg-muted"
           >
             View all alerts
           </Link>
