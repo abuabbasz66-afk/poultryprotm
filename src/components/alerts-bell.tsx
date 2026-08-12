@@ -66,7 +66,10 @@ export function AlertsBell({ tone = "light" }: { tone?: "light" | "dark" }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-[min(92vw,360px)] overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-[var(--shadow-lift)]">
+        <div
+          style={pos ? { top: pos.top, left: pos.left, width: pos.width } : { visibility: "hidden" }}
+          className="fixed z-50 flex max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-[var(--shadow-lift)]"
+        >
           <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
             <div className="font-display text-sm font-semibold">Alerts</div>
             {unread.length > 0 && (
