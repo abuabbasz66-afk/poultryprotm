@@ -82,7 +82,7 @@ export function AlertsBell({ tone = "light" }: { tone?: "light" | "dark" }) {
             )}
           </div>
 
-          <div className="max-h-[52vh] overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {loading ? (
               <div className="flex items-center gap-2 px-4 py-6 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Checking your farm…
