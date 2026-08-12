@@ -9,6 +9,8 @@ export function AlertsBell({ tone = "light" }: { tone?: "light" | "dark" }) {
   const { alerts, unread, count, isRead, markRead, markAllRead, loading } = useUnreadAlerts();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -19,11 +21,33 @@ export function AlertsBell({ tone = "light" }: { tone?: "light" | "dark" }) {
     return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const b = btnRef.current?.getBoundingClientRect();
+      if (!b) return;
+      const gap = 12;
+      const width = Math.min(380, window.innerWidth - gap * 2);
+      let left = b.right - width;
+      left = Math.min(Math.max(left, gap), window.innerWidth - width - gap);
+      setPos({ top: b.bottom + 8, left, width });
+    };
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open]);
+
   const top = alerts.slice(0, 6);
+
 
   return (
     <div ref={ref} className="relative">
       <button
+        ref={btnRef}
         onClick={() => setOpen((v) => !v)}
         aria-label={count > 0 ? `Notifications, ${count} unread` : "Notifications"}
         className={cn(
@@ -42,7 +66,10 @@ export function AlertsBell({ tone = "light" }: { tone?: "light" | "dark" }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-[min(92vw,360px)] overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-[var(--shadow-lift)]">
+        <div
+          style={pos ? { top: pos.top, left: pos.left, width: pos.width } : { visibility: "hidden" }}
+          className="fixed z-50 flex max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-[var(--shadow-lift)]"
+        >
           <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
             <div className="font-display text-sm font-semibold">Alerts</div>
             {unread.length > 0 && (
@@ -55,7 +82,7 @@ export function AlertsBell({ tone = "light" }: { tone?: "light" | "dark" }) {
             )}
           </div>
 
-          <div className="max-h-[52vh] overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {loading ? (
               <div className="flex items-center gap-2 px-4 py-6 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Checking your farm…
@@ -100,7 +127,7 @@ export function AlertsBell({ tone = "light" }: { tone?: "light" | "dark" }) {
           <Link
             to="/alerts"
             onClick={() => setOpen(false)}
-            className="block border-t border-border px-4 py-2.5 text-center text-[12px] font-medium text-[color:var(--forest)] hover:bg-muted"
+            className="block shrink-0 border-t border-border px-4 py-2.5 text-center text-[12px] font-medium text-[color:var(--forest)] hover:bg-muted"
           >
             View all alerts
           </Link>
