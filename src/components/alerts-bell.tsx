@@ -47,6 +47,7 @@ export function AlertsBell({ tone = "light" }: { tone?: "light" | "dark" }) {
   return (
     <div ref={ref} className="relative">
       <button
+        ref={btnRef}
         onClick={() => setOpen((v) => !v)}
         aria-label={count > 0 ? `Notifications, ${count} unread` : "Notifications"}
         className={cn(
