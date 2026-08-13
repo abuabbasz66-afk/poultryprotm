@@ -42,7 +42,32 @@ export function BrokenEggsCard({ eggs, rooms }: { eggs: EggRow[]; rooms: Room[] 
 
   const max = Math.max(1, ...trend.map((p) => p.pct));
 
+  // --- Per-date broken egg log (Date | R2 | R3 | R4 | Total) ---
+  const [showAll, setShowAll] = useState(false);
+  const [openDate, setOpenDate] = useState<string | null>(null);
+  const slots = useMemo(() => eggSlots(rooms), [rooms]);
+  const log = useMemo(
+    () => eggs.map((e) => ({
+      row: e,
+      dateKey: toDateKey(e.date) ?? e.date,
+      perRoom: slots.map((s) => ({ key: s.key, name: s.room.name, broken: brokenOf(e, s.key) })),
+      extra: Number(e.broken_extra) || 0,
+      total: totalBroken(e),
+    })),
+    [eggs, slots],
+  );
+  const windowTotal = (days: number) => {
+    const start = dayKeyOffset(days - 1);
+    const end = dayKeyOffset(0);
+    return log.reduce((s, l) => (l.dateKey >= start && l.dateKey <= end ? s + l.total : s), 0);
+  };
+  const brokenToday = windowTotal(1);
+  const broken7 = windowTotal(7);
+  const broken30 = windowTotal(30);
+  const shownLog = showAll ? log : log.slice(0, 7);
+
   return (
+
     <section className="rounded-2xl border border-border bg-card p-5">
       <div className="flex items-start justify-between gap-3">
         <h3 className="inline-flex items-center gap-2 font-display text-base font-semibold text-foreground">
