@@ -234,6 +234,15 @@ function AuthPage() {
     ? (mode === "signin" ? "Signing in…" : mode === "signup" ? "Creating account…" : "Sending link…")
     : (mode === "signin" ? "Sign In" : mode === "signup" ? "Create Account" : "Send reset link");
 
+  if (resuming) {
+    return (
+      <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <div className="h-10 w-10 rounded-full border-2 border-muted border-t-primary animate-spin" />
+        <p className="text-sm text-muted-foreground">Taking you back to where you left off…</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#FAF9F6] hero-fade-up">
       <div className="lg:grid lg:grid-cols-[45fr_55fr] min-h-screen">
