@@ -1,8 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { ShoppingCart, TrendingUp, Users, Receipt, Loader2, Egg } from "lucide-react";
-import { useEggs, usePrices } from "@/lib/farm-data";
-import { RecentActivitiesCard } from "@/components/recent-activities-card";
+import { useEggs } from "@/lib/farm-data";
 import { useEffectivePrice } from "@/lib/effective-price";
 import { usePermissions, roleStyle } from "@/lib/rbac";
 import { PermissionDenied } from "@/components/permission-denied";
@@ -31,7 +30,6 @@ function naira(n: number) {
 function SalesPage() {
   const { can, loading, roleLabel, role } = usePermissions();
   const eggsQ = useEggs();
-  const pricesQ = usePrices();
   const pricing = useEffectivePrice();
   const rs = roleStyle(role);
 
@@ -88,21 +86,6 @@ function SalesPage() {
         <Kpi label="Revenue today" value={naira(totals.today)} icon={TrendingUp} />
         <Kpi label="Revenue this week" value={naira(totals.week)} icon={Receipt} />
         <Kpi label="Revenue this month" value={naira(totals.month)} icon={Receipt} />
-      </div>
-
-      <div className="mt-6">
-        <RecentActivitiesCard
-          eggs={eggsQ.data ?? []}
-          feed={[]}
-          mortality={[]}
-          health={[]}
-          prices={pricesQ.data ?? []}
-          bagWeightKg={25}
-          kinds={["production", "price"]}
-          title="Recent Sales Activity"
-          subtitle="Production volume recorded and price changes affecting sales value"
-          canViewAll
-        />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
