@@ -44,7 +44,10 @@ export type FarmWeather = {
     isDay: boolean;
   };
   hourly: WeatherHour[];
+  /** Forecast days, today first. */
   daily: WeatherDay[];
+  /** The last 10 days of observed weather, used for historical correlation. */
+  history: WeatherDay[];
 };
 
 export type FarmWeatherResult =
@@ -108,6 +111,7 @@ export const getFarmWeather = createServerFn({ method: "GET" })
       longitude: String(place.longitude),
       timezone: "auto",
       forecast_days: "7",
+      past_days: "10",
       current: "temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,precipitation_probability,weather_code,is_day",
       hourly: "temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,precipitation_probability",
       daily: "temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,weather_code",
@@ -157,6 +161,10 @@ export const getFarmWeather = createServerFn({ method: "GET" })
       code: Number(d.weather_code?.[i] ?? 0),
     }));
 
+    const todayKey = new Date().toLocaleDateString("en-CA", { timeZone: json.timezone ?? "UTC" });
+    const history = daily.filter((x) => x.date < todayKey);
+    const forecast = daily.filter((x) => x.date >= todayKey);
+
     const c = json.current ?? {};
     return {
       ok: true,
@@ -176,7 +184,8 @@ export const getFarmWeather = createServerFn({ method: "GET" })
           isDay: Number(c.is_day ?? 1) === 1,
         },
         hourly,
-        daily,
+        daily: forecast,
+        history,
       },
     };
   });
