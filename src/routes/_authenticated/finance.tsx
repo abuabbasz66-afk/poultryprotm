@@ -363,7 +363,8 @@ function FinancePage() {
             <div className="rounded-2xl border border-border bg-card p-4">
               <h2 className="font-display text-base font-semibold">Profit &amp; loss statement</h2>
               <p className="text-xs text-muted-foreground">{from} → {to}</p>
-              <table className="mt-3 w-full text-sm">
+              <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[420px] text-sm">
                 <tbody>
                   <Row label="Total revenue" value={naira(totals.revenue)} strong />
                   {revenueSplit.map((r) => <Row key={r.key} label={r.label} value={naira(r.value)} indent />)}
@@ -377,6 +378,7 @@ function FinancePage() {
                   <Row label="Cost per bird" value={naira(econ.costPerBird)} />
                 </tbody>
               </table>
+              </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button size="sm" variant="outline" onClick={() => runExport("csv", "expenses")}><Download className="mr-1 h-4 w-4" /> Expenses CSV</Button>
                 <Button size="sm" variant="outline" onClick={() => runExport("excel", "expenses")}><FileSpreadsheet className="mr-1 h-4 w-4" /> Expenses Excel</Button>

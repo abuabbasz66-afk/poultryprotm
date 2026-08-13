@@ -22,7 +22,8 @@ import {
 } from "@/lib/feed-formulas-data";
 
 import { useFeedIntelligence } from "@/lib/feed-intelligence";
-import { useFarm } from "@/lib/farm-data";
+import { useFarm, useFeed, usePrices } from "@/lib/farm-data";
+import { RecentActivitiesCard } from "@/components/recent-activities-card";
 import { toDateKey } from "@/lib/date-key";
 
 
@@ -171,9 +172,32 @@ function OverviewTab() {
         <KpiCard label="Bag Weight" value={`${stats.bagWeightKg} kg`} sub="Farm setting" />
       </section>
 
+      <FeedActivityCard />
+
       <div id="feed-intelligence" className="scroll-mt-24" />
       <FeedIntelligencePanel />
     </div>
+  );
+}
+
+/** Recent feed + price activity, using the same feed card as Farm Records. */
+function FeedActivityCard() {
+  const farm = useFarm();
+  const feed = useFeed();
+  const prices = usePrices();
+  return (
+    <RecentActivitiesCard
+      eggs={[]}
+      feed={feed.data ?? []}
+      mortality={[]}
+      health={[]}
+      prices={prices.data ?? []}
+      bagWeightKg={farm.data?.bag_weight_kg ?? 25}
+      kinds={["feed", "price"]}
+      title="Recent Feed Activity"
+      subtitle="Latest feed issues and feed-related price updates"
+      canViewAll
+    />
   );
 }
 

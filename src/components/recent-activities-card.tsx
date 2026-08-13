@@ -21,14 +21,22 @@ export function RecentActivitiesCard(props: {
   prices: Price[];
   bagWeightKg: number;
   canViewAll?: boolean;
+  /** Optional module scope — only these activity kinds are listed. */
+  kinds?: ActivityKind[];
+  title?: string;
+  subtitle?: string;
 }) {
   const [showAll, setShowAll] = useState(false);
+  const kinds = props.kinds;
   const activities = useMemo(
-    () => buildFarmActivities({
-      eggs: props.eggs, feed: props.feed, mortality: props.mortality,
-      health: props.health, prices: props.prices, bagWeightKg: props.bagWeightKg,
-    }),
-    [props.eggs, props.feed, props.mortality, props.health, props.prices, props.bagWeightKg],
+    () => {
+      const all = buildFarmActivities({
+        eggs: props.eggs, feed: props.feed, mortality: props.mortality,
+        health: props.health, prices: props.prices, bagWeightKg: props.bagWeightKg,
+      });
+      return kinds ? all.filter((a) => kinds.includes(a.kind)) : all;
+    },
+    [props.eggs, props.feed, props.mortality, props.health, props.prices, props.bagWeightKg, kinds],
   );
   const shown = showAll ? activities.slice(0, 40) : activities.slice(0, 7);
 
@@ -37,9 +45,9 @@ export function RecentActivitiesCard(props: {
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
         <div className="min-w-0">
           <h3 className="inline-flex items-center gap-2 font-display text-base font-semibold">
-            <Activity className="h-4 w-4 shrink-0 text-[color:var(--forest)]" /> Recent Activities
+            <Activity className="h-4 w-4 shrink-0 text-[color:var(--forest)]" /> {props.title ?? "Recent Activities"}
           </h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">Latest recorded farm activity across every module</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{props.subtitle ?? "Latest recorded farm activity across every module"}</p>
         </div>
         {props.canViewAll && (
           <Link to="/activity" className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:bg-secondary">
