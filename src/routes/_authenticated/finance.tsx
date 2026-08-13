@@ -363,7 +363,8 @@ function FinancePage() {
             <div className="rounded-2xl border border-border bg-card p-4">
               <h2 className="font-display text-base font-semibold">Profit &amp; loss statement</h2>
               <p className="text-xs text-muted-foreground">{from} → {to}</p>
-              <table className="mt-3 w-full text-sm">
+              <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[420px] text-sm">
                 <tbody>
                   <Row label="Total revenue" value={naira(totals.revenue)} strong />
                   {revenueSplit.map((r) => <Row key={r.key} label={r.label} value={naira(r.value)} indent />)}
