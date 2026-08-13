@@ -207,6 +207,15 @@ const setBagWeightKg = (v: number | null) => {
   const [expandedMortDate, setExpandedMortDate] = useState<string | null>(null);
   const [expandedFeedDate, setExpandedFeedDate] = useState<string | null>(null);
   const [eggShowAll, setEggShowAll] = useState(false);
+  const [expandedEggRows, setExpandedEggRows] = useState<Set<string>>(new Set());
+  const toggleEggRow = (id: string) => {
+    setExpandedEggRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
   const [healthShowAll, setHealthShowAll] = useState(false);
   const [confirmState, setConfirmState] = useState<{ title: string; message: string; confirmLabel?: string; onConfirm: () => void | Promise<void> } | null>(null);
   const askDelete = (title: string, message: string, onConfirm: () => void | Promise<void>) =>
