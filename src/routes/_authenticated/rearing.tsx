@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   Egg, Plus, Loader2, Scale, Wheat, Skull, Droplets, Syringe, CalendarClock,
-  Trash2, ArrowLeft, Sparkles, Settings2, Bell, ArrowRightLeft, Thermometer,
+  Trash2, ArrowLeft, Sparkles, Settings2, Bell, ArrowRightLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePermissions } from "@/lib/rbac";
