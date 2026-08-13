@@ -171,6 +171,7 @@ function SidebarBody({
     const { supabase } = await import("@/integrations/supabase/client");
     const { logSecurityEvent } = await import("@/lib/security-events");
     await logSecurityEvent("logout");
+    try { await flushCurrentLocation(); } catch { /* non-blocking */ }
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   };

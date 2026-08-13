@@ -181,3 +181,31 @@ export async function resolveResumeDestination(opts: {
   }
   return toHref(saved);
 }
+
+/**
+ * Flush the location currently shown in the browser. Called right before
+ * sign-out so the session ends with the user's real last page saved.
+ * Logout never clears the saved location — it only ends the session.
+ */
+export async function flushCurrentLocation(farmId?: string | null) {
+  if (typeof window === "undefined") return;
+  const { pathname, search, hash } = window.location;
+  if (!isResumablePath(pathname)) return;
+  const { data } = await supabase.auth.getUser();
+  const userId = data.user?.id;
+  if (!userId) return;
+  const params: Record<string, string> = {};
+  new URLSearchParams(search).forEach((v, k) => { params[k] = v; });
+  await saveLastLocation(
+    userId,
+    {
+      pathname,
+      search: params,
+      hash: hash ? hash.replace(/^#/, "") : null,
+      farmId: farmId ?? null,
+      contextKind: null,
+      contextId: null,
+    },
+    { immediate: true },
+  );
+}
