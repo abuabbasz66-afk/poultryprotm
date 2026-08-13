@@ -27,6 +27,7 @@ import {
 
 
 import { supabase } from "@/integrations/supabase/client";
+import { flushCurrentLocation } from "@/lib/last-location";
 import { logSecurityEvent } from "@/lib/security-events";
 import { useActiveFormulaCostPerKg } from "@/lib/feed-formulas-data";
 
@@ -380,6 +381,7 @@ const setBagWeightKg = (v: number | null) => {
     await logSecurityEvent("logout");
     await qc.cancelQueries();
     qc.clear();
+    try { await flushCurrentLocation(); } catch { /* non-blocking */ }
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   };

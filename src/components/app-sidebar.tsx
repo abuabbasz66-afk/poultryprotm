@@ -6,6 +6,7 @@ import {
 import { NAV_SECTIONS, type NavEntry, type NavLeaf } from "@/lib/nav-config";
 import { useFarm } from "@/lib/farm-data";
 import { usePermissions, roleStyle } from "@/lib/rbac";
+import { flushCurrentLocation } from "@/lib/last-location";
 import { SyncStatus } from "@/components/sync-status";
 import { AlertsBell } from "@/components/alerts-bell";
 
@@ -171,6 +172,7 @@ function SidebarBody({
     const { supabase } = await import("@/integrations/supabase/client");
     const { logSecurityEvent } = await import("@/lib/security-events");
     await logSecurityEvent("logout");
+    try { await flushCurrentLocation(); } catch { /* non-blocking */ }
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   };

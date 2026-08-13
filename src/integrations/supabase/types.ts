@@ -1844,6 +1844,53 @@ export type Database = {
         }
         Relationships: []
       }
+      user_last_location: {
+        Row: {
+          context_id: string | null
+          context_kind: string | null
+          created_at: string
+          farm_id: string | null
+          hash: string | null
+          label: string | null
+          pathname: string
+          search: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          context_id?: string | null
+          context_kind?: string | null
+          created_at?: string
+          farm_id?: string | null
+          hash?: string | null
+          label?: string | null
+          pathname: string
+          search?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          context_id?: string | null
+          context_kind?: string | null
+          created_at?: string
+          farm_id?: string | null
+          hash?: string | null
+          label?: string | null
+          pathname?: string
+          search?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_last_location_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_presence: {
         Row: {
           last_seen: string
