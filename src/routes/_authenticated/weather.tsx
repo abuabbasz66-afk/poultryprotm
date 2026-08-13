@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -7,7 +7,9 @@ import {
   MapPin, RefreshCw, ChevronDown, Baby, Drumstick, Egg, ShieldAlert, Info,
 } from "lucide-react";
 import { RequirePermission } from "@/components/require-permission";
-import { getFarmWeather } from "@/lib/weather.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { getFarmWeather, type FarmWeather } from "@/lib/weather.functions";
+
 import {
   RISK_META, advisory, combinedRisk, conditionLabel, dayRisk, peakWindow,
   riskRank, tomorrowAlert, worstRisk, type FlockProfile, type RiskLevel,
