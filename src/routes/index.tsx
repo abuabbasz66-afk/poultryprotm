@@ -11,6 +11,7 @@ import {
   ShieldCheck, Sparkles, ArrowRight, MapPin, Trophy, Cpu, Users, Leaf,
   Calculator, FileText, Brain, Mic, TrendingUp, CloudSun, Radio, Camera,
   Sliders, DollarSign, Syringe, BarChart3, Store, Handshake, Smartphone,
+  Baby, Drumstick,
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 
