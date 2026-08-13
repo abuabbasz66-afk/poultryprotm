@@ -287,9 +287,9 @@ const tiers = [
     ],
     price: "₦1,950",
     priceNote: "per month",
-    cta: "Join Premium Waitlist",
-    ctaHref: "mailto:contact@poultrypro.africa?subject=PoultryPro%20AI%20Intelligence%20Waitlist" as string | null,
-    badge: "Coming soon — AI rollout",
+    cta: "Start Premium Plan",
+    ctaHref: null as string | null,
+    badge: "Available now — AI-powered",
     highlight: false,
   },
 ];
@@ -1024,8 +1024,8 @@ function Index() {
           </div>
 
           <p className="mt-6 text-xs sm:text-sm text-muted-foreground max-w-3xl">
-            Premium AI features are currently being rolled out. All Basic and Standard features are
-            fully available today.
+            All plans — Basic, Standard and Premium — are available today. Premium AI features are live
+            and active once you subscribe to the Premium plan.
           </p>
 
           {/* Final CTA */}
