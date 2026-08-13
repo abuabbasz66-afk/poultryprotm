@@ -752,8 +752,12 @@ export type Database = {
           created_at: string
           farm_type: string | null
           feed_source: string
+          geocoded_at: string | null
+          geocoded_place: string | null
           id: string
+          latitude: number | null
           location: string | null
+          longitude: number | null
           name: string
           owner_id: string
           owner_name: string | null
@@ -775,8 +779,12 @@ export type Database = {
           created_at?: string
           farm_type?: string | null
           feed_source?: string
+          geocoded_at?: string | null
+          geocoded_place?: string | null
           id?: string
+          latitude?: number | null
           location?: string | null
+          longitude?: number | null
           name?: string
           owner_id: string
           owner_name?: string | null
@@ -798,8 +806,12 @@ export type Database = {
           created_at?: string
           farm_type?: string | null
           feed_source?: string
+          geocoded_at?: string | null
+          geocoded_place?: string | null
           id?: string
+          latitude?: number | null
           location?: string | null
+          longitude?: number | null
           name?: string
           owner_id?: string
           owner_name?: string | null
