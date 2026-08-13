@@ -943,9 +943,13 @@ const setBagWeightKg = (v: number | null) => {
                 <tr className="text-left text-muted-foreground border-b border-border">
                   <th className="py-2 pr-4 font-medium">Date</th>
                   {eggRoomSlots.map(s => (
-                    <th key={s.room.id} className="py-2 pr-4 font-medium whitespace-nowrap">{s.room.name.replace(/^ROOM\s*/i, "R")}</th>
+                    <Fragment key={s.room.id}>
+                      <th className="py-2 pr-4 font-medium whitespace-nowrap">{s.room.name.replace(/^ROOM\s*/i, "R")}</th>
+                      <th className="py-2 pr-4 font-medium whitespace-nowrap">{s.room.name.replace(/^ROOM\s*/i, "R")} %</th>
+                    </Fragment>
                   ))}
                   <th className="py-2 pr-4 font-medium">Total</th>
+                  <th className="py-2 pr-4 font-medium whitespace-nowrap">Overall %</th>
                   <th className="py-2 pr-4 font-medium">Extra</th>
                   <th className="py-2 pr-2 font-medium w-6"></th>
                 </tr>
@@ -953,16 +957,28 @@ const setBagWeightKg = (v: number | null) => {
               <tbody>
                 {(eggShowAll ? eggs : eggs.slice(0, 7)).map(e => {
                   const norm = normaliseEggRow(e);
+                  const prod = productionByDate.get(e.date);
                   return (
                     <tr key={e.id ?? e.date + e.label} className="border-b border-border/50">
                       <td className="py-2.5 pr-4 whitespace-nowrap">{e.label}</td>
-                      {eggRoomSlots.map(s => (
-                        <td key={s.room.id} className="py-2.5 pr-4 tabular-nums">{e[s.key]}</td>
-                      ))}
+                      {eggRoomSlots.map(s => {
+                        const rp = prod?.rooms.find(r => r.roomId === s.room.id) ?? null;
+                        return (
+                          <Fragment key={s.room.id}>
+                            <td className="py-2.5 pr-4 tabular-nums">{e[s.key]}</td>
+                            <td className={`py-2.5 pr-4 tabular-nums ${rp?.pct == null ? "text-muted-foreground" : ""}`}>
+                              {fmtPct(rp?.pct ?? null)}
+                            </td>
+                          </Fragment>
+                        );
+                      })}
                       <td className="py-2.5 pr-4">
                         <span className="inline-flex items-center rounded-full bg-[color:var(--forest)] text-primary-foreground px-2.5 py-0.5 text-xs font-medium">
                           {norm.crates}
                         </span>
+                      </td>
+                      <td className={`py-2.5 pr-4 tabular-nums font-medium ${prod?.overallPct == null ? "text-muted-foreground font-normal" : ""}`}>
+                        {fmtPct(prod?.overallPct ?? null)}
                       </td>
                       <td className="py-2.5 pr-4 text-muted-foreground">{norm.extra ? `+${norm.extra}` : "—"}</td>
                       <td className="py-2.5 pr-2 text-right"><RowActions onEdit={() => editEgg(e)} onDelete={() => delEgg(e)} /></td>
@@ -971,7 +987,7 @@ const setBagWeightKg = (v: number | null) => {
                 })}
 
                 {eggs.length === 0 && (
-                  <tr><td colSpan={eggRoomSlots.length + 4} className="py-4 text-center text-muted-foreground text-xs">
+                  <tr><td colSpan={eggRoomSlots.length * 2 + 5} className="py-4 text-center text-muted-foreground text-xs">
                     <span className="font-medium">Pending entry</span> — no production records yet.
                   </td></tr>
                 )}
