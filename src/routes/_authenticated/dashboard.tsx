@@ -294,6 +294,8 @@ const setBagWeightKg = (v: number | null) => {
     [productionSeries],
   );
   const todayProduction = productionSeries[0] ?? null;
+  // Current lay rate = the overall lay percentage for the latest production day.
+  const currentLayRateDisplay = fmtPct(todayProduction?.overallPct ?? null);
   const roomSeries = useMemo(
     () => eggRoomSlots.map((s) => ({ name: s.room.name, key: s.key })),
     [eggRoomSlots],
