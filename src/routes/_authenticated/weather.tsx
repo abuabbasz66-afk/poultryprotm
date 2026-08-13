@@ -236,11 +236,6 @@ function WeatherPage() {
         </div>
         <button
           type="button"
-          onClick={() => weatherQ.refetch()}
-          className="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-medium hover:bg-muted"
-        >
-        <button
-          type="button"
           onClick={() => { if (!weatherQ.isFetching) void weatherQ.refetch(); }}
           disabled={weatherQ.isFetching}
           className="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-medium hover:bg-muted disabled:opacity-60"
