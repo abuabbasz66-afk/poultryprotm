@@ -88,6 +88,21 @@ function SalesPage() {
         <Kpi label="Revenue this month" value={naira(totals.month)} icon={Receipt} />
       </div>
 
+      <div className="mt-6">
+        <RecentActivitiesCard
+          eggs={eggsQ.data ?? []}
+          feed={[]}
+          mortality={[]}
+          health={[]}
+          prices={pricesQ.data ?? []}
+          bagWeightKg={25}
+          kinds={["production", "price"]}
+          title="Recent Sales Activity"
+          subtitle="Production volume recorded and price changes affecting sales value"
+          canViewAll
+        />
+      </div>
+
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Panel title="Customers" icon={Users}>
           Customer records, receipts and outstanding payments arrive with the full Sales module.
