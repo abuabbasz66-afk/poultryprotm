@@ -851,7 +851,7 @@ function Index() {
 
 
 
-      <section id="founder" className="py-24 bg-[color:var(--forest)] text-primary-foreground">
+      <section id="founder" className="overflow-x-clip py-24 bg-[color:var(--forest)] text-primary-foreground">
         <div className="container-x grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-4">
             <div className="relative">
