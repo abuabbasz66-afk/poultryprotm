@@ -1001,6 +1001,77 @@ const setBagWeightKg = (v: number | null) => {
               </button>
             </div>
           )}
+
+          {todayProduction && todayProduction.rooms.length > 0 && (
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              {/* Daily production breakdown */}
+              <div className="rounded-2xl border border-border bg-secondary/40 p-4">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                  Daily Production · {todayProduction.label}
+                </div>
+                <div className="mt-3 space-y-1.5">
+                  {todayProduction.rooms.map(r => (
+                    <div key={r.roomId} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="font-medium truncate">{r.roomName}</span>
+                      <span className="flex items-center gap-4 tabular-nums">
+                        <span className="text-muted-foreground">{r.eggs.toLocaleString()} eggs</span>
+                        <span className={`w-16 text-right font-semibold ${r.pct == null ? "text-muted-foreground font-normal" : ""}`}>{fmtPct(r.pct)}</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 pt-3 border-t border-border flex items-center justify-between gap-3 text-sm font-semibold">
+                  <span>TOTAL</span>
+                  <span className="flex items-center gap-4 tabular-nums">
+                    <span>{todayProduction.totalEggs.toLocaleString()} eggs</span>
+                    <span className="w-16 text-right">{fmtPct(todayProduction.overallPct)}</span>
+                  </span>
+                </div>
+                {todayProduction.totalBirds !== null && (
+                  <div className="mt-2 text-[11px] text-muted-foreground">
+                    Based on {todayProduction.totalBirds.toLocaleString()} active birds on this date.
+                  </div>
+                )}
+              </div>
+
+              {/* Room comparison */}
+              <div className="rounded-2xl border border-border bg-background p-4">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Room Comparison</div>
+                {todayProduction.ranked.length === 0 ? (
+                  <div className="mt-3 text-sm text-muted-foreground">
+                    Bird counts unavailable for this date — percentages shown as N/A.
+                  </div>
+                ) : (
+                  <div className="mt-3 space-y-2">
+                    {todayProduction.ranked.map((r, i) => {
+                      const top = i === 0;
+                      const low = i === todayProduction.ranked.length - 1 && todayProduction.ranked.length > 1;
+                      const max = todayProduction.ranked[0].pct ?? 0;
+                      const width = max > 0 ? Math.max(4, ((r.pct ?? 0) / max) * 100) : 0;
+                      return (
+                        <div key={r.roomId}>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="flex items-center gap-1.5 truncate">
+                              {top && <span aria-hidden>🥇</span>}
+                              <span className={top ? "font-semibold" : ""}>{r.roomName}</span>
+                              {low && <span className="text-[10px] uppercase tracking-[0.14em] text-destructive">lowest</span>}
+                            </span>
+                            <span className="tabular-nums font-medium">{fmtPct(r.pct)}</span>
+                          </div>
+                          <div className="mt-1 h-1.5 rounded-full bg-secondary overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${top ? "bg-[color:var(--forest)]" : low ? "bg-destructive/60" : "bg-[color:var(--forest)]/50"}`}
+                              style={{ width: `${width}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </Card>
 
         <div className="grid lg:grid-cols-2 gap-6">
