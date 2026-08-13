@@ -207,6 +207,15 @@ const setBagWeightKg = (v: number | null) => {
   const [expandedMortDate, setExpandedMortDate] = useState<string | null>(null);
   const [expandedFeedDate, setExpandedFeedDate] = useState<string | null>(null);
   const [eggShowAll, setEggShowAll] = useState(false);
+  const [expandedEggRows, setExpandedEggRows] = useState<Set<string>>(new Set());
+  const toggleEggRow = (id: string) => {
+    setExpandedEggRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
   const [healthShowAll, setHealthShowAll] = useState(false);
   const [confirmState, setConfirmState] = useState<{ title: string; message: string; confirmLabel?: string; onConfirm: () => void | Promise<void> } | null>(null);
   const askDelete = (title: string, message: string, onConfirm: () => void | Promise<void>) =>
@@ -943,51 +952,114 @@ const setBagWeightKg = (v: number | null) => {
                 <tr className="text-left text-muted-foreground border-b border-border">
                   <th className="py-2 pr-4 font-medium">Date</th>
                   {eggRoomSlots.map(s => (
-                    <Fragment key={s.room.id}>
-                      <th className="py-2 pr-4 font-medium whitespace-nowrap">{s.room.name.replace(/^ROOM\s*/i, "R")}</th>
-                      <th className="py-2 pr-4 font-medium whitespace-nowrap">{s.room.name.replace(/^ROOM\s*/i, "R")} %</th>
-                    </Fragment>
+                    <th key={s.room.id} className="py-2 pr-4 font-medium whitespace-nowrap">{s.room.name.replace(/^ROOM\s*/i, "R")}</th>
                   ))}
                   <th className="py-2 pr-4 font-medium">Total</th>
-                  <th className="py-2 pr-4 font-medium whitespace-nowrap">Overall %</th>
                   <th className="py-2 pr-4 font-medium">Extra</th>
                   <th className="py-2 pr-2 font-medium w-6"></th>
                 </tr>
               </thead>
               <tbody>
                 {(eggShowAll ? eggs : eggs.slice(0, 7)).map(e => {
+                  const rowId = e.id ?? e.date + e.label;
                   const norm = normaliseEggRow(e);
                   const prod = productionByDate.get(e.date);
+                  const isExpanded = expandedEggRows.has(rowId);
+                  const colSpan = 1 + eggRoomSlots.length + 3;
                   return (
-                    <tr key={e.id ?? e.date + e.label} className="border-b border-border/50">
-                      <td className="py-2.5 pr-4 whitespace-nowrap">{e.label}</td>
-                      {eggRoomSlots.map(s => {
-                        const rp = prod?.rooms.find(r => r.roomId === s.room.id) ?? null;
-                        return (
-                          <Fragment key={s.room.id}>
-                            <td className="py-2.5 pr-4 tabular-nums">{e[s.key]}</td>
-                            <td className={`py-2.5 pr-4 tabular-nums ${rp?.pct == null ? "text-muted-foreground" : ""}`}>
-                              {fmtPct(rp?.pct ?? null)}
-                            </td>
-                          </Fragment>
-                        );
-                      })}
-                      <td className="py-2.5 pr-4">
-                        <span className="inline-flex items-center rounded-full bg-[color:var(--forest)] text-primary-foreground px-2.5 py-0.5 text-xs font-medium">
-                          {norm.crates}
-                        </span>
-                      </td>
-                      <td className={`py-2.5 pr-4 tabular-nums font-medium ${prod?.overallPct == null ? "text-muted-foreground font-normal" : ""}`}>
-                        {fmtPct(prod?.overallPct ?? null)}
-                      </td>
-                      <td className="py-2.5 pr-4 text-muted-foreground">{norm.extra ? `+${norm.extra}` : "—"}</td>
-                      <td className="py-2.5 pr-2 text-right"><RowActions onEdit={() => editEgg(e)} onDelete={() => delEgg(e)} /></td>
-                    </tr>
+                    <Fragment key={rowId}>
+                      <tr
+                        className={`border-b border-border/50 cursor-pointer transition-colors ${isExpanded ? "bg-secondary/30" : "hover:bg-secondary/20"}`}
+                        onClick={() => toggleEggRow(rowId)}
+                      >
+                        <td className="py-2.5 pr-4 whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={(evt) => { evt.stopPropagation(); toggleEggRow(rowId); }}
+                            className="inline-flex items-center gap-1.5 text-left hover:text-[color:var(--forest)] transition"
+                            aria-label={isExpanded ? "Collapse production analysis" : "Expand production analysis"}
+                          >
+                            <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                            <span>{e.label}</span>
+                          </button>
+                        </td>
+                        {eggRoomSlots.map(s => (
+                          <td key={s.room.id} className="py-2.5 pr-4 tabular-nums">{e[s.key]}</td>
+                        ))}
+                        <td className="py-2.5 pr-4">
+                          <span className="inline-flex items-center rounded-full bg-[color:var(--forest)] text-primary-foreground px-2.5 py-0.5 text-xs font-medium">
+                            {norm.crates}
+                          </span>
+                        </td>
+                        <td className="py-2.5 pr-4 text-muted-foreground">{norm.extra ? `+${norm.extra}` : "—"}</td>
+                        <td className="py-2.5 pr-2 text-right">
+                          <RowActions
+                            onEdit={() => editEgg(e)}
+                            onDelete={() => delEgg(e)}
+                            extra={{ label: isExpanded ? "Hide analysis" : "Show analysis", onClick: () => toggleEggRow(rowId) }}
+                          />
+                        </td>
+                      </tr>
+                      {isExpanded && prod && (
+                        <tr className="border-b border-border/50">
+                          <td colSpan={colSpan} className="p-0">
+                            <div className="bg-secondary/40 px-3 py-3 sm:px-4 sm:py-3">
+                              <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                                Room Production Rate
+                              </div>
+                              <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                                {prod.rooms.map(r => (
+                                  <span key={r.roomId} className="tabular-nums">
+                                    {r.roomName.replace(/^ROOM\s*/i, "R")}: <span className={r.pct == null ? "text-muted-foreground" : "font-medium"}>{fmtPct(r.pct)}</span>
+                                  </span>
+                                ))}
+                                <span className="tabular-nums">
+                                  Overall: <span className={prod.overallPct == null ? "text-muted-foreground" : "font-medium"}>{fmtPct(prod.overallPct)}</span>
+                                </span>
+                              </div>
+                              <div className="mt-3 border-t border-border" />
+                              <div className="mt-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                                Daily Production Analysis · {prod.label}
+                              </div>
+                              <div className="mt-2 space-y-1">
+                                {prod.rooms.map(r => (
+                                  <div key={r.roomId} className="flex items-center justify-between gap-3 text-sm">
+                                    <span className="font-medium">{r.roomName}</span>
+                                    <span className="flex items-center gap-4 tabular-nums">
+                                      <span className="text-muted-foreground">{r.eggs.toLocaleString()} eggs</span>
+                                      <span className={`w-16 text-right ${r.pct == null ? "text-muted-foreground" : ""}`}>{fmtPct(r.pct)}</span>
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="mt-2 border-t border-border pt-2 flex items-center justify-between gap-3 text-sm font-semibold">
+                                <span>Overall</span>
+                                <span className="flex items-center gap-4 tabular-nums">
+                                  <span>{prod.totalEggs.toLocaleString()} eggs</span>
+                                  <span className={`w-16 text-right ${prod.overallPct == null ? "text-muted-foreground font-normal" : ""}`}>{fmtPct(prod.overallPct)}</span>
+                                </span>
+                              </div>
+                              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                {prod.totalBirds !== null && (
+                                  <span>Based on {prod.totalBirds.toLocaleString()} active birds on this date.</span>
+                                )}
+                                {prod.best && (
+                                  <span>Best performing room: {prod.best.roomName} — {fmtPct(prod.best.pct)}</span>
+                                )}
+                                {prod.worst && (
+                                  <span>Lowest performing room: {prod.worst.roomName} — {fmtPct(prod.worst.pct)}</span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
                   );
                 })}
 
                 {eggs.length === 0 && (
-                  <tr><td colSpan={eggRoomSlots.length * 2 + 5} className="py-4 text-center text-muted-foreground text-xs">
+                  <tr><td colSpan={1 + eggRoomSlots.length + 3} className="py-4 text-center text-muted-foreground text-xs">
                     <span className="font-medium">Pending entry</span> — no production records yet.
                   </td></tr>
                 )}
