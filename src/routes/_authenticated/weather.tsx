@@ -63,15 +63,64 @@ function WeatherPage() {
   const layerBatches = useLayerBatches().data ?? [];
 
   const fetchWeather = useServerFn(getFarmWeather);
+  const [cached, setCached] = useState<{ weather: FarmWeather; at: string } | null>(null);
+
+  // Last good forecast, so a temporary outage still shows something honest.
+  useEffect(() => {
+    if (!farm?.id) return;
+    try {
+      const raw = localStorage.getItem(`pp:weather:${farm.id}`);
+      if (raw) setCached(JSON.parse(raw));
+    } catch {
+      /* ignore unreadable cache */
+    }
+  }, [farm?.id]);
+
   const weatherQ = useQuery({
-    queryKey: ["weather", farm?.location, farm?.state, farm?.country],
+    queryKey: ["weather", farm?.id, farm?.latitude, farm?.longitude, farm?.location, farm?.state, farm?.country],
     enabled: !!farm,
     staleTime: 15 * 60_000,
+    retry: 1,
     queryFn: () =>
       fetchWeather({
-        data: { location: farm?.location ?? null, state: farm?.state ?? null, country: farm?.country ?? null },
+        data: {
+          latitude: farm?.latitude ?? null,
+          longitude: farm?.longitude ?? null,
+          location: farm?.location ?? null,
+          state: farm?.state ?? null,
+          country: farm?.country ?? null,
+        },
       }),
   });
+
+  // Persist the successful result: cache locally, and save the resolved
+  // coordinates on the farm so future lookups skip geocoding entirely.
+  useEffect(() => {
+    const res = weatherQ.data;
+    if (!res?.ok || !farm?.id) return;
+    const entry = { weather: res.weather, at: res.weather.fetchedAt };
+    setCached(entry);
+    try {
+      localStorage.setItem(`pp:weather:${farm.id}`, JSON.stringify(entry));
+    } catch {
+      /* storage full — not fatal */
+    }
+    if (farm.latitude == null || farm.longitude == null) {
+      void supabase
+        .from("farms")
+        .update({
+          latitude: res.resolved.latitude,
+          longitude: res.resolved.longitude,
+          geocoded_place: res.resolved.place,
+          geocoded_at: new Date().toISOString(),
+        } as never)
+        .eq("id", farm.id)
+        .then(({ error }) => {
+          if (error) console.warn("[weather] could not save farm coordinates:", error.message);
+        });
+    }
+  }, [weatherQ.data, farm?.id, farm?.latitude, farm?.longitude]);
+
 
   const flocks = useMemo<FlockProfile[]>(() => {
     const out: FlockProfile[] = [];
