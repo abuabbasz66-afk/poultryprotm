@@ -239,20 +239,55 @@ function WeatherPage() {
           onClick={() => weatherQ.refetch()}
           className="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-medium hover:bg-muted"
         >
-          <RefreshCw className={cn("h-3.5 w-3.5", weatherQ.isFetching && "animate-spin")} /> Refresh
+        <button
+          type="button"
+          onClick={() => { if (!weatherQ.isFetching) void weatherQ.refetch(); }}
+          disabled={weatherQ.isFetching}
+          className="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-medium hover:bg-muted disabled:opacity-60"
+        >
+          <RefreshCw className={cn("h-3.5 w-3.5", weatherQ.isFetching && "animate-spin")} />
+          {weatherQ.isFetching ? "Refreshing…" : "Refresh"}
         </button>
       </header>
 
-      {weatherQ.isLoading && (
+      {(weatherQ.isLoading || (weatherQ.isFetching && !weather)) && (
         <div className="flex items-center gap-2 rounded-2xl border p-6 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" /> Reading the weather for your farm location…
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading farm weather…
         </div>
       )}
 
-      {result && !result.ok && (
+      {!weatherQ.isFetching && result && !result.ok && (
         <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5 text-sm">
-          <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-600" />
-          <p>{result.error}</p>
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+          <div className="space-y-2">
+            <p className="font-medium">Weather data could not be loaded.</p>
+            <p className="text-muted-foreground">{result.error}</p>
+            <ul className="text-xs text-muted-foreground">
+              <li>Location: {locationLabel}</li>
+              <li>
+                Weather service:{" "}
+                {result.stage === "forecast"
+                  ? "connection failed"
+                  : result.stage === "geocode"
+                    ? "location not recognised"
+                    : "no farm location saved"}
+              </li>
+            </ul>
+            <button
+              type="button"
+              onClick={() => void weatherQ.refetch()}
+              className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium hover:bg-muted"
+            >
+              <RefreshCw className="h-3.5 w-3.5" /> Retry
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showingStale && weather && (
+        <div className="rounded-2xl border border-muted bg-muted/40 p-4 text-xs text-muted-foreground">
+          Showing the most recent available forecast — last updated{" "}
+          {new Date(weather.fetchedAt).toLocaleString()}. This is not live weather.
         </div>
       )}
 
@@ -261,6 +296,7 @@ function WeatherPage() {
           {alert && (
             <TomorrowAlert alert={alert} weather={weather} />
           )}
+
 
           <CurrentConditions weather={weather} flocks={flocks} />
 
