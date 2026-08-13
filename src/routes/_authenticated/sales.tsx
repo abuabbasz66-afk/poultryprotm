@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { ShoppingCart, TrendingUp, Users, Receipt, Loader2, Egg } from "lucide-react";
-import { useEggs } from "@/lib/farm-data";
+import { useEggs, usePrices } from "@/lib/farm-data";
+import { RecentActivitiesCard } from "@/components/recent-activities-card";
 import { useEffectivePrice } from "@/lib/effective-price";
 import { usePermissions, roleStyle } from "@/lib/rbac";
 import { PermissionDenied } from "@/components/permission-denied";
@@ -30,6 +31,7 @@ function naira(n: number) {
 function SalesPage() {
   const { can, loading, roleLabel, role } = usePermissions();
   const eggsQ = useEggs();
+  const pricesQ = usePrices();
   const pricing = useEffectivePrice();
   const rs = roleStyle(role);
 
