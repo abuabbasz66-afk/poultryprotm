@@ -22,7 +22,8 @@ import {
 } from "@/lib/feed-formulas-data";
 
 import { useFeedIntelligence } from "@/lib/feed-intelligence";
-import { useFarm } from "@/lib/farm-data";
+import { useFarm, useFeed, usePrices } from "@/lib/farm-data";
+import { RecentActivitiesCard } from "@/components/recent-activities-card";
 import { toDateKey } from "@/lib/date-key";
 
 
