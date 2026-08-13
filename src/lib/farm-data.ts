@@ -200,6 +200,9 @@ export type Farm = {
   subscription_plan: string | null;
   bag_weight_kg: number | null;
   feed_source: "purchased" | "self_produced";
+  latitude: number | null;
+  longitude: number | null;
+
 };
 
 export function useFarm() {
