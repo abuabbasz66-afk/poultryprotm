@@ -37,6 +37,7 @@ import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as SuperAdminFarmsFarmIdRouteImport } from './routes/super-admin.farms.$farmId'
 import { Route as ApiPublicWhatsappClickRouteImport } from './routes/api/public/whatsapp-click'
+import { Route as ApiPublicWeatherDiagRouteImport } from './routes/api/public/weather-diag'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -182,6 +183,11 @@ const ApiPublicWhatsappClickRoute = ApiPublicWhatsappClickRouteImport.update({
   path: '/api/public/whatsapp-click',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWeatherDiagRoute = ApiPublicWeatherDiagRouteImport.update({
+  id: '/api/public/weather-diag',
+  path: '/api/public/weather-diag',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -225,6 +231,7 @@ export interface FileRoutesByFullPath {
   '/staff': typeof AuthenticatedStaffRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/weather': typeof AuthenticatedWeatherRoute
+  '/api/public/weather-diag': typeof ApiPublicWeatherDiagRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
   '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByTo {
   '/staff': typeof AuthenticatedStaffRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/weather': typeof AuthenticatedWeatherRoute
+  '/api/public/weather-diag': typeof ApiPublicWeatherDiagRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
   '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -291,6 +299,7 @@ export interface FileRoutesById {
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/_authenticated/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/_authenticated/weather': typeof AuthenticatedWeatherRoute
+  '/api/public/weather-diag': typeof ApiPublicWeatherDiagRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
   '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -325,6 +334,7 @@ export interface FileRouteTypes {
     | '/staff'
     | '/subscriptions'
     | '/weather'
+    | '/api/public/weather-diag'
     | '/api/public/whatsapp-click'
     | '/super-admin/farms/$farmId'
     | '/lovable/email/auth/preview'
@@ -357,6 +367,7 @@ export interface FileRouteTypes {
     | '/staff'
     | '/subscriptions'
     | '/weather'
+    | '/api/public/weather-diag'
     | '/api/public/whatsapp-click'
     | '/super-admin/farms/$farmId'
     | '/lovable/email/auth/preview'
@@ -390,6 +401,7 @@ export interface FileRouteTypes {
     | '/_authenticated/staff'
     | '/_authenticated/subscriptions'
     | '/_authenticated/weather'
+    | '/api/public/weather-diag'
     | '/api/public/whatsapp-click'
     | '/super-admin/farms/$farmId'
     | '/lovable/email/auth/preview'
@@ -408,6 +420,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
   TermsRoute: typeof TermsRoute
+  ApiPublicWeatherDiagRoute: typeof ApiPublicWeatherDiagRoute
   ApiPublicWhatsappClickRoute: typeof ApiPublicWhatsappClickRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -612,6 +625,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWhatsappClickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/weather-diag': {
+      id: '/api/public/weather-diag'
+      path: '/api/public/weather-diag'
+      fullPath: '/api/public/weather-diag'
+      preLoaderRoute: typeof ApiPublicWeatherDiagRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -700,6 +720,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuperAdminRoute: SuperAdminRouteWithChildren,
   TermsRoute: TermsRoute,
+  ApiPublicWeatherDiagRoute: ApiPublicWeatherDiagRoute,
   ApiPublicWhatsappClickRoute: ApiPublicWhatsappClickRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
