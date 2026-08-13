@@ -113,7 +113,7 @@ function WeatherPage() {
 
     const rearing = layerBatches.filter((b) => b.status === "rearing");
     if (rearing.length) {
-      const ages = rearing.map((b) => layerAgeDays(b.placement_date, b.start_age_days));
+      const ages = rearing.map((b) => layerAgeDays(b));
       out.push({
         kind: "brooding",
         label: `Brooding & rearing (${rearing.length} batch${rearing.length > 1 ? "es" : ""})`,
@@ -260,7 +260,7 @@ function CurrentConditions({
   weather,
   flocks,
 }: {
-  weather: NonNullable<ReturnType<typeof useCurrentWeatherType>>;
+  weather: import("@/lib/weather.functions").FarmWeather;
   flocks: FlockProfile[];
 }) {
   const cur = weather.current;
@@ -291,9 +291,6 @@ function CurrentConditions({
     </section>
   );
 }
-
-// helper for typing only
-declare function useCurrentWeatherType(): import("@/lib/weather.functions").FarmWeather | null;
 
 function flockIcon(kind: FlockProfile["kind"]) {
   return kind === "broiler" ? Drumstick : kind === "brooding" ? Baby : Egg;
