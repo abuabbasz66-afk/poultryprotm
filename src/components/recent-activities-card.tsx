@@ -21,14 +21,22 @@ export function RecentActivitiesCard(props: {
   prices: Price[];
   bagWeightKg: number;
   canViewAll?: boolean;
+  /** Optional module scope — only these activity kinds are listed. */
+  kinds?: ActivityKind[];
+  title?: string;
+  subtitle?: string;
 }) {
   const [showAll, setShowAll] = useState(false);
+  const kinds = props.kinds;
   const activities = useMemo(
-    () => buildFarmActivities({
-      eggs: props.eggs, feed: props.feed, mortality: props.mortality,
-      health: props.health, prices: props.prices, bagWeightKg: props.bagWeightKg,
-    }),
-    [props.eggs, props.feed, props.mortality, props.health, props.prices, props.bagWeightKg],
+    () => {
+      const all = buildFarmActivities({
+        eggs: props.eggs, feed: props.feed, mortality: props.mortality,
+        health: props.health, prices: props.prices, bagWeightKg: props.bagWeightKg,
+      });
+      return kinds ? all.filter((a) => kinds.includes(a.kind)) : all;
+    },
+    [props.eggs, props.feed, props.mortality, props.health, props.prices, props.bagWeightKg, kinds],
   );
   const shown = showAll ? activities.slice(0, 40) : activities.slice(0, 7);
 
