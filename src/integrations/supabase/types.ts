@@ -1101,6 +1101,358 @@ export type Database = {
         }
         Relationships: []
       }
+      layer_batch_daily: {
+        Row: {
+          avg_weight_g: number | null
+          batch_id: string
+          birds_count: number | null
+          created_at: string
+          death_reason: string | null
+          deaths: number
+          entry_date: string
+          farm_id: string
+          feed_cost: number
+          feed_kg: number
+          feed_type: string | null
+          id: string
+          notes: string | null
+          observation: string | null
+          recorded_by: string | null
+          recorded_by_name: string | null
+          temperature_c: number | null
+          updated_at: string
+          water_litres: number
+        }
+        Insert: {
+          avg_weight_g?: number | null
+          batch_id: string
+          birds_count?: number | null
+          created_at?: string
+          death_reason?: string | null
+          deaths?: number
+          entry_date: string
+          farm_id: string
+          feed_cost?: number
+          feed_kg?: number
+          feed_type?: string | null
+          id?: string
+          notes?: string | null
+          observation?: string | null
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          temperature_c?: number | null
+          updated_at?: string
+          water_litres?: number
+        }
+        Update: {
+          avg_weight_g?: number | null
+          batch_id?: string
+          birds_count?: number | null
+          created_at?: string
+          death_reason?: string | null
+          deaths?: number
+          entry_date?: string
+          farm_id?: string
+          feed_cost?: number
+          feed_kg?: number
+          feed_type?: string | null
+          id?: string
+          notes?: string | null
+          observation?: string | null
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          temperature_c?: number | null
+          updated_at?: string
+          water_litres?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "layer_batch_daily_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "layer_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "layer_batch_daily_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      layer_batch_health: {
+        Row: {
+          administered_by: string | null
+          batch_id: string
+          created_at: string
+          dosage: string | null
+          entry_date: string
+          farm_id: string
+          id: string
+          kind: string
+          name: string
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          administered_by?: string | null
+          batch_id: string
+          created_at?: string
+          dosage?: string | null
+          entry_date: string
+          farm_id: string
+          id?: string
+          kind?: string
+          name: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          administered_by?: string | null
+          batch_id?: string
+          created_at?: string
+          dosage?: string | null
+          entry_date?: string
+          farm_id?: string
+          id?: string
+          kind?: string
+          name?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "layer_batch_health_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "layer_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "layer_batch_health_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      layer_batch_milestones: {
+        Row: {
+          batch_id: string
+          created_at: string
+          done_at: string
+          farm_id: string
+          id: string
+          milestone_key: string
+          note: string | null
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          done_at?: string
+          farm_id: string
+          id?: string
+          milestone_key: string
+          note?: string | null
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          done_at?: string
+          farm_id?: string
+          id?: string
+          milestone_key?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "layer_batch_milestones_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "layer_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "layer_batch_milestones_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      layer_batch_weights: {
+        Row: {
+          avg_weight_g: number
+          batch_id: string
+          birds_weighed: number
+          created_at: string
+          entry_date: string
+          farm_id: string
+          id: string
+          notes: string | null
+          target_weight_g: number | null
+          updated_at: string
+          week: number
+        }
+        Insert: {
+          avg_weight_g?: number
+          batch_id: string
+          birds_weighed?: number
+          created_at?: string
+          entry_date?: string
+          farm_id: string
+          id?: string
+          notes?: string | null
+          target_weight_g?: number | null
+          updated_at?: string
+          week: number
+        }
+        Update: {
+          avg_weight_g?: number
+          batch_id?: string
+          birds_weighed?: number
+          created_at?: string
+          entry_date?: string
+          farm_id?: string
+          id?: string
+          notes?: string | null
+          target_weight_g?: number | null
+          updated_at?: string
+          week?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "layer_batch_weights_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "layer_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "layer_batch_weights_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      layer_batches: {
+        Row: {
+          bird_type: string
+          birds_placed: number
+          breed: string | null
+          created_at: string
+          current_birds: number
+          farm_id: string
+          id: string
+          name: string
+          notes: string | null
+          placement_date: string
+          room: string | null
+          room_id: string | null
+          source: string | null
+          start_age_days: number
+          status: string
+          transferred_at: string | null
+          transferred_room_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          bird_type?: string
+          birds_placed?: number
+          breed?: string | null
+          created_at?: string
+          current_birds?: number
+          farm_id: string
+          id?: string
+          name: string
+          notes?: string | null
+          placement_date: string
+          room?: string | null
+          room_id?: string | null
+          source?: string | null
+          start_age_days?: number
+          status?: string
+          transferred_at?: string | null
+          transferred_room_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bird_type?: string
+          birds_placed?: number
+          breed?: string | null
+          created_at?: string
+          current_birds?: number
+          farm_id?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          placement_date?: string
+          room?: string | null
+          room_id?: string | null
+          source?: string | null
+          start_age_days?: number
+          status?: string
+          transferred_at?: string | null
+          transferred_room_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "layer_batches_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      layer_rearing_settings: {
+        Row: {
+          created_at: string
+          farm_id: string
+          maturity_weeks: number
+          schedule: Json
+          stages: Json
+          updated_at: string
+          weight_targets: Json
+        }
+        Insert: {
+          created_at?: string
+          farm_id: string
+          maturity_weeks?: number
+          schedule?: Json
+          stages?: Json
+          updated_at?: string
+          weight_targets?: Json
+        }
+        Update: {
+          created_at?: string
+          farm_id?: string
+          maturity_weeks?: number
+          schedule?: Json
+          stages?: Json
+          updated_at?: string
+          weight_targets?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "layer_rearing_settings_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: true
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mortality: {
         Row: {
           cause: string
