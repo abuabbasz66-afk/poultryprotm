@@ -1957,6 +1957,24 @@ export type Database = {
         }
         Relationships: []
       }
+      weather_cache: {
+        Row: {
+          cache_key: string
+          fetched_at: string
+          payload: Json
+        }
+        Insert: {
+          cache_key: string
+          fetched_at?: string
+          payload: Json
+        }
+        Update: {
+          cache_key?: string
+          fetched_at?: string
+          payload?: Json
+        }
+        Relationships: []
+      }
       whatsapp_clicks: {
         Row: {
           browser: string | null
