@@ -243,7 +243,9 @@ export const getFarmWeather = createServerFn({ method: "GET" })
     const c = json.current ?? {};
     return {
       ok: true,
+      resolved: { latitude: place.latitude, longitude: place.longitude, place: place.label },
       weather: {
+
         place: place.label,
         latitude: place.latitude,
         longitude: place.longitude,
