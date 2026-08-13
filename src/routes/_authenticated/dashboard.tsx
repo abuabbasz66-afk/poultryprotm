@@ -50,6 +50,7 @@ import { useSubscription } from "@/lib/subscription";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
+import { computeProductionSeries, fmtPct } from "@/lib/production-percent";
 import { toDateKey, toLocalDate } from "@/lib/date-key";
 import { computeDashboardMetrics, priceUnitLabel } from "@/lib/farm-analytics";
 import {
@@ -262,13 +263,7 @@ const setBagWeightKg = (v: number | null) => {
     ? Math.round(last7Eggs.reduce((s, r) => s + totalEggsFromRow(r), 0) / last7Eggs.length)
     : 0;
 
-  const rawLayRate = productionRatePct;
-  const layRateValid = rawLayRate !== null && Number.isFinite(rawLayRate) && rawLayRate <= 100;
-  const currentLayRateDisplay = rawLayRate === null
-    ? "—"
-    : layRateValid
-      ? `${rawLayRate.toFixed(1)}%`
-      : "—";
+  void productionRatePct;
 
   const eggPrice = metrics.eggPrice;
   const feedPrice = metrics.feedPrice;
@@ -288,6 +283,19 @@ const setBagWeightKg = (v: number | null) => {
   // Egg columns r2/r3/r4 belong to ROOM 2/3/4 — mapped by room number, never
   // by list position, and limited to rooms still in production.
   const eggRoomSlots = useMemo(() => eggSlots(rooms), [rooms]);
+  // Daily lay percentages per room + flock, recomputed whenever production,
+  // rooms or mortality change (historical populations are reconstructed).
+  const productionSeries = useMemo(
+    () => computeProductionSeries(eggs, rooms, mortality),
+    [eggs, rooms, mortality],
+  );
+  const productionByDate = useMemo(
+    () => new Map(productionSeries.map((p) => [p.date, p] as const)),
+    [productionSeries],
+  );
+  const todayProduction = productionSeries[0] ?? null;
+  // Current lay rate = the overall lay percentage for the latest production day.
+  const currentLayRateDisplay = fmtPct(todayProduction?.overallPct ?? null);
   const roomSeries = useMemo(
     () => eggRoomSlots.map((s) => ({ name: s.room.name, key: s.key })),
     [eggRoomSlots],
@@ -935,9 +943,13 @@ const setBagWeightKg = (v: number | null) => {
                 <tr className="text-left text-muted-foreground border-b border-border">
                   <th className="py-2 pr-4 font-medium">Date</th>
                   {eggRoomSlots.map(s => (
-                    <th key={s.room.id} className="py-2 pr-4 font-medium whitespace-nowrap">{s.room.name.replace(/^ROOM\s*/i, "R")}</th>
+                    <Fragment key={s.room.id}>
+                      <th className="py-2 pr-4 font-medium whitespace-nowrap">{s.room.name.replace(/^ROOM\s*/i, "R")}</th>
+                      <th className="py-2 pr-4 font-medium whitespace-nowrap">{s.room.name.replace(/^ROOM\s*/i, "R")} %</th>
+                    </Fragment>
                   ))}
                   <th className="py-2 pr-4 font-medium">Total</th>
+                  <th className="py-2 pr-4 font-medium whitespace-nowrap">Overall %</th>
                   <th className="py-2 pr-4 font-medium">Extra</th>
                   <th className="py-2 pr-2 font-medium w-6"></th>
                 </tr>
@@ -945,16 +957,28 @@ const setBagWeightKg = (v: number | null) => {
               <tbody>
                 {(eggShowAll ? eggs : eggs.slice(0, 7)).map(e => {
                   const norm = normaliseEggRow(e);
+                  const prod = productionByDate.get(e.date);
                   return (
                     <tr key={e.id ?? e.date + e.label} className="border-b border-border/50">
                       <td className="py-2.5 pr-4 whitespace-nowrap">{e.label}</td>
-                      {eggRoomSlots.map(s => (
-                        <td key={s.room.id} className="py-2.5 pr-4 tabular-nums">{e[s.key]}</td>
-                      ))}
+                      {eggRoomSlots.map(s => {
+                        const rp = prod?.rooms.find(r => r.roomId === s.room.id) ?? null;
+                        return (
+                          <Fragment key={s.room.id}>
+                            <td className="py-2.5 pr-4 tabular-nums">{e[s.key]}</td>
+                            <td className={`py-2.5 pr-4 tabular-nums ${rp?.pct == null ? "text-muted-foreground" : ""}`}>
+                              {fmtPct(rp?.pct ?? null)}
+                            </td>
+                          </Fragment>
+                        );
+                      })}
                       <td className="py-2.5 pr-4">
                         <span className="inline-flex items-center rounded-full bg-[color:var(--forest)] text-primary-foreground px-2.5 py-0.5 text-xs font-medium">
                           {norm.crates}
                         </span>
+                      </td>
+                      <td className={`py-2.5 pr-4 tabular-nums font-medium ${prod?.overallPct == null ? "text-muted-foreground font-normal" : ""}`}>
+                        {fmtPct(prod?.overallPct ?? null)}
                       </td>
                       <td className="py-2.5 pr-4 text-muted-foreground">{norm.extra ? `+${norm.extra}` : "—"}</td>
                       <td className="py-2.5 pr-2 text-right"><RowActions onEdit={() => editEgg(e)} onDelete={() => delEgg(e)} /></td>
@@ -963,7 +987,7 @@ const setBagWeightKg = (v: number | null) => {
                 })}
 
                 {eggs.length === 0 && (
-                  <tr><td colSpan={eggRoomSlots.length + 4} className="py-4 text-center text-muted-foreground text-xs">
+                  <tr><td colSpan={eggRoomSlots.length * 2 + 5} className="py-4 text-center text-muted-foreground text-xs">
                     <span className="font-medium">Pending entry</span> — no production records yet.
                   </td></tr>
                 )}
@@ -975,6 +999,77 @@ const setBagWeightKg = (v: number | null) => {
               <button onClick={() => setEggShowAll(v => !v)} className="text-xs font-medium text-[color:var(--forest)] hover:underline">
                 {eggShowAll ? "Show latest 7 only" : `View all ${eggs.length} production records`}
               </button>
+            </div>
+          )}
+
+          {todayProduction && todayProduction.rooms.length > 0 && (
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              {/* Daily production breakdown */}
+              <div className="rounded-2xl border border-border bg-secondary/40 p-4">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                  Daily Production · {todayProduction.label}
+                </div>
+                <div className="mt-3 space-y-1.5">
+                  {todayProduction.rooms.map(r => (
+                    <div key={r.roomId} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="font-medium truncate">{r.roomName}</span>
+                      <span className="flex items-center gap-4 tabular-nums">
+                        <span className="text-muted-foreground">{r.eggs.toLocaleString()} eggs</span>
+                        <span className={`w-16 text-right font-semibold ${r.pct == null ? "text-muted-foreground font-normal" : ""}`}>{fmtPct(r.pct)}</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 pt-3 border-t border-border flex items-center justify-between gap-3 text-sm font-semibold">
+                  <span>TOTAL</span>
+                  <span className="flex items-center gap-4 tabular-nums">
+                    <span>{todayProduction.totalEggs.toLocaleString()} eggs</span>
+                    <span className="w-16 text-right">{fmtPct(todayProduction.overallPct)}</span>
+                  </span>
+                </div>
+                {todayProduction.totalBirds !== null && (
+                  <div className="mt-2 text-[11px] text-muted-foreground">
+                    Based on {todayProduction.totalBirds.toLocaleString()} active birds on this date.
+                  </div>
+                )}
+              </div>
+
+              {/* Room comparison */}
+              <div className="rounded-2xl border border-border bg-background p-4">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Room Comparison</div>
+                {todayProduction.ranked.length === 0 ? (
+                  <div className="mt-3 text-sm text-muted-foreground">
+                    Bird counts unavailable for this date — percentages shown as N/A.
+                  </div>
+                ) : (
+                  <div className="mt-3 space-y-2">
+                    {todayProduction.ranked.map((r, i) => {
+                      const top = i === 0;
+                      const low = i === todayProduction.ranked.length - 1 && todayProduction.ranked.length > 1;
+                      const max = todayProduction.ranked[0].pct ?? 0;
+                      const width = max > 0 ? Math.max(4, ((r.pct ?? 0) / max) * 100) : 0;
+                      return (
+                        <div key={r.roomId}>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="flex items-center gap-1.5 truncate">
+                              {top && <span aria-hidden>🥇</span>}
+                              <span className={top ? "font-semibold" : ""}>{r.roomName}</span>
+                              {low && <span className="text-[10px] uppercase tracking-[0.14em] text-destructive">lowest</span>}
+                            </span>
+                            <span className="tabular-nums font-medium">{fmtPct(r.pct)}</span>
+                          </div>
+                          <div className="mt-1 h-1.5 rounded-full bg-secondary overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${top ? "bg-[color:var(--forest)]" : low ? "bg-destructive/60" : "bg-[color:var(--forest)]/50"}`}
+                              style={{ width: `${width}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </Card>
