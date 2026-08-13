@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -7,7 +7,9 @@ import {
   MapPin, RefreshCw, ChevronDown, Baby, Drumstick, Egg, ShieldAlert, Info,
 } from "lucide-react";
 import { RequirePermission } from "@/components/require-permission";
-import { getFarmWeather } from "@/lib/weather.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { getFarmWeather, type FarmWeather } from "@/lib/weather.functions";
+
 import {
   RISK_META, advisory, combinedRisk, conditionLabel, dayRisk, peakWindow,
   riskRank, tomorrowAlert, worstRisk, type FlockProfile, type RiskLevel,
@@ -63,15 +65,64 @@ function WeatherPage() {
   const layerBatches = useLayerBatches().data ?? [];
 
   const fetchWeather = useServerFn(getFarmWeather);
+  const [cached, setCached] = useState<{ weather: FarmWeather; at: string } | null>(null);
+
+  // Last good forecast, so a temporary outage still shows something honest.
+  useEffect(() => {
+    if (!farm?.id) return;
+    try {
+      const raw = localStorage.getItem(`pp:weather:${farm.id}`);
+      if (raw) setCached(JSON.parse(raw));
+    } catch {
+      /* ignore unreadable cache */
+    }
+  }, [farm?.id]);
+
   const weatherQ = useQuery({
-    queryKey: ["weather", farm?.location, farm?.state, farm?.country],
+    queryKey: ["weather", farm?.id, farm?.latitude, farm?.longitude, farm?.location, farm?.state, farm?.country],
     enabled: !!farm,
     staleTime: 15 * 60_000,
+    retry: 1,
     queryFn: () =>
       fetchWeather({
-        data: { location: farm?.location ?? null, state: farm?.state ?? null, country: farm?.country ?? null },
+        data: {
+          latitude: farm?.latitude ?? null,
+          longitude: farm?.longitude ?? null,
+          location: farm?.location ?? null,
+          state: farm?.state ?? null,
+          country: farm?.country ?? null,
+        },
       }),
   });
+
+  // Persist the successful result: cache locally, and save the resolved
+  // coordinates on the farm so future lookups skip geocoding entirely.
+  useEffect(() => {
+    const res = weatherQ.data;
+    if (!res?.ok || !farm?.id) return;
+    const entry = { weather: res.weather, at: res.weather.fetchedAt };
+    setCached(entry);
+    try {
+      localStorage.setItem(`pp:weather:${farm.id}`, JSON.stringify(entry));
+    } catch {
+      /* storage full — not fatal */
+    }
+    if (farm.latitude == null || farm.longitude == null) {
+      void supabase
+        .from("farms")
+        .update({
+          latitude: res.resolved.latitude,
+          longitude: res.resolved.longitude,
+          geocoded_place: res.resolved.place,
+          geocoded_at: new Date().toISOString(),
+        } as never)
+        .eq("id", farm.id)
+        .then(({ error }) => {
+          if (error) console.warn("[weather] could not save farm coordinates:", error.message);
+        });
+    }
+  }, [weatherQ.data, farm?.id, farm?.latitude, farm?.longitude]);
+
 
   const flocks = useMemo<FlockProfile[]>(() => {
     const out: FlockProfile[] = [];
@@ -137,7 +188,13 @@ function WeatherPage() {
   }, [rooms, broilers, layerBatches, farm]);
 
   const result = weatherQ.data;
-  const weather = result?.ok ? result.weather : null;
+  const live = result?.ok ? result.weather : null;
+  // Fall back to the last good forecast, clearly labelled as not live.
+  const weather = live ?? (result && !result.ok ? cached?.weather ?? null : null);
+  const showingStale = !live && !!weather;
+  const locationLabel =
+    [farm?.location, farm?.state, farm?.country].filter(Boolean).join(", ") || "not set";
+
 
   const alert = useMemo(() => (weather ? tomorrowAlert(weather, flocks) : null), [weather, flocks]);
 
@@ -179,23 +236,53 @@ function WeatherPage() {
         </div>
         <button
           type="button"
-          onClick={() => weatherQ.refetch()}
-          className="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-medium hover:bg-muted"
+          onClick={() => { if (!weatherQ.isFetching) void weatherQ.refetch(); }}
+          disabled={weatherQ.isFetching}
+          className="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-medium hover:bg-muted disabled:opacity-60"
         >
-          <RefreshCw className={cn("h-3.5 w-3.5", weatherQ.isFetching && "animate-spin")} /> Refresh
+          <RefreshCw className={cn("h-3.5 w-3.5", weatherQ.isFetching && "animate-spin")} />
+          {weatherQ.isFetching ? "Refreshing…" : "Refresh"}
         </button>
       </header>
 
-      {weatherQ.isLoading && (
+      {(weatherQ.isLoading || (weatherQ.isFetching && !weather)) && (
         <div className="flex items-center gap-2 rounded-2xl border p-6 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" /> Reading the weather for your farm location…
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading farm weather…
         </div>
       )}
 
-      {result && !result.ok && (
+      {!weatherQ.isFetching && result && !result.ok && (
         <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5 text-sm">
-          <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-600" />
-          <p>{result.error}</p>
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+          <div className="space-y-2">
+            <p className="font-medium">Weather data could not be loaded.</p>
+            <p className="text-muted-foreground">{result.error}</p>
+            <ul className="text-xs text-muted-foreground">
+              <li>Location: {locationLabel}</li>
+              <li>
+                Weather service:{" "}
+                {result.stage === "forecast"
+                  ? "connection failed"
+                  : result.stage === "geocode"
+                    ? "location not recognised"
+                    : "no farm location saved"}
+              </li>
+            </ul>
+            <button
+              type="button"
+              onClick={() => void weatherQ.refetch()}
+              className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium hover:bg-muted"
+            >
+              <RefreshCw className="h-3.5 w-3.5" /> Retry
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showingStale && weather && (
+        <div className="rounded-2xl border border-muted bg-muted/40 p-4 text-xs text-muted-foreground">
+          Showing the most recent available forecast — last updated{" "}
+          {new Date(weather.fetchedAt).toLocaleString()}. This is not live weather.
         </div>
       )}
 
@@ -204,6 +291,7 @@ function WeatherPage() {
           {alert && (
             <TomorrowAlert alert={alert} weather={weather} />
           )}
+
 
           <CurrentConditions weather={weather} flocks={flocks} />
 

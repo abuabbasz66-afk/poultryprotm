@@ -51,60 +51,129 @@ export type FarmWeather = {
 };
 
 export type FarmWeatherResult =
-  | { ok: true; weather: FarmWeather }
-  | { ok: false; error: string };
+  | { ok: true; weather: FarmWeather; resolved: { latitude: number; longitude: number; place: string } }
+  | { ok: false; error: string; stage: "location" | "geocode" | "forecast"; detail: string };
 
-type Input = { location?: string | null; state?: string | null; country?: string | null };
+type Input = {
+  latitude?: number | null;
+  longitude?: number | null;
+  location?: string | null;
+  state?: string | null;
+  country?: string | null;
+};
 
-async function geocode(q: string) {
-  const url =
-    "https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&format=json&name=" +
-    encodeURIComponent(q);
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  const json = (await res.json()) as {
-    results?: { name: string; admin1?: string; country?: string; latitude: number; longitude: number }[];
-  };
-  const hit = json.results?.[0];
+const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+
+/** fetch with timeout + one retry — transient network blips must not kill the page. */
+async function fetchJson(url: string, label: string): Promise<any> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: { Accept: "application/json", "User-Agent": "PoultryPro/1.0 (farm weather advisory)" },
+        signal: AbortSignal.timeout(9000),
+      });
+      if (!res.ok) throw new Error(`${label} responded ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      lastErr = err;
+      console.error(`[weather] ${label} attempt ${attempt + 1} failed:`, err);
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 600));
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(`${label} failed`);
+}
+
+async function geocodeOpenMeteo(q: string) {
+  const json = await fetchJson(
+    "https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&format=json&name=" + encodeURIComponent(q),
+    "geocoding",
+  );
+  const hit = json?.results?.[0];
   if (!hit) return null;
   return {
     label: [hit.name, hit.admin1, hit.country].filter(Boolean).join(", "),
-    latitude: hit.latitude,
-    longitude: hit.longitude,
+    latitude: Number(hit.latitude),
+    longitude: Number(hit.longitude),
+  };
+}
+
+/** Second opinion when Open-Meteo's gazetteer does not know a village name. */
+async function geocodeNominatim(q: string) {
+  const json = await fetchJson(
+    "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(q),
+    "backup geocoding",
+  );
+  const hit = Array.isArray(json) ? json[0] : null;
+  if (!hit) return null;
+  return {
+    label: String(hit.display_name ?? q).split(",").slice(0, 3).join(",").trim(),
+    latitude: Number(hit.lat),
+    longitude: Number(hit.lon),
   };
 }
 
 export const getFarmWeather = createServerFn({ method: "GET" })
   .inputValidator((input: Input) => ({
+    latitude: num(input?.latitude),
+    longitude: num(input?.longitude),
     location: (input?.location ?? "").trim(),
     state: (input?.state ?? "").trim(),
     country: (input?.country ?? "").trim(),
   }))
   .handler(async ({ data }): Promise<FarmWeatherResult> => {
-    const candidates = [
-      [data.location, data.state, data.country].filter(Boolean).join(", "),
-      [data.location, data.country].filter(Boolean).join(", "),
-      [data.state, data.country].filter(Boolean).join(", "),
-      data.location,
-      data.state,
-    ].filter((s) => s && s.length > 1) as string[];
+    let place: { label: string; latitude: number; longitude: number } | null = null;
 
-    if (candidates.length === 0) {
-      return { ok: false, error: "No farm location saved. Add your farm location in Settings." };
+    if (data.latitude != null && data.longitude != null) {
+      place = {
+        label: [data.location, data.state, data.country].filter(Boolean).join(", ") || "Saved farm coordinates",
+        latitude: data.latitude,
+        longitude: data.longitude,
+      };
     }
 
-    let place: Awaited<ReturnType<typeof geocode>> = null;
-    for (const q of candidates) {
-      try {
-        place = await geocode(q);
-      } catch {
-        place = null;
-      }
-      if (place) break;
-    }
     if (!place) {
-      return { ok: false, error: `We could not locate "${candidates[0]}". Check the farm location in Settings.` };
+      const candidates = [
+        [data.location, data.state, data.country].filter(Boolean).join(", "),
+        [data.location, data.country].filter(Boolean).join(", "),
+        [data.state, data.country].filter(Boolean).join(", "),
+        data.location,
+        data.state,
+      ].filter((s) => s && s.length > 1) as string[];
+
+      if (candidates.length === 0) {
+        return {
+          ok: false,
+          stage: "location",
+          error: "No farm location saved. Add your farm location in Settings.",
+          detail: "Farm has no location, state or coordinates saved.",
+        };
+      }
+
+      let geoDetail = "No matching place found";
+      for (const q of candidates) {
+        for (const fn of [geocodeOpenMeteo, geocodeNominatim]) {
+          try {
+            place = await fn(q);
+          } catch (err) {
+            geoDetail = err instanceof Error ? err.message : "Geocoding failed";
+            place = null;
+          }
+          if (place) break;
+        }
+        if (place) break;
+      }
+      if (!place) {
+        console.error("[weather] geocoding failed for", candidates, geoDetail);
+        return {
+          ok: false,
+          stage: "geocode",
+          error: `We could not locate "${candidates[0]}". Check the farm location in Settings.`,
+          detail: geoDetail,
+        };
+      }
     }
+
 
     const params = new URLSearchParams({
       latitude: String(place.latitude),
@@ -119,12 +188,18 @@ export const getFarmWeather = createServerFn({ method: "GET" })
 
     let json: any;
     try {
-      const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
-      if (!res.ok) throw new Error(`forecast ${res.status}`);
-      json = await res.json();
-    } catch {
-      return { ok: false, error: "Weather service is unavailable right now. Please try again shortly." };
+      json = await fetchJson(`https://api.open-meteo.com/v1/forecast?${params.toString()}`, "forecast");
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : "Connection failed";
+      console.error("[weather] forecast failed", { place: place.label, detail });
+      return {
+        ok: false,
+        stage: "forecast",
+        error: "Weather data could not be loaded.",
+        detail,
+      };
     }
+
 
     const h = json.hourly ?? {};
     const times: string[] = h.time ?? [];
@@ -168,7 +243,9 @@ export const getFarmWeather = createServerFn({ method: "GET" })
     const c = json.current ?? {};
     return {
       ok: true,
+      resolved: { latitude: place.latitude, longitude: place.longitude, place: place.label },
       weather: {
+
         place: place.label,
         latitude: place.latitude,
         longitude: place.longitude,
