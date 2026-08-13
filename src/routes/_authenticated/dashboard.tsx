@@ -920,8 +920,174 @@ const setBagWeightKg = (v: number | null) => {
               body="Digitise daily poultry activities and maintain structured operational records across production, feed, flock health, mortality and farm rooms."
             />
 
+        {/* 1 — Recent Activities */}
+        <RecentActivitiesCard eggs={eggs} feed={feed} mortality={mortality} health={health} prices={canPrices ? prices : []} bagWeightKg={bagKg} canViewAll={canAudit} />
+
+        {canAudit && <RecentStaffActivity />}
+
+        {/* 2 — Room Management */}
+        <div id="rooms" className="scroll-mt-24" />
+        <Card>
+          <CardHeader
+            title={<span className="inline-flex items-center gap-2"><Bird className="h-5 w-5 text-[color:var(--forest)]" /> Room Management</span>}
+            subtitle="Add, edit or remove poultry rooms — scalable for unlimited rooms"
+            right={<ActionBtn onClick={addRoom} icon={Plus}>Add Room</ActionBtn>}
+          />
+          {missingAgeRooms.length > 0 && (
+            <div className="mt-4 rounded-xl border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 p-4">
+              <p className="text-sm font-semibold">🐔 Complete Flock Profile</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Bird age has not been recorded for {missingAgeRooms.length === 1 ? `${missingAgeRooms[0].name}` : `${missingAgeRooms.length} flocks`}. Add the current age so PoultryPro can provide accurate feeding, water, vaccination, growth and management reminders.
+              </p>
+              {canManageAge && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {missingAgeRooms.map((r) => (
+                    <button key={r.id} onClick={() => setAgeRoom(r)} className="rounded-full bg-[color:var(--forest)] px-3 py-1.5 text-xs font-semibold text-primary-foreground">
+                      Add Bird Age · {r.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          <div className="grid grid-cols-3 gap-3 mt-4">
+            <MiniStat label="Total Birds" value={totalBirds.toLocaleString()} tone="sky" />
+            <MiniStat label="Active Rooms" value={`${productionRooms(rooms).length} of ${rooms.length}`} tone="mint" />
+            <MiniStat label="Total Loss" value={String(totalLoss)} tone="peach" />
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {roomTodaySummary.filter(s => roomStatus(s.room) !== "inactive").map(s => {
+              const open = openRoomId === s.room.id;
+              return (
+                <div key={s.room.id} className="rounded-2xl border border-border bg-secondary/30 p-4">
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                    <span className="truncate font-semibold text-sm">{s.room.name}</span>
+                    <span className={`shrink-0 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium ${ROOM_STATUS_TONES[roomStatus(s.room)]}`}>
+                      {ROOM_STATUS_LABELS[roomStatus(s.room)]}
+                    </span>
+                  </div>
+                  <div className="mt-1 font-display text-xl font-semibold text-[color:var(--forest)]">
+                    {s.room.current.toLocaleString()} <span className="text-xs font-sans font-normal text-muted-foreground">birds</span>
+                  </div>
+                  <div className="mt-2 space-y-0.5 text-[12px] text-muted-foreground">
+                    <div>Production: <span className="tabular-nums text-foreground">{s.eggs.toLocaleString()} eggs</span></div>
+                    <div>Mortality: <span className="tabular-nums text-foreground">{s.deaths}</span></div>
+                    <div>Feed: <span className="tabular-nums text-foreground">{s.bags > 0 ? `${round1(s.bags * bagKg)} kg` : "N/A"}</span></div>
+                  </div>
+                  <button
+                    onClick={() => setOpenRoomId(open ? null : s.room.id)}
+                    className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-[color:var(--forest)] hover:underline"
+                  >
+                    {open ? "Hide room records" : "Open room records"}
+                    <ChevronDown className={"h-3 w-3 transition-transform " + (open ? "rotate-180" : "")} />
+                  </button>
+                  {open && (
+                    <div className="mt-3 space-y-3 border-t border-border pt-3 text-[11px]">
+                      <div className="grid grid-cols-2 gap-y-0.5">
+                        <span className="text-muted-foreground">Bird type</span><span className="text-right">{s.room.bird_type || "N/A"}</span>
+                        <span className="text-muted-foreground">Bird age</span><span className="text-right">{hasAge(s.room) ? `${flockAge(s.room).weeks} wks` : "N/A"}</span>
+                        <span className="text-muted-foreground">Initial birds</span><span className="text-right tabular-nums">{s.room.initial.toLocaleString()}</span>
+                        <span className="text-muted-foreground">Total loss</span><span className="text-right tabular-nums">{Math.max(0, s.room.initial - s.room.current)}</span>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-foreground">Recent feed</div>
+                        {s.recentFeed.length === 0 ? <div className="text-muted-foreground">No records</div> : s.recentFeed.map(f => (
+                          <div key={f.id} className="flex justify-between"><span className="text-muted-foreground">{f.date}</span><span className="tabular-nums">{round1(f.bags * bagKg)} kg</span></div>
+                        ))}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-foreground">Recent mortality</div>
+                        {s.recentMortality.length === 0 ? <div className="text-muted-foreground">No records</div> : s.recentMortality.map(m => (
+                          <div key={m.id} className="flex justify-between gap-2"><span className="truncate text-muted-foreground">{m.date} · {m.cause}</span><span className="tabular-nums">{Math.abs(m.loss)}</span></div>
+                        ))}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-foreground">Recent health</div>
+                        {s.recentHealth.length === 0 ? <div className="text-muted-foreground">No records</div> : s.recentHealth.map(h => (
+                          <div key={h.id} className="flex justify-between gap-2"><span className="truncate text-muted-foreground">{h.date} · {h.name}</span><span>{h.type}</span></div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {rooms.length === 0 && (
+              <div className="text-xs text-muted-foreground">No rooms yet — add your first room to start recording.</div>
+            )}
+          </div>
+          <div className="mt-5 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-muted-foreground border-b border-border">
+                  <th className="py-2 pr-4 font-medium">Room</th>
+                  <th className="py-2 pr-4 font-medium">Bird Age</th>
+                  <th className="py-2 pr-4 font-medium">Current</th>
+                  <th className="py-2 pr-4 font-medium">Initial</th>
+                  <th className="py-2 pr-4 font-medium">Loss</th>
+                  <th className="py-2 pr-4 font-medium">Status</th>
+                  <th className="py-2 pr-4 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rooms.map(r => {
+                  const loss = r.initial - r.current;
+                  const pct = ((loss / (r.initial || 1)) * 100).toFixed(1);
+                  const st = roomStatus(r);
+                  return (
+                    <tr key={r.id} className="border-b border-border/50">
+                      <td className="py-3 pr-4">
+                        <span className="flex items-center gap-2"><Bird className="h-4 w-4 text-[color:var(--forest)]" />{r.name}</span>
+                        {st === "culled" && r.culled_on && (
+                          <span className="mt-0.5 block text-[11px] text-muted-foreground">Culled {r.culled_on}{r.culled_birds_sold ? ` · ${r.culled_birds_sold} birds sold` : ""}</span>
+                        )}
+                      </td>
+                      <td className="py-3 pr-4">
+                        {hasAge(r) ? (
+                          <span className="block">
+                            <span className="font-medium">{flockAge(r).weeks} {flockAge(r).weeks === 1 ? "Week" : "Weeks"}</span>
+                            <span className="block text-[11px] text-muted-foreground">
+                              {flockAge(r).days} Days{flockStage(r) ? ` · ${flockStage(r)}` : ""}
+                              {flockAge(r).status === "estimated" ? " · estimated start" : ""}
+                            </span>
+                            {canManageAge && (
+                              <button onClick={() => setAgeRoom(r)} className="mt-1 text-[11px] font-medium text-[color:var(--forest)] underline underline-offset-2">Edit age</button>
+                            )}
+                          </span>
+                        ) : canManageAge ? (
+                          <button onClick={() => setAgeRoom(r)} className="rounded-full border border-[color:var(--gold)]/50 bg-[color:var(--gold)]/10 px-2.5 py-1 text-xs font-semibold text-[color:var(--forest)]">Add Bird Age</button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Not recorded</span>
+                        )}
+                      </td>
+                      <td className="py-3 pr-4">{r.current.toLocaleString()}</td>
+                      <td className="py-3 pr-4 text-muted-foreground">{r.initial.toLocaleString()}</td>
+                      <td className="py-3 pr-4 text-destructive">-{loss} <span className="text-xs">({pct}%)</span></td>
+                      <td className="py-3 pr-4">
+                        <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${ROOM_STATUS_TONES[st]}`}>{ROOM_STATUS_LABELS[st]}</span>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+                          <button onClick={() => editRoom(r)} className="rounded-full border border-border px-2.5 py-1 text-xs font-medium hover:bg-secondary">Edit</button>
+                          {st !== "culled" && (
+                            <button onClick={() => cullRoom(r)} className="rounded-full border border-destructive/40 px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/10">Mark as Culled</button>
+                          )}
+                          <button onClick={() => archiveRoom(r)} className="rounded-full border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary">
+                            {st === "inactive" ? "Restore" : "Archive"}
+                          </button>
+                          <button onClick={() => delRoom(r.id)} aria-label={`Delete ${r.name}`} className="text-destructive hover:opacity-70"><Trash2 className="h-4 w-4 inline" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        {/* 3 — Daily Production */}
         <div id="production" className="scroll-mt-24" />
-        {/* Daily Egg Production table */}
         <Card>
           <CardHeader
             title={<span className="inline-flex items-center gap-2"><Egg className="h-5 w-5 text-[color:var(--forest)]" /> Daily Egg Production</span>}
@@ -939,13 +1105,9 @@ const setBagWeightKg = (v: number | null) => {
                 <tr className="text-left text-muted-foreground border-b border-border">
                   <th className="py-2 pr-4 font-medium">Date</th>
                   {eggRoomSlots.map(s => (
-                    <Fragment key={s.room.id}>
-                      <th className="py-2 pr-4 font-medium whitespace-nowrap">{s.room.name.replace(/^ROOM\s*/i, "R")}</th>
-                      <th className="py-2 pr-4 font-medium whitespace-nowrap">{s.room.name.replace(/^ROOM\s*/i, "R")} %</th>
-                    </Fragment>
+                    <th key={s.room.id} className="py-2 pr-4 font-medium whitespace-nowrap">{s.room.name.replace(/^ROOM\s*/i, "R")}</th>
                   ))}
                   <th className="py-2 pr-4 font-medium">Total</th>
-                  <th className="py-2 pr-4 font-medium whitespace-nowrap">Overall %</th>
                   <th className="py-2 pr-4 font-medium">Extra</th>
                   <th className="py-2 pr-2 font-medium w-6"></th>
                 </tr>
@@ -954,36 +1116,66 @@ const setBagWeightKg = (v: number | null) => {
                 {(eggShowAll ? eggs : eggs.slice(0, 7)).map(e => {
                   const norm = normaliseEggRow(e);
                   const prod = productionByDate.get(e.date);
+                  const isOpen = expandedEggDate === e.date;
                   return (
-                    <tr key={e.id ?? e.date + e.label} className="border-b border-border/50">
-                      <td className="py-2.5 pr-4 whitespace-nowrap">{e.label}</td>
-                      {eggRoomSlots.map(s => {
-                        const rp = prod?.rooms.find(r => r.roomId === s.room.id) ?? null;
-                        return (
-                          <Fragment key={s.room.id}>
-                            <td className="py-2.5 pr-4 tabular-nums">{e[s.key]}</td>
-                            <td className={`py-2.5 pr-4 tabular-nums ${rp?.pct == null ? "text-muted-foreground" : ""}`}>
-                              {fmtPct(rp?.pct ?? null)}
-                            </td>
-                          </Fragment>
-                        );
-                      })}
-                      <td className="py-2.5 pr-4">
-                        <span className="inline-flex items-center rounded-full bg-[color:var(--forest)] text-primary-foreground px-2.5 py-0.5 text-xs font-medium">
-                          {norm.crates}
-                        </span>
-                      </td>
-                      <td className={`py-2.5 pr-4 tabular-nums font-medium ${prod?.overallPct == null ? "text-muted-foreground font-normal" : ""}`}>
-                        {fmtPct(prod?.overallPct ?? null)}
-                      </td>
-                      <td className="py-2.5 pr-4 text-muted-foreground">{norm.extra ? `+${norm.extra}` : "—"}</td>
-                      <td className="py-2.5 pr-2 text-right"><RowActions onEdit={() => editEgg(e)} onDelete={() => delEgg(e)} /></td>
-                    </tr>
+                    <Fragment key={e.id ?? e.date + e.label}>
+                      <tr className="border-b border-border/50 cursor-pointer hover:bg-secondary/40" onClick={() => setExpandedEggDate(isOpen ? null : e.date)}>
+                        <td className="py-2.5 pr-4 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5">
+                            <ChevronDown className={"h-3.5 w-3.5 text-muted-foreground transition-transform " + (isOpen ? "rotate-180" : "")} />
+                            {e.label}
+                          </span>
+                        </td>
+                        {eggRoomSlots.map(s => (
+                          <td key={s.room.id} className="py-2.5 pr-4 tabular-nums">{e[s.key]}</td>
+                        ))}
+                        <td className="py-2.5 pr-4">
+                          <span className="inline-flex items-center rounded-full bg-[color:var(--forest)] text-primary-foreground px-2.5 py-0.5 text-xs font-medium">
+                            {norm.crates}
+                          </span>
+                        </td>
+                        <td className="py-2.5 pr-4 text-muted-foreground">{norm.extra ? `+${norm.extra}` : "—"}</td>
+                        <td className="py-2.5 pr-2 text-right" onClick={(ev) => ev.stopPropagation()}>
+                          <RowActions onEdit={() => editEgg(e)} onDelete={() => delEgg(e)} />
+                        </td>
+                      </tr>
+                      {isOpen && (
+                        <tr className="border-b border-border/50 bg-secondary/30">
+                          <td colSpan={eggRoomSlots.length + 4} className="px-3 py-3">
+                            <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Daily Production Analysis</div>
+                            <div className="mt-2 max-w-md space-y-1.5">
+                              {(prod?.rooms ?? []).map(r => (
+                                <div key={r.roomId} className="flex items-center justify-between gap-3 text-sm">
+                                  <span className="truncate">{r.roomName}</span>
+                                  <span className="flex items-center gap-4 tabular-nums">
+                                    <span className="text-muted-foreground">{r.eggs.toLocaleString()} eggs</span>
+                                    <span className={`w-16 text-right font-medium ${r.pct == null ? "text-muted-foreground font-normal" : ""}`}>{fmtPct(r.pct)}</span>
+                                  </span>
+                                </div>
+                              ))}
+                              <div className="mt-2 pt-2 border-t border-border flex items-center justify-between gap-3 text-sm font-semibold">
+                                <span>Overall production</span>
+                                <span className="flex items-center gap-4 tabular-nums">
+                                  <span>{(prod?.totalEggs ?? norm.totalEggs).toLocaleString()} eggs</span>
+                                  <span className="w-16 text-right">{fmtPct(prod?.overallPct ?? null)}</span>
+                                </span>
+                              </div>
+                              {prod?.totalBirds != null && (
+                                <div className="text-[11px] text-muted-foreground">
+                                  Based on {prod.totalBirds.toLocaleString()} active birds on this date.
+                                </div>
+                              )}
+                              <div className="pt-1 text-[11px] text-muted-foreground">Extra (loose) eggs: {norm.extra}</div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
                   );
                 })}
 
                 {eggs.length === 0 && (
-                  <tr><td colSpan={eggRoomSlots.length * 2 + 5} className="py-4 text-center text-muted-foreground text-xs">
+                  <tr><td colSpan={eggRoomSlots.length + 4} className="py-4 text-center text-muted-foreground text-xs">
                     <span className="font-medium">Pending entry</span> — no production records yet.
                   </td></tr>
                 )}
@@ -997,113 +1189,153 @@ const setBagWeightKg = (v: number | null) => {
               </button>
             </div>
           )}
+        </Card>
 
-          {todayProduction && todayProduction.rooms.length > 0 && (
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              {/* Daily production breakdown */}
-              <div className="rounded-2xl border border-border bg-secondary/40 p-4">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                  Daily Production · {todayProduction.label}
-                </div>
-                <div className="mt-3 space-y-1.5">
-                  {todayProduction.rooms.map(r => (
-                    <div key={r.roomId} className="flex items-center justify-between gap-3 text-sm">
-                      <span className="font-medium truncate">{r.roomName}</span>
-                      <span className="flex items-center gap-4 tabular-nums">
-                        <span className="text-muted-foreground">{r.eggs.toLocaleString()} eggs</span>
-                        <span className={`w-16 text-right font-semibold ${r.pct == null ? "text-muted-foreground font-normal" : ""}`}>{fmtPct(r.pct)}</span>
-                      </span>
+        {/* 4 — Room Comparison */}
+        <RoomComparisonCard rooms={rooms} eggs={eggs} mortality={mortality} feed={feed} bagWeightKg={bagKg} />
+
+        {/* 5 — Broken Eggs */}
+        <BrokenEggsCard eggs={eggs} rooms={rooms} />
+
+        {/* 6 — Room Overview */}
+        <Card>
+          <CardHeader title="Room Overview" subtitle="Current status, flock age and today's figures per room" />
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {roomTodaySummary.map((s) => {
+              const r = s.room;
+              const st = roomStatus(r);
+              return (
+                <div key={r.id} className="rounded-2xl bg-secondary/40 p-4">
+                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[color:var(--forest)]/10 text-[color:var(--forest)]"><Bird className="h-4 w-4" /></span>
+                    <div className="min-w-0">
+                      <div className="truncate font-semibold text-sm">{r.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {r.current.toLocaleString()} birds · {r.bird_type || "N/A"} · {hasAge(r) ? `${flockAge(r).weeks} weeks` : "Age N/A"}
+                      </div>
                     </div>
-                  ))}
-                </div>
-                <div className="mt-3 pt-3 border-t border-border flex items-center justify-between gap-3 text-sm font-semibold">
-                  <span>TOTAL</span>
-                  <span className="flex items-center gap-4 tabular-nums">
-                    <span>{todayProduction.totalEggs.toLocaleString()} eggs</span>
-                    <span className="w-16 text-right">{fmtPct(todayProduction.overallPct)}</span>
-                  </span>
-                </div>
-                {todayProduction.totalBirds !== null && (
-                  <div className="mt-2 text-[11px] text-muted-foreground">
-                    Based on {todayProduction.totalBirds.toLocaleString()} active birds on this date.
+                    <span className={`shrink-0 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium ${ROOM_STATUS_TONES[st]}`}>{ROOM_STATUS_LABELS[st]}</span>
                   </div>
-                )}
-              </div>
+                  <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-[12px] sm:grid-cols-3">
+                    <span className="text-muted-foreground">Production <span className="block tabular-nums text-foreground">{s.eggs.toLocaleString()} eggs</span></span>
+                    <span className="text-muted-foreground">Production rate <span className="block tabular-nums text-foreground">{fmtPct(s.pct)}</span></span>
+                    <span className="text-muted-foreground">Mortality <span className="block tabular-nums text-foreground">{s.deaths}</span></span>
+                    <span className="text-muted-foreground">Feed issued <span className="block tabular-nums text-foreground">{s.bags > 0 ? `${round1(s.bags * bagKg)} kg` : "N/A"}</span></span>
+                    <span className="text-muted-foreground">Health <span className="block text-foreground">{s.lastHealth ? s.lastHealth.type : "No records"}</span></span>
+                    <span className="text-muted-foreground">Total loss <span className="block tabular-nums text-foreground">{Math.max(0, r.initial - r.current)}</span></span>
+                  </div>
+                </div>
+              );
+            })}
+            {rooms.length === 0 && <div className="text-xs text-muted-foreground">No rooms yet.</div>}
+          </div>
+        </Card>
 
-              {/* Room comparison */}
-              <div className="rounded-2xl border border-border bg-background p-4">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Room Comparison</div>
-                {todayProduction.ranked.length === 0 ? (
-                  <div className="mt-3 text-sm text-muted-foreground">
-                    Bird counts unavailable for this date — percentages shown as N/A.
-                  </div>
-                ) : (
-                  <div className="mt-3 space-y-2">
-                    {todayProduction.ranked.map((r, i) => {
-                      const top = i === 0;
-                      const low = i === todayProduction.ranked.length - 1 && todayProduction.ranked.length > 1;
-                      const max = todayProduction.ranked[0].pct ?? 0;
-                      const width = max > 0 ? Math.max(4, ((r.pct ?? 0) / max) * 100) : 0;
+        {/* 7 — Feed Management */}
+        {/* Feed Management */}
+        <Card>
+          <CardHeader
+            title="Feed Management"
+            subtitle="Formulas & daily usage"
+            right={
+              <div className="inline-flex rounded-full bg-secondary p-1 text-xs font-medium">
+                {(["Usage", "Formulas"] as const).map(t => (
+                  <button key={t} onClick={() => setFeedTab(t)} className={"px-3 py-1 rounded-full transition " + (feedTab === t ? "bg-[color:var(--forest)] text-primary-foreground" : "text-muted-foreground")}>{t}</button>
+                ))}
+              </div>
+            }
+          />
+          <div className="mt-4 flex justify-end">
+            <ActionBtn onClick={recordFeed} icon={Plus}>Record Feed</ActionBtn>
+          </div>
+          {feedTab === "Usage" ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                <MiniStat label="Today's Feed" value={`${round1(feedToday * bagKg)} kg`} tone="sky" hint={`${round1(feedToday)} bags`} />
+                <MiniStat label="7-Day Avg" value={`${round1(feed7Avg * bagKg)} kg/day`} tone="mint" hint={`${round1(feed7Avg)} bags/day`} />
+                <MiniStat label="Feed / Bird" value={`${feedPerBirdG.toFixed(0)} g`} tone="plain" />
+                <MiniStat label="30-Day Avg" value={`${round1(feed30Avg * bagKg)} kg/day`} tone="peach" hint={`${round1(w30.totalBags * bagKg)} kg total · ${round1(w30.totalBags)} bags`} />
+              </div>
+              <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+                <table className="w-full text-xs sm:text-sm">
+                  <thead>
+                    <tr className="text-left text-muted-foreground bg-[color:var(--gold)]/10">
+                      <th className="py-2 px-3 font-medium">Date</th>
+                      {feedRoomNames.map(rn => (
+                        <th key={rn} className="py-2 px-3 font-medium text-right whitespace-nowrap">{rn.replace(/^ROOM\s*/i, "R")}</th>
+                      ))}
+                      <th className="py-2 px-3 font-medium text-right whitespace-nowrap">Total</th>
+                      <th className="py-2 px-2 w-6"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(feedShowAll ? feedByDate : feedByDate.slice(0, 7)).map(g => {
+                      const isOpen = expandedFeedDate === g.date;
                       return (
-                        <div key={r.roomId}>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="flex items-center gap-1.5 truncate">
-                              {top && <span aria-hidden>🥇</span>}
-                              <span className={top ? "font-semibold" : ""}>{r.roomName}</span>
-                              {low && <span className="text-[10px] uppercase tracking-[0.14em] text-destructive">lowest</span>}
-                            </span>
-                            <span className="tabular-nums font-medium">{fmtPct(r.pct)}</span>
-                          </div>
-                          <div className="mt-1 h-1.5 rounded-full bg-secondary overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${top ? "bg-[color:var(--forest)]" : low ? "bg-destructive/60" : "bg-[color:var(--forest)]/50"}`}
-                              style={{ width: `${width}%` }}
-                            />
-                          </div>
-                        </div>
+                        <Fragment key={g.date}>
+                          <tr key={g.date} className="border-t border-border/60 hover:bg-[color:var(--gold)]/5 cursor-pointer" onClick={() => setExpandedFeedDate(isOpen ? null : g.date)}>
+                            <td className="py-2 px-3 font-medium whitespace-nowrap">{g.date}</td>
+                            {feedRoomNames.map(rn => {
+                              const bagsVal = g.byRoom[rn];
+                              return (
+                                <td key={rn} className="py-2 px-3 text-right tabular-nums">
+                                  {bagsVal
+                                    ? <span>{round1(bagsVal * bagKg)}<span className="text-[10px] text-muted-foreground ml-0.5">kg</span></span>
+                                    : <span className="text-muted-foreground/50">—</span>}
+                                </td>
+                              );
+                            })}
+                            <td className="py-2 px-3 text-right font-semibold tabular-nums whitespace-nowrap">
+                              {round1(g.total * bagKg)} kg
+                              <span className="ml-1 text-[10px] font-normal text-muted-foreground">({round1(g.total)} bags)</span>
+                            </td>
+                            <td className="py-2 px-2 text-muted-foreground"><ChevronDown className={"h-3.5 w-3.5 transition-transform " + (isOpen ? "rotate-180" : "")} /></td>
+                          </tr>
+                          {isOpen && (
+                            <tr className="bg-background/60">
+                              <td colSpan={feedRoomNames.length + 3} className="px-3 py-2">
+                                <div className="mb-2 flex justify-end">
+                                  <button onClick={(e) => { e.stopPropagation(); editFeedDay(g.items); }} className="inline-flex items-center gap-1 text-[11px] font-medium text-[color:var(--forest)] hover:underline">
+                                    <Pencil className="h-3 w-3" /> Edit daily feed usage
+                                  </button>
+                                </div>
+                                <div className="space-y-1">
+                                  {g.items.map(f => (
+                                    <div key={f.id} className="flex items-center justify-between text-xs">
+                                      <span className="font-medium">{f.room}</span>
+                                      <div className="flex items-center gap-3">
+                                        <span className="tabular-nums">{round1(f.bags * bagKg)} kg <span className="text-muted-foreground">({round1(f.bags)} bags)</span></span>
+                                        <RowActions onEdit={() => editFeed(f)} onDelete={() => delFeedRow(f)} />
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
                       );
                     })}
-                  </div>
-                )}
+                    {feedByDate.length === 0 && (
+                      <tr><td colSpan={feedRoomNames.length + 3} className="py-4 text-center text-muted-foreground">No feed records yet.</td></tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            </div>
+              {feedByDate.length > 7 && (
+                <div className="mt-3 text-center">
+                  <button onClick={() => setFeedShowAll(v => !v)} className="text-xs font-medium text-[color:var(--forest)] hover:underline">
+                    {feedShowAll ? "Show latest 7 only" : `View all feed records (${feedByDate.length})`}
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="mt-4 p-6 text-center text-muted-foreground text-sm bg-secondary/40 rounded-xl">No custom formulas yet.</div>
           )}
         </Card>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Room overview */}
-          <Card>
-            <CardHeader title="Room Overview" subtitle="Current status per room" />
-            <div className="mt-4 space-y-2">
-              {rooms.map((r) => {
-                const slot = eggRoomSlots.find(s => s.room.id === r.id);
-                const todayR = today && slot ? today[slot.key] : 0;
-                const loss = r.initial - r.current;
-                const st = roomStatus(r);
-                return (
-                  <div key={r.id} className="flex items-center justify-between rounded-2xl bg-secondary/50 px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <span className="grid h-9 w-9 place-items-center rounded-lg bg-[color:var(--forest)]/10 text-[color:var(--forest)]"><Bird className="h-4 w-4" /></span>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-sm">{r.name}</span>
-                          <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium ${ROOM_STATUS_TONES[st]}`}>{ROOM_STATUS_LABELS[st]}</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">{r.current.toLocaleString()} birds</div>
-                      </div>
-                    </div>
-                    <div className="text-right text-sm">
-                      {slot
-                        ? <div className="inline-flex items-center gap-1 text-[color:var(--forest)]"><Egg className="h-3.5 w-3.5" /> {todayR} <span className="text-muted-foreground text-xs">crates</span></div>
-                        : <div className="text-xs text-muted-foreground">No active production</div>}
-                      {loss > 0 && <div className="text-xs text-destructive flex items-center gap-1 justify-end mt-0.5"><TrendingDown className="h-3 w-3" /> {loss}</div>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-
+        {/* 8 — Mortality Log */}
           {/* Mortality */}
           <Card>
             <CardHeader
@@ -1233,40 +1465,73 @@ const setBagWeightKg = (v: number | null) => {
             )}
           </Card>
 
-        </div>
-
+        {/* 9 — Health Records */}
         <div id="health" className="scroll-mt-24" />
-        {/* Health */}
         <Card>
-          <CardHeader title="Health Records" subtitle="Vaccinations, vitamins & observations" right={<ActionBtn onClick={addHealth} icon={Plus}>Add</ActionBtn>} />
-          <div className="mt-4 space-y-2">
-            {(healthShowAll ? healthByDate : healthByDate.slice(0, 5)).map(h => {
-              const style = healthTypeStyle(h.type);
-              const Icon = style.icon;
-              return (
-              <div key={h.id} className="flex items-center justify-between rounded-xl bg-secondary/40 px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <span className={"grid h-9 w-9 place-items-center rounded-lg " + style.wrap}>
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <div className="text-sm font-semibold">{h.name}</div>
-                    <div className="text-xs text-muted-foreground">{h.scope}</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="text-right">
-                    <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + style.badge}>{h.type}</span>
-                    <div className="text-xs text-muted-foreground mt-1">{h.date}</div>
-                  </div>
-                  <RowActions onEdit={() => editHealth(h)} onDelete={() => delHealthRow(h)} />
-                </div>
-              </div>
-              );
-            })}
-            {healthByDate.length === 0 && (
-              <div className="text-xs text-muted-foreground text-center py-4">No health records yet.</div>
-            )}
+          <CardHeader title="Health Records" subtitle="Vaccinations, vitamins, treatments & observations" right={<ActionBtn onClick={addHealth} icon={Plus}>Add</ActionBtn>} />
+          <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+            <table className="w-full text-xs sm:text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-muted-foreground">
+                  <th className="py-2 px-3 font-medium">Date</th>
+                  <th className="py-2 px-3 font-medium">Room</th>
+                  <th className="py-2 px-3 font-medium">Health Record</th>
+                  <th className="py-2 px-3 font-medium">Action</th>
+                  <th className="py-2 px-3 font-medium">Status</th>
+                  <th className="py-2 px-2 w-6"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {(healthShowAll ? healthByDate : healthByDate.slice(0, 5)).map(h => {
+                  const isOpen = expandedHealthId === h.id;
+                  const status = h.type === "Observation" ? "Normal" : (h.type === "Treatment" || h.type === "Medication") ? "Monitoring" : "Completed";
+                  return (
+                    <Fragment key={h.id}>
+                      <tr className="cursor-pointer border-t border-border/60 hover:bg-secondary/40" onClick={() => setExpandedHealthId(isOpen ? null : h.id)}>
+                        <td className="py-2 px-3 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5">
+                            <ChevronDown className={"h-3.5 w-3.5 text-muted-foreground transition-transform " + (isOpen ? "rotate-180" : "")} />
+                            {h.date}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3">{h.scope || "—"}</td>
+                        <td className="py-2 px-3">{h.name}</td>
+                        <td className="py-2 px-3">
+                          <span className={"inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + healthTypeStyle(h.type).badge}>{h.type}</span>
+                        </td>
+                        <td className="py-2 px-3 text-muted-foreground">{status}</td>
+                        <td className="py-2 px-2 text-right" onClick={(ev) => ev.stopPropagation()}>
+                          <RowActions onEdit={() => editHealth(h)} onDelete={() => delHealthRow(h)} />
+                        </td>
+                      </tr>
+                      {isOpen && (
+                        <tr className="bg-secondary/30">
+                          <td colSpan={6} className="px-3 py-3">
+                            <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Full record</div>
+                            <div className="mt-2 grid max-w-xl grid-cols-2 gap-x-6 gap-y-1 text-[12px]">
+                              <span className="text-muted-foreground">Date</span><span>{h.date}</span>
+                              <span className="text-muted-foreground">Room / scope</span><span>{h.scope || "N/A"}</span>
+                              <span className="text-muted-foreground">Record</span><span>{h.name}</span>
+                              <span className="text-muted-foreground">Type</span><span>{h.type}</span>
+                              <span className="text-muted-foreground">Status</span><span>{status}</span>
+                              <span className="text-muted-foreground">Symptoms</span><span className="text-muted-foreground">Not recorded</span>
+                              <span className="text-muted-foreground">Diagnosis</span><span className="text-muted-foreground">Not recorded</span>
+                              <span className="text-muted-foreground">Medication / dosage</span><span className="text-muted-foreground">Not recorded</span>
+                              <span className="text-muted-foreground">Duration</span><span className="text-muted-foreground">Not recorded</span>
+                              <span className="text-muted-foreground">Veterinary notes</span><span className="text-muted-foreground">Not recorded</span>
+                              <span className="text-muted-foreground">Follow-up date</span><span className="text-muted-foreground">Not recorded</span>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
+                {healthByDate.length === 0 && (
+                  <tr><td colSpan={6} className="py-4 text-center text-xs text-muted-foreground">No health records yet.</td></tr>
+                )}
+              </tbody>
+            </table>
           </div>
           {healthByDate.length > 5 && (
             <div className="mt-3 text-center">
@@ -1277,209 +1542,7 @@ const setBagWeightKg = (v: number | null) => {
           )}
         </Card>
 
-        <div id="rooms" className="scroll-mt-24" />
-        {/* Room Management */}
-        <Card>
-          <CardHeader
-            title={<span className="inline-flex items-center gap-2"><Bird className="h-5 w-5 text-[color:var(--forest)]" /> Room Management</span>}
-            subtitle="Add, edit or remove poultry rooms — scalable for unlimited rooms"
-            right={<ActionBtn onClick={addRoom} icon={Plus}>Add Room</ActionBtn>}
-          />
-          {missingAgeRooms.length > 0 && (
-            <div className="mt-4 rounded-xl border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 p-4">
-              <p className="text-sm font-semibold">🐔 Complete Flock Profile</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Bird age has not been recorded for {missingAgeRooms.length === 1 ? `${missingAgeRooms[0].name}` : `${missingAgeRooms.length} flocks`}. Add the current age so PoultryPro can provide accurate feeding, water, vaccination, growth and management reminders.
-              </p>
-              {canManageAge && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {missingAgeRooms.map((r) => (
-                    <button key={r.id} onClick={() => setAgeRoom(r)} className="rounded-full bg-[color:var(--forest)] px-3 py-1.5 text-xs font-semibold text-primary-foreground">
-                      Add Bird Age · {r.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-          <div className="grid grid-cols-3 gap-3 mt-4">
-            <MiniStat label="Total Birds" value={totalBirds.toLocaleString()} tone="sky" />
-            <MiniStat label="Active Rooms" value={`${productionRooms(rooms).length} of ${rooms.length}`} tone="mint" />
-            <MiniStat label="Total Loss" value={String(totalLoss)} tone="peach" />
-          </div>
-          <div className="mt-5 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-muted-foreground border-b border-border">
-                  <th className="py-2 pr-4 font-medium">Room</th>
-                  <th className="py-2 pr-4 font-medium">Bird Age</th>
-                  <th className="py-2 pr-4 font-medium">Current</th>
-                  <th className="py-2 pr-4 font-medium">Initial</th>
-                  <th className="py-2 pr-4 font-medium">Loss</th>
-                  <th className="py-2 pr-4 font-medium">Status</th>
-                  <th className="py-2 pr-4 font-medium text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rooms.map(r => {
-                  const loss = r.initial - r.current;
-                  const pct = ((loss / (r.initial || 1)) * 100).toFixed(1);
-                  const st = roomStatus(r);
-                  return (
-                    <tr key={r.id} className="border-b border-border/50">
-                      <td className="py-3 pr-4">
-                        <span className="flex items-center gap-2"><Bird className="h-4 w-4 text-[color:var(--forest)]" />{r.name}</span>
-                        {st === "culled" && r.culled_on && (
-                          <span className="mt-0.5 block text-[11px] text-muted-foreground">Culled {r.culled_on}{r.culled_birds_sold ? ` · ${r.culled_birds_sold} birds sold` : ""}</span>
-                        )}
-                      </td>
-                      <td className="py-3 pr-4">
-                        {hasAge(r) ? (
-                          <span className="block">
-                            <span className="font-medium">{flockAge(r).weeks} {flockAge(r).weeks === 1 ? "Week" : "Weeks"}</span>
-                            <span className="block text-[11px] text-muted-foreground">
-                              {flockAge(r).days} Days{flockStage(r) ? ` · ${flockStage(r)}` : ""}
-                              {flockAge(r).status === "estimated" ? " · estimated start" : ""}
-                            </span>
-                            {canManageAge && (
-                              <button onClick={() => setAgeRoom(r)} className="mt-1 text-[11px] font-medium text-[color:var(--forest)] underline underline-offset-2">Edit age</button>
-                            )}
-                          </span>
-                        ) : canManageAge ? (
-                          <button onClick={() => setAgeRoom(r)} className="rounded-full border border-[color:var(--gold)]/50 bg-[color:var(--gold)]/10 px-2.5 py-1 text-xs font-semibold text-[color:var(--forest)]">Add Bird Age</button>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Not recorded</span>
-                        )}
-                      </td>
-                      <td className="py-3 pr-4">{r.current.toLocaleString()}</td>
-                      <td className="py-3 pr-4 text-muted-foreground">{r.initial.toLocaleString()}</td>
-                      <td className="py-3 pr-4 text-destructive">-{loss} <span className="text-xs">({pct}%)</span></td>
-                      <td className="py-3 pr-4">
-                        <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${ROOM_STATUS_TONES[st]}`}>{ROOM_STATUS_LABELS[st]}</span>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <div className="flex items-center justify-end gap-2 whitespace-nowrap">
-                          <button onClick={() => editRoom(r)} className="rounded-full border border-border px-2.5 py-1 text-xs font-medium hover:bg-secondary">Edit</button>
-                          {st !== "culled" && (
-                            <button onClick={() => cullRoom(r)} className="rounded-full border border-destructive/40 px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/10">Mark as Culled</button>
-                          )}
-                          <button onClick={() => archiveRoom(r)} className="rounded-full border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary">
-                            {st === "inactive" ? "Restore" : "Archive"}
-                          </button>
-                          <button onClick={() => delRoom(r.id)} aria-label={`Delete ${r.name}`} className="text-destructive hover:opacity-70"><Trash2 className="h-4 w-4 inline" /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-
-        {/* Feed Management */}
-        <Card>
-          <CardHeader
-            title="Feed Management"
-            subtitle="Formulas & daily usage"
-            right={
-              <div className="inline-flex rounded-full bg-secondary p-1 text-xs font-medium">
-                {(["Usage", "Formulas"] as const).map(t => (
-                  <button key={t} onClick={() => setFeedTab(t)} className={"px-3 py-1 rounded-full transition " + (feedTab === t ? "bg-[color:var(--forest)] text-primary-foreground" : "text-muted-foreground")}>{t}</button>
-                ))}
-              </div>
-            }
-          />
-          <div className="mt-4 flex justify-end">
-            <ActionBtn onClick={recordFeed} icon={Plus}>Record Feed</ActionBtn>
-          </div>
-          {feedTab === "Usage" ? (
-            <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-                <MiniStat label="Today's Feed" value={`${round1(feedToday * bagKg)} kg`} tone="sky" hint={`${round1(feedToday)} bags`} />
-                <MiniStat label="7-Day Avg" value={`${round1(feed7Avg * bagKg)} kg/day`} tone="mint" hint={`${round1(feed7Avg)} bags/day`} />
-                <MiniStat label="Feed / Bird" value={`${feedPerBirdG.toFixed(0)} g`} tone="plain" />
-                <MiniStat label="30-Day Avg" value={`${round1(feed30Avg * bagKg)} kg/day`} tone="peach" hint={`${round1(w30.totalBags * bagKg)} kg total · ${round1(w30.totalBags)} bags`} />
-              </div>
-              <div className="mt-4 overflow-x-auto rounded-xl border border-border">
-                <table className="w-full text-xs sm:text-sm">
-                  <thead>
-                    <tr className="text-left text-muted-foreground bg-[color:var(--gold)]/10">
-                      <th className="py-2 px-3 font-medium">Date</th>
-                      {feedRoomNames.map(rn => (
-                        <th key={rn} className="py-2 px-3 font-medium text-right whitespace-nowrap">{rn.replace(/^ROOM\s*/i, "R")}</th>
-                      ))}
-                      <th className="py-2 px-3 font-medium text-right whitespace-nowrap">Total</th>
-                      <th className="py-2 px-2 w-6"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(feedShowAll ? feedByDate : feedByDate.slice(0, 7)).map(g => {
-                      const isOpen = expandedFeedDate === g.date;
-                      return (
-                        <Fragment key={g.date}>
-                          <tr key={g.date} className="border-t border-border/60 hover:bg-[color:var(--gold)]/5 cursor-pointer" onClick={() => setExpandedFeedDate(isOpen ? null : g.date)}>
-                            <td className="py-2 px-3 font-medium whitespace-nowrap">{g.date}</td>
-                            {feedRoomNames.map(rn => {
-                              const bagsVal = g.byRoom[rn];
-                              return (
-                                <td key={rn} className="py-2 px-3 text-right tabular-nums">
-                                  {bagsVal
-                                    ? <span>{round1(bagsVal * bagKg)}<span className="text-[10px] text-muted-foreground ml-0.5">kg</span></span>
-                                    : <span className="text-muted-foreground/50">—</span>}
-                                </td>
-                              );
-                            })}
-                            <td className="py-2 px-3 text-right font-semibold tabular-nums whitespace-nowrap">
-                              {round1(g.total * bagKg)} kg
-                              <span className="ml-1 text-[10px] font-normal text-muted-foreground">({round1(g.total)} bags)</span>
-                            </td>
-                            <td className="py-2 px-2 text-muted-foreground"><ChevronDown className={"h-3.5 w-3.5 transition-transform " + (isOpen ? "rotate-180" : "")} /></td>
-                          </tr>
-                          {isOpen && (
-                            <tr className="bg-background/60">
-                              <td colSpan={feedRoomNames.length + 3} className="px-3 py-2">
-                                <div className="mb-2 flex justify-end">
-                                  <button onClick={(e) => { e.stopPropagation(); editFeedDay(g.items); }} className="inline-flex items-center gap-1 text-[11px] font-medium text-[color:var(--forest)] hover:underline">
-                                    <Pencil className="h-3 w-3" /> Edit daily feed usage
-                                  </button>
-                                </div>
-                                <div className="space-y-1">
-                                  {g.items.map(f => (
-                                    <div key={f.id} className="flex items-center justify-between text-xs">
-                                      <span className="font-medium">{f.room}</span>
-                                      <div className="flex items-center gap-3">
-                                        <span className="tabular-nums">{round1(f.bags * bagKg)} kg <span className="text-muted-foreground">({round1(f.bags)} bags)</span></span>
-                                        <RowActions onEdit={() => editFeed(f)} onDelete={() => delFeedRow(f)} />
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </Fragment>
-                      );
-                    })}
-                    {feedByDate.length === 0 && (
-                      <tr><td colSpan={feedRoomNames.length + 3} className="py-4 text-center text-muted-foreground">No feed records yet.</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {feedByDate.length > 7 && (
-                <div className="mt-3 text-center">
-                  <button onClick={() => setFeedShowAll(v => !v)} className="text-xs font-medium text-[color:var(--forest)] hover:underline">
-                    {feedShowAll ? "Show latest 7 only" : `View all feed records (${feedByDate.length})`}
-                  </button>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="mt-4 p-6 text-center text-muted-foreground text-sm bg-secondary/40 rounded-xl">No custom formulas yet.</div>
-          )}
-        </Card>
-
+        {/* 10 — Current Prices */}
         {/* Prices — owner-only. Managers never see or change pricing. */}
         {canPrices && (<>
         <div id="prices" className="scroll-mt-24" />
