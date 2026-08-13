@@ -51,6 +51,8 @@ import { Lock } from "lucide-react";
 import { toast } from "sonner";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
 import { computeProductionSeries, fmtPct } from "@/lib/production-percent";
+import { computeDailyMortality, mortalityRoomColumns, recentMortality } from "@/lib/mortality-percent";
+
 import { toDateKey, toLocalDate } from "@/lib/date-key";
 import { computeDashboardMetrics, priceUnitLabel } from "@/lib/farm-analytics";
 import {
@@ -456,22 +458,15 @@ const setBagWeightKg = (v: number | null) => {
   };
 
 
-  // --- Mortality aggregation (grouped by date, preserving arrival order) ---
-  type MortGroup = { date: string; total: number; byRoom: Record<string, number>; causes: string[]; items: Mortality[] };
-  const mortalityByDate = useMemo<MortGroup[]>(() => {
-    const map = new Map<string, MortGroup>();
-    for (const m of mortality) {
-      let g = map.get(m.date);
-      if (!g) { g = { date: m.date, total: 0, byRoom: {}, causes: [], items: [] }; map.set(m.date, g); }
-      const loss = Math.abs(m.loss);
-      g.total += loss;
-      g.byRoom[m.room] = (g.byRoom[m.room] ?? 0) + loss;
-      if (!g.causes.includes(m.cause)) g.causes.push(m.cause);
-      g.items.push(m);
-    }
-
-  return Array.from(map.values());
-  }, [mortality]);
+  // --- Mortality aggregation (grouped by date, with historical rates) ---
+  const mortalityByDate = useMemo(
+    () => computeDailyMortality(mortality, rooms),
+    [mortality, rooms],
+  );
+  const mortRoomCols = useMemo(
+    () => mortalityRoomColumns(rooms, mortality),
+    [rooms, mortality],
+  );
 
   // --- Health sorted by date newest → oldest ---
   const healthByDate = useMemo<Health[]>(() => {
@@ -479,13 +474,14 @@ const setBagWeightKg = (v: number | null) => {
   }, [health]);
 
   const totalInitialBirds = rooms.reduce((s, r) => s + r.initial, 0);
-  const mortalityRatePct = totalInitialBirds ? (monthlyMortality / totalInitialBirds) * 100 : 0;
-  const leadingCause = useMemo(() => {
-    const c: Record<string, number> = {};
-    for (const m of mortality) c[m.cause] = (c[m.cause] ?? 0) + Math.abs(m.loss);
-    const top = Object.entries(c).sort((a, b) => b[1] - a[1])[0];
-    return top?.[0] ?? "—";
-  }, [mortality]);
+  const totalMortality = useMemo(
+    () => mortality.reduce((s, m) => s + Math.abs(Number(m.loss) || 0), 0),
+    [mortality],
+  );
+  const sevenDayMortality = useMemo(() => recentMortality(mortality, 7), [mortality]);
+  const currentFlock = rooms.reduce((s, r) => s + (Number(r.current) || 0), 0);
+  const mortalityRatePct = totalInitialBirds ? (totalMortality / totalInitialBirds) * 100 : 0;
+
 
   // --- Feed aggregation (grouped by date, dynamic rooms) ---
   type FeedGroup = { date: string; byRoom: Record<string, number>; total: number; items: Feed[] };
@@ -1110,56 +1106,123 @@ const setBagWeightKg = (v: number | null) => {
 
           {/* Mortality */}
           <Card>
-            <CardHeader title="Mortality Log" subtitle="Grouped by date" right={<ActionBtn onClick={addMortality} icon={Plus}>Add</ActionBtn>} />
-            <div className="grid grid-cols-3 gap-3 mt-4">
-              <MiniStat label="This Month" value={String(monthlyMortality)} tone="peach" />
+            <CardHeader
+              title={<span className="inline-flex items-center gap-2"><Skull className="h-5 w-5 text-destructive" /> Mortality Log</span>}
+              subtitle="One row per date — tap a row for the full analysis"
+              right={<ActionBtn onClick={addMortality} icon={Plus}>Add</ActionBtn>}
+            />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+              <MiniStat label="Total Mortality" value={birdsLabel(totalMortality)} tone="peach" />
+              <MiniStat label="7-Day Mortality" value={birdsLabel(sevenDayMortality)} tone="sky" />
+              <MiniStat label="Current Flock" value={currentFlock.toLocaleString()} tone="mint" />
               <MiniStat label="Mortality Rate" value={mortalityRatePct.toFixed(2) + "%"} tone="plain" />
-              <MiniStat label="Leading Cause" value={leadingCause} tone="mint" />
             </div>
-            <div className="mt-4 space-y-2">
-              {(mortShowAll ? mortalityByDate : mortalityByDate.slice(0, 7)).map(g => {
-                const isOpen = expandedMortDate === g.date;
-                const cause = g.causes.length > 1 ? "Mixed" : (g.causes[0] ?? "—");
-                const breakdown = Object.entries(g.byRoom)
-                  .map(([r, n]) => `${r.replace(/^ROOM\s*/i, "R")}: ${n}`)
-                  .join(" · ");
-                return (
-                  <div key={g.date} className="rounded-xl bg-destructive/5 border border-destructive/10 overflow-hidden">
-                    <button
-                      onClick={() => setExpandedMortDate(isOpen ? null : g.date)}
-                      className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-left"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-destructive/10 text-destructive"><Skull className="h-3.5 w-3.5" /></span>
-                        <div className="min-w-0">
-                          <div className="text-sm font-semibold truncate">{formatDayLabel(g.date)} <span className="text-destructive">· {birdsLabel(g.total)}</span></div>
-                          <div className="text-xs text-muted-foreground truncate">{breakdown || "—"} <span className="opacity-70">| {cause}</span></div>
-                        </div>
-                      </div>
-                      <ChevronDown className={"h-4 w-4 shrink-0 text-muted-foreground transition-transform " + (isOpen ? "rotate-180" : "")} />
-                    </button>
-                    {isOpen && (
-                      <div className="border-t border-destructive/10 bg-background/60 px-3 py-2 space-y-1.5">
-                        {g.items.map(m => (
-                          <div key={m.id} className="flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="font-medium">{m.room}</span>
-                              <span className="text-muted-foreground truncate">· {m.cause}</span>
-                            </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-destructive font-semibold">{Math.abs(m.loss)}</span>
-                              <RowActions onEdit={() => editMortality(m)} onDelete={() => delMortalityRow(m)} />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              {mortalityByDate.length === 0 && (
-                <div className="text-xs text-muted-foreground text-center py-4">No mortality records yet.</div>
-              )}
+            <div className="mt-5 overflow-x-auto">
+              <table className="w-full text-xs sm:text-sm">
+                <thead>
+                  <tr className="text-left text-muted-foreground border-b border-border">
+                    <th className="py-2 pr-4 font-medium">Date</th>
+                    {mortRoomCols.map(r => (
+                      <th key={r.id} className="py-2 pr-4 font-medium whitespace-nowrap">
+                        {r.name.replace(/^ROOM\s*/i, "R")}
+                      </th>
+                    ))}
+                    <th className="py-2 pr-4 font-medium">Total</th>
+                    <th className="py-2 pr-2 font-medium w-6"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(mortShowAll ? mortalityByDate : mortalityByDate.slice(0, 7)).map(g => {
+                    const isOpen = expandedMortDate === g.date;
+                    const single = g.items.length === 1 ? g.items[0] : null;
+                    return (
+                      <Fragment key={g.date}>
+                        <tr
+                          className="border-b border-border/50 cursor-pointer hover:bg-secondary/40"
+                          onClick={() => setExpandedMortDate(isOpen ? null : g.date)}
+                        >
+                          <td className="py-2.5 pr-4 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1.5">
+                              <ChevronDown className={"h-3.5 w-3.5 text-muted-foreground transition-transform " + (isOpen ? "rotate-180" : "")} />
+                              {formatDayLabel(g.date)}
+                            </span>
+                          </td>
+                          {g.rooms.map(r => (
+                            <td key={r.roomId} className="py-2.5 pr-4 tabular-nums">{r.deaths}</td>
+                          ))}
+                          <td className="py-2.5 pr-4">
+                            <span className="inline-flex items-center rounded-full bg-destructive/10 text-destructive px-2.5 py-0.5 text-xs font-medium tabular-nums">
+                              {g.total}
+                            </span>
+                          </td>
+                          <td className="py-2.5 pr-2 text-right" onClick={(e) => e.stopPropagation()}>
+                            {single && <RowActions onEdit={() => editMortality(single)} onDelete={() => delMortalityRow(single)} />}
+                          </td>
+                        </tr>
+                        {isOpen && (
+                          <tr className="border-b border-border/50 bg-secondary/30">
+                            <td colSpan={mortRoomCols.length + 3} className="px-3 py-3">
+                              <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Mortality Analysis</div>
+                              <div className="mt-2 space-y-1.5 max-w-md">
+                                {g.rooms.map(r => (
+                                  <div key={r.roomId} className="flex items-center justify-between gap-3 text-sm">
+                                    <span className="truncate">{r.roomName}</span>
+                                    <span className="tabular-nums">{birdsLabel(r.deaths)}</span>
+                                  </div>
+                                ))}
+                                <div className="pt-2 mt-2 border-t border-border flex items-center justify-between gap-3 text-sm font-semibold">
+                                  <span>Total</span>
+                                  <span className="tabular-nums">{birdsLabel(g.total)}</span>
+                                </div>
+                              </div>
+
+                              <div className="mt-3 max-w-md">
+                                <div className="flex items-center justify-between gap-3 text-sm font-semibold">
+                                  <span>Overall Mortality Rate</span>
+                                  <span className={`tabular-nums ${g.overallPct == null ? "text-muted-foreground font-normal" : ""}`}>{fmtPct(g.overallPct)}</span>
+                                </div>
+                                <div className="mt-1.5 space-y-1">
+                                  {g.rooms.map(r => (
+                                    <div key={r.roomId} className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                                      <span className="truncate">{r.roomName} Mortality Rate</span>
+                                      <span className="tabular-nums">{fmtPct(r.pct)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                                {g.totalBirds !== null && (
+                                  <div className="mt-2 text-[11px] text-muted-foreground">
+                                    Based on {g.totalBirds.toLocaleString()} active birds on this date.
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="mt-3 pt-3 border-t border-border space-y-1.5">
+                                {g.items.map(m => (
+                                  <div key={m.id} className="flex items-center justify-between gap-2 text-xs">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <span className="font-medium">{m.room}</span>
+                                      <span className="text-muted-foreground truncate">· {m.cause}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <span className="text-destructive font-semibold">{Math.abs(m.loss)}</span>
+                                      <RowActions onEdit={() => editMortality(m)} onDelete={() => delMortalityRow(m)} />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                  {mortalityByDate.length === 0 && (
+                    <tr><td colSpan={mortRoomCols.length + 3} className="py-4 text-center text-muted-foreground text-xs">
+                      No mortality records yet.
+                    </td></tr>
+                  )}
+                </tbody>
+              </table>
             </div>
             {mortalityByDate.length > 7 && (
               <div className="mt-3 text-center">
@@ -1169,6 +1232,7 @@ const setBagWeightKg = (v: number | null) => {
               </div>
             )}
           </Card>
+
         </div>
 
         <div id="health" className="scroll-mt-24" />
