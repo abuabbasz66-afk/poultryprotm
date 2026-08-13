@@ -1,8 +1,18 @@
-import { useMemo } from "react";
-import { EggOff, TrendingDown, TrendingUp } from "lucide-react";
+import { Fragment, useMemo, useState } from "react";
+import { ChevronDown, EggOff, TrendingDown, TrendingUp } from "lucide-react";
 import type { EggRow, Room } from "@/lib/farm-data";
-import { summarise, breakageByRoom, breakageTrend, breakageInsight } from "@/lib/broken-eggs";
+import { summarise, breakageByRoom, breakageTrend, breakageInsight, brokenOf, totalBroken } from "@/lib/broken-eggs";
+import { eggSlots } from "@/lib/rooms";
+import { toDateKey } from "@/lib/date-key";
 import { cn } from "@/lib/utils";
+
+function dayKeyOffset(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  const p = (x: number) => (x < 10 ? `0${x}` : String(x));
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 
 /** Breakage overview: farm-wide rate, per-room table, 30-day trend, insight. */
 export function BrokenEggsCard({ eggs, rooms }: { eggs: EggRow[]; rooms: Room[] }) {
