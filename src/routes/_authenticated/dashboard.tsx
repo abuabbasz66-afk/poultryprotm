@@ -1009,35 +1009,38 @@ const setBagWeightKg = (v: number | null) => {
                       </tr>
                       {isOpen && (
                         <tr className="border-b border-border/50 bg-secondary/30">
-                          <td colSpan={eggRoomSlots.length + 4} className="px-3 py-3">
-                            <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Daily Production Analysis</div>
-                            <div className="mt-2 max-w-md space-y-1.5">
-                              {(prod?.rooms ?? []).map(r => (
-                                <div key={r.roomId} className="flex items-center justify-between gap-3 text-sm">
-                                  <span className="truncate">{r.roomName}</span>
-                                  <span className="flex items-center gap-4 tabular-nums">
-                                    <span className="text-muted-foreground">{r.eggs.toLocaleString()} eggs</span>
-                                    <span className={`w-16 text-right font-medium ${r.pct == null ? "text-muted-foreground font-normal" : ""}`}>{fmtPct(r.pct)}</span>
+                          <td colSpan={eggRoomSlots.length + 4} className="px-2 py-3 sm:px-3">
+                            <div className="rounded-xl border border-border bg-card p-3 sm:max-w-md">
+                              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                Daily Production Breakdown
+                              </div>
+                              <div className="mt-2 divide-y divide-border/60">
+                                {(prod?.rooms ?? []).map(r => (
+                                  <div key={r.roomId} className="grid grid-cols-[minmax(0,1fr)_auto_4.25rem] items-center gap-2 py-1.5 text-[13px]">
+                                    <span className="truncate">{r.roomName.replace(/^ROOM\s*/i, "R")}</span>
+                                    <span className="tabular-nums text-muted-foreground text-right">{r.eggs.toLocaleString()} eggs</span>
+                                    <span className={`text-right tabular-nums font-semibold ${r.pct == null ? "text-muted-foreground font-normal" : "text-[color:var(--forest)]"}`}>
+                                      {r.pct == null ? "N/A" : `${r.pct.toFixed(1)}%`}
+                                    </span>
+                                  </div>
+                                ))}
+                                <div className="grid grid-cols-[minmax(0,1fr)_auto_4.25rem] items-center gap-2 pt-2 text-[13px] font-semibold">
+                                  <span>Overall</span>
+                                  <span className="tabular-nums text-right">{(prod?.totalEggs ?? norm.totalEggs).toLocaleString()} eggs</span>
+                                  <span className={`text-right tabular-nums ${prod?.overallPct == null ? "text-muted-foreground font-normal" : "text-[color:var(--forest)]"}`}>
+                                    {prod?.overallPct == null ? "N/A" : `${prod.overallPct.toFixed(1)}%`}
                                   </span>
                                 </div>
-                              ))}
-                              <div className="mt-2 pt-2 border-t border-border flex items-center justify-between gap-3 text-sm font-semibold">
-                                <span>Overall production</span>
-                                <span className="flex items-center gap-4 tabular-nums">
-                                  <span>{(prod?.totalEggs ?? norm.totalEggs).toLocaleString()} eggs</span>
-                                  <span className="w-16 text-right">{fmtPct(prod?.overallPct ?? null)}</span>
-                                </span>
                               </div>
-                              {prod?.totalBirds != null && (
-                                <div className="text-[11px] text-muted-foreground">
-                                  Based on {prod.totalBirds.toLocaleString()} active birds on this date.
-                                </div>
-                              )}
-                              <div className="pt-1 text-[11px] text-muted-foreground">Extra (loose) eggs: {norm.extra}</div>
+                              <div className="mt-2 space-y-0.5 text-[11px] text-muted-foreground">
+                                {prod?.totalBirds != null && <div>Based on {prod.totalBirds.toLocaleString()} active birds on this date.</div>}
+                                <div>Extra (loose) eggs: {norm.extra}</div>
+                              </div>
                             </div>
                           </td>
                         </tr>
                       )}
+
                     </Fragment>
                   );
                 })}
