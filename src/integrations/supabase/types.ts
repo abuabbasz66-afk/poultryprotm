@@ -412,12 +412,18 @@ export type Database = {
       egg_production: {
         Row: {
           broken_extra: number
+          broken_extra_r2: number
+          broken_extra_r3: number
+          broken_extra_r4: number
           broken_r2: number
           broken_r3: number
           broken_r4: number
           created_at: string
           date: string
           extra: number
+          extra_r2: number
+          extra_r3: number
+          extra_r4: number
           farm_id: string
           id: string
           label: string
@@ -427,12 +433,18 @@ export type Database = {
         }
         Insert: {
           broken_extra?: number
+          broken_extra_r2?: number
+          broken_extra_r3?: number
+          broken_extra_r4?: number
           broken_r2?: number
           broken_r3?: number
           broken_r4?: number
           created_at?: string
           date: string
           extra?: number
+          extra_r2?: number
+          extra_r3?: number
+          extra_r4?: number
           farm_id: string
           id?: string
           label: string
@@ -442,12 +454,18 @@ export type Database = {
         }
         Update: {
           broken_extra?: number
+          broken_extra_r2?: number
+          broken_extra_r3?: number
+          broken_extra_r4?: number
           broken_r2?: number
           broken_r3?: number
           broken_r4?: number
           created_at?: string
           date?: string
           extra?: number
+          extra_r2?: number
+          extra_r3?: number
+          extra_r4?: number
           farm_id?: string
           id?: string
           label?: string

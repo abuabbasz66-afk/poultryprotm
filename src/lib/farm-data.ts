@@ -27,7 +27,11 @@ export type EggRow = {
   id: string; date: string; label: string; r2: number; r3: number; r4: number; extra: number;
   /** Broken eggs recorded per production room (counts, not crates). */
   broken_r2?: number; broken_r3?: number; broken_r4?: number; broken_extra?: number;
+  /** Loose (extra) eggs recorded per production room. `extra` stays the farm total. */
+  extra_r2?: number; extra_r3?: number; extra_r4?: number;
+  broken_extra_r2?: number; broken_extra_r3?: number; broken_extra_r4?: number;
 };
+
 
 export type Mortality = { id: string; room: string; cause: string; date: string; loss: number };
 export const HEALTH_TYPES = ["Vaccination", "Vitamin", "Medication", "Treatment", "Observation"] as const;
@@ -299,7 +303,7 @@ export function useEggs() {
         fetcher: async () => {
           const { data, error } = await supabase
             .from("egg_production")
-            .select("id, date, label, r2, r3, r4, extra, broken_r2, broken_r3, broken_r4, broken_extra")
+            .select("id, date, label, r2, r3, r4, extra, broken_r2, broken_r3, broken_r4, broken_extra, extra_r2, extra_r3, extra_r4, broken_extra_r2, broken_extra_r3, broken_extra_r4")
             .eq("farm_id", farmId!)
             .order("date", { ascending: false });
           if (error) throw error;
