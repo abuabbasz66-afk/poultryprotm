@@ -402,24 +402,93 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
   const [r2, setR2] = useState<number | "">(item?.r2 ?? 0);
   const [r3, setR3] = useState<number | "">(item?.r3 ?? 0);
   const [r4, setR4] = useState<number | "">(item?.r4 ?? 0);
-  const [extra, setExtra] = useState<number | "">(item?.extra ?? 0);
   const [b2, setB2] = useState<number | "">(item?.broken_r2 ?? 0);
   const [b3, setB3] = useState<number | "">(item?.broken_r3 ?? 0);
   const [b4, setB4] = useState<number | "">(item?.broken_r4 ?? 0);
-  const [bExtra, setBExtra] = useState<number | "">(item?.broken_extra ?? 0);
+  // Per-room loose (extra) eggs and their breakage.
+  const [e2, setE2] = useState<number | "">(item?.extra_r2 ?? 0);
+  const [e3, setE3] = useState<number | "">(item?.extra_r3 ?? 0);
+  const [e4, setE4] = useState<number | "">(item?.extra_r4 ?? 0);
+  const [be2, setBe2] = useState<number | "">(item?.broken_extra_r2 ?? 0);
+  const [be3, setBe3] = useState<number | "">(item?.broken_extra_r3 ?? 0);
+  const [be4, setBe4] = useState<number | "">(item?.broken_extra_r4 ?? 0);
   const add = useAddEgg();
   const upd = useUpdateEgg();
   const pending = add.isPending || upd.isPending;
 
-  const roomCrates = (Number(r2) || 0) + (Number(r3) || 0) + (Number(r4) || 0);
-  const rawExtra = Number(extra) || 0;
+  const n = (v: number | "") => Number(v) || 0;
+
+  // Legacy farm-level loose eggs that were never attributed to a room.
+  // Preserved as-is on edit; never reassigned to a room.
+  const legacyExtra = isEdit
+    ? Math.max(0, (item?.extra ?? 0) - (n(item?.extra_r2 ?? 0) + n(item?.extra_r3 ?? 0) + n(item?.extra_r4 ?? 0)))
+    : 0;
+  const legacyBrokenExtra = isEdit
+    ? Math.max(
+        0,
+        (item?.broken_extra ?? 0) -
+          (n(item?.broken_extra_r2 ?? 0) + n(item?.broken_extra_r3 ?? 0) + n(item?.broken_extra_r4 ?? 0)),
+      )
+    : 0;
+
+  // Egg production columns r2/r3/r4 belong to ROOM 2/3/4. Map by room number,
+  // never by list position, and skip rooms that are no longer in production.
+  const slots = useMemo(() => {
+    const crate: Record<"r2" | "r3" | "r4", [number | "", (v: number | "") => void]> = {
+      r2: [r2, setR2], r3: [r3, setR3], r4: [r4, setR4],
+    };
+    const broke: Record<"r2" | "r3" | "r4", [number | "", (v: number | "") => void]> = {
+      r2: [b2, setB2], r3: [b3, setB3], r4: [b4, setB4],
+    };
+    const loose: Record<"r2" | "r3" | "r4", [number | "", (v: number | "") => void]> = {
+      r2: [e2, setE2], r3: [e3, setE3], r4: [e4, setE4],
+    };
+    const looseBroke: Record<"r2" | "r3" | "r4", [number | "", (v: number | "") => void]> = {
+      r2: [be2, setBe2], r3: [be3, setBe3], r4: [be4, setBe4],
+    };
+    const build = (name: string, k: "r2" | "r3" | "r4") => ({
+      name, key: k,
+      getter: crate[k][0], setter: crate[k][1],
+      broken: broke[k][0], setBroken: broke[k][1],
+      extra: loose[k][0], setExtra: loose[k][1],
+      brokenExtra: looseBroke[k][0], setBrokenExtra: looseBroke[k][1],
+    });
+    const mapped = eggSlots(rooms).map((s) => build(s.room.name, s.key));
+    if (mapped.length) return mapped;
+    return (["r2", "r3", "r4"] as const).map((k, i) => build(["ROOM 2", "ROOM 3", "ROOM 4"][i], k));
+  }, [rooms, r2, r3, r4, b2, b3, b4, e2, e3, e4, be2, be3, be4]);
+
+  const perRoom = slots.map((s) => {
+    const crates = n(s.getter);
+    const crateBroken = n(s.broken);
+    const looseEggs = n(s.extra);
+    const looseBroken = n(s.brokenExtra);
+    const collected = crates * 30 + looseEggs;
+    const broken = crateBroken + looseBroken;
+    return {
+      key: s.key,
+      name: s.name,
+      crates,
+      crateBroken,
+      looseEggs,
+      looseBroken,
+      collected,
+      broken,
+      usable: Math.max(0, collected - broken),
+    };
+  });
+
+  const roomCrates = perRoom.reduce((a, r) => a + r.crates, 0);
+  const rawExtra = perRoom.reduce((a, r) => a + r.looseEggs, 0) + legacyExtra;
   const collected = roomCrates * 30 + rawExtra;
-  const broken = (Number(b2) || 0) + (Number(b3) || 0) + (Number(b4) || 0) + (Number(bExtra) || 0);
+  const broken = perRoom.reduce((a, r) => a + r.broken, 0) + legacyBrokenExtra;
   const good = Math.max(0, collected - broken);
-  const totalCrates = Math.floor(good / 30);
-  const remainderExtra = good % 30;
+  const usableLoose = Math.max(0, rawExtra - perRoom.reduce((a, r) => a + r.looseBroken, 0) - legacyBrokenExtra);
+  const convertedCrates = Math.floor(usableLoose / 30);
+  const remainderExtra = usableLoose % 30;
+  const totalCrates = roomCrates + convertedCrates;
   const breakagePct = collected > 0 ? (broken / collected) * 100 : 0;
-  const overBroken = broken > collected;
+  const overBroken = perRoom.some((r) => r.broken > r.collected) || broken > collected;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -427,14 +496,13 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
     const payload = {
       date,
       label: isoToLabel(date),
-      r2: Number(r2) || 0,
-      r3: Number(r3) || 0,
-      r4: Number(r4) || 0,
-      extra: Number(extra) || 0,
-      broken_r2: Number(b2) || 0,
-      broken_r3: Number(b3) || 0,
-      broken_r4: Number(b4) || 0,
-      broken_extra: Number(bExtra) || 0,
+      r2: n(r2), r3: n(r3), r4: n(r4),
+      // `extra` / `broken_extra` remain the farm-level totals used by analytics.
+      extra: n(e2) + n(e3) + n(e4) + legacyExtra,
+      broken_r2: n(b2), broken_r3: n(b3), broken_r4: n(b4),
+      broken_extra: n(be2) + n(be3) + n(be4) + legacyBrokenExtra,
+      extra_r2: n(e2), extra_r3: n(e3), extra_r4: n(e4),
+      broken_extra_r2: n(be2), broken_extra_r3: n(be3), broken_extra_r4: n(be4),
     };
     const done = {
       onSuccess: () => { toast.success(isEdit ? "Production record updated" : "Production record saved successfully"); onClose(); },
@@ -444,25 +512,6 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
     else add.mutate(payload, done);
   };
 
-  // Egg production columns r2/r3/r4 belong to ROOM 2/3/4. Map by room number,
-  // never by list position, and skip rooms that are no longer in production.
-  const slots = useMemo(() => {
-    const state: Record<"r2" | "r3" | "r4", [number | "", (v: number | "") => void]> = {
-      r2: [r2, setR2], r3: [r3, setR3], r4: [r4, setR4],
-    };
-    const broke: Record<"r2" | "r3" | "r4", [number | "", (v: number | "") => void]> = {
-      r2: [b2, setB2], r3: [b3, setB3], r4: [b4, setB4],
-    };
-    const build = (name: string, k: "r2" | "r3" | "r4") => ({
-      name, key: k,
-      getter: state[k][0], setter: state[k][1],
-      broken: broke[k][0], setBroken: broke[k][1],
-    });
-    const mapped = eggSlots(rooms).map((s) => build(s.room.name, s.key));
-    if (mapped.length) return mapped;
-    return (["r2", "r3", "r4"] as const).map((k, i) => build(["ROOM 2", "ROOM 3", "ROOM 4"][i], k));
-  }, [rooms, r2, r3, r4, b2, b3, b4]);
-
   return (
     <form onSubmit={submit} className="space-y-4">
       <Field label="Production date">
@@ -470,9 +519,8 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
       </Field>
 
       <div className="space-y-3">
-        {slots.map((s) => {
-          const roomCollected = (Number(s.getter) || 0) * 30;
-          const roomBroken = Number(s.broken) || 0;
+        {slots.map((s, i) => {
+          const room = perRoom[i];
           return (
             <div key={s.key} className="rounded-2xl border border-[color:var(--forest)]/10 bg-background/60 p-3">
               <div className="text-xs font-semibold text-[color:var(--forest)] mb-2">{s.name}</div>
@@ -491,55 +539,82 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
                     placeholder="0"
                   />
                 </Field>
+                <Field label="Extra eggs (loose)">
+                  <NumberInput
+                    value={s.extra}
+                    onChange={(e) => s.setExtra(e.target.value === "" ? "" : Number(e.target.value))}
+                    placeholder="0"
+                  />
+                </Field>
+                <Field label="Broken (loose)">
+                  <NumberInput
+                    value={s.brokenExtra}
+                    onChange={(e) => s.setBrokenExtra(e.target.value === "" ? "" : Number(e.target.value))}
+                    placeholder="0"
+                  />
+                </Field>
               </div>
               <div className="mt-1.5 text-[11px] text-muted-foreground">
-                Net usable: {Math.max(0, roomCollected - roomBroken)} eggs
-                {roomCollected > 0 && roomBroken > 0 && ` · ${((roomBroken / roomCollected) * 100).toFixed(1)}% breakage`}
+                Net usable: {room.usable} eggs
+                {room.collected > 0 && room.broken > 0 && ` · ${((room.broken / room.collected) * 100).toFixed(1)}% breakage`}
+                {room.broken > room.collected && (
+                  <span className="ml-1 font-medium text-destructive">Broken exceeds collected</span>
+                )}
               </div>
             </div>
           );
         })}
       </div>
 
-      <div className="rounded-2xl border border-[color:var(--forest)]/10 bg-background/60 p-3">
-        <div className="text-xs font-semibold text-[color:var(--forest)] mb-2">Extra eggs (loose)</div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Extra eggs">
-            <NumberInput
-              value={extra}
-              onChange={(e) => setExtra(e.target.value === "" ? "" : Number(e.target.value))}
-              placeholder="0"
-            />
-          </Field>
-          <Field label="Broken (loose)">
-            <NumberInput
-              value={bExtra}
-              onChange={(e) => setBExtra(e.target.value === "" ? "" : Number(e.target.value))}
-              placeholder="0"
-            />
-          </Field>
+      {legacyExtra + legacyBrokenExtra > 0 && (
+        <div className="rounded-2xl border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/10 px-4 py-3 text-[11.5px] text-[color:var(--forest)]">
+          This record has {legacyExtra} historical farm-level loose egg{legacyExtra === 1 ? "" : "s"}
+          {legacyBrokenExtra > 0 && ` (${legacyBrokenExtra} broken)`} that were not attributed to a room. They are
+          preserved in the totals below.
         </div>
-      </div>
+      )}
 
       <div className="rounded-2xl bg-[color:var(--forest)]/8 border border-[color:var(--forest)]/15 px-4 py-3">
         <div className="text-[11px] uppercase tracking-wider text-[color:var(--forest)] font-semibold">Production Summary</div>
-        <div className="mt-1 flex items-baseline justify-between gap-4">
-          <div>
-            <div className="font-display text-2xl font-semibold text-[color:var(--forest)]">{totalCrates}</div>
-            <div className="text-[11px] text-muted-foreground">good crates</div>
+
+        <div className="mt-2 space-y-1.5">
+          {perRoom.map((r) => (
+            <div key={r.key} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 text-[12px]">
+              <span className="font-medium text-[color:var(--forest)]">{r.name}</span>
+              <span className="text-muted-foreground">
+                Crates: <span className="font-medium text-foreground">{r.crates}</span> · Extra:{" "}
+                <span className="font-medium text-foreground">{r.looseEggs}</span> eggs · Usable:{" "}
+                <span className="font-medium text-foreground">{r.usable}</span> eggs
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-3 border-t border-[color:var(--forest)]/15 pt-3">
+          <div className="text-[11px] uppercase tracking-wider text-[color:var(--forest)] font-semibold mb-2">Farm Total</div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div>
+              <div className="font-display text-2xl font-semibold text-[color:var(--forest)]">{totalCrates}</div>
+              <div className="text-[11px] text-muted-foreground">total crates</div>
+            </div>
+            <div>
+              <div className="font-display text-2xl font-semibold text-[color:var(--forest)]">+{convertedCrates}</div>
+              <div className="text-[11px] text-muted-foreground">from extras</div>
+            </div>
+            <div>
+              <div className="font-display text-2xl font-semibold text-[color:var(--forest)]">{remainderExtra}</div>
+              <div className="text-[11px] text-muted-foreground">remaining loose</div>
+            </div>
+            <div>
+              <div className="font-display text-2xl font-semibold text-[color:var(--gold)]">{good}</div>
+              <div className="text-[11px] text-muted-foreground">total usable eggs</div>
+            </div>
           </div>
-          <div className="text-right">
-            <div className="font-display text-2xl font-semibold text-[color:var(--forest)]">{remainderExtra}</div>
-            <div className="text-[11px] text-muted-foreground">extra eggs</div>
-          </div>
-          <div className="text-right">
-            <div className="font-display text-2xl font-semibold text-[color:var(--gold)]">{good}</div>
-            <div className="text-[11px] text-muted-foreground">good eggs</div>
+          <div className="mt-2 text-[11.5px] text-muted-foreground">
+            Collected {collected} · Extra eggs {rawExtra} · Broken {broken} · Breakage {breakagePct.toFixed(1)}%
           </div>
         </div>
-        <div className="mt-2 border-t border-[color:var(--forest)]/15 pt-2 text-[11.5px] text-muted-foreground">
-          Collected {collected} · Broken {broken} · Breakage {breakagePct.toFixed(1)}%
-        </div>
+
         {overBroken && (
           <div className="mt-2 text-[11.5px] font-medium text-destructive">
             Broken eggs cannot be more than the eggs collected.
@@ -551,6 +626,7 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
     </form>
   );
 }
+
 
 
 
