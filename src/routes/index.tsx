@@ -237,7 +237,7 @@ const tiers = [
     priceNote: "Up to 500 birds · 1 Farm",
     cta: "Create Free Account",
     ctaHref: null as string | null,
-    badge: null as string | null,
+    badge: "Available now" as string | null,
     highlight: false,
   },
   {
@@ -263,7 +263,7 @@ const tiers = [
     priceNote: "per month · Unlimited birds",
     cta: "Start Standard Plan",
     ctaHref: null as string | null,
-    badge: "Most Popular",
+    badge: "Popular · Available now",
     highlight: true,
   },
   {
@@ -289,7 +289,7 @@ const tiers = [
     priceNote: "per month",
     cta: "Join Premium Waitlist",
     ctaHref: "mailto:contact@poultrypro.africa?subject=PoultryPro%20AI%20Intelligence%20Waitlist" as string | null,
-    badge: "Coming Soon",
+    badge: "Coming soon — AI rollout",
     highlight: false,
   },
 ];
@@ -744,6 +744,112 @@ function Index() {
           </div>
         </div>
       </section>
+
+      <section id="operations" className="py-20 md:py-24">
+        <div className="container-x">
+          <div className="max-w-2xl">
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Built for different poultry operations</span>
+            <h2 className="mt-4 font-display text-3xl md:text-5xl font-semibold leading-tight">
+              One Platform. Different Poultry Operations.
+            </h2>
+            <p className="mt-5 text-muted-foreground text-lg">
+              Whether you manage layers, broilers, Noilers or young birds, PoultryPro adapts to the way
+              your farm operates.
+            </p>
+          </div>
+          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {operations.map((o) => (
+              <div key={o.title} className="min-w-0 rounded-3xl border border-border bg-card p-6 hover:border-[color:var(--gold)] transition-colors">
+                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
+                  <o.icon className="h-5 w-5" />
+                </span>
+                <h3 className="mt-5 font-display text-xl font-semibold uppercase tracking-wide">{o.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{o.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="weather" className="py-20 md:py-24 bg-secondary/40 border-y border-border">
+        <div className="container-x grid lg:grid-cols-12 gap-12 items-center">
+          <div className="lg:col-span-6 space-y-5">
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Farm Weather &amp; Bird Advisory</span>
+            <h2 className="font-display text-3xl md:text-5xl font-semibold leading-tight">
+              Weather that understands your birds.
+            </h2>
+            <p className="text-muted-foreground text-lg leading-relaxed">
+              PoultryPro connects farm weather conditions with poultry-specific guidance, helping farmers
+              understand how changing weather may affect flock comfort, production and farm management.
+            </p>
+            <ul className="grid sm:grid-cols-2 gap-2.5 pt-2">
+              {weatherSignals.map((s) => (
+                <li key={s} className="flex items-start gap-2.5 text-sm">
+                  <span className="mt-1.5 h-1.5 w-1.5 flex-none rounded-full bg-[color:var(--gold)]" />
+                  <span className="text-muted-foreground">{s}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-muted-foreground pt-2">
+              Advisory guidance only — live forecasts come from the farm's own registered location. If the
+              weather service is unavailable, PoultryPro shows a clear fallback state instead of estimates.
+            </p>
+          </div>
+          <div className="lg:col-span-6">
+            <div className="rounded-[2rem] border border-border bg-card p-6 md:p-8">
+              {[
+                { k: "Weather", v: "Temperature, humidity, rainfall and wind for your farm location.", icon: CloudSun },
+                { k: "Bird Risk", v: "Conditions interpreted into a poultry risk level for your flock and bird age.", icon: ShieldCheck },
+                { k: "Farm Action", v: "Practical management steps such as ventilation, water and stocking checks.", icon: Sparkles },
+              ].map((row, i, arr) => (
+                <div key={row.k}>
+                  <div className="flex items-start gap-4">
+                    <span className="grid h-11 w-11 flex-none place-items-center rounded-2xl bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
+                      <row.icon className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="text-[11px] uppercase tracking-[0.2em] text-[color:var(--forest)] font-semibold">{row.k}</div>
+                      <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{row.v}</p>
+                    </div>
+                  </div>
+                  {i < arr.length - 1 && (
+                    <div className="my-4 ml-5 h-6 w-px bg-[color:var(--gold)]/60" aria-hidden />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="alerts" className="py-20 md:py-24">
+        <div className="container-x">
+          <div className="max-w-2xl">
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Farm Alerts</span>
+            <h2 className="mt-4 font-display text-3xl md:text-5xl font-semibold leading-tight">
+              Know when your farm needs attention.
+            </h2>
+            <p className="mt-5 text-muted-foreground text-lg">
+              PoultryPro helps farm owners identify important changes in production, mortality, feed usage,
+              financial performance and other farm records.
+            </p>
+          </div>
+          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {exampleAlerts.map((a) => (
+              <div key={a.title} className="min-w-0 rounded-2xl border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/5 p-5">
+                <span className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-semibold">Example</span>
+                <h3 className="mt-2 font-display text-lg font-semibold">{a.title}</h3>
+                <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{a.desc}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-xs text-muted-foreground">
+            Illustrative examples only — real alerts are generated from your own farm records.
+          </p>
+        </div>
+      </section>
+
+
 
       <section id="founder" className="py-24 bg-[color:var(--forest)] text-primary-foreground">
         <div className="container-x grid lg:grid-cols-12 gap-12 items-center">
