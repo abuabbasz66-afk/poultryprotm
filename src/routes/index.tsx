@@ -280,22 +280,22 @@ const liveFeatures: { icon: any; title: string; desc: string }[] = [
   { icon: Users, title: "Staff & Users Management", desc: "Invite farm staff, assign roles and manage permissions across your team." },
   { icon: ShieldCheck, title: "Multi-Farm Management", desc: "Secure farm-specific dashboards with complete tenant isolation." },
   { icon: FileText, title: "Smart Reporting", desc: "Automatically generate operational and financial reports." },
+  { icon: CloudSun, title: "Farm Weather & Bird Advisory", desc: "Live weather forecasts interpreted into poultry-specific risk alerts and management recommendations." },
+  { icon: BarChart3, title: "Production Forecasting", desc: "Predict egg production and feed consumption based on historical farm records." },
+  { icon: Smartphone, title: "Native Android & iOS Apps", desc: "Offline-first mobile applications with synchronisation and push notifications." },
 ];
 
 const comingSoon: { icon: any; title: string; desc: string }[] = [
   { icon: Brain, title: "AI Disease Prediction", desc: "Predict disease outbreaks before symptoms appear." },
   { icon: Mic, title: "AI Voice Assistant", desc: "Ask PoultryPro questions using natural voice commands." },
   { icon: TrendingUp, title: "Market Price Intelligence", desc: "Predict future egg and feed prices." },
-  { icon: CloudSun, title: "Weather Integration", desc: "Weather forecasts linked to production recommendations." },
   { icon: Radio, title: "IoT Sensor Integration", desc: "Connect temperature, humidity, water and feed sensors." },
   { icon: Camera, title: "Smart Camera Monitoring", desc: "AI vision for bird behaviour and health monitoring." },
   { icon: Sliders, title: "Automated Feed Optimisation", desc: "Recommend the most profitable feed formulations." },
   { icon: DollarSign, title: "Profit Forecasting", desc: "Predict farm profitability for future weeks and months." },
   { icon: Syringe, title: "Smart Vaccination Assistant", desc: "Automatic vaccination schedules and reminders." },
-  { icon: BarChart3, title: "Production Forecasting", desc: "Predict egg production and feed consumption." },
   { icon: Store, title: "Poultry Marketplace", desc: "Buy and sell feed, chicks, eggs, equipment and other poultry products." },
   { icon: Handshake, title: "Cooperative & Investor Portal", desc: "Dedicated dashboards for cooperatives, investors and financial institutions." },
-  { icon: Smartphone, title: "Native Android & iOS Apps", desc: "Offline-first mobile applications with synchronisation and push notifications." },
 ];
 
 function Index() {
