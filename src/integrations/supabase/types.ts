@@ -1325,6 +1325,9 @@ export type Database = {
       }
       rooms: {
         Row: {
+          age_anchor_date: string | null
+          age_recorded_at: string | null
+          age_status: string
           age_weeks: number | null
           batch_number: string | null
           bird_type: string | null
@@ -1344,6 +1347,9 @@ export type Database = {
           status: string
         }
         Insert: {
+          age_anchor_date?: string | null
+          age_recorded_at?: string | null
+          age_status?: string
           age_weeks?: number | null
           batch_number?: string | null
           bird_type?: string | null
@@ -1363,6 +1369,9 @@ export type Database = {
           status?: string
         }
         Update: {
+          age_anchor_date?: string | null
+          age_recorded_at?: string | null
+          age_status?: string
           age_weeks?: number | null
           batch_number?: string | null
           bird_type?: string | null
