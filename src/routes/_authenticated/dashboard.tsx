@@ -288,6 +288,17 @@ const setBagWeightKg = (v: number | null) => {
   // Egg columns r2/r3/r4 belong to ROOM 2/3/4 — mapped by room number, never
   // by list position, and limited to rooms still in production.
   const eggRoomSlots = useMemo(() => eggSlots(rooms), [rooms]);
+  // Daily lay percentages per room + flock, recomputed whenever production,
+  // rooms or mortality change (historical populations are reconstructed).
+  const productionSeries = useMemo(
+    () => computeProductionSeries(eggs, rooms, mortality),
+    [eggs, rooms, mortality],
+  );
+  const productionByDate = useMemo(
+    () => new Map(productionSeries.map((p) => [p.date, p])),
+    [productionSeries],
+  );
+  const todayProduction = productionSeries[0] ?? null;
   const roomSeries = useMemo(
     () => eggRoomSlots.map((s) => ({ name: s.room.name, key: s.key })),
     [eggRoomSlots],
