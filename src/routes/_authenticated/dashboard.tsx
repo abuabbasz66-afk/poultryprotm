@@ -5,6 +5,8 @@ import { eggSlots, productionRooms, roomStatus, ROOM_STATUS_LABELS, ROOM_STATUS_
 import { PermissionDenied } from "@/components/permission-denied";
 import { RecentStaffActivity } from "@/components/recent-staff-activity";
 import { BrokenEggsCard } from "@/components/broken-eggs-card";
+import { RecentActivitiesCard } from "@/components/recent-activities-card";
+import { RoomComparisonCard } from "@/components/room-comparison-card";
 
 import { AlertsBanner } from "@/components/alerts-banner";
 
@@ -209,6 +211,9 @@ const setBagWeightKg = (v: number | null) => {
   const [expandedMortDate, setExpandedMortDate] = useState<string | null>(null);
   const [expandedFeedDate, setExpandedFeedDate] = useState<string | null>(null);
   const [eggShowAll, setEggShowAll] = useState(false);
+  const [expandedEggDate, setExpandedEggDate] = useState<string | null>(null);
+  const [expandedHealthId, setExpandedHealthId] = useState<string | null>(null);
+  const [openRoomId, setOpenRoomId] = useState<string | null>(null);
   const [healthShowAll, setHealthShowAll] = useState(false);
   const [confirmState, setConfirmState] = useState<{ title: string; message: string; confirmLabel?: string; onConfirm: () => void | Promise<void> } | null>(null);
   const askDelete = (title: string, message: string, onConfirm: () => void | Promise<void>) =>
@@ -538,6 +543,31 @@ const setBagWeightKg = (v: number | null) => {
   const round1 = (n: number) => Math.round(n * 10) / 10;
   const feedFmt = (bags: number) => `${round1(bags * bagKg)} kg (${round1(bags)} bags)`;
 
+  // Per-room snapshot used by Room Management and Room Overview. Every figure
+  // comes from existing records; unknown values stay null and render "N/A".
+  const roomTodaySummary = useMemo(() => {
+    const latestEgg = eggs[0] ?? null;
+    const prod = latestEgg ? productionByDate.get(latestEgg.date) : undefined;
+    const sameDay = (raw: string) => (toDateKey(raw) ?? raw) === todayKeyLocal;
+    return rooms.map((r) => {
+      const rp = prod?.rooms.find((x) => x.roomId === r.id) ?? null;
+      const roomFeed = feed.filter((f) => f.room === r.name);
+      const roomMort = mortality.filter((m) => m.room === r.name);
+      const roomHealth = healthByDate.filter((h) => h.scope === r.name);
+      return {
+        room: r,
+        eggs: rp?.eggs ?? 0,
+        pct: rp?.pct ?? null,
+        deaths: roomMort.filter((m) => sameDay(m.date)).reduce((s, m) => s + Math.abs(Number(m.loss) || 0), 0),
+        bags: roomFeed.filter((f) => sameDay(f.date)).reduce((s, f) => s + (Number(f.bags) || 0), 0),
+        lastHealth: roomHealth[0] ?? null,
+        recentFeed: roomFeed.slice(0, 5),
+        recentMortality: roomMort.slice(0, 5),
+        recentHealth: roomHealth.slice(0, 5),
+      };
+    });
+  }, [rooms, eggs, productionByDate, feed, mortality, healthByDate, todayKeyLocal]);
+
   // Farm context must resolve (or fail loudly) before any farm-scoped UI.
   // A loading state must always terminate: success, or a clear message.
   const farmLoading = farmIdQ.isPending || (!!farmIdQ.data && farmQ.isPending);
@@ -692,9 +722,6 @@ const setBagWeightKg = (v: number | null) => {
           <PermissionDenied hint="Analytics, financials and AI insights are available to the Farm Owner only." />
         )}
 
-        {area === "records" && <BrokenEggsCard eggs={eggs} rooms={rooms} />}
-
-        {canAudit && area === "records" && <RecentStaffActivity />}
 
 
         {area === "analytics" && canAnalyticsArea && (
