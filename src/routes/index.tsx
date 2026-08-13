@@ -297,11 +297,11 @@ const tiers = [
 
 
 const problems = [
-  "Important records get lost in notebooks or scattered across different places.",
-  "Farmers cannot quickly see how birds, eggs and costs are really performing.",
-  "Feed — your largest expense — is hard to track and even harder to optimise.",
-  "Profitability problems often go unnoticed until it is too late to fix them.",
-  "Health and mortality records are incomplete, making early intervention harder.",
+  "Important records get lost in notebooks, spreadsheets or scattered across different places.",
+  "Farmers cannot quickly see how birds, production, feed and costs are really performing.",
+  "Feed is one of the largest farm expenses and is difficult to track and optimise.",
+  "Profitability problems often go unnoticed until they become difficult to fix.",
+  "Health and mortality records are often incomplete, making early intervention harder.",
 ];
 
 const liveFeatures: { icon: any; title: string; desc: string }[] = [
@@ -319,7 +319,7 @@ const liveFeatures: { icon: any; title: string; desc: string }[] = [
   { icon: FileText, title: "Smart Reporting", desc: "Automatically generate operational and financial reports." },
   { icon: CloudSun, title: "Farm Weather & Bird Advisory", desc: "Live weather forecasts interpreted into poultry-specific risk alerts and management recommendations." },
   { icon: BarChart3, title: "Production Forecasting", desc: "Predict egg production and feed consumption based on historical farm records." },
-  { icon: Smartphone, title: "Native Android & iOS Apps", desc: "Offline-first mobile applications with synchronisation and push notifications." },
+  { icon: Smartphone, title: "Mobile App — Android & iOS", desc: "Installable offline-first mobile app with automatic synchronisation when connectivity returns." },
 ];
 
 const comingSoon: { icon: any; title: string; desc: string }[] = [
@@ -385,11 +385,12 @@ function Index() {
               Capture · Understand · Predict
             </span>
             <h1 className="font-display font-extrabold tracking-tight text-foreground text-[2.75rem] sm:text-5xl md:text-6xl lg:text-[4.25rem] leading-[1.05]">
-              Run a smarter, more profitable poultry farm with confidence.
+              Run your poultry farm with data, clarity and confidence.
             </h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-[600px] leading-relaxed font-normal">
-              PoultryPro™ turns everyday farm records into clear insights and AI-powered recommendations,
-              helping you reduce guesswork, cut waste and make better business decisions every day.
+              PoultryPro brings production, feed, health, mortality, bird age, finance and intelligent
+              farm insights into one powerful platform — helping poultry farmers make better decisions
+              and protect their profits.
             </p>
 
             <div className="flex flex-wrap gap-3 pt-2">
@@ -440,6 +441,32 @@ function Index() {
               <div className="text-xs font-semibold uppercase tracking-wider">Practical &amp; Clear</div>
               <div className="font-display text-lg font-bold">Built for farmers</div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="recognition" className="border-y border-border bg-card/60">
+        <div className="container-x py-10 md:py-12">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <h2 className="font-display text-2xl md:text-3xl font-semibold leading-tight">
+              Built in Nigeria. Recognised for Innovation.
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Recognition earned through real farm work and public showcases.
+            </p>
+          </div>
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {recognition.map((r) => (
+              <div key={r.title} className="flex items-start gap-3 rounded-2xl border border-border bg-background p-4">
+                <span className="grid h-9 w-9 flex-none place-items-center rounded-xl bg-[color:var(--gold)]/15 text-[color:var(--forest)]">
+                  <r.icon className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold leading-snug">{r.title}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">{r.desc}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -547,19 +574,27 @@ function Index() {
               One farm record. One clear truth.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              PoultryPro brings your production, feed, health, mortality and financial data together so
-              you can understand performance, control costs and make confident decisions.
+              PoultryPro brings production, feed, health, mortality, bird age and financial data
+              together so farmers can understand performance, control costs and make confident decisions.
             </p>
           </div>
 
-          <div className="mt-14 grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((f) => (
-              <div key={f.title} className="group rounded-2xl bg-card border border-border p-7 hover:shadow-[var(--shadow-lift)] hover:-translate-y-0.5 transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="inline-grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition">
+          <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {features.map((f, i) => (
+              <div key={f.title} className="group min-w-0 rounded-2xl bg-card border border-border p-6 hover:shadow-[var(--shadow-lift)] hover:-translate-y-0.5 transition-all">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="inline-grid h-11 w-11 flex-none place-items-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition">
                     <f.icon className="h-5 w-5" />
                   </span>
-                  <span className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-medium">{f.tier}</span>
+                  {f.soon ? (
+                    <span className="rounded-full bg-[color:var(--gold)]/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-[color:var(--ink)]">
+                      Coming soon
+                    </span>
+                  ) : (
+                    <span className="text-[10px] uppercase tracking-widest text-[color:var(--forest)] font-medium">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                  )}
                 </div>
                 <h3 className="mt-5 font-display text-xl font-semibold">{f.title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
@@ -624,8 +659,8 @@ function Index() {
               Everything you need to run a data-driven farm.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              From daily record keeping to intelligent alerts, PoultryPro gives you the visibility and
-              insights to stay in control.
+              From daily farm records to intelligent alerts, PoultryPro gives farmers the visibility,
+              analytics and tools they need to stay in control.
             </p>
           </div>
 
@@ -677,8 +712,8 @@ function Index() {
               },
               {
                 icon: Sparkles,
-                title: "PoultryPro Prediction",
-                desc: "Detect unusual patterns, identify risks earlier and make proactive decisions with AI-supported insights.",
+                title: "PoultryPro Intelligence",
+                desc: "Identify unusual patterns, monitor farm risks and provide intelligent recommendations based on available farm data.",
                 preview: (
                   <div className="space-y-2.5">
                     <div className="rounded-lg border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 px-3 py-2.5">
@@ -733,6 +768,10 @@ function Index() {
               "I built PoultryPro because farmers deserve technology that turns their daily work
               into smarter decisions and stronger businesses."
             </blockquote>
+            <p className="text-primary-foreground/80 leading-relaxed max-w-2xl">
+              PoultryPro was born from firsthand experience in poultry production and farm management,
+              combined with a background in computer science and digital transformation.
+            </p>
             <div className="grid sm:grid-cols-2 gap-4 pt-4">
               {[
                 { icon: Cpu, t: "MICT & B.Sc. Computer Science" },
@@ -998,10 +1037,12 @@ function Index() {
                 <h3 className="mt-5 font-display text-3xl md:text-5xl font-semibold leading-[1.1]">
                   The Future of Poultry Farming Starts Here
                 </h3>
-                <p className="mt-5 text-primary-foreground/80 text-base md:text-lg leading-relaxed">
-                  PoultryPro is already helping poultry farmers manage production, feed, health and
-                  profitability. Our vision is to become Africa's leading smart poultry operating system
-                  by combining artificial intelligence, predictive analytics, automation and connected
+                <p className="mt-3 text-xs uppercase tracking-[0.2em] text-[color:var(--gold)]">
+                  Long-term vision
+                </p>
+                <p className="mt-4 text-primary-foreground/80 text-base md:text-lg leading-relaxed">
+                  PoultryPro is building toward Africa's smart poultry operating system — combining farm
+                  records, analytics, artificial intelligence, predictive tools, automation and connected
                   farm technologies into one integrated platform.
                 </p>
                 <div className="mt-8">
@@ -1031,13 +1072,23 @@ function Index() {
                   Ready to transform your poultry farm?
                 </h2>
                 <p className="text-primary-foreground/75 text-lg max-w-2xl">
-                  Join forward-thinking farmers, investors and partners who are building the future of
-                  smart poultry management in Africa.
+                  Join forward-thinking poultry farmers, farm managers and agribusinesses using
+                  technology to make better decisions and build stronger, more profitable farms.
                 </p>
               </div>
-              <div className="lg:col-span-4 flex lg:justify-end">
-                <a href="mailto:contact@poultrypro.africa" className="inline-flex items-center gap-2 rounded-full bg-[color:var(--gold)] text-[color:var(--ink)] px-7 py-4 font-medium hover:brightness-95 transition">
-                  Request a Demo <ArrowRight className="h-4 w-4" />
+              <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 lg:justify-end lg:items-end">
+                <Link
+                  to="/auth"
+                  search={{ mode: "signup" }}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[color:var(--gold)] text-[color:var(--ink)] px-7 py-4 font-semibold hover:brightness-95 transition"
+                >
+                  Create Free Account <ArrowRight className="h-4 w-4 flex-none" />
+                </Link>
+                <a
+                  href="mailto:greenfieldcontractsagroltd@gmail.com?subject=PoultryPro%20Demo%20Request"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 px-7 py-4 font-semibold hover:bg-white/10 transition"
+                >
+                  Request a Demo
                 </a>
               </div>
             </div>
