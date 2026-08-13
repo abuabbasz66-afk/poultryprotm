@@ -520,7 +520,7 @@ export function useUpdateRoom() {
       id: string; current?: number; initial?: number; name?: string; status?: string;
       bird_type?: string | null; breed?: string | null; age_weeks?: number | null;
       batch_number?: string | null; date_stocked?: string | null;
-      age_status?: string | null; age_anchor_date?: string | null; age_recorded_at?: string | null;
+      age_status?: string; age_anchor_date?: string | null; age_recorded_at?: string | null;
       culled_on?: string | null; culled_birds_sold?: number | null;
       culled_unit_price?: number | null; culled_revenue?: number | null; culled_notes?: string | null;
     }) => {

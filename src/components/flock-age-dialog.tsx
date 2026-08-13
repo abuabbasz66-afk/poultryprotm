@@ -17,7 +17,7 @@ const todayIso = () => {
 
 export function FlockAgeDialog({ room, onClose }: { room: Room; onClose: () => void }) {
   const editing = hasAge(room);
-  const [birdType, setBirdType] = useState(() => {
+  const [birdType, setBirdType] = useState<string>(() => {
     const t = (room.bird_type ?? "").toLowerCase();
     return BIRD_TYPES.find((b) => t.includes(b.toLowerCase())) ?? (t.includes("layer") ? "Layer" : "Other");
   });
