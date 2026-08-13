@@ -481,12 +481,6 @@ const setBagWeightKg = (v: number | null) => {
   const sevenDayMortality = useMemo(() => recentMortality(mortality, 7), [mortality]);
   const currentFlock = rooms.reduce((s, r) => s + (Number(r.current) || 0), 0);
   const mortalityRatePct = totalInitialBirds ? (totalMortality / totalInitialBirds) * 100 : 0;
-  const leadingCause = useMemo(() => {
-    const c: Record<string, number> = {};
-    for (const m of mortality) c[m.cause] = (c[m.cause] ?? 0) + Math.abs(m.loss);
-    const top = Object.entries(c).sort((a, b) => b[1] - a[1])[0];
-    return top?.[0] ?? "—";
-  }, [mortality]);
 
 
   // --- Feed aggregation (grouped by date, dynamic rooms) ---
