@@ -954,7 +954,112 @@ const setBagWeightKg = (v: number | null) => {
 
         {canAudit && <RecentStaffActivity />}
 
-        {/* 2 — Room Management */}
+        {/* 2 — Daily Production */}
+        <div id="production" className="scroll-mt-24" />
+        <Card>
+          <CardHeader
+            title={<span className="inline-flex items-center gap-2"><Egg className="h-5 w-5 text-[color:var(--forest)]" /> Daily Egg Production</span>}
+            subtitle="One row per room per date — click Record to add a new day"
+            right={<ActionBtn onClick={recordProduction} icon={Plus}>Record Production</ActionBtn>}
+          />
+          <div className="grid grid-cols-3 gap-3 mt-4">
+            <MiniStat label="Today's Production" value={`${todayCrates} cr`} tone="mint" />
+            <MiniStat label="7-Day Avg" value={`${sevenDayAvgEggs.toLocaleString()} eggs`} tone="sky" />
+            <MiniStat label="Current Lay Rate" value={currentLayRateDisplay} tone="plain" />
+          </div>
+          <div className="mt-5 overflow-x-auto">
+            <table className="w-full text-xs sm:text-sm">
+              <thead>
+                <tr className="text-left text-muted-foreground border-b border-border">
+                  <th className="py-2 pr-4 font-medium">Date</th>
+                  {eggRoomSlots.map(s => (
+                    <th key={s.room.id} className="py-2 pr-4 font-medium whitespace-nowrap">{s.room.name.replace(/^ROOM\s*/i, "R")}</th>
+                  ))}
+                  <th className="py-2 pr-4 font-medium">Total</th>
+                  <th className="py-2 pr-4 font-medium">Extra</th>
+                  <th className="py-2 pr-2 font-medium w-6"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {(eggShowAll ? eggs : eggs.slice(0, 7)).map(e => {
+                  const norm = normaliseEggRow(e);
+                  const prod = productionByDate.get(e.date);
+                  const isOpen = expandedEggDate === e.date;
+                  return (
+                    <Fragment key={e.id ?? e.date + e.label}>
+                      <tr className="border-b border-border/50 cursor-pointer hover:bg-secondary/40" onClick={() => setExpandedEggDate(isOpen ? null : e.date)}>
+                        <td className="py-2.5 pr-4 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5">
+                            <ChevronDown className={"h-3.5 w-3.5 text-muted-foreground transition-transform " + (isOpen ? "rotate-180" : "")} />
+                            {e.label}
+                          </span>
+                        </td>
+                        {eggRoomSlots.map(s => (
+                          <td key={s.room.id} className="py-2.5 pr-4 tabular-nums">{e[s.key]}</td>
+                        ))}
+                        <td className="py-2.5 pr-4">
+                          <span className="inline-flex items-center rounded-full bg-[color:var(--forest)] text-primary-foreground px-2.5 py-0.5 text-xs font-medium">
+                            {norm.crates}
+                          </span>
+                        </td>
+                        <td className="py-2.5 pr-4 text-muted-foreground">{norm.extra ? `+${norm.extra}` : "—"}</td>
+                        <td className="py-2.5 pr-2 text-right" onClick={(ev) => ev.stopPropagation()}>
+                          <RowActions onEdit={() => editEgg(e)} onDelete={() => delEgg(e)} />
+                        </td>
+                      </tr>
+                      {isOpen && (
+                        <tr className="border-b border-border/50 bg-secondary/30">
+                          <td colSpan={eggRoomSlots.length + 4} className="px-3 py-3">
+                            <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Daily Production Analysis</div>
+                            <div className="mt-2 max-w-md space-y-1.5">
+                              {(prod?.rooms ?? []).map(r => (
+                                <div key={r.roomId} className="flex items-center justify-between gap-3 text-sm">
+                                  <span className="truncate">{r.roomName}</span>
+                                  <span className="flex items-center gap-4 tabular-nums">
+                                    <span className="text-muted-foreground">{r.eggs.toLocaleString()} eggs</span>
+                                    <span className={`w-16 text-right font-medium ${r.pct == null ? "text-muted-foreground font-normal" : ""}`}>{fmtPct(r.pct)}</span>
+                                  </span>
+                                </div>
+                              ))}
+                              <div className="mt-2 pt-2 border-t border-border flex items-center justify-between gap-3 text-sm font-semibold">
+                                <span>Overall production</span>
+                                <span className="flex items-center gap-4 tabular-nums">
+                                  <span>{(prod?.totalEggs ?? norm.totalEggs).toLocaleString()} eggs</span>
+                                  <span className="w-16 text-right">{fmtPct(prod?.overallPct ?? null)}</span>
+                                </span>
+                              </div>
+                              {prod?.totalBirds != null && (
+                                <div className="text-[11px] text-muted-foreground">
+                                  Based on {prod.totalBirds.toLocaleString()} active birds on this date.
+                                </div>
+                              )}
+                              <div className="pt-1 text-[11px] text-muted-foreground">Extra (loose) eggs: {norm.extra}</div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
+
+                {eggs.length === 0 && (
+                  <tr><td colSpan={eggRoomSlots.length + 4} className="py-4 text-center text-muted-foreground text-xs">
+                    <span className="font-medium">Pending entry</span> — no production records yet.
+                  </td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          {eggs.length > 7 && (
+            <div className="mt-3 text-center">
+              <button onClick={() => setEggShowAll(v => !v)} className="text-xs font-medium text-[color:var(--forest)] hover:underline">
+                {eggShowAll ? "Show latest 7 only" : `View all ${eggs.length} production records`}
+              </button>
+            </div>
+          )}
+        </Card>
+
+        {/* 3 — Room Management */}
         <div id="rooms" className="scroll-mt-24" />
         <Card>
           <CardHeader
@@ -1113,111 +1218,6 @@ const setBagWeightKg = (v: number | null) => {
               </tbody>
             </table>
           </div>
-        </Card>
-
-        {/* 3 — Daily Production */}
-        <div id="production" className="scroll-mt-24" />
-        <Card>
-          <CardHeader
-            title={<span className="inline-flex items-center gap-2"><Egg className="h-5 w-5 text-[color:var(--forest)]" /> Daily Egg Production</span>}
-            subtitle="One row per room per date — click Record to add a new day"
-            right={<ActionBtn onClick={recordProduction} icon={Plus}>Record Production</ActionBtn>}
-          />
-          <div className="grid grid-cols-3 gap-3 mt-4">
-            <MiniStat label="Today's Production" value={`${todayCrates} cr`} tone="mint" />
-            <MiniStat label="7-Day Avg" value={`${sevenDayAvgEggs.toLocaleString()} eggs`} tone="sky" />
-            <MiniStat label="Current Lay Rate" value={currentLayRateDisplay} tone="plain" />
-          </div>
-          <div className="mt-5 overflow-x-auto">
-            <table className="w-full text-xs sm:text-sm">
-              <thead>
-                <tr className="text-left text-muted-foreground border-b border-border">
-                  <th className="py-2 pr-4 font-medium">Date</th>
-                  {eggRoomSlots.map(s => (
-                    <th key={s.room.id} className="py-2 pr-4 font-medium whitespace-nowrap">{s.room.name.replace(/^ROOM\s*/i, "R")}</th>
-                  ))}
-                  <th className="py-2 pr-4 font-medium">Total</th>
-                  <th className="py-2 pr-4 font-medium">Extra</th>
-                  <th className="py-2 pr-2 font-medium w-6"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {(eggShowAll ? eggs : eggs.slice(0, 7)).map(e => {
-                  const norm = normaliseEggRow(e);
-                  const prod = productionByDate.get(e.date);
-                  const isOpen = expandedEggDate === e.date;
-                  return (
-                    <Fragment key={e.id ?? e.date + e.label}>
-                      <tr className="border-b border-border/50 cursor-pointer hover:bg-secondary/40" onClick={() => setExpandedEggDate(isOpen ? null : e.date)}>
-                        <td className="py-2.5 pr-4 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1.5">
-                            <ChevronDown className={"h-3.5 w-3.5 text-muted-foreground transition-transform " + (isOpen ? "rotate-180" : "")} />
-                            {e.label}
-                          </span>
-                        </td>
-                        {eggRoomSlots.map(s => (
-                          <td key={s.room.id} className="py-2.5 pr-4 tabular-nums">{e[s.key]}</td>
-                        ))}
-                        <td className="py-2.5 pr-4">
-                          <span className="inline-flex items-center rounded-full bg-[color:var(--forest)] text-primary-foreground px-2.5 py-0.5 text-xs font-medium">
-                            {norm.crates}
-                          </span>
-                        </td>
-                        <td className="py-2.5 pr-4 text-muted-foreground">{norm.extra ? `+${norm.extra}` : "—"}</td>
-                        <td className="py-2.5 pr-2 text-right" onClick={(ev) => ev.stopPropagation()}>
-                          <RowActions onEdit={() => editEgg(e)} onDelete={() => delEgg(e)} />
-                        </td>
-                      </tr>
-                      {isOpen && (
-                        <tr className="border-b border-border/50 bg-secondary/30">
-                          <td colSpan={eggRoomSlots.length + 4} className="px-3 py-3">
-                            <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Daily Production Analysis</div>
-                            <div className="mt-2 max-w-md space-y-1.5">
-                              {(prod?.rooms ?? []).map(r => (
-                                <div key={r.roomId} className="flex items-center justify-between gap-3 text-sm">
-                                  <span className="truncate">{r.roomName}</span>
-                                  <span className="flex items-center gap-4 tabular-nums">
-                                    <span className="text-muted-foreground">{r.eggs.toLocaleString()} eggs</span>
-                                    <span className={`w-16 text-right font-medium ${r.pct == null ? "text-muted-foreground font-normal" : ""}`}>{fmtPct(r.pct)}</span>
-                                  </span>
-                                </div>
-                              ))}
-                              <div className="mt-2 pt-2 border-t border-border flex items-center justify-between gap-3 text-sm font-semibold">
-                                <span>Overall production</span>
-                                <span className="flex items-center gap-4 tabular-nums">
-                                  <span>{(prod?.totalEggs ?? norm.totalEggs).toLocaleString()} eggs</span>
-                                  <span className="w-16 text-right">{fmtPct(prod?.overallPct ?? null)}</span>
-                                </span>
-                              </div>
-                              {prod?.totalBirds != null && (
-                                <div className="text-[11px] text-muted-foreground">
-                                  Based on {prod.totalBirds.toLocaleString()} active birds on this date.
-                                </div>
-                              )}
-                              <div className="pt-1 text-[11px] text-muted-foreground">Extra (loose) eggs: {norm.extra}</div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </Fragment>
-                  );
-                })}
-
-                {eggs.length === 0 && (
-                  <tr><td colSpan={eggRoomSlots.length + 4} className="py-4 text-center text-muted-foreground text-xs">
-                    <span className="font-medium">Pending entry</span> — no production records yet.
-                  </td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          {eggs.length > 7 && (
-            <div className="mt-3 text-center">
-              <button onClick={() => setEggShowAll(v => !v)} className="text-xs font-medium text-[color:var(--forest)] hover:underline">
-                {eggShowAll ? "Show latest 7 only" : `View all ${eggs.length} production records`}
-              </button>
-            </div>
-          )}
         </Card>
 
         {/* 4 — Room Comparison */}
