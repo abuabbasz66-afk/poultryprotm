@@ -50,6 +50,7 @@ import { useSubscription } from "@/lib/subscription";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
+import { computeProductionSeries, fmtPct } from "@/lib/production-percent";
 import { toDateKey, toLocalDate } from "@/lib/date-key";
 import { computeDashboardMetrics, priceUnitLabel } from "@/lib/farm-analytics";
 import {
