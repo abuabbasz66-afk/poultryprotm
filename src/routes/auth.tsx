@@ -7,6 +7,7 @@ import heroAsset from "@/assets/hero-layer-birds.jpg.asset.json";
 import { toast } from "sonner";
 import { homeRouteForRole } from "@/lib/rbac";
 import { logSecurityEvent } from "@/lib/security-events";
+import { resolveResumeDestination } from "@/lib/last-location";
 import {
   ArrowLeft, Eye, EyeOff, Check, ShieldCheck, Lock, CloudUpload,
   Headphones, ClipboardList, LineChart, Sparkles,
@@ -92,11 +93,37 @@ function AuthPage() {
   };
 
   const redirectTo = search.redirect && search.redirect.startsWith("/") ? search.redirect : "/dashboard";
+  const [resuming, setResuming] = useState(false);
+
+  // Where should this user land? Their last valid location when they have one,
+  // otherwise their permitted default dashboard.
+  const resolveDestination = async () => {
+    if (search.redirect) return redirectTo;
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    const { data: ctx } = await supabase.rpc("my_farm_context");
+    const raw = (ctx ?? {}) as { role?: string; permissions?: string[] };
+    const role = raw.role ?? "owner";
+    const permissions = Array.isArray(raw.permissions) && raw.permissions.length ? raw.permissions : ["*"];
+    if (!userId) return homeRouteForRole(role);
+    let farmIds: string[] | undefined;
+    try {
+      const { data: ids } = await supabase.rpc("my_farm_ids");
+      if (Array.isArray(ids)) farmIds = ids as string[];
+    } catch { /* optional context check */ }
+    return resolveResumeDestination({ userId, role, permissions, farmIds });
+  };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: redirectTo });
+    let cancelled = false;
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session || cancelled) return;
+      setResuming(true);
+      const destination = await resolveDestination().catch(() => redirectTo);
+      if (!cancelled) navigate({ to: destination });
     });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, redirectTo]);
 
   // Sync mode with URL so browser back/forward moves between Sign In / Create Account.
@@ -165,12 +192,8 @@ function AuthPage() {
         void logSecurityEvent("login", { identifier: loginEmail });
         await qc.cancelQueries();
         qc.clear();
-        let destination = redirectTo;
-        if (!search.redirect) {
-          const { data: ctx } = await supabase.rpc("my_farm_context");
-          const role = (ctx as { role?: string } | null)?.role ?? "owner";
-          destination = homeRouteForRole(role);
-        }
+        setResuming(true);
+        const destination = await resolveDestination().catch(() => redirectTo);
         navigate({ to: destination });
       } else {
         const trimmed = email.trim().toLowerCase();
