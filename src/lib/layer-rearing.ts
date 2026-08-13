@@ -130,7 +130,10 @@ export const defaultSettings = (farmId: string): RearingSettings => ({
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
 /** Age in days today — derived, never stored. */
-export function batchAgeDays(b: Pick<LayerBatch, "placement_date" | "start_age_days">, on: Date = new Date()) {
+export function batchAgeDays(
+  b: Pick<LayerBatch, "placement_date" | "start_age_days">,
+  on: Date = new Date(),
+) {
   const start = new Date(`${b.placement_date}T00:00:00`);
   const days = Math.floor((startOfDay(on).getTime() - start.getTime()) / 86_400_000);
   return Math.max(0, days) + (Number(b.start_age_days) || 0);
@@ -156,7 +159,10 @@ export function stageFor(days: number, stages: StageConfig[] = DEFAULT_STAGES): 
 
 export function stageIndex(days: number, stages: StageConfig[] = DEFAULT_STAGES) {
   const ordered = [...stages].sort((a, b) => a.fromDay - b.fromDay);
-  return Math.max(0, ordered.findIndex((s) => s.key === stageFor(days, ordered).key));
+  return Math.max(
+    0,
+    ordered.findIndex((s) => s.key === stageFor(days, ordered).key),
+  );
 }
 
 export function isReadyForProduction(days: number, maturityWeeks: number) {
@@ -210,7 +216,8 @@ export type BatchMetrics = {
 };
 
 const sum = (rows: number[]) => rows.reduce((s, n) => s + (Number(n) || 0), 0);
-const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const iso = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 export function computeBatchMetrics(
   batch: LayerBatch,
@@ -235,12 +242,20 @@ export function computeBatchMetrics(
   const birds = Math.max(0, batch.current_birds);
 
   const lastWeight = weights.length ? weights[weights.length - 1] : null;
-  const target = lastWeight?.target_weight_g ?? targetWeight(settings, batch.breed, lastWeight?.week ?? 0);
+  const target =
+    lastWeight?.target_weight_g ?? targetWeight(settings, batch.breed, lastWeight?.week ?? 0);
   let growthStatus = "No weight recorded";
   if (lastWeight && target) {
     const diff = lastWeight.avg_weight_g - target;
     const pct = (diff / target) * 100;
-    growthStatus = pct >= 2 ? "Above target" : pct <= -5 ? "Below target" : pct < 0 ? "Slightly below target" : "On target";
+    growthStatus =
+      pct >= 2
+        ? "Above target"
+        : pct <= -5
+          ? "Below target"
+          : pct < 0
+            ? "Slightly below target"
+            : "On target";
   } else if (lastWeight) {
     growthStatus = "No target configured";
   }
@@ -248,9 +263,10 @@ export function computeBatchMetrics(
   const schedule = settings.schedule?.length ? settings.schedule : DEFAULT_SCHEDULE;
   const next = [...schedule].sort((a, b) => a.day - b.day).find((s) => s.day >= days) ?? null;
 
-  const upcomingVax = health
-    .filter((h) => h.kind === "vaccination" && h.status !== "done" && h.entry_date >= today)
-    .sort((a, b) => a.entry_date.localeCompare(b.entry_date))[0] ?? null;
+  const upcomingVax =
+    health
+      .filter((h) => h.kind === "vaccination" && h.status !== "done" && h.entry_date >= today)
+      .sort((a, b) => a.entry_date.localeCompare(b.entry_date))[0] ?? null;
 
   return {
     batch,
@@ -282,15 +298,23 @@ export function computeBatchMetrics(
 }
 
 /** Farmer-configured target for a breed/week. Returns null when not configured. */
-export function targetWeight(settings: RearingSettings, breed: string | null | undefined, week: number): number | null {
-  const table = settings.weight_targets?.[(breed ?? "").trim().toLowerCase()] ?? settings.weight_targets?.["default"];
+export function targetWeight(
+  settings: RearingSettings,
+  breed: string | null | undefined,
+  week: number,
+): number | null {
+  const table =
+    settings.weight_targets?.[(breed ?? "").trim().toLowerCase()] ??
+    settings.weight_targets?.["default"];
   const v = table?.[String(week)];
   return Number.isFinite(Number(v)) ? Number(v) : null;
 }
 
 /** Remaining birds after each recorded mortality entry, newest first. */
 export function mortalityLedger(m: BatchMetrics) {
-  const rows = [...m.daily].filter((d) => d.deaths > 0).sort((a, b) => a.entry_date.localeCompare(b.entry_date));
+  const rows = [...m.daily]
+    .filter((d) => d.deaths > 0)
+    .sort((a, b) => a.entry_date.localeCompare(b.entry_date));
   let alive = m.batch.birds_placed;
   const out = rows.map((r) => {
     alive = Math.max(0, alive - r.deaths);
@@ -301,7 +325,10 @@ export function mortalityLedger(m: BatchMetrics) {
 
 /** Water-pattern watch: flags a day that deviates strongly from the recent mean. */
 export function waterAlerts(m: BatchMetrics) {
-  const rows = [...m.daily].filter((d) => d.water_litres > 0).sort((a, b) => b.entry_date.localeCompare(a.entry_date)).slice(0, 8);
+  const rows = [...m.daily]
+    .filter((d) => d.water_litres > 0)
+    .sort((a, b) => b.entry_date.localeCompare(a.entry_date))
+    .slice(0, 8);
   if (rows.length < 4) return [] as { date: string; change: number }[];
   const [latest, ...rest] = rows;
   const mean = sum(rest.map((r) => r.water_litres)) / rest.length;
@@ -316,12 +343,16 @@ export function batchNotifications(m: BatchMetrics, settings: RearingSettings): 
   const maturity = (settings.maturity_weeks || DEFAULT_MATURITY_WEEKS) * 7;
   if (m.batch.status !== "rearing") return out;
   if (m.days === 7) out.push(`${m.batch.name} is 7 days old.`);
-  if (m.days > 0 && m.days % 7 === 0) out.push(`${m.batch.name}: weekly weight check is due (Week ${m.weeks}).`);
-  if (m.days >= 21 && m.days < 28) out.push(`${m.batch.name} is approaching the end of the brooding stage.`);
+  if (m.days > 0 && m.days % 7 === 0)
+    out.push(`${m.batch.name}: weekly weight check is due (Week ${m.weeks}).`);
+  if (m.days >= 21 && m.days < 28)
+    out.push(`${m.batch.name} is approaching the end of the brooding stage.`);
   if (m.days >= 28 && m.days < 31) out.push(`${m.batch.name} has entered the grower stage.`);
   if (m.days >= 98 && m.days < 105) out.push(`${m.batch.name} is approaching the pre-lay stage.`);
-  if (m.days >= maturity - 14 && m.days < maturity) out.push(`${m.batch.name} is approaching point of lay.`);
-  if (m.days >= maturity) out.push(`${m.batch.name} is ready — prepare the flock for transfer to Layer Production.`);
+  if (m.days >= maturity - 14 && m.days < maturity)
+    out.push(`${m.batch.name} is approaching point of lay.`);
+  if (m.days >= maturity)
+    out.push(`${m.batch.name} is ready — prepare the flock for transfer to Layer Production.`);
   return out;
 }
 
@@ -336,7 +367,9 @@ export function useLayerBatches() {
     queryFn: async (): Promise<LayerBatch[]> => {
       const { data, error } = await supabase
         .from("layer_batches")
-        .select("id, farm_id, name, bird_type, breed, birds_placed, current_birds, placement_date, start_age_days, room, room_id, source, notes, status, transferred_at, transferred_room_id, created_at")
+        .select(
+          "id, farm_id, name, bird_type, breed, birds_placed, current_birds, placement_date, start_age_days, room, room_id, source, notes, status, transferred_at, transferred_room_id, created_at",
+        )
         .eq("farm_id", farmId!)
         .order("placement_date", { ascending: false });
       if (error) throw error;
@@ -354,7 +387,9 @@ export function useLayerDaily() {
     queryFn: async (): Promise<LayerDaily[]> => {
       const { data, error } = await supabase
         .from("layer_batch_daily")
-        .select("id, batch_id, entry_date, deaths, death_reason, feed_kg, feed_type, feed_cost, water_litres, avg_weight_g, birds_count, temperature_c, observation, notes")
+        .select(
+          "id, batch_id, entry_date, deaths, death_reason, feed_kg, feed_type, feed_cost, water_litres, avg_weight_g, birds_count, temperature_c, observation, notes",
+        )
         .eq("farm_id", farmId!)
         .order("entry_date", { ascending: false });
       if (error) throw error;
@@ -372,7 +407,9 @@ export function useLayerWeights() {
     queryFn: async (): Promise<LayerWeight[]> => {
       const { data, error } = await supabase
         .from("layer_batch_weights")
-        .select("id, batch_id, week, entry_date, birds_weighed, avg_weight_g, target_weight_g, notes")
+        .select(
+          "id, batch_id, week, entry_date, birds_weighed, avg_weight_g, target_weight_g, notes",
+        )
         .eq("farm_id", farmId!)
         .order("week", { ascending: true });
       if (error) throw error;
@@ -439,8 +476,14 @@ export function useAddLayerBatch() {
   return useMutation({
     networkMode: "always",
     mutationFn: async (input: {
-      name: string; breed?: string | null; birds_placed: number; placement_date: string;
-      start_age_days?: number; room?: string | null; source?: string | null; notes?: string | null;
+      name: string;
+      breed?: string | null;
+      birds_placed: number;
+      placement_date: string;
+      start_age_days?: number;
+      room?: string | null;
+      source?: string | null;
+      notes?: string | null;
     }) => {
       if (!farmId) throw new Error("No farm found for this user.");
       const { error } = await supabase.from("layer_batches").insert({
@@ -468,7 +511,9 @@ export function useUpdateLayerBatch() {
   const { farmId } = useCtx();
   return useMutation({
     networkMode: "always",
-    mutationFn: async (input: { id: string } & Partial<Omit<LayerBatch, "id" | "farm_id" | "created_at">>) => {
+    mutationFn: async (
+      input: { id: string } & Partial<Omit<LayerBatch, "id" | "farm_id" | "created_at">>,
+    ) => {
       const { id, ...patch } = input;
       const { error } = await supabase.from("layer_batches").update(patch).eq("id", id);
       if (error) throw error;
@@ -496,10 +541,19 @@ export function useRecordLayerDaily() {
   return useMutation({
     networkMode: "always",
     mutationFn: async (input: {
-      batch_id: string; entry_date: string; deaths: number; death_reason?: string | null;
-      feed_kg: number; feed_type?: string | null; feed_cost?: number; water_litres: number;
-      avg_weight_g?: number | null; birds_count?: number | null; temperature_c?: number | null;
-      observation?: string | null; notes?: string | null;
+      batch_id: string;
+      entry_date: string;
+      deaths: number;
+      death_reason?: string | null;
+      feed_kg: number;
+      feed_type?: string | null;
+      feed_cost?: number;
+      water_litres: number;
+      avg_weight_g?: number | null;
+      birds_count?: number | null;
+      temperature_c?: number | null;
+      observation?: string | null;
+      notes?: string | null;
       /** Birds alive before this entry, so the head-count stays in step. */
       current_birds: number;
     }) => {
@@ -525,7 +579,10 @@ export function useRecordLayerDaily() {
 
       if (input.deaths > 0) {
         const next = Math.max(0, input.current_birds - input.deaths);
-        const { error: upErr } = await supabase.from("layer_batches").update({ current_birds: next }).eq("id", input.batch_id);
+        const { error: upErr } = await supabase
+          .from("layer_batches")
+          .update({ current_birds: next })
+          .eq("id", input.batch_id);
         if (upErr) throw upErr;
       }
     },
@@ -552,20 +609,28 @@ export function useRecordLayerWeight() {
   return useMutation({
     networkMode: "always",
     mutationFn: async (input: {
-      batch_id: string; week: number; entry_date: string; birds_weighed: number;
-      avg_weight_g: number; target_weight_g?: number | null; notes?: string | null;
+      batch_id: string;
+      week: number;
+      entry_date: string;
+      birds_weighed: number;
+      avg_weight_g: number;
+      target_weight_g?: number | null;
+      notes?: string | null;
     }) => {
       if (!farmId) throw new Error("No farm found for this user.");
-      const { error } = await supabase.from("layer_batch_weights").upsert({
-        farm_id: farmId,
-        batch_id: input.batch_id,
-        week: input.week,
-        entry_date: input.entry_date,
-        birds_weighed: input.birds_weighed,
-        avg_weight_g: input.avg_weight_g,
-        target_weight_g: input.target_weight_g ?? null,
-        notes: input.notes?.trim() || null,
-      }, { onConflict: "batch_id,week" });
+      const { error } = await supabase.from("layer_batch_weights").upsert(
+        {
+          farm_id: farmId,
+          batch_id: input.batch_id,
+          week: input.week,
+          entry_date: input.entry_date,
+          birds_weighed: input.birds_weighed,
+          avg_weight_g: input.avg_weight_g,
+          target_weight_g: input.target_weight_g ?? null,
+          notes: input.notes?.trim() || null,
+        },
+        { onConflict: "batch_id,week" },
+      );
       if (error) throw error;
     },
     onSuccess: () => invalidateFarm(qc, farmId),
@@ -591,8 +656,14 @@ export function useRecordLayerHealth() {
   return useMutation({
     networkMode: "always",
     mutationFn: async (input: {
-      batch_id: string; kind: string; name: string; entry_date: string;
-      dosage?: string | null; administered_by?: string | null; status?: string; notes?: string | null;
+      batch_id: string;
+      kind: string;
+      name: string;
+      entry_date: string;
+      dosage?: string | null;
+      administered_by?: string | null;
+      status?: string;
+      notes?: string | null;
     }) => {
       if (!farmId) throw new Error("No farm found for this user.");
       const { error } = await supabase.from("layer_batch_health").insert({
@@ -632,13 +703,16 @@ export function useSaveRearingSettings() {
     networkMode: "always",
     mutationFn: async (input: Partial<Omit<RearingSettings, "farm_id">>) => {
       if (!farmId) throw new Error("No farm found for this user.");
-      const { error } = await supabase.from("layer_rearing_settings").upsert({
-        farm_id: farmId,
-        ...(input.stages ? { stages: input.stages } : {}),
-        ...(input.schedule ? { schedule: input.schedule } : {}),
-        ...(input.weight_targets ? { weight_targets: input.weight_targets } : {}),
-        ...(input.maturity_weeks ? { maturity_weeks: input.maturity_weeks } : {}),
-      } as never, { onConflict: "farm_id" });
+      const { error } = await supabase.from("layer_rearing_settings").upsert(
+        {
+          farm_id: farmId,
+          ...(input.stages ? { stages: input.stages } : {}),
+          ...(input.schedule ? { schedule: input.schedule } : {}),
+          ...(input.weight_targets ? { weight_targets: input.weight_targets } : {}),
+          ...(input.maturity_weeks ? { maturity_weeks: input.maturity_weeks } : {}),
+        } as never,
+        { onConflict: "farm_id" },
+      );
       if (error) throw error;
     },
     onSuccess: () => invalidateFarm(qc, farmId),
@@ -656,44 +730,58 @@ export function useTransferToProduction() {
   const { farmId } = useCtx();
   return useMutation({
     networkMode: "always",
-    mutationFn: async (input: { batch: LayerBatch; roomName?: string; existingRoomId?: string | null }) => {
+    mutationFn: async (input: {
+      batch: LayerBatch;
+      roomName?: string;
+      existingRoomId?: string | null;
+    }) => {
       if (!farmId) throw new Error("No farm found for this user.");
       let roomId = input.existingRoomId ?? null;
 
       if (!roomId) {
-        const { data, error } = await supabase.from("rooms").insert({
-          farm_id: farmId,
-          name: (input.roomName ?? input.batch.name).trim(),
-          current: input.batch.current_birds,
-          initial: input.batch.birds_placed,
-          status: "active",
-          bird_type: "Layer",
-          breed: input.batch.breed,
-          date_stocked: input.batch.placement_date,
-          age_status: "recorded",
-          age_anchor_date: input.batch.placement_date,
-          age_recorded_at: new Date().toISOString(),
-        }).select("id").single();
+        const { data, error } = await supabase
+          .from("rooms")
+          .insert({
+            farm_id: farmId,
+            name: (input.roomName ?? input.batch.name).trim(),
+            current: input.batch.current_birds,
+            initial: input.batch.birds_placed,
+            status: "active",
+            bird_type: "Layer",
+            breed: input.batch.breed,
+            date_stocked: input.batch.placement_date,
+            age_status: "recorded",
+            age_anchor_date: input.batch.placement_date,
+            age_recorded_at: new Date().toISOString(),
+          })
+          .select("id")
+          .single();
         if (error) throw error;
         roomId = data.id as string;
       } else {
-        const { error } = await supabase.from("rooms").update({
-          current: input.batch.current_birds,
-          bird_type: "Layer",
-          breed: input.batch.breed,
-          age_status: "recorded",
-          age_anchor_date: input.batch.placement_date,
-          age_recorded_at: new Date().toISOString(),
-        }).eq("id", roomId);
+        const { error } = await supabase
+          .from("rooms")
+          .update({
+            current: input.batch.current_birds,
+            bird_type: "Layer",
+            breed: input.batch.breed,
+            age_status: "recorded",
+            age_anchor_date: input.batch.placement_date,
+            age_recorded_at: new Date().toISOString(),
+          })
+          .eq("id", roomId);
         if (error) throw error;
       }
 
-      const { error: bErr } = await supabase.from("layer_batches").update({
-        status: "transferred",
-        transferred_at: new Date().toISOString(),
-        transferred_room_id: roomId,
-        room_id: roomId,
-      }).eq("id", input.batch.id);
+      const { error: bErr } = await supabase
+        .from("layer_batches")
+        .update({
+          status: "transferred",
+          transferred_at: new Date().toISOString(),
+          transferred_room_id: roomId,
+          room_id: roomId,
+        })
+        .eq("id", input.batch.id);
       if (bErr) throw bErr;
       return roomId;
     },
