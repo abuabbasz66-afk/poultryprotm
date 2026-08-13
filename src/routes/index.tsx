@@ -275,6 +275,9 @@ const liveFeatures: { icon: any; title: string; desc: string }[] = [
   { icon: Sparkles, title: "AI Feed Intelligence", desc: "Monitor feed inventory, estimate remaining days of feed and generate low-feed alerts." },
   { icon: LineChart, title: "Production Analytics", desc: "Interactive production trends, room performance, historical records and operational insights." },
   { icon: HeartPulse, title: "Mortality & Health Tracking", desc: "Monitor bird health, mortality trends and treatment history." },
+  { icon: Baby, title: "Layer Brooding & Rearing", desc: "Track pullet development from day one through growth stages until maturity and transfer to layer rooms." },
+  { icon: Drumstick, title: "Broiler Dashboard", desc: "Dedicated broiler management with growth tracking, FCR, health records and batch analytics." },
+  { icon: Users, title: "Staff & Users Management", desc: "Invite farm staff, assign roles and manage permissions across your team." },
   { icon: ShieldCheck, title: "Multi-Farm Management", desc: "Secure farm-specific dashboards with complete tenant isolation." },
   { icon: FileText, title: "Smart Reporting", desc: "Automatically generate operational and financial reports." },
 ];
