@@ -188,7 +188,13 @@ function WeatherPage() {
   }, [rooms, broilers, layerBatches, farm]);
 
   const result = weatherQ.data;
-  const weather = result?.ok ? result.weather : null;
+  const live = result?.ok ? result.weather : null;
+  // Fall back to the last good forecast, clearly labelled as not live.
+  const weather = live ?? (result && !result.ok ? cached?.weather ?? null : null);
+  const showingStale = !live && !!weather;
+  const locationLabel =
+    [farm?.location, farm?.state, farm?.country].filter(Boolean).join(", ") || "not set";
+
 
   const alert = useMemo(() => (weather ? tomorrowAlert(weather, flocks) : null), [weather, flocks]);
 
