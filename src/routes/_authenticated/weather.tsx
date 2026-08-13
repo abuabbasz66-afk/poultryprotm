@@ -107,6 +107,7 @@ function WeatherPage() {
     } catch {
       /* storage full — not fatal */
     }
+    console.log("[weather] persist check", farm.latitude, farm.longitude, (res as any).resolved);
     if (farm.latitude == null || farm.longitude == null) {
       void supabase
         .from("farms")
