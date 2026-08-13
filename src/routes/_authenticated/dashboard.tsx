@@ -456,22 +456,15 @@ const setBagWeightKg = (v: number | null) => {
   };
 
 
-  // --- Mortality aggregation (grouped by date, preserving arrival order) ---
-  type MortGroup = { date: string; total: number; byRoom: Record<string, number>; causes: string[]; items: Mortality[] };
-  const mortalityByDate = useMemo<MortGroup[]>(() => {
-    const map = new Map<string, MortGroup>();
-    for (const m of mortality) {
-      let g = map.get(m.date);
-      if (!g) { g = { date: m.date, total: 0, byRoom: {}, causes: [], items: [] }; map.set(m.date, g); }
-      const loss = Math.abs(m.loss);
-      g.total += loss;
-      g.byRoom[m.room] = (g.byRoom[m.room] ?? 0) + loss;
-      if (!g.causes.includes(m.cause)) g.causes.push(m.cause);
-      g.items.push(m);
-    }
-
-  return Array.from(map.values());
-  }, [mortality]);
+  // --- Mortality aggregation (grouped by date, with historical rates) ---
+  const mortalityByDate = useMemo(
+    () => computeDailyMortality(mortality, rooms),
+    [mortality, rooms],
+  );
+  const mortRoomCols = useMemo(
+    () => mortalityRoomColumns(rooms, mortality),
+    [rooms, mortality],
+  );
 
   // --- Health sorted by date newest → oldest ---
   const healthByDate = useMemo<Health[]>(() => {
@@ -479,13 +472,20 @@ const setBagWeightKg = (v: number | null) => {
   }, [health]);
 
   const totalInitialBirds = rooms.reduce((s, r) => s + r.initial, 0);
-  const mortalityRatePct = totalInitialBirds ? (monthlyMortality / totalInitialBirds) * 100 : 0;
+  const totalMortality = useMemo(
+    () => mortality.reduce((s, m) => s + Math.abs(Number(m.loss) || 0), 0),
+    [mortality],
+  );
+  const sevenDayMortality = useMemo(() => recentMortality(mortality, 7), [mortality]);
+  const currentFlock = rooms.reduce((s, r) => s + (Number(r.current) || 0), 0);
+  const mortalityRatePct = totalInitialBirds ? (totalMortality / totalInitialBirds) * 100 : 0;
   const leadingCause = useMemo(() => {
     const c: Record<string, number> = {};
     for (const m of mortality) c[m.cause] = (c[m.cause] ?? 0) + Math.abs(m.loss);
     const top = Object.entries(c).sort((a, b) => b[1] - a[1])[0];
     return top?.[0] ?? "—";
   }, [mortality]);
+
 
   // --- Feed aggregation (grouped by date, dynamic rooms) ---
   type FeedGroup = { date: string; byRoom: Record<string, number>; total: number; items: Feed[] };
