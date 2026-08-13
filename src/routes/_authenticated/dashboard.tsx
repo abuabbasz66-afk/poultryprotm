@@ -42,6 +42,8 @@ import { ProductionDeclineIntelligence } from "@/components/production-decline-c
 import { MortalityPatternIntelligence } from "@/components/mortality-pattern-card";
 import { FarmInsightsIntelligence } from "@/components/farm-insights-card";
 import { RecordDialogs, RecordConfirmDialog, type RecordDialogState } from "@/components/record-dialogs";
+import { FlockAgeDialog } from "@/components/flock-age-dialog";
+import { flockAge, hasAge, roomsMissingAge, flockStage } from "@/lib/flock-age";
 import { UpgradeDialog, type UpgradeTier } from "@/components/upgrade-dialog";
 import { TrialBanner } from "@/components/trial-banner";
 import { useSubscription } from "@/lib/subscription";
@@ -176,6 +178,9 @@ function Dashboard() {
   const canAnalyticsArea = can("reports.read") || can("financials.read");
   const canAIArea = can("ai.view");
   const canAudit = can("audit.read");
+  /** Only the owner, or a manager explicitly granted "rooms.age", may set flock age. */
+  const canManageAge = can("rooms.age");
+  const missingAgeRooms = useMemo(() => roomsMissingAge(rooms), [rooms]);
   const search = Route.useSearch();
   const requestedArea: DashboardArea = search.area ?? "records";
   const area: DashboardArea = requestedArea;
@@ -206,6 +211,7 @@ const setBagWeightKg = (v: number | null) => {
   const askDelete = (title: string, message: string, onConfirm: () => void | Promise<void>) =>
     setConfirmState({ title, message, onConfirm });
   const [dialog, setDialog] = useState<RecordDialogState | null>(null);
+  const [ageRoom, setAgeRoom] = useState<Room | null>(null);
   const openDialog = (s: RecordDialogState) => setDialog(s);
 
   // ---------------------------------------------------------------------------
@@ -1120,6 +1126,23 @@ const setBagWeightKg = (v: number | null) => {
             subtitle="Add, edit or remove poultry rooms — scalable for unlimited rooms"
             right={<ActionBtn onClick={addRoom} icon={Plus}>Add Room</ActionBtn>}
           />
+          {missingAgeRooms.length > 0 && (
+            <div className="mt-4 rounded-xl border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 p-4">
+              <p className="text-sm font-semibold">🐔 Complete Flock Profile</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Bird age has not been recorded for {missingAgeRooms.length === 1 ? `${missingAgeRooms[0].name}` : `${missingAgeRooms.length} flocks`}. Add the current age so PoultryPro can provide accurate feeding, water, vaccination, growth and management reminders.
+              </p>
+              {canManageAge && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {missingAgeRooms.map((r) => (
+                    <button key={r.id} onClick={() => setAgeRoom(r)} className="rounded-full bg-[color:var(--forest)] px-3 py-1.5 text-xs font-semibold text-primary-foreground">
+                      Add Bird Age · {r.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <div className="grid grid-cols-3 gap-3 mt-4">
             <MiniStat label="Total Birds" value={totalBirds.toLocaleString()} tone="sky" />
             <MiniStat label="Active Rooms" value={`${productionRooms(rooms).length} of ${rooms.length}`} tone="mint" />
@@ -1130,6 +1153,7 @@ const setBagWeightKg = (v: number | null) => {
               <thead>
                 <tr className="text-left text-muted-foreground border-b border-border">
                   <th className="py-2 pr-4 font-medium">Room</th>
+                  <th className="py-2 pr-4 font-medium">Bird Age</th>
                   <th className="py-2 pr-4 font-medium">Current</th>
                   <th className="py-2 pr-4 font-medium">Initial</th>
                   <th className="py-2 pr-4 font-medium">Loss</th>
@@ -1148,6 +1172,24 @@ const setBagWeightKg = (v: number | null) => {
                         <span className="flex items-center gap-2"><Bird className="h-4 w-4 text-[color:var(--forest)]" />{r.name}</span>
                         {st === "culled" && r.culled_on && (
                           <span className="mt-0.5 block text-[11px] text-muted-foreground">Culled {r.culled_on}{r.culled_birds_sold ? ` · ${r.culled_birds_sold} birds sold` : ""}</span>
+                        )}
+                      </td>
+                      <td className="py-3 pr-4">
+                        {hasAge(r) ? (
+                          <span className="block">
+                            <span className="font-medium">{flockAge(r).weeks} {flockAge(r).weeks === 1 ? "Week" : "Weeks"}</span>
+                            <span className="block text-[11px] text-muted-foreground">
+                              {flockAge(r).days} Days{flockStage(r) ? ` · ${flockStage(r)}` : ""}
+                              {flockAge(r).status === "estimated" ? " · estimated start" : ""}
+                            </span>
+                            {canManageAge && (
+                              <button onClick={() => setAgeRoom(r)} className="mt-1 text-[11px] font-medium text-[color:var(--forest)] underline underline-offset-2">Edit age</button>
+                            )}
+                          </span>
+                        ) : canManageAge ? (
+                          <button onClick={() => setAgeRoom(r)} className="rounded-full border border-[color:var(--gold)]/50 bg-[color:var(--gold)]/10 px-2.5 py-1 text-xs font-semibold text-[color:var(--forest)]">Add Bird Age</button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Not recorded</span>
                         )}
                       </td>
                       <td className="py-3 pr-4">{r.current.toLocaleString()}</td>
@@ -1483,6 +1525,7 @@ const setBagWeightKg = (v: number | null) => {
         </div>
       </main>
       <RecordDialogs state={dialog} onClose={() => setDialog(null)} rooms={rooms} />
+      {ageRoom && <FlockAgeDialog room={ageRoom} onClose={() => setAgeRoom(null)} />}
       <RecordConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
       <UpgradeDialog tier={upgradeTier} open={upgradeTier !== null} onOpenChange={(v) => { if (!v) setUpgradeTier(null); }} />
 

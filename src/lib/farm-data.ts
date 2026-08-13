@@ -12,6 +12,11 @@ export type Room = {
   age_weeks?: number | null;
   batch_number?: string | null;
   date_stocked?: string | null;
+  /** "recorded" | "estimated" | "missing" — see src/lib/flock-age.ts. */
+  age_status?: string | null;
+  /** Real or estimated placement date the current age is derived from. */
+  age_anchor_date?: string | null;
+  age_recorded_at?: string | null;
   culled_on?: string | null;
   culled_birds_sold?: number | null;
   culled_unit_price?: number | null;
@@ -269,7 +274,7 @@ export function useRooms() {
         fetcher: async () => {
           const { data, error } = await supabase
             .from("rooms")
-            .select("id, name, current, initial, status, bird_type, breed, age_weeks, batch_number, date_stocked, culled_on, culled_birds_sold, culled_unit_price, culled_revenue, culled_notes")
+            .select("id, name, current, initial, status, bird_type, breed, age_weeks, batch_number, date_stocked, age_status, age_anchor_date, age_recorded_at, culled_on, culled_birds_sold, culled_unit_price, culled_revenue, culled_notes")
             .eq("farm_id", farmId!)
             .order("name");
           if (error) throw error;
@@ -462,6 +467,7 @@ export function useAddRoom() {
       name: string; initial: number;
       bird_type?: string | null; breed?: string | null; age_weeks?: number | null;
       batch_number?: string | null; date_stocked?: string | null;
+      age_status?: string | null; age_anchor_date?: string | null;
     }) => {
       if (!farmId) throw new Error("No farm found for this user.");
       const row = {
@@ -472,6 +478,9 @@ export function useAddRoom() {
         age_weeks: input.age_weeks ?? null,
         batch_number: input.batch_number ?? null,
         date_stocked: input.date_stocked ?? null,
+        age_anchor_date: input.age_anchor_date ?? input.date_stocked ?? null,
+        age_status: input.age_status ?? (input.date_stocked ? "recorded" : "missing"),
+        age_recorded_at: (input.age_anchor_date ?? input.date_stocked) ? new Date().toISOString() : null,
       };
       return runOrQueue({
         userId, farmId, table: "rooms", op: "insert", payload: row,
@@ -511,6 +520,7 @@ export function useUpdateRoom() {
       id: string; current?: number; initial?: number; name?: string; status?: string;
       bird_type?: string | null; breed?: string | null; age_weeks?: number | null;
       batch_number?: string | null; date_stocked?: string | null;
+      age_status?: string; age_anchor_date?: string | null; age_recorded_at?: string | null;
       culled_on?: string | null; culled_birds_sold?: number | null;
       culled_unit_price?: number | null; culled_revenue?: number | null; culled_notes?: string | null;
     }) => {
