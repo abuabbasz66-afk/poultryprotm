@@ -12,6 +12,11 @@ export type Room = {
   age_weeks?: number | null;
   batch_number?: string | null;
   date_stocked?: string | null;
+  /** "recorded" | "estimated" | "missing" — see src/lib/flock-age.ts. */
+  age_status?: string | null;
+  /** Real or estimated placement date the current age is derived from. */
+  age_anchor_date?: string | null;
+  age_recorded_at?: string | null;
   culled_on?: string | null;
   culled_birds_sold?: number | null;
   culled_unit_price?: number | null;
