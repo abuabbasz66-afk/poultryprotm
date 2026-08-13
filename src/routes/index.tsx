@@ -15,9 +15,9 @@ import {
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 
-const HOME_TITLE = "PoultryPro™ — Smart Poultry Farm Management Software";
+const HOME_TITLE = "PoultryPro | Smart Poultry Farm Management Platform";
 const HOME_DESC =
-  "PoultryPro helps African poultry farmers record production, feed, health, mortality and finances daily, then turns those records into profit analytics and AI insights.";
+  "PoultryPro is a digital poultry farm management platform helping farmers manage production, feed, health, mortality, finance, bird age, weather advisories and farm performance.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -149,32 +149,69 @@ const architecture = [
     step: "01",
     title: "Capture",
     tag: "Farm Records",
-    desc: "Record eggs, feed, health, mortality and costs in one organised place — so nothing gets lost and every decision is based on facts.",
+    desc: "Record eggs, feed, health, mortality, costs, bird information and other farm activities in one organised system.",
     icon: LayoutDashboard,
   },
   {
     step: "02",
     title: "Understand",
     tag: "Farm Analytics",
-    desc: "Turn daily records into clear production, cost and profit views that show exactly how your farm is performing.",
+    desc: "Turn your farm records into clear production, cost, revenue and profitability insights.",
     icon: LineChart,
   },
   {
     step: "03",
     title: "Predict",
-    tag: "PoultryPro AI",
-    desc: "Detect unusual trends, spot hidden risks earlier and make proactive decisions before small issues become costly problems.",
+    tag: "Intelligent Insights",
+    desc: "Use intelligent alerts, farm trends and weather-based bird advisories to identify risks earlier and make proactive decisions.",
     icon: Sparkles,
   },
 ];
 
-const features = [
-  { icon: LayoutDashboard, title: "Interactive Dashboard", desc: "Monitor birds, eggs, feed, mortality and revenue from one clear view — no more digging through notebooks.", tier: "Capture + Understand" },
-  { icon: Egg, title: "Production Management", desc: "Track daily egg output by room and flock so you know exactly which groups are performing best.", tier: "Capture" },
-  { icon: Wheat, title: "Feed Management", desc: "Monitor feed usage and costs in real time to protect your biggest farm expense and improve efficiency.", tier: "Capture + Understand" },
-  { icon: HeartPulse, title: "Health Records", desc: "Keep complete vaccination, medication and health histories to support better flock care and compliance.", tier: "Capture" },
-  { icon: LineChart, title: "Financial Analytics", desc: "See daily and monthly profitability, revenue trends and where your money is really going.", tier: "Understand" },
-  { icon: ShieldCheck, title: "Mortality Tracking", desc: "Log and analyse bird losses by room to identify issues faster and protect your investment.", tier: "Capture + Understand" },
+const recognition = [
+  { icon: FileText, title: "Daily Trust", desc: "Featured in Agriculture" },
+  { icon: Trophy, title: "3MTT", desc: "Fellow of the Week" },
+  { icon: Trophy, title: "Airtel Sponsored 3MTT NextGen Knowledge Showcase", desc: "Winner" },
+  { icon: Handshake, title: "Poultry Association of Nigeria", desc: "PoultryPro presented to the Katsina Chapter" },
+];
+
+const features: { icon: any; title: string; desc: string; soon?: boolean }[] = [
+  { icon: LayoutDashboard, title: "Interactive Farm Dashboard", desc: "Monitor birds, production, feed, mortality, health, revenue and farm performance from one clear view." },
+  { icon: Egg, title: "Production Management", desc: "Track daily production by room and flock and understand which groups are performing best." },
+  { icon: Wheat, title: "Feed Management", desc: "Monitor feed usage, inventory and costs while improving control over one of the farm's biggest expenses." },
+  { icon: HeartPulse, title: "Health & Mortality", desc: "Maintain health records, treatments, vaccinations and mortality history to support better flock management." },
+  { icon: Wallet, title: "Revenue & Expenditure", desc: "Track farm income, expenses, costs and profitability to understand where your money is going." },
+  { icon: Bird, title: "Bird Age Tracking", desc: "Automatically track flock age from placement and understand the stage of your birds." },
+  { icon: CloudSun, title: "Farm Weather & Bird Advisory", desc: "Interpret local weather conditions into practical poultry risk alerts and management recommendations." },
+  { icon: Baby, title: "Layer Brooding & Rearing", desc: "Track pullets from brooding through rearing, growth stages and transfer into layer production." },
+  { icon: Drumstick, title: "Broiler Dashboard", desc: "Manage broiler batches with age, growth, feed, health, mortality and performance tracking." },
+  { icon: Bird, title: "Noiler Dashboard", desc: "Manage Noiler production with dedicated flock, growth, production, feed and financial insights.", soon: true },
+  { icon: Users, title: "Staff & Users Management", desc: "Invite farm staff, assign roles and control access to farm information." },
+  { icon: ShieldCheck, title: "Farm Alerts", desc: "Receive important alerts when farm records, trends or conditions require attention." },
+  { icon: BarChart3, title: "Production Analytics", desc: "Understand production trends, room performance and historical farm records." },
+  { icon: LineChart, title: "Financial Analytics", desc: "Analyse revenue, expenditure, costs and profitability over time." },
+];
+
+const operations = [
+  { icon: Egg, title: "Layers", desc: "Production, eggs, feed, health, mortality, rooms and profitability." },
+  { icon: Drumstick, title: "Broilers", desc: "Age, growth, feed, water, health, mortality and batch performance." },
+  { icon: Bird, title: "Noilers", desc: "Flock management, growth, feed, health, production and financial performance." },
+  { icon: Baby, title: "Brooding & Rearing", desc: "Track pullets from day-old through brooding, rearing and maturity." },
+];
+
+const weatherSignals = [
+  "Heat stress risk",
+  "Heavy rainfall",
+  "High humidity",
+  "Sudden temperature changes",
+  "Practical management recommendations",
+];
+
+const exampleAlerts = [
+  { title: "Production Alert", desc: "Room production is below its recent trend." },
+  { title: "Feed Alert", desc: "Feed usage is higher than expected." },
+  { title: "Mortality Alert", desc: "Recent mortality requires attention." },
+  { title: "Financial Alert", desc: "Farm expenditure has increased compared with the previous period." },
 ];
 
 const tiers = [
