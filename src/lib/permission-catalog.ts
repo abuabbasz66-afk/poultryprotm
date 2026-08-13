@@ -28,6 +28,7 @@ export const ACCESS_CATALOG: AccessGroup[] = [
       { key: "formulas", label: "Feed Formulation", description: "Build and cost feed formulas", grants: ["formulas.read"], writes: ["formulas.write"] },
       { key: "health", label: "Health, Medication & Vaccination", description: "Treatments, vaccines and health records", grants: ["health.read"], writes: ["health.write", "health.delete"] },
       { key: "mortality", label: "Mortality Log", description: "Bird losses and causes", grants: ["mortality.read"], writes: ["mortality.write", "mortality.delete"] },
+      { key: "flockage", label: "Flock Age & Start Date", description: "Set or change a flock's bird age and placement date", grants: ["rooms.age"] },
       { key: "rooms", label: "Bird & Batch Management", description: "Rooms, layers and broiler batches", grants: ["rooms.read"], writes: ["rooms.write", "rooms.delete"] },
     ],
   },

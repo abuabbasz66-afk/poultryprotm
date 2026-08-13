@@ -178,6 +178,9 @@ function Dashboard() {
   const canAnalyticsArea = can("reports.read") || can("financials.read");
   const canAIArea = can("ai.view");
   const canAudit = can("audit.read");
+  /** Only the owner, or a manager explicitly granted "rooms.age", may set flock age. */
+  const canManageAge = can("rooms.age");
+  const missingAgeRooms = useMemo(() => roomsMissingAge(rooms), [rooms]);
   const search = Route.useSearch();
   const requestedArea: DashboardArea = search.area ?? "records";
   const area: DashboardArea = requestedArea;
