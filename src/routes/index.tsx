@@ -287,9 +287,9 @@ const tiers = [
     ],
     price: "₦1,950",
     priceNote: "per month",
-    cta: "Join Premium Waitlist",
-    ctaHref: "mailto:contact@poultrypro.africa?subject=PoultryPro%20AI%20Intelligence%20Waitlist" as string | null,
-    badge: "Coming soon — AI rollout",
+    cta: "Start Premium Plan",
+    ctaHref: null as string | null,
+    badge: "Available now — AI-powered",
     highlight: false,
   },
 ];
