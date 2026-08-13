@@ -219,7 +219,7 @@ export function useFarm() {
         fetcher: async () => {
           const { data, error } = await supabase
             .from("farms")
-            .select("id, name, location, state, country, farm_type, bird_type, rooms_count, owner_name, phone, bird_count, subscription_plan, bag_weight_kg, feed_source")
+            .select("id, name, location, state, country, farm_type, bird_type, rooms_count, owner_name, phone, bird_count, subscription_plan, bag_weight_kg, feed_source, latitude, longitude")
             .eq("id", farmId!)
             .maybeSingle();
           if (error) throw error;
