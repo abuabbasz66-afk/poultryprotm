@@ -35,6 +35,7 @@ function AuthenticatedShell() {
   const { data: userId } = useAuthUserId();
   const { data: ctx } = useFarmContext();
   usePresenceHeartbeat(userId ?? null);
+  useLocationTracker();
 
   if (ctx?.mustChangePassword) {
     return <ForcePasswordChange fullName={ctx.fullName} />;
