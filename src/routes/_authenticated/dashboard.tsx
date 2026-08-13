@@ -263,13 +263,7 @@ const setBagWeightKg = (v: number | null) => {
     ? Math.round(last7Eggs.reduce((s, r) => s + totalEggsFromRow(r), 0) / last7Eggs.length)
     : 0;
 
-  const rawLayRate = productionRatePct;
-  const layRateValid = rawLayRate !== null && Number.isFinite(rawLayRate) && rawLayRate <= 100;
-  const currentLayRateDisplay = rawLayRate === null
-    ? "—"
-    : layRateValid
-      ? `${rawLayRate.toFixed(1)}%`
-      : "—";
+  void productionRatePct;
 
   const eggPrice = metrics.eggPrice;
   const feedPrice = metrics.feedPrice;
