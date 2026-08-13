@@ -290,7 +290,7 @@ const setBagWeightKg = (v: number | null) => {
     [eggs, rooms, mortality],
   );
   const productionByDate = useMemo(
-    () => new Map(productionSeries.map((p) => [p.date, p])),
+    () => new Map(productionSeries.map((p) => [p.date, p] as const)),
     [productionSeries],
   );
   const todayProduction = productionSeries[0] ?? null;
