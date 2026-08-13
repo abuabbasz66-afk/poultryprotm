@@ -188,12 +188,18 @@ export const getFarmWeather = createServerFn({ method: "GET" })
 
     let json: any;
     try {
-      const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
-      if (!res.ok) throw new Error(`forecast ${res.status}`);
-      json = await res.json();
-    } catch {
-      return { ok: false, error: "Weather service is unavailable right now. Please try again shortly." };
+      json = await fetchJson(`https://api.open-meteo.com/v1/forecast?${params.toString()}`, "forecast");
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : "Connection failed";
+      console.error("[weather] forecast failed", { place: place.label, detail });
+      return {
+        ok: false,
+        stage: "forecast",
+        error: "Weather data could not be loaded.",
+        detail,
+      };
     }
+
 
     const h = json.hourly ?? {};
     const times: string[] = h.time ?? [];
