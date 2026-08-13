@@ -402,16 +402,14 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
   const [r2, setR2] = useState<number | "">(item?.r2 ?? 0);
   const [r3, setR3] = useState<number | "">(item?.r3 ?? 0);
   const [r4, setR4] = useState<number | "">(item?.r4 ?? 0);
-  const [b2, setB2] = useState<number | "">(item?.broken_r2 ?? 0);
-  const [b3, setB3] = useState<number | "">(item?.broken_r3 ?? 0);
-  const [b4, setB4] = useState<number | "">(item?.broken_r4 ?? 0);
-  // Per-room loose (extra) eggs and their breakage.
+  // Combine legacy broken_r and broken_extra_r into one "Broken eggs" field per room.
+  const [b2, setB2] = useState<number | "">((item?.broken_r2 ?? 0) + (item?.broken_extra_r2 ?? 0));
+  const [b3, setB3] = useState<number | "">((item?.broken_r3 ?? 0) + (item?.broken_extra_r3 ?? 0));
+  const [b4, setB4] = useState<number | "">((item?.broken_r4 ?? 0) + (item?.broken_extra_r4 ?? 0));
+  // Per-room loose (extra) eggs.
   const [e2, setE2] = useState<number | "">(item?.extra_r2 ?? 0);
   const [e3, setE3] = useState<number | "">(item?.extra_r3 ?? 0);
   const [e4, setE4] = useState<number | "">(item?.extra_r4 ?? 0);
-  const [be2, setBe2] = useState<number | "">(item?.broken_extra_r2 ?? 0);
-  const [be3, setBe3] = useState<number | "">(item?.broken_extra_r3 ?? 0);
-  const [be4, setBe4] = useState<number | "">(item?.broken_extra_r4 ?? 0);
   const add = useAddEgg();
   const upd = useUpdateEgg();
   const pending = add.isPending || upd.isPending;
@@ -424,11 +422,7 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
     ? Math.max(0, (item?.extra ?? 0) - (n(item?.extra_r2 ?? 0) + n(item?.extra_r3 ?? 0) + n(item?.extra_r4 ?? 0)))
     : 0;
   const legacyBrokenExtra = isEdit
-    ? Math.max(
-        0,
-        (item?.broken_extra ?? 0) -
-          (n(item?.broken_extra_r2 ?? 0) + n(item?.broken_extra_r3 ?? 0) + n(item?.broken_extra_r4 ?? 0)),
-      )
+    ? Math.max(0, (item?.broken_extra ?? 0) - (n(item?.broken_extra_r2 ?? 0) + n(item?.broken_extra_r3 ?? 0) + n(item?.broken_extra_r4 ?? 0)))
     : 0;
 
   // Egg production columns r2/r3/r4 belong to ROOM 2/3/4. Map by room number,
@@ -443,35 +437,27 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
     const loose: Record<"r2" | "r3" | "r4", [number | "", (v: number | "") => void]> = {
       r2: [e2, setE2], r3: [e3, setE3], r4: [e4, setE4],
     };
-    const looseBroke: Record<"r2" | "r3" | "r4", [number | "", (v: number | "") => void]> = {
-      r2: [be2, setBe2], r3: [be3, setBe3], r4: [be4, setBe4],
-    };
     const build = (name: string, k: "r2" | "r3" | "r4") => ({
       name, key: k,
       getter: crate[k][0], setter: crate[k][1],
       broken: broke[k][0], setBroken: broke[k][1],
       extra: loose[k][0], setExtra: loose[k][1],
-      brokenExtra: looseBroke[k][0], setBrokenExtra: looseBroke[k][1],
     });
     const mapped = eggSlots(rooms).map((s) => build(s.room.name, s.key));
     if (mapped.length) return mapped;
     return (["r2", "r3", "r4"] as const).map((k, i) => build(["ROOM 2", "ROOM 3", "ROOM 4"][i], k));
-  }, [rooms, r2, r3, r4, b2, b3, b4, e2, e3, e4, be2, be3, be4]);
+  }, [rooms, r2, r3, r4, b2, b3, b4, e2, e3, e4]);
 
   const perRoom = slots.map((s) => {
     const crates = n(s.getter);
-    const crateBroken = n(s.broken);
-    const looseEggs = n(s.extra);
-    const looseBroken = n(s.brokenExtra);
-    const collected = crates * 30 + looseEggs;
-    const broken = crateBroken + looseBroken;
+    const broken = n(s.broken);
+    const extra = n(s.extra);
+    const collected = crates * 30 + extra;
     return {
       key: s.key,
       name: s.name,
       crates,
-      crateBroken,
-      looseEggs,
-      looseBroken,
+      extra,
       collected,
       broken,
       usable: Math.max(0, collected - broken),
@@ -479,20 +465,20 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
   });
 
   const roomCrates = perRoom.reduce((a, r) => a + r.crates, 0);
-  const rawExtra = perRoom.reduce((a, r) => a + r.looseEggs, 0) + legacyExtra;
+  const rawExtra = perRoom.reduce((a, r) => a + r.extra, 0) + legacyExtra;
   const collected = roomCrates * 30 + rawExtra;
   const broken = perRoom.reduce((a, r) => a + r.broken, 0) + legacyBrokenExtra;
   const good = Math.max(0, collected - broken);
-  const usableLoose = Math.max(0, rawExtra - perRoom.reduce((a, r) => a + r.looseBroken, 0) - legacyBrokenExtra);
-  const convertedCrates = Math.floor(usableLoose / 30);
-  const remainderExtra = usableLoose % 30;
-  const totalCrates = roomCrates + convertedCrates;
+  const totalCrates = Math.floor(good / 30);
+  const remainderExtra = good % 30;
   const breakagePct = collected > 0 ? (broken / collected) * 100 : 0;
   const overBroken = perRoom.some((r) => r.broken > r.collected) || broken > collected;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (pending || overBroken) return;
+    // Store the combined per-room broken value in the legacy broken_r columns and
+    // clear the broken_extra_r columns so analytics always see the total.
     const payload = {
       date,
       label: isoToLabel(date),
@@ -500,9 +486,9 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
       // `extra` / `broken_extra` remain the farm-level totals used by analytics.
       extra: n(e2) + n(e3) + n(e4) + legacyExtra,
       broken_r2: n(b2), broken_r3: n(b3), broken_r4: n(b4),
-      broken_extra: n(be2) + n(be3) + n(be4) + legacyBrokenExtra,
+      broken_extra: legacyBrokenExtra,
       extra_r2: n(e2), extra_r3: n(e3), extra_r4: n(e4),
-      broken_extra_r2: n(be2), broken_extra_r3: n(be3), broken_extra_r4: n(be4),
+      broken_extra_r2: 0, broken_extra_r3: 0, broken_extra_r4: 0,
     };
     const done = {
       onSuccess: () => { toast.success(isEdit ? "Production record updated" : "Production record saved successfully"); onClose(); },
@@ -524,7 +510,7 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
           return (
             <div key={s.key} className="rounded-2xl border border-[color:var(--forest)]/10 bg-background/60 p-3">
               <div className="text-xs font-semibold text-[color:var(--forest)] mb-2">{s.name}</div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <Field label="Crates">
                   <NumberInput
                     value={s.getter}
@@ -532,24 +518,17 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
                     placeholder="0"
                   />
                 </Field>
-                <Field label="Broken eggs">
-                  <NumberInput
-                    value={s.broken}
-                    onChange={(e) => s.setBroken(e.target.value === "" ? "" : Number(e.target.value))}
-                    placeholder="0"
-                  />
-                </Field>
-                <Field label="Extra eggs (loose)">
+                <Field label="Extra eggs">
                   <NumberInput
                     value={s.extra}
                     onChange={(e) => s.setExtra(e.target.value === "" ? "" : Number(e.target.value))}
                     placeholder="0"
                   />
                 </Field>
-                <Field label="Broken (loose)">
+                <Field label="Broken eggs">
                   <NumberInput
-                    value={s.brokenExtra}
-                    onChange={(e) => s.setBrokenExtra(e.target.value === "" ? "" : Number(e.target.value))}
+                    value={s.broken}
+                    onChange={(e) => s.setBroken(e.target.value === "" ? "" : Number(e.target.value))}
                     placeholder="0"
                   />
                 </Field>
@@ -583,7 +562,7 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
               <span className="font-medium text-[color:var(--forest)]">{r.name}</span>
               <span className="text-muted-foreground">
                 Crates: <span className="font-medium text-foreground">{r.crates}</span> · Extra:{" "}
-                <span className="font-medium text-foreground">{r.looseEggs}</span> eggs · Usable:{" "}
+                <span className="font-medium text-foreground">{r.extra}</span> eggs · Usable:{" "}
                 <span className="font-medium text-foreground">{r.usable}</span> eggs
               </span>
             </div>
@@ -592,14 +571,10 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
 
         <div className="mt-3 border-t border-[color:var(--forest)]/15 pt-3">
           <div className="text-[11px] uppercase tracking-wider text-[color:var(--forest)] font-semibold mb-2">Farm Total</div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <div className="font-display text-2xl font-semibold text-[color:var(--forest)]">{totalCrates}</div>
               <div className="text-[11px] text-muted-foreground">total crates</div>
-            </div>
-            <div>
-              <div className="font-display text-2xl font-semibold text-[color:var(--forest)]">+{convertedCrates}</div>
-              <div className="text-[11px] text-muted-foreground">from extras</div>
             </div>
             <div>
               <div className="font-display text-2xl font-semibold text-[color:var(--forest)]">{remainderExtra}</div>
@@ -626,6 +601,7 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
     </form>
   );
 }
+
 
 
 
