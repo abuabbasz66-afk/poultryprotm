@@ -170,8 +170,10 @@ const architecture = [
 
 const recognition = [
   { icon: FileText, title: "Daily Trust", desc: "Featured in Agriculture" },
+  { icon: FileText, title: "Legit News", desc: "Featured in Technology & Agriculture" },
   { icon: Trophy, title: "3MTT", desc: "Fellow of the Week" },
   { icon: Trophy, title: "Airtel Sponsored 3MTT NextGen Knowledge Showcase", desc: "Winner" },
+  { icon: Trophy, title: "NXTGEN National Innovation Challenge", desc: "Finalist — Abuja" },
   { icon: Handshake, title: "Poultry Association of Nigeria", desc: "PoultryPro presented to the Katsina Chapter" },
 ];
 
