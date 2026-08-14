@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  Brain, Sparkles, Send, Loader2, ShieldCheck, AlertTriangle, Activity,
-  TrendingUp, Gauge, Database, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, CheckCircle2,
+  Brain, Sparkles, Send, Loader2, ShieldCheck, AlertTriangle,
+  TrendingUp, Gauge, Database, ChevronDown, ChevronUp, CheckCircle2,
 } from "lucide-react";
 import { RequirePermission } from "@/components/require-permission";
 import { useEggs, useFarm, useFarmId, useFeed, useHealth, useMortality, usePrices, useRooms } from "@/lib/farm-data";
@@ -325,18 +325,6 @@ function InsightCard({ insight, feedback }: { insight: Insight; feedback?: boole
         </ul>
       )}
     </article>
-  );
-}
-
-function FeedbackButton({ icon: Icon, label, onClick }: { icon: typeof ThumbsUp; label: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
-    >
-      <Icon className="h-3 w-3" /> {label}
-    </button>
   );
 }
 
