@@ -28,6 +28,7 @@ import { Route as AuthenticatedRearingRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedPricesRouteImport } from './routes/_authenticated/prices'
 import { Route as AuthenticatedPriceHistoryRouteImport } from './routes/_authenticated/price-history'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedIntelligenceRouteImport } from './routes/_authenticated/intelligence'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
 import { Route as AuthenticatedFinanceRouteImport } from './routes/_authenticated/finance'
 import { Route as AuthenticatedFeedRouteImport } from './routes/_authenticated/feed'
@@ -137,6 +138,12 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedIntelligenceRoute =
+  AuthenticatedIntelligenceRouteImport.update({
+    id: '/intelligence',
+    path: '/intelligence',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
   id: '/import',
   path: '/import',
@@ -216,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/feed': typeof AuthenticatedFeedRoute
   '/finance': typeof AuthenticatedFinanceRoute
   '/import': typeof AuthenticatedImportRoute
+  '/intelligence': typeof AuthenticatedIntelligenceRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/price-history': typeof AuthenticatedPriceHistoryRoute
   '/prices': typeof AuthenticatedPricesRoute
@@ -248,6 +256,7 @@ export interface FileRoutesByTo {
   '/feed': typeof AuthenticatedFeedRoute
   '/finance': typeof AuthenticatedFinanceRoute
   '/import': typeof AuthenticatedImportRoute
+  '/intelligence': typeof AuthenticatedIntelligenceRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/price-history': typeof AuthenticatedPriceHistoryRoute
   '/prices': typeof AuthenticatedPricesRoute
@@ -282,6 +291,7 @@ export interface FileRoutesById {
   '/_authenticated/feed': typeof AuthenticatedFeedRoute
   '/_authenticated/finance': typeof AuthenticatedFinanceRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
+  '/_authenticated/intelligence': typeof AuthenticatedIntelligenceRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/price-history': typeof AuthenticatedPriceHistoryRoute
   '/_authenticated/prices': typeof AuthenticatedPricesRoute
@@ -316,6 +326,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/finance'
     | '/import'
+    | '/intelligence'
     | '/onboarding'
     | '/price-history'
     | '/prices'
@@ -348,6 +359,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/finance'
     | '/import'
+    | '/intelligence'
     | '/onboarding'
     | '/price-history'
     | '/prices'
@@ -381,6 +393,7 @@ export interface FileRouteTypes {
     | '/_authenticated/feed'
     | '/_authenticated/finance'
     | '/_authenticated/import'
+    | '/_authenticated/intelligence'
     | '/_authenticated/onboarding'
     | '/_authenticated/price-history'
     | '/_authenticated/prices'
@@ -549,6 +562,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/intelligence': {
+      id: '/_authenticated/intelligence'
+      path: '/intelligence'
+      fullPath: '/intelligence'
+      preLoaderRoute: typeof AuthenticatedIntelligenceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/import': {
       id: '/_authenticated/import'
       path: '/import'
@@ -644,6 +664,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFeedRoute: typeof AuthenticatedFeedRoute
   AuthenticatedFinanceRoute: typeof AuthenticatedFinanceRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
+  AuthenticatedIntelligenceRoute: typeof AuthenticatedIntelligenceRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPriceHistoryRoute: typeof AuthenticatedPriceHistoryRoute
   AuthenticatedPricesRoute: typeof AuthenticatedPricesRoute
@@ -663,6 +684,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFeedRoute: AuthenticatedFeedRoute,
   AuthenticatedFinanceRoute: AuthenticatedFinanceRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
+  AuthenticatedIntelligenceRoute: AuthenticatedIntelligenceRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPriceHistoryRoute: AuthenticatedPriceHistoryRoute,
   AuthenticatedPricesRoute: AuthenticatedPricesRoute,
