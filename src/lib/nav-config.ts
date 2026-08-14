@@ -226,6 +226,13 @@ export const NAV_SECTIONS: NavSection[] = [
         permission: "reports.read",
       },
       {
+        label: "AI Farm Intelligence",
+        icon: Brain,
+        to: "/intelligence",
+        premium: true,
+        permission: "ai.view",
+      },
+      {
         label: "AI Insights",
         icon: Brain,
         to: "/dashboard",
@@ -233,6 +240,7 @@ export const NAV_SECTIONS: NavSection[] = [
         premium: true,
         permission: "ai.view",
         children: [
+
           {
             label: "Production Insights",
             icon: LineChart,
