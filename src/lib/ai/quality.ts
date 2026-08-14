@@ -98,7 +98,8 @@ export function validateFarmData(input: {
 
     for (const { room, key } of slots) {
       const crates = Number(e[key]) || 0;
-      const broken = Number((e as unknown as Record<string, number | undefined>)[`broken_${key}` as EggColumn]) || 0;
+      const broken = Number((e as unknown as Record<string, number | undefined>)[`broken_${key}`]) || 0;
+
       if (crates < 0 || broken < 0) {
         push({ sourceTable: "egg_production", sourceId: e.id, entryDate: e.date, rule: "negative_value",
           status: "INVALID", detail: `${room.name}: negative eggs or broken eggs on ${e.date}.` });
