@@ -180,6 +180,66 @@ export type Database = {
           },
         ]
       }
+      ai_learning_signals: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          farm_id: string
+          id: string
+          insight_key: string | null
+          intelligence_version: string
+          payload: Json
+          recommendation_id: string | null
+          signal_type: string
+          trusted: boolean
+          weight: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          farm_id: string
+          id?: string
+          insight_key?: string | null
+          intelligence_version?: string
+          payload?: Json
+          recommendation_id?: string | null
+          signal_type: string
+          trusted?: boolean
+          weight?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          farm_id?: string
+          id?: string
+          insight_key?: string | null
+          intelligence_version?: string
+          payload?: Json
+          recommendation_id?: string | null
+          signal_type?: string
+          trusted?: boolean
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_learning_signals_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_learning_signals_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_recommendations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_model_versions: {
         Row: {
           created_at: string
@@ -228,63 +288,93 @@ export type Database = {
       ai_recommendations: {
         Row: {
           acted_on: string | null
+          after_metrics: Json
+          before_metrics: Json
           category: string
           confidence: number
           created_at: string
+          decision_reason: string | null
           detail: Json
+          expires_at: string | null
           farm_id: string
           feedback: string | null
           feedback_note: string | null
           id: string
           insight_key: string
+          intelligence_version: string
+          outcome: string | null
+          outcome_date: string | null
           outcome_note: string | null
           resolved_at: string | null
           resolved_by: string | null
+          reviewed_at: string | null
+          room_label: string | null
           severity: string
           status: string
           summary: string
           title: string
           updated_at: string
+          viewed_at: string | null
         }
         Insert: {
           acted_on?: string | null
+          after_metrics?: Json
+          before_metrics?: Json
           category: string
           confidence?: number
           created_at?: string
+          decision_reason?: string | null
           detail?: Json
+          expires_at?: string | null
           farm_id: string
           feedback?: string | null
           feedback_note?: string | null
           id?: string
           insight_key: string
+          intelligence_version?: string
+          outcome?: string | null
+          outcome_date?: string | null
           outcome_note?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
+          reviewed_at?: string | null
+          room_label?: string | null
           severity?: string
           status?: string
           summary: string
           title: string
           updated_at?: string
+          viewed_at?: string | null
         }
         Update: {
           acted_on?: string | null
+          after_metrics?: Json
+          before_metrics?: Json
           category?: string
           confidence?: number
           created_at?: string
+          decision_reason?: string | null
           detail?: Json
+          expires_at?: string | null
           farm_id?: string
           feedback?: string | null
           feedback_note?: string | null
           id?: string
           insight_key?: string
+          intelligence_version?: string
+          outcome?: string | null
+          outcome_date?: string | null
           outcome_note?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
+          reviewed_at?: string | null
+          room_label?: string | null
           severity?: string
           status?: string
           summary?: string
           title?: string
           updated_at?: string
+          viewed_at?: string | null
         }
         Relationships: [
           {
@@ -2461,6 +2551,11 @@ export type Database = {
         }
       }
       admin_whatsapp_stats: { Args: never; Returns: Json }
+      ai_farm_benchmarks: { Args: { _farm_id: string }; Returns: Json }
+      ai_recommendation_performance: {
+        Args: { _farm_id: string }
+        Returns: Json
+      }
       can: { Args: { _farm: string; _perm: string }; Returns: boolean }
       can_edit_recent: {
         Args: { _created: string; _farm: string; _perm: string }
