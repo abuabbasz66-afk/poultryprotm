@@ -853,12 +853,19 @@ function Index() {
 
 
 
-      <section id="founder" className="overflow-x-clip py-24 bg-[color:var(--forest)] text-primary-foreground">
-        <div className="container-x grid lg:grid-cols-12 gap-12 items-center">
+      <section id="founder" className="py-20 md:py-28 bg-[color:var(--forest)] text-primary-foreground">
+        <div className="container-x grid lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           <div className="lg:col-span-4">
-            <div className="relative">
-              <img src={founderAsset.url} alt="Abubakar Sadiq Abbas" width={900} height={1100} loading="lazy" className="rounded-3xl object-cover object-top w-full h-[520px]" />
-              <div className="absolute -bottom-5 right-2 sm:-right-5 bg-[color:var(--gold)] text-[color:var(--ink)] rounded-2xl px-5 py-3">
+            <div className="relative max-w-sm mx-auto lg:max-w-none">
+              <img
+                src={founderAsset.url}
+                alt="Abubakar Sadiq Abbas"
+                width={900}
+                height={1100}
+                loading="lazy"
+                className="rounded-3xl object-cover object-top w-full h-[480px] md:h-[600px]"
+              />
+              <div className="absolute -bottom-5 right-2 sm:-right-5 bg-[color:var(--gold)] text-[color:var(--ink)] rounded-2xl px-5 py-3 shadow-lg">
                 <div className="text-[10px] uppercase tracking-widest">Founder</div>
                 <div className="font-display text-lg font-semibold">Abubakar Sadiq Abbas</div>
               </div>
@@ -870,28 +877,27 @@ function Index() {
               Abubakar Sadiq Abbas
             </h2>
             <p className="text-primary-foreground/70 uppercase text-xs tracking-widest">
-              AgriTech Innovator · Project Manager · Agribusiness Specialist
+              AGRITECH INNOVATOR • POULTRY FARMING EXPERT • DIGITAL TRANSFORMATION SPECIALIST
             </p>
             <blockquote className="font-display text-2xl md:text-3xl italic leading-snug border-l-2 border-[color:var(--gold)] pl-6">
-              "I built PoultryPro because farmers deserve technology that turns their daily work
-              into smarter decisions and stronger businesses."
+              “I built PoultryPro because farmers deserve technology that turns their daily work into smarter decisions and stronger businesses.”
             </blockquote>
             <p className="text-primary-foreground/80 leading-relaxed max-w-2xl">
-              PoultryPro was born from firsthand experience in poultry production and farm management,
-              combined with a background in computer science and digital transformation.
+              PoultryPro was born from years of hands-on experience in poultry production and farm management, combined with a background in computer science and digital transformation. It was built to solve real problems faced by poultry farmers every day.
             </p>
-            <div className="grid sm:grid-cols-2 gap-4 pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
               {[
                 { icon: Cpu, t: "MICT & B.Sc. Computer Science" },
                 { icon: Wallet, t: "MBA — Business Administration" },
+                { icon: GraduationCap, t: "Doctorate in Business Administration (DBA) — In View" },
                 { icon: Leaf, t: "Agribusiness & Digital Transformation" },
                 { icon: MapPin, t: "Based in Katsina State, Nigeria" },
               ].map((x) => (
-                <div key={x.t} className="flex items-center gap-3 text-sm">
-                  <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/10">
+                <div key={x.t} className="flex items-center gap-3 text-sm min-w-0">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/10">
                     <x.icon className="h-4 w-4" />
                   </span>
-                  {x.t}
+                  <span className="leading-snug">{x.t}</span>
                 </div>
               ))}
             </div>
