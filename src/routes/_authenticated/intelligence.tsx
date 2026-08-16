@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  Brain, Sparkles, Send, Loader2, ShieldCheck, AlertTriangle,
-  TrendingUp, Gauge, Database, ChevronDown, ChevronUp, CheckCircle2,
+  Brain, Sparkles, Send, Loader2, ShieldCheck, AlertTriangle, Activity,
+  TrendingUp, Gauge, Database, ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, CheckCircle2,
 } from "lucide-react";
 import { RequirePermission } from "@/components/require-permission";
 import { useEggs, useFarm, useFarmId, useFeed, useHealth, useMortality, usePrices, useRooms } from "@/lib/farm-data";
@@ -11,8 +11,7 @@ import { useExpenses, useRevenue } from "@/lib/finance-data";
 import { useLayerDaily } from "@/lib/layer-rearing";
 import { runIntelligence, KIND_LABEL, SEVERITY_TONE, type Insight } from "@/lib/ai/engine";
 import { QUALITY_TONE } from "@/lib/ai/quality";
-import { useSyncInsights } from "@/lib/ai/store";
-import { LearningTab, RecommendationActions } from "@/components/ai/recommendation-panel";
+import { useAiRecommendations, useInsightFeedback, useSyncInsights } from "@/lib/ai/store";
 import { askFarmAssistant, type AssistantTurn } from "@/lib/ai-assistant.functions";
 import { naira } from "@/lib/finance-analytics";
 import { cn } from "@/lib/utils";
@@ -35,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/intelligence")({
   ),
 });
 
-type Tab = "overview" | "insights" | "learning" | "forecasts" | "quality" | "assistant";
+type Tab = "overview" | "insights" | "forecasts" | "quality" | "assistant";
 
 function IntelligencePage() {
   const { data: farmId } = useFarmId();
@@ -68,7 +67,7 @@ function IntelligencePage() {
   useEffect(() => {
     if (!farmId || syncedRef.current || !report.ready || report.insights.length === 0) return;
     syncedRef.current = true;
-    sync.mutate({ insights: report.insights, baselines: report.baselines });
+    sync.mutate(report.insights);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [farmId, report.ready, report.insights.length]);
 
@@ -93,7 +92,6 @@ function IntelligencePage() {
         {([
           ["overview", "Overview", Gauge],
           ["insights", "Insights", Sparkles],
-          ["learning", "Recommendations", CheckCircle2],
           ["forecasts", "Forecasts", TrendingUp],
           ["quality", "Data quality", Database],
           ["assistant", "AI Assistant", Brain],
@@ -181,8 +179,6 @@ function IntelligencePage() {
         </div>
       )}
 
-      {tab === "learning" && <LearningTab />}
-
       {tab === "forecasts" && (
         <div className="grid gap-4 md:grid-cols-2">
           {report.forecasts.length === 0 ? (
@@ -263,6 +259,9 @@ function Empty({ text }: { text: string }) {
 function InsightCard({ insight, feedback }: { insight: Insight; feedback?: boolean }) {
   const [open, setOpen] = useState(false);
   const tone = SEVERITY_TONE[insight.severity];
+  const stored = useAiRecommendations().data ?? [];
+  const record = stored.find((r) => r.insight_key === insight.key);
+  const submit = useInsightFeedback();
 
   return (
     <article className={cn("rounded-2xl border bg-card p-5", tone.ring)}>
@@ -308,12 +307,21 @@ function InsightCard({ insight, feedback }: { insight: Insight; feedback?: boole
           Why am I seeing this? {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
         </button>
 
-        {feedback && (
-          <div className="ml-auto w-full sm:w-auto sm:min-w-[320px]">
-            <RecommendationActions insightKey={insight.key} />
+        {feedback && record && (
+          <div className="ml-auto flex items-center gap-2">
+            {record.feedback ? (
+              <span className="inline-flex items-center gap-1 text-xs text-emerald-700">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Feedback saved
+              </span>
+            ) : (
+              <>
+                <FeedbackButton icon={ThumbsUp} label="Helpful" onClick={() => submit.mutate({ id: record.id, feedback: "helpful" })} />
+                <FeedbackButton icon={ThumbsDown} label="Not useful" onClick={() => submit.mutate({ id: record.id, feedback: "not_helpful" })} />
+                <FeedbackButton icon={Activity} label="Acted on it" onClick={() => submit.mutate({ id: record.id, feedback: "acted_on" })} />
+              </>
+            )}
           </div>
         )}
-
       </div>
 
       {open && (
@@ -325,6 +333,18 @@ function InsightCard({ insight, feedback }: { insight: Insight; feedback?: boole
         </ul>
       )}
     </article>
+  );
+}
+
+function FeedbackButton({ icon: Icon, label, onClick }: { icon: typeof ThumbsUp; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+    >
+      <Icon className="h-3 w-3" /> {label}
+    </button>
   );
 }
 
