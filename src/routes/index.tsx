@@ -867,7 +867,7 @@ function Index() {
                 className="rounded-3xl object-cover object-top w-full h-[480px] md:h-[600px]"
               />
               <div className="absolute -bottom-5 right-2 sm:-right-5 bg-[color:var(--gold)] text-[color:var(--ink)] rounded-2xl px-5 py-3 shadow-lg">
-                <div className="text-[10px] uppercase tracking-widest">Founder</div>
+                <div className="text-[10px] uppercase tracking-widest">Founder & CEO</div>
                 <div className="font-display text-lg font-semibold">Abubakar Sadiq Abbas</div>
               </div>
             </div>
