@@ -233,6 +233,12 @@ export function SiteFooter() {
         </div>
       </div>
 
+      <div className="border-t border-primary-foreground/10">
+        <div className="container-x py-4 text-center text-xs text-primary-foreground/55">
+          <span className="text-primary-foreground/50">Developed by</span>{" "}
+          <span className="font-medium text-primary-foreground/80">Greenfield Contracts &amp; Agro Limited</span>
+        </div>
+      </div>
     </footer>
   );
 }
