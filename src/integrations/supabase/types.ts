@@ -95,6 +95,297 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_assistant_messages: {
+        Row: {
+          content: string
+          created_at: string
+          farm_id: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          farm_id: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          farm_id?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_assistant_messages_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_data_quality_flags: {
+        Row: {
+          created_at: string
+          detail: string | null
+          entry_date: string | null
+          farm_id: string
+          id: string
+          resolved: boolean
+          rule: string
+          source_id: string | null
+          source_table: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          entry_date?: string | null
+          farm_id: string
+          id?: string
+          resolved?: boolean
+          rule: string
+          source_id?: string | null
+          source_table: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          entry_date?: string | null
+          farm_id?: string
+          id?: string
+          resolved?: boolean
+          rule?: string
+          source_id?: string | null
+          source_table?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_data_quality_flags_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_learning_signals: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          farm_id: string
+          id: string
+          insight_key: string | null
+          intelligence_version: string
+          payload: Json
+          recommendation_id: string | null
+          signal_type: string
+          trusted: boolean
+          weight: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          farm_id: string
+          id?: string
+          insight_key?: string | null
+          intelligence_version?: string
+          payload?: Json
+          recommendation_id?: string | null
+          signal_type: string
+          trusted?: boolean
+          weight?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          farm_id?: string
+          id?: string
+          insight_key?: string | null
+          intelligence_version?: string
+          payload?: Json
+          recommendation_id?: string | null
+          signal_type?: string
+          trusted?: boolean
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_learning_signals_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_learning_signals_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_recommendations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_model_versions: {
+        Row: {
+          created_at: string
+          data_period_end: string | null
+          data_period_start: string | null
+          farms_used: number
+          id: string
+          metrics: Json
+          notes: string | null
+          records_used: number
+          status: string
+          trained_at: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          data_period_end?: string | null
+          data_period_start?: string | null
+          farms_used?: number
+          id?: string
+          metrics?: Json
+          notes?: string | null
+          records_used?: number
+          status?: string
+          trained_at?: string
+          updated_at?: string
+          version: string
+        }
+        Update: {
+          created_at?: string
+          data_period_end?: string | null
+          data_period_start?: string | null
+          farms_used?: number
+          id?: string
+          metrics?: Json
+          notes?: string | null
+          records_used?: number
+          status?: string
+          trained_at?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      ai_recommendations: {
+        Row: {
+          acted_on: string | null
+          after_metrics: Json
+          before_metrics: Json
+          category: string
+          confidence: number
+          created_at: string
+          decision_reason: string | null
+          detail: Json
+          expires_at: string | null
+          farm_id: string
+          feedback: string | null
+          feedback_note: string | null
+          id: string
+          insight_key: string
+          intelligence_version: string
+          outcome: string | null
+          outcome_date: string | null
+          outcome_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          reviewed_at: string | null
+          room_label: string | null
+          severity: string
+          status: string
+          summary: string
+          title: string
+          updated_at: string
+          viewed_at: string | null
+        }
+        Insert: {
+          acted_on?: string | null
+          after_metrics?: Json
+          before_metrics?: Json
+          category: string
+          confidence?: number
+          created_at?: string
+          decision_reason?: string | null
+          detail?: Json
+          expires_at?: string | null
+          farm_id: string
+          feedback?: string | null
+          feedback_note?: string | null
+          id?: string
+          insight_key: string
+          intelligence_version?: string
+          outcome?: string | null
+          outcome_date?: string | null
+          outcome_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          reviewed_at?: string | null
+          room_label?: string | null
+          severity?: string
+          status?: string
+          summary: string
+          title: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Update: {
+          acted_on?: string | null
+          after_metrics?: Json
+          before_metrics?: Json
+          category?: string
+          confidence?: number
+          created_at?: string
+          decision_reason?: string | null
+          detail?: Json
+          expires_at?: string | null
+          farm_id?: string
+          feedback?: string | null
+          feedback_note?: string | null
+          id?: string
+          insight_key?: string
+          intelligence_version?: string
+          outcome?: string | null
+          outcome_date?: string | null
+          outcome_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          reviewed_at?: string | null
+          room_label?: string | null
+          severity?: string
+          status?: string
+          summary?: string
+          title?: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_recommendations_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       broiler_batches: {
         Row: {
           birds_placed: number
@@ -2260,6 +2551,11 @@ export type Database = {
         }
       }
       admin_whatsapp_stats: { Args: never; Returns: Json }
+      ai_farm_benchmarks: { Args: { _farm_id: string }; Returns: Json }
+      ai_recommendation_performance: {
+        Args: { _farm_id: string }
+        Returns: Json
+      }
       can: { Args: { _farm: string; _perm: string }; Returns: boolean }
       can_edit_recent: {
         Args: { _created: string; _farm: string; _perm: string }
