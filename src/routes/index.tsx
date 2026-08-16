@@ -171,6 +171,7 @@ const architecture = [
 const recognition = [
   { icon: FileText, title: "Daily Trust", desc: "Featured in Agriculture" },
   { icon: FileText, title: "Legit News", desc: "Featured in Technology & Agriculture" },
+  { icon: BookOpen, title: "African Farmers Voice Magazine", desc: "Recognised in print for AgriTech Innovation" },
   { icon: Trophy, title: "3MTT", desc: "Fellow of the Week" },
   { icon: Trophy, title: "Airtel Sponsored 3MTT NextGen Knowledge Showcase", desc: "Winner" },
   { icon: Trophy, title: "NXTGEN National Innovation Challenge", desc: "Finalist — Abuja" },
