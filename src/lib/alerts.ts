@@ -10,6 +10,7 @@ import { detectProductionDecline } from "@/lib/production-decline";
 import { detectMortalityPatterns } from "@/lib/mortality-pattern";
 import { describeEvent } from "@/lib/security-events";
 import { toDateKey } from "@/lib/date-key";
+import { useRoomFeedAnalytics, FEED_THRESHOLDS, fmtGrams } from "@/lib/feed-per-bird";
 
 /**
  * Smart Alerts engine.
@@ -162,6 +163,7 @@ export function useFarmAlerts(): { alerts: FarmAlert[]; loading: boolean } {
   const priceQ = usePriceHistory();
   const canAudit = !permsLoading && can("audit.read");
   const eventsQ = useSecurityEvents(canAudit, 60);
+  const roomFeed = useRoomFeedAnalytics();
 
   const alerts = useMemo<FarmAlert[]>(() => {
     const out: FarmAlert[] = [];
@@ -275,6 +277,46 @@ export function useFarmAlerts(): { alerts: FarmAlert[]; loading: boolean } {
       }
     }
 
+    // ---- 3b. Room-level feed status alerts --------------------------------
+    if (can("feed.read") && roomFeed.latest) {
+      const day = roomFeed.latest;
+      const at = new Date(`${day.date}T12:00:00`).toISOString();
+      for (const r of day.rooms) {
+        if (r.unallocated || r.gramsPerBird === null) continue;
+        if (r.status === "underfed") {
+          out.push({
+            id: `feed-underfed:${day.date}:${r.roomName}`,
+            category: "operations",
+            severity: "warning",
+            title: `${r.roomName} underfed`,
+            message: `${r.roomName} consumed ${fmtGrams(r.gramsPerBird)}/bird, below the ${FEED_THRESHOLDS.underBelow} g/bird threshold (${r.birds?.toLocaleString()} birds).`,
+            at, to: "/feed", search: { tab: "rooms" },
+          });
+        } else if (r.status === "overfed") {
+          out.push({
+            id: `feed-overfed:${day.date}:${r.roomName}`,
+            category: "operations",
+            severity: "warning",
+            title: `${r.roomName} overfed`,
+            message: `${r.roomName} consumed ${fmtGrams(r.gramsPerBird)}/bird, above the ${FEED_THRESHOLDS.overAbove} g/bird threshold (${r.birds?.toLocaleString()} birds).`,
+            at, to: "/feed", search: { tab: "rooms" },
+          });
+        }
+      }
+
+      for (const s of roomFeed.rooms) {
+        if (s.changePct === null || Math.abs(s.changePct) < 30) continue;
+        out.push({
+          id: `feed-shift:${day.date}:${s.roomName}`,
+          category: "operations",
+          severity: "info",
+          title: `${s.roomName} feed intake changed sharply`,
+          message: `${s.roomName} is ${Math.abs(s.changePct).toFixed(0)}% ${s.changePct > 0 ? "above" : "below"} its own 7-day average of ${fmtGrams(s.avg7)}/bird.`,
+          at, to: "/feed", search: { tab: "rooms" },
+        });
+      }
+    }
+
     // ---- 4. Activity alerts -----------------------------------------------
     if (canAudit) {
       for (const e of (eventsQ.data ?? []).slice(0, 25)) {
@@ -296,6 +338,7 @@ export function useFarmAlerts(): { alerts: FarmAlert[]; loading: boolean } {
   }, [
     can, canAudit, isPremium,
     eggsQ.data, roomsQ.data, mortQ.data, feedQ.data, healthQ.data, priceQ.data, eventsQ.data,
+    roomFeed.latest, roomFeed.rooms,
   ]);
 
   const loading = permsLoading || eggsQ.isPending || roomsQ.isPending;

@@ -9,6 +9,7 @@ import { useFeedInventory, useFeedStockAnalytics } from "@/lib/feed-inventory-da
 import { useActiveFormulaCostPerKg } from "@/lib/feed-formulas-data";
 import { totalEggsFromRow } from "@/lib/egg-normalize";
 import { toDateKey } from "@/lib/date-key";
+import { useRoomFeedAnalytics, FEED_THRESHOLDS, fmtGrams } from "@/lib/feed-per-bird";
 
 export type Severity = "critical" | "warning" | "info" | "positive";
 
@@ -61,6 +62,7 @@ export function useFeedIntelligence(leadTimeDays = 3): FeedIntelligence {
   const invQ = useFeedInventory();
   const stock = useFeedStockAnalytics();
   const activeFormulaCost = useActiveFormulaCostPerKg();
+  const roomFeed = useRoomFeedAnalytics();
 
   const bagKg = farm.data?.bag_weight_kg && farm.data.bag_weight_kg > 0 ? farm.data.bag_weight_kg : 25;
 
@@ -259,6 +261,52 @@ export function useFeedIntelligence(leadTimeDays = 3): FeedIntelligence {
       });
     }
 
+    // ---- Room-level feed intelligence (advisory only) ---------------------
+    const latestDay = roomFeed.latest;
+    if (latestDay) {
+      for (const r of latestDay.rooms) {
+        if (r.unallocated || r.gramsPerBird === null) continue;
+        if (r.status === "underfed") {
+          insights.push({
+            id: `room-underfed:${r.roomName}`, severity: "warning",
+            title: `${r.roomName} is underfed`,
+            detail: `${r.roomName} consumed ${fmtGrams(r.gramsPerBird)}/bird, which is below the current ${FEED_THRESHOLDS.underBelow} g/bird threshold. Check feeder access, feed delivery and bird health.`,
+          });
+        } else if (r.status === "overfed") {
+          insights.push({
+            id: `room-overfed:${r.roomName}`, severity: "warning",
+            title: `${r.roomName} is overfed`,
+            detail: `${r.roomName} consumed ${fmtGrams(r.gramsPerBird)}/bird, exceeding the current ${FEED_THRESHOLDS.overAbove} g/bird threshold. Check for spillage, wastage or an over-issued ration.`,
+          });
+        }
+      }
+
+      // Sudden change vs each room's own 7-day baseline
+      for (const s of roomFeed.rooms) {
+        if (s.changePct === null || Math.abs(s.changePct) < 30) continue;
+        insights.push({
+          id: `room-shift:${s.roomName}`, severity: "info",
+          title: `${s.roomName} feed intake ${s.changePct > 0 ? "jumped" : "dropped"}`,
+          detail: `${s.roomName} is ${Math.abs(s.changePct).toFixed(0)}% ${s.changePct > 0 ? "above" : "below"} its own 7-day average of ${fmtGrams(s.avg7)}/bird. Verify the entry before acting.`,
+        });
+      }
+
+      // Room-to-room spread
+      const known = latestDay.rooms.filter((r) => !r.unallocated && r.gramsPerBird !== null);
+      if (known.length >= 2) {
+        const sorted = [...known].sort((a, b) => (b.gramsPerBird as number) - (a.gramsPerBird as number));
+        const hi = sorted[0], lo = sorted[sorted.length - 1];
+        const spread = ((hi.gramsPerBird as number) - (lo.gramsPerBird as number)) / (lo.gramsPerBird as number || 1) * 100;
+        if (Number.isFinite(spread) && spread >= 30) {
+          insights.push({
+            id: "room-spread", severity: "info",
+            title: "Rooms are consuming very differently",
+            detail: `${hi.roomName} is at ${fmtGrams(hi.gramsPerBird)}/bird while ${lo.roomName} is at ${fmtGrams(lo.gramsPerBird)}/bird — a ${spread.toFixed(0)}% gap between comparable rooms.`,
+          });
+        }
+      }
+    }
+
     const order: Record<Severity, number> = { critical: 0, warning: 1, positive: 2, info: 3 };
     insights.sort((a, b) => order[a.severity] - order[b.severity]);
 
@@ -275,6 +323,6 @@ export function useFeedIntelligence(leadTimeDays = 3): FeedIntelligence {
     feedQ.data, feedQ.isLoading, eggQ.data, eggQ.isLoading, roomsQ.data, roomsQ.isLoading,
     pricesQ.data, invQ.data, invQ.isLoading, stock.stockKg, stock.daysRemaining, stock.depletion,
     stock.recommendPurchaseBags, stock.recommendPurchaseKg, stock.isLoading,
-    activeFormulaCost, bagKg, leadTimeDays,
+    activeFormulaCost, bagKg, leadTimeDays, roomFeed.latest, roomFeed.rooms,
   ]);
 }
