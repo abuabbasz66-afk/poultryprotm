@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft, Package, TrendingDown, Sparkles, Plus, Trash2, AlertTriangle, Wheat,
   ClipboardList, Beaker, ArrowDownRight, ArrowUpRight, Info, Check, Star, Pencil, X,
-  ShoppingCart, Factory,
+  ShoppingCart, Factory, LayoutGrid,
 } from "lucide-react";
 import {
   useFeedInventory,
@@ -22,16 +22,17 @@ import {
 } from "@/lib/feed-formulas-data";
 
 import { useFeedIntelligence } from "@/lib/feed-intelligence";
+import { RoomFeedTab } from "@/components/feed/room-feed-tab";
 import { useFarm } from "@/lib/farm-data";
 import { toDateKey } from "@/lib/date-key";
 
 
-type Tab = "overview" | "inventory" | "ledger" | "formulation";
+type Tab = "overview" | "rooms" | "inventory" | "ledger" | "formulation";
 
 export const Route = createFileRoute("/_authenticated/feed")({
   validateSearch: (search: Record<string, unknown>): { tab?: Tab } => {
     const t = search.tab;
-    return t === "inventory" || t === "ledger" || t === "formulation" || t === "overview"
+    return t === "inventory" || t === "ledger" || t === "formulation" || t === "overview" || t === "rooms"
       ? { tab: t }
       : {};
   },
@@ -97,6 +98,7 @@ function FeedManagementPage() {
         <div className="mx-auto max-w-6xl px-2 md:px-4">
           <div className="flex gap-1 overflow-x-auto">
             <TabBtn active={tab === "overview"} onClick={() => setTab("overview")} icon={Sparkles}>Overview</TabBtn>
+            <TabBtn active={tab === "rooms"} onClick={() => setTab("rooms")} icon={LayoutGrid}>Rooms</TabBtn>
             <TabBtn active={tab === "inventory"} onClick={() => setTab("inventory")} icon={Package}>Warehouse</TabBtn>
             <TabBtn active={tab === "ledger"} onClick={() => setTab("ledger")} icon={ClipboardList}>Ledger</TabBtn>
             <TabBtn active={tab === "formulation"} onClick={() => setTab("formulation")} icon={Beaker}>Formulation</TabBtn>
@@ -106,6 +108,7 @@ function FeedManagementPage() {
 
       <main className="mx-auto max-w-6xl px-4 py-6 space-y-6">
         {tab === "overview" && <OverviewTab />}
+        {tab === "rooms" && <RoomFeedTab />}
         {tab === "inventory" && <InventoryTab />}
         {tab === "ledger" && <LedgerTab />}
         {tab === "formulation" && <FormulationTab />}
