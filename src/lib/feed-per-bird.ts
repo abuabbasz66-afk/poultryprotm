@@ -14,12 +14,57 @@
 import { useMemo } from "react";
 import { useFarm, useFeed, useMortality, useRooms, type Feed, type Mortality, type Room } from "@/lib/farm-data";
 import { roomBirdsOn } from "@/lib/production-percent";
-import { toDateKey } from "@/lib/date-key";
+import { toDateKey, toLocalDate } from "@/lib/date-key";
+import { flockAge } from "@/lib/flock-age";
 
 export type FeedStatus = "underfed" | "normal" | "overfed" | "unknown";
 
-/** Farmer-defined thresholds (g/bird/day). Configurable in a future release. */
+/** Default (mature layer) thresholds (g/bird/day). */
 export const FEED_THRESHOLDS = { underBelow: 100, overAbove: 125 } as const;
+
+export type FeedTarget = { underBelow: number; overAbove: number; label: string };
+
+export const DEFAULT_FEED_TARGET: FeedTarget = {
+  underBelow: FEED_THRESHOLDS.underBelow,
+  overAbove: FEED_THRESHOLDS.overAbove,
+  label: "Layer",
+};
+
+/**
+ * Expected daily intake band for a room, based on the bird type and the flock's
+ * age on that date. A fixed 100–125 g band only fits mature layers: broilers at
+ * market age eat ~150–200 g and brooding chicks eat ~10–40 g, so judging them
+ * against the layer band produces permanent false Underfed/Overfed warnings.
+ *
+ * When the age is not recorded we widen the band for that bird type instead of
+ * guessing an age, so a room is only flagged when it is clearly out of range.
+ */
+export function feedTargetFor(
+  room: Pick<Room, "bird_type" | "age_status" | "age_anchor_date"> | null,
+  dateKey?: string,
+): FeedTarget {
+  if (!room) return DEFAULT_FEED_TARGET;
+  const type = (room.bird_type ?? "").toLowerCase();
+  const on = dateKey ? toLocalDate(dateKey) ?? new Date() : new Date();
+  const age = flockAge(room, on);
+  const known = age.status !== "missing";
+
+  if (type.includes("broiler") || type.includes("noiler")) {
+    if (!known) return { underBelow: 20, overAbove: 220, label: "Broiler (age not recorded)" };
+    if (age.days <= 10) return { underBelow: 8, overAbove: 45, label: "Broiler starter" };
+    if (age.days <= 24) return { underBelow: 45, overAbove: 130, label: "Broiler grower" };
+    return { underBelow: 110, overAbove: 220, label: "Broiler finisher" };
+  }
+
+  // Layers / pullets / anything else on a layer programme.
+  if (!known) return { underBelow: 90, overAbove: 140, label: "Layer (age not recorded)" };
+  if (age.weeks < 8) return { underBelow: 8, overAbove: 55, label: "Chick / brooding" };
+  if (age.weeks < 18) return { underBelow: 40, overAbove: 95, label: "Grower / pullet" };
+  if (age.weeks < 22) return { underBelow: 75, overAbove: 120, label: "Point of lay" };
+  return { underBelow: 100, overAbove: 135, label: "Laying" };
+}
+
+export const feedTargetLabel = (t: FeedTarget) => `${t.underBelow}\u2013${t.overAbove} g/bird (${t.label})`;
 
 export const FEED_STATUS_LABELS: Record<FeedStatus, string> = {
   underfed: "Underfed",
@@ -28,12 +73,14 @@ export const FEED_STATUS_LABELS: Record<FeedStatus, string> = {
   unknown: "No data",
 };
 
-export const FEED_STATUS_MESSAGES: Record<FeedStatus, string> = {
-  underfed: `Underfed — feed consumption is below ${FEED_THRESHOLDS.underBelow} g/bird.`,
-  normal: `Normal — feed consumption is between ${FEED_THRESHOLDS.underBelow} and ${FEED_THRESHOLDS.overAbove} g/bird.`,
-  overfed: `Overfed — feed consumption is above ${FEED_THRESHOLDS.overAbove} g/bird.`,
-  unknown: "Bird count unavailable for this room and date, so feed per bird cannot be calculated.",
-};
+export function feedStatusMessage(status: FeedStatus, target: FeedTarget = DEFAULT_FEED_TARGET): string {
+  switch (status) {
+    case "underfed": return `Underfed — below the ${target.underBelow} g/bird expected for a ${target.label.toLowerCase()} flock.`;
+    case "overfed": return `Overfed — above the ${target.overAbove} g/bird expected for a ${target.label.toLowerCase()} flock.`;
+    case "normal": return `Normal — within the ${target.underBelow}–${target.overAbove} g/bird range expected for a ${target.label.toLowerCase()} flock.`;
+    default: return "Bird count unavailable for this room and date, so feed per bird cannot be calculated.";
+  }
+}
 
 export const FEED_STATUS_TONES: Record<FeedStatus, string> = {
   underfed: "bg-amber-500/12 text-amber-700 border-amber-500/30",
@@ -42,10 +89,10 @@ export const FEED_STATUS_TONES: Record<FeedStatus, string> = {
   unknown: "bg-muted text-muted-foreground border-border",
 };
 
-export function feedStatus(gramsPerBird: number | null): FeedStatus {
+export function feedStatus(gramsPerBird: number | null, target: FeedTarget = DEFAULT_FEED_TARGET): FeedStatus {
   if (gramsPerBird === null || !Number.isFinite(gramsPerBird)) return "unknown";
-  if (gramsPerBird < FEED_THRESHOLDS.underBelow) return "underfed";
-  if (gramsPerBird > FEED_THRESHOLDS.overAbove) return "overfed";
+  if (gramsPerBird < target.underBelow) return "underfed";
+  if (gramsPerBird > target.overAbove) return "overfed";
   return "normal";
 }
 
@@ -70,6 +117,8 @@ export type RoomFeedDay = {
   birds: number | null;
   gramsPerBird: number | null;
   status: FeedStatus;
+  /** Expected intake band for this room's bird type and age on that date. */
+  target: FeedTarget;
   /** True when the record could not be matched to a room on this farm. */
   unallocated: boolean;
   entries: Feed[];
@@ -115,6 +164,7 @@ export function computeFeedDays(
       const kg = bags * bagWeightKg;
       const room = byRoomName.get(roomName.toLowerCase()) ?? null;
       const birds = room ? roomBirdsOn(room, date, mortality) : null;
+      const target = feedTargetFor(room, date);
       const gramsPerBird = birds && birds > 0 && kg > 0 ? (kg * 1000) / birds : birds && kg === 0 ? 0 : null;
       roomRows.push({
         roomId: room?.id ?? null,
@@ -123,7 +173,8 @@ export function computeFeedDays(
         bags,
         birds,
         gramsPerBird,
-        status: feedStatus(gramsPerBird),
+        status: feedStatus(gramsPerBird, target),
+        target,
         unallocated: !room,
         entries,
       });
@@ -206,6 +257,7 @@ export type RoomFeedSummary = {
   kg7: number;
   kg30: number;
   status: FeedStatus;
+  target: FeedTarget;
   /** % change of the latest g/bird against the 7-day baseline. */
   changePct: number | null;
   trend: RoomTrendPoint[];
@@ -296,7 +348,8 @@ export function useRoomFeedAnalytics(): RoomFeedAnalytics {
         avg30,
         kg7,
         kg30,
-        status: feedStatus(current ?? avg7),
+        status: feedStatus(current ?? avg7, latestRow?.target ?? DEFAULT_FEED_TARGET),
+        target: latestRow?.target ?? DEFAULT_FEED_TARGET,
         changePct,
         trend: points,
       };
