@@ -9,7 +9,7 @@ import { useFeedInventory, useFeedStockAnalytics } from "@/lib/feed-inventory-da
 import { useActiveFormulaCostPerKg } from "@/lib/feed-formulas-data";
 import { totalEggsFromRow } from "@/lib/egg-normalize";
 import { toDateKey } from "@/lib/date-key";
-import { useRoomFeedAnalytics, FEED_THRESHOLDS, fmtGrams } from "@/lib/feed-per-bird";
+import { useRoomFeedAnalytics, fmtGrams } from "@/lib/feed-per-bird";
 
 export type Severity = "critical" | "warning" | "info" | "positive";
 
@@ -270,13 +270,13 @@ export function useFeedIntelligence(leadTimeDays = 3): FeedIntelligence {
           insights.push({
             id: `room-underfed:${r.roomName}`, severity: "warning",
             title: `${r.roomName} is underfed`,
-            detail: `${r.roomName} consumed ${fmtGrams(r.gramsPerBird)}/bird, which is below the current ${FEED_THRESHOLDS.underBelow} g/bird threshold. Check feeder access, feed delivery and bird health.`,
+            detail: `${r.roomName} consumed ${fmtGrams(r.gramsPerBird)}/bird, which is below the ${r.target.underBelow} g/bird expected for a ${r.target.label.toLowerCase()} flock. Check feeder access, feed delivery and bird health.`,
           });
         } else if (r.status === "overfed") {
           insights.push({
             id: `room-overfed:${r.roomName}`, severity: "warning",
             title: `${r.roomName} is overfed`,
-            detail: `${r.roomName} consumed ${fmtGrams(r.gramsPerBird)}/bird, exceeding the current ${FEED_THRESHOLDS.overAbove} g/bird threshold. Check for spillage, wastage or an over-issued ration.`,
+            detail: `${r.roomName} consumed ${fmtGrams(r.gramsPerBird)}/bird, above the ${r.target.overAbove} g/bird expected for a ${r.target.label.toLowerCase()} flock. Check for spillage, wastage or an over-issued ration.`,
           });
         }
       }

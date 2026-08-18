@@ -10,7 +10,7 @@ import { detectProductionDecline } from "@/lib/production-decline";
 import { detectMortalityPatterns } from "@/lib/mortality-pattern";
 import { describeEvent } from "@/lib/security-events";
 import { toDateKey } from "@/lib/date-key";
-import { useRoomFeedAnalytics, FEED_THRESHOLDS, fmtGrams } from "@/lib/feed-per-bird";
+import { useRoomFeedAnalytics, fmtGrams } from "@/lib/feed-per-bird";
 
 /**
  * Smart Alerts engine.
@@ -289,7 +289,7 @@ export function useFarmAlerts(): { alerts: FarmAlert[]; loading: boolean } {
             category: "operations",
             severity: "warning",
             title: `${r.roomName} underfed`,
-            message: `${r.roomName} consumed ${fmtGrams(r.gramsPerBird)}/bird, below the ${FEED_THRESHOLDS.underBelow} g/bird threshold (${r.birds?.toLocaleString()} birds).`,
+            message: `${r.roomName} consumed ${fmtGrams(r.gramsPerBird)}/bird, below the ${r.target.underBelow} g/bird expected for a ${r.target.label.toLowerCase()} flock (${r.birds?.toLocaleString()} birds).`,
             at, to: "/feed", search: { tab: "rooms" },
           });
         } else if (r.status === "overfed") {
@@ -298,7 +298,7 @@ export function useFarmAlerts(): { alerts: FarmAlert[]; loading: boolean } {
             category: "operations",
             severity: "warning",
             title: `${r.roomName} overfed`,
-            message: `${r.roomName} consumed ${fmtGrams(r.gramsPerBird)}/bird, above the ${FEED_THRESHOLDS.overAbove} g/bird threshold (${r.birds?.toLocaleString()} birds).`,
+            message: `${r.roomName} consumed ${fmtGrams(r.gramsPerBird)}/bird, above the ${r.target.overAbove} g/bird expected for a ${r.target.label.toLowerCase()} flock (${r.birds?.toLocaleString()} birds).`,
             at, to: "/feed", search: { tab: "rooms" },
           });
         }
