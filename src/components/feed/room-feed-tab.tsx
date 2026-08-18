@@ -4,15 +4,16 @@
 import { useMemo, useState } from "react";
 import { AlertTriangle, ChevronDown, Info, TrendingDown, TrendingUp } from "lucide-react";
 import {
-  useRoomFeedAnalytics, FEED_STATUS_LABELS, FEED_STATUS_MESSAGES, FEED_STATUS_TONES,
-  FEED_THRESHOLDS, fmtGrams, fmtKgValue, type FeedDay, type FeedStatus, type RoomFeedSummary,
+  useRoomFeedAnalytics, FEED_STATUS_LABELS, feedStatusMessage, FEED_STATUS_TONES,
+  DEFAULT_FEED_TARGET, fmtGrams, fmtKgValue,
+  type FeedDay, type FeedStatus, type FeedTarget, type RoomFeedSummary,
 } from "@/lib/feed-per-bird";
 import { formatKeyShort } from "@/lib/date-key";
 
-function StatusPill({ status, className = "" }: { status: FeedStatus; className?: string }) {
+function StatusPill({ status, target, className = "" }: { status: FeedStatus; target?: FeedTarget; className?: string }) {
   return (
     <span
-      title={FEED_STATUS_MESSAGES[status]}
+      title={feedStatusMessage(status, target ?? DEFAULT_FEED_TARGET)}
       className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${FEED_STATUS_TONES[status]} ${className}`}
     >
       {FEED_STATUS_LABELS[status]}
@@ -57,7 +58,7 @@ export function RoomFeedTab() {
               <p className="text-xs text-muted-foreground">Latest recorded day · {formatKeyShort(latest.date)}</p>
             </div>
             <span className="rounded-full bg-secondary px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-              {FEED_THRESHOLDS.underBelow}–{FEED_THRESHOLDS.overAbove} g/bird target
+              Targets adapt to bird type &amp; age
             </span>
           </div>
 
@@ -156,7 +157,7 @@ export function RoomFeedTab() {
                     <td className="py-2 pr-3 text-right tabular-nums">{r.birds !== null ? r.birds.toLocaleString() : "N/A"}</td>
                     <td className="py-2 pr-3 text-right tabular-nums">{fmtKgValue(r.kg)}</td>
                     <td className="py-2 pr-3 text-right tabular-nums">{fmtGrams(r.gramsPerBird)}</td>
-                    <td className="py-2"><StatusPill status={r.status} /></td>
+                    <td className="py-2"><StatusPill status={r.status} target={r.target} /></td>
                   </tr>
                 )),
               )}
@@ -218,7 +219,7 @@ function DayCard({ day, open, onToggle, bagKg }: { day: FeedDay; open: boolean; 
             <div key={r.roomName} className="rounded-xl border border-border bg-secondary/40 p-3">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-semibold uppercase">{r.roomName}</p>
-                <StatusPill status={r.status} />
+                <StatusPill status={r.status} target={r.target} />
               </div>
               <p className="text-[11px] text-muted-foreground">{r.birds !== null ? `${r.birds.toLocaleString()} birds` : "Bird count unavailable"}</p>
               <div className="mt-2 flex items-baseline gap-3">
@@ -241,7 +242,7 @@ function RoomCompareCard({ room }: { room: RoomFeedSummary }) {
     <div className="rounded-2xl border border-border bg-secondary/30 p-4">
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-semibold uppercase">{room.roomName}</p>
-        <StatusPill status={room.status} />
+        <StatusPill status={room.status} target={room.target} />
       </div>
       <p className="mt-2 font-display text-2xl font-semibold">{fmtGrams(current)}</p>
       <p className="text-[11px] text-muted-foreground">
