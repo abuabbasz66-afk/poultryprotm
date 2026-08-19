@@ -734,9 +734,16 @@ const setBagWeightKg = (v: number | null) => {
           <PermissionDenied hint="Analytics, financials and AI insights are available to the Farm Owner only." />
         )}
 
+        {/* Plan gating: after the trial ends, paid areas are locked behind an upgrade. */}
+        {(analyticsPlanLocked || aiPlanLocked) && (
+          <PlanLocked
+            tier={analyticsPlanLocked ? "standard" : "premium"}
+            onUpgrade={() => setUpgradeTier(analyticsPlanLocked ? "standard" : "premium")}
+          />
+        )}
 
+        {area === "analytics" && canAnalyticsArea && planAllowsAnalytics && (
 
-        {area === "analytics" && canAnalyticsArea && (
 
           <div className="space-y-6">
             <SectionIntro
