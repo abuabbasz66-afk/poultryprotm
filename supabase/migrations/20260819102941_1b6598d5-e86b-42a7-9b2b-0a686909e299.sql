@@ -1,0 +1,1 @@
+UPDATE public.farms SET subscription_plan = 'basic', plan_updated_at = now() WHERE subscription_plan <> 'basic';
