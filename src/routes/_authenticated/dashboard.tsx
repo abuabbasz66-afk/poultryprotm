@@ -193,6 +193,13 @@ function Dashboard() {
   const search = Route.useSearch();
   const requestedArea: DashboardArea = search.area ?? "records";
   const area: DashboardArea = requestedArea;
+  /** Plan gating (trial counts as premium until it expires). */
+  const planTier = subscription?.effectivePlan ?? "basic";
+  const planReady = !!subscription;
+  const planAllowsAnalytics = planTier === "standard" || planTier === "premium";
+  const planAllowsAI = planTier === "premium";
+  const analyticsPlanLocked = planReady && area === "analytics" && canAnalyticsArea && !planAllowsAnalytics;
+  const aiPlanLocked = planReady && area === "ai" && canAIArea && !planAllowsAI;
   const setArea = (next: DashboardArea) =>
     navigate({ to: "/dashboard", search: { area: next }, hash: "" as never });
 
