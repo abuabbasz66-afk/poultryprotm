@@ -193,6 +193,13 @@ function Dashboard() {
   const search = Route.useSearch();
   const requestedArea: DashboardArea = search.area ?? "records";
   const area: DashboardArea = requestedArea;
+  /** Plan gating (trial counts as premium until it expires). */
+  const planTier = subscription?.effectivePlan ?? "basic";
+  const planReady = !!subscription;
+  const planAllowsAnalytics = planTier === "standard" || planTier === "premium";
+  const planAllowsAI = planTier === "premium";
+  const analyticsPlanLocked = planReady && area === "analytics" && canAnalyticsArea && !planAllowsAnalytics;
+  const aiPlanLocked = planReady && area === "ai" && canAIArea && !planAllowsAI;
   const setArea = (next: DashboardArea) =>
     navigate({ to: "/dashboard", search: { area: next }, hash: "" as never });
 
@@ -727,9 +734,16 @@ const setBagWeightKg = (v: number | null) => {
           <PermissionDenied hint="Analytics, financials and AI insights are available to the Farm Owner only." />
         )}
 
+        {/* Plan gating: after the trial ends, paid areas are locked behind an upgrade. */}
+        {(analyticsPlanLocked || aiPlanLocked) && (
+          <PlanLocked
+            tier={analyticsPlanLocked ? "standard" : "premium"}
+            onUpgrade={() => setUpgradeTier(analyticsPlanLocked ? "standard" : "premium")}
+          />
+        )}
 
+        {area === "analytics" && canAnalyticsArea && planAllowsAnalytics && (
 
-        {area === "analytics" && canAnalyticsArea && (
 
           <div className="space-y-6">
             <SectionIntro
@@ -1634,7 +1648,7 @@ const setBagWeightKg = (v: number | null) => {
           </div>
         )}
 
-        {area === "ai" && canAIArea && (
+        {area === "ai" && canAIArea && planAllowsAI && (
           <div className="space-y-6">
             <SectionIntro
               stage="PREDICT" plan="Premium" title="PoultryPro AI Intelligence" premium
@@ -3010,3 +3024,37 @@ function AbnormalActivityMonitor({ rooms, eggs, feed, mortality, health, bagWeig
   );
 }
 
+
+/** Shown when the user's plan (after trial expiry) no longer includes an area. */
+function PlanLocked({ tier, onUpgrade }: { tier: UpgradeTier; onUpgrade: () => void }) {
+  const isAI = tier === "premium";
+  return (
+    <Card>
+      <div className="flex flex-col items-start gap-4 p-2 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-start gap-3 min-w-0">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
+            {isAI ? <Brain className="h-5 w-5" /> : <LineChartIcon className="h-5 w-5" />}
+          </span>
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[color:var(--forest)]">
+              {isAI ? "03 · Predict — Premium" : "02 · Understand — Standard"}
+            </div>
+            <div className="mt-1 font-semibold text-foreground">
+              {isAI ? "PoultryPro AI Intelligence is locked" : "Farm Analytics is locked"}
+            </div>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Your free trial has ended. Upgrade to {isAI ? "Premium" : "Standard"} to unlock this area again — your farm records stay safe and unchanged.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onUpgrade}
+          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full bg-[color:var(--gold)] px-5 py-2.5 text-sm font-semibold text-[color:var(--ink)] hover:brightness-105 transition"
+        >
+          {isAI ? "Unlock PoultryPro AI" : "Upgrade to Standard"} <ArrowRight className="h-4 w-4" />
+        </button>
+      </div>
+    </Card>
+  );
+}
