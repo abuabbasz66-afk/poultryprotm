@@ -37,6 +37,8 @@ import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as SuperAdminFarmsFarmIdRouteImport } from './routes/super-admin.farms.$farmId'
 import { Route as ApiPublicWhatsappClickRouteImport } from './routes/api/public/whatsapp-click'
+import { Route as ApiPaystackManageRouteImport } from './routes/api/paystack/manage'
+import { Route as ApiPaystackInitializeRouteImport } from './routes/api/paystack/initialize'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -182,6 +184,16 @@ const ApiPublicWhatsappClickRoute = ApiPublicWhatsappClickRouteImport.update({
   path: '/api/public/whatsapp-click',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPaystackManageRoute = ApiPaystackManageRouteImport.update({
+  id: '/api/paystack/manage',
+  path: '/api/paystack/manage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPaystackInitializeRoute = ApiPaystackInitializeRouteImport.update({
+  id: '/api/paystack/initialize',
+  path: '/api/paystack/initialize',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -225,6 +237,8 @@ export interface FileRoutesByFullPath {
   '/staff': typeof AuthenticatedStaffRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/weather': typeof AuthenticatedWeatherRoute
+  '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
+  '/api/paystack/manage': typeof ApiPaystackManageRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
   '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -257,6 +271,8 @@ export interface FileRoutesByTo {
   '/staff': typeof AuthenticatedStaffRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/weather': typeof AuthenticatedWeatherRoute
+  '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
+  '/api/paystack/manage': typeof ApiPaystackManageRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
   '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -291,6 +307,8 @@ export interface FileRoutesById {
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/_authenticated/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/_authenticated/weather': typeof AuthenticatedWeatherRoute
+  '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
+  '/api/paystack/manage': typeof ApiPaystackManageRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
   '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -325,6 +343,8 @@ export interface FileRouteTypes {
     | '/staff'
     | '/subscriptions'
     | '/weather'
+    | '/api/paystack/initialize'
+    | '/api/paystack/manage'
     | '/api/public/whatsapp-click'
     | '/super-admin/farms/$farmId'
     | '/lovable/email/auth/preview'
@@ -357,6 +377,8 @@ export interface FileRouteTypes {
     | '/staff'
     | '/subscriptions'
     | '/weather'
+    | '/api/paystack/initialize'
+    | '/api/paystack/manage'
     | '/api/public/whatsapp-click'
     | '/super-admin/farms/$farmId'
     | '/lovable/email/auth/preview'
@@ -390,6 +412,8 @@ export interface FileRouteTypes {
     | '/_authenticated/staff'
     | '/_authenticated/subscriptions'
     | '/_authenticated/weather'
+    | '/api/paystack/initialize'
+    | '/api/paystack/manage'
     | '/api/public/whatsapp-click'
     | '/super-admin/farms/$farmId'
     | '/lovable/email/auth/preview'
@@ -408,6 +432,8 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
   TermsRoute: typeof TermsRoute
+  ApiPaystackInitializeRoute: typeof ApiPaystackInitializeRoute
+  ApiPaystackManageRoute: typeof ApiPaystackManageRoute
   ApiPublicWhatsappClickRoute: typeof ApiPublicWhatsappClickRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -612,6 +638,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWhatsappClickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/paystack/manage': {
+      id: '/api/paystack/manage'
+      path: '/api/paystack/manage'
+      fullPath: '/api/paystack/manage'
+      preLoaderRoute: typeof ApiPaystackManageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/paystack/initialize': {
+      id: '/api/paystack/initialize'
+      path: '/api/paystack/initialize'
+      fullPath: '/api/paystack/initialize'
+      preLoaderRoute: typeof ApiPaystackInitializeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -700,6 +740,8 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuperAdminRoute: SuperAdminRouteWithChildren,
   TermsRoute: TermsRoute,
+  ApiPaystackInitializeRoute: ApiPaystackInitializeRoute,
+  ApiPaystackManageRoute: ApiPaystackManageRoute,
   ApiPublicWhatsappClickRoute: ApiPublicWhatsappClickRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
