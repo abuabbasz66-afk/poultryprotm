@@ -941,6 +941,68 @@ export type Database = {
           },
         ]
       }
+      farm_payments: {
+        Row: {
+          amount_ngn: number
+          created_at: string
+          currency: string
+          farm_id: string
+          gateway_response: string | null
+          id: string
+          metadata: Json
+          paid_at: string | null
+          paystack_customer_code: string | null
+          paystack_plan_code: string | null
+          paystack_subscription_code: string | null
+          plan: string
+          reference: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_ngn?: number
+          created_at?: string
+          currency?: string
+          farm_id: string
+          gateway_response?: string | null
+          id?: string
+          metadata?: Json
+          paid_at?: string | null
+          paystack_customer_code?: string | null
+          paystack_plan_code?: string | null
+          paystack_subscription_code?: string | null
+          plan: string
+          reference: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_ngn?: number
+          created_at?: string
+          currency?: string
+          farm_id?: string
+          gateway_response?: string | null
+          id?: string
+          metadata?: Json
+          paid_at?: string | null
+          paystack_customer_code?: string | null
+          paystack_plan_code?: string | null
+          paystack_subscription_code?: string | null
+          plan?: string
+          reference?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_payments_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farm_revenue: {
         Row: {
           amount: number
@@ -1052,12 +1114,19 @@ export type Database = {
           name: string
           owner_id: string
           owner_name: string | null
+          paystack_customer_code: string | null
+          paystack_email_token: string | null
+          paystack_plan_code: string | null
+          paystack_subscription_code: string | null
+          paystack_subscription_status: string | null
           phone: string | null
           plan_updated_at: string
           rooms_count: number | null
           state: string | null
           status: string
+          subscription_next_payment_at: string | null
           subscription_plan: string
+          subscription_started_at: string | null
           trial_ends_at: string
           trial_started_at: string
         }
@@ -1079,12 +1148,19 @@ export type Database = {
           name?: string
           owner_id: string
           owner_name?: string | null
+          paystack_customer_code?: string | null
+          paystack_email_token?: string | null
+          paystack_plan_code?: string | null
+          paystack_subscription_code?: string | null
+          paystack_subscription_status?: string | null
           phone?: string | null
           plan_updated_at?: string
           rooms_count?: number | null
           state?: string | null
           status?: string
+          subscription_next_payment_at?: string | null
           subscription_plan?: string
+          subscription_started_at?: string | null
           trial_ends_at?: string
           trial_started_at?: string
         }
@@ -1106,12 +1182,19 @@ export type Database = {
           name?: string
           owner_id?: string
           owner_name?: string | null
+          paystack_customer_code?: string | null
+          paystack_email_token?: string | null
+          paystack_plan_code?: string | null
+          paystack_subscription_code?: string | null
+          paystack_subscription_status?: string | null
           phone?: string | null
           plan_updated_at?: string
           rooms_count?: number | null
           state?: string | null
           status?: string
+          subscription_next_payment_at?: string | null
           subscription_plan?: string
+          subscription_started_at?: string | null
           trial_ends_at?: string
           trial_started_at?: string
         }
