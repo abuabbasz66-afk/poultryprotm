@@ -294,16 +294,62 @@ function SubscriptionsPage() {
           </div>
         </section>
 
-        {/* Payment history placeholder */}
+        {/* Payment history */}
         <section className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-[var(--shadow-soft)]">
           <h2 className="font-display text-lg font-bold text-foreground">Payment history</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            You haven't made any payments yet. Receipts and invoices will appear here once paid subscriptions go live.
+            Every Paystack transaction for this farm, verified server-side.
           </p>
-          <div className="mt-4 rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-            No payments recorded.
-          </div>
+          {payments.isPending ? (
+            <div className="mt-4 grid place-items-center p-6">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (payments.data?.length ?? 0) === 0 ? (
+            <div className="mt-4 rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              No payments recorded.
+            </div>
+          ) : (
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                    <th className="py-2 pr-3 font-semibold">Date</th>
+                    <th className="py-2 pr-3 font-semibold">Plan</th>
+                    <th className="py-2 pr-3 font-semibold">Amount</th>
+                    <th className="py-2 pr-3 font-semibold">Status</th>
+                    <th className="py-2 pr-3 font-semibold">Reference</th>
+                    <th className="py-2 font-semibold">Paid</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.data!.map((p) => (
+                    <tr key={p.id} className="border-t border-border">
+                      <td className="py-2 pr-3 whitespace-nowrap">{fmtDay(p.created_at)}</td>
+                      <td className="py-2 pr-3 capitalize">{p.plan}</td>
+                      <td className="py-2 pr-3 whitespace-nowrap">{formatNaira(Number(p.amount_ngn))}</td>
+                      <td className="py-2 pr-3">
+                        <span
+                          className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${
+                            p.status === "success"
+                              ? "bg-emerald-500/10 text-emerald-600"
+                              : p.status === "pending"
+                                ? "bg-amber-500/10 text-amber-600"
+                                : "bg-destructive/10 text-destructive"
+                          }`}
+                        >
+                          {p.status.replace("_", " ")}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-3 font-mono text-xs text-muted-foreground break-all">{p.reference}</td>
+                      <td className="py-2 whitespace-nowrap">{fmtDay(p.paid_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
+
 
         <p className="text-center text-xs text-muted-foreground">
           Paid subscriptions will be processed securely via Paystack. Your data is never deleted when a plan
