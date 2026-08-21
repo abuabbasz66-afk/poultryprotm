@@ -366,7 +366,7 @@ function InfoTile({ icon, label, value }: { icon: React.ReactNode; label: string
 }
 
 function PlanCard({
-  planId, name, tagline, priceLabel, features, featured, current, onSelect,
+  planId, name, tagline, priceLabel, features, featured, current, busy, onSelect,
 }: {
   planId: PlanTier;
   name: string;
@@ -375,8 +375,10 @@ function PlanCard({
   features: string[];
   featured?: boolean;
   current?: boolean;
+  busy?: boolean;
   onSelect: () => void;
 }) {
+
   return (
     <div
       className={`relative rounded-2xl border p-5 flex flex-col ${
