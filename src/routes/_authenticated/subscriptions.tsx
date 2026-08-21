@@ -210,14 +210,26 @@ function SubscriptionsPage() {
                 {isTrial ? "Trial ends" : "Renews"}
               </div>
               <div className="mt-1 font-semibold text-foreground">
-                {fmtDay(data.trialEndsAt)}
+                {fmtDay(isTrial ? data.trialEndsAt : (data.nextPaymentAt ?? data.trialEndsAt))}
               </div>
               {isTrial && (
                 <div className="text-xs text-muted-foreground">
                   {data.daysRemaining} {data.daysRemaining === 1 ? "day" : "days"} remaining
                 </div>
               )}
+              {data.paystackSubscriptionCode && (
+                <button
+                  type="button"
+                  onClick={openManage}
+                  disabled={managing}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-secondary disabled:opacity-60"
+                >
+                  {managing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="h-3.5 w-3.5" />}
+                  Manage subscription
+                </button>
+              )}
             </div>
+
           </div>
 
           {/* Progress bar for trial */}
