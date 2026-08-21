@@ -50,25 +50,23 @@ export async function activatePaidPlan(opts: {
   const existing = await findPaymentByReference(opts.reference);
   const alreadySuccess = existing?.status === "success";
 
-  await admin
-    .from("farm_payments")
-    .upsert(
-      {
-        farm_id: opts.farmId,
-        plan: opts.plan,
-        amount_ngn: opts.amountKobo / 100,
-        currency: "NGN",
-        reference: opts.reference,
-        status: "success",
-        paystack_customer_code: opts.customerCode ?? null,
-        paystack_subscription_code: opts.subscriptionCode ?? null,
-        paystack_plan_code: opts.planCode ?? null,
-        gateway_response: opts.gatewayResponse ?? null,
-        paid_at: opts.paidAt ?? new Date().toISOString(),
-        metadata: opts.metadata ?? {},
-      },
-      { onConflict: "reference" },
-    );
+  await admin.from("farm_payments").upsert(
+    {
+      farm_id: opts.farmId,
+      plan: opts.plan,
+      amount_ngn: opts.amountKobo / 100,
+      currency: "NGN",
+      reference: opts.reference,
+      status: "success",
+      paystack_customer_code: opts.customerCode ?? null,
+      paystack_subscription_code: opts.subscriptionCode ?? null,
+      paystack_plan_code: opts.planCode ?? null,
+      gateway_response: opts.gatewayResponse ?? null,
+      paid_at: opts.paidAt ?? new Date().toISOString(),
+      metadata: opts.metadata ?? {},
+    },
+    { onConflict: "reference" },
+  );
 
   if (alreadySuccess) return { idempotent: true };
 

@@ -1,10 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  appUrl,
-  paystackFetch,
-  planFromCode,
-  type PaidPlan,
-} from "@/lib/paystack.server";
+import { appUrl, paystackFetch, planFromCode, type PaidPlan } from "@/lib/paystack.server";
 import {
   activatePaidPlan,
   amountMatches,
@@ -45,7 +40,11 @@ export const Route = createFileRoute("/api/public/paystack/callback")({
           (!tx?.metadata?.farm_id || tx.metadata.farm_id === pending.farm_id);
 
         if (!valid) {
-          await markPaymentStatus(reference, "failed", tx?.gateway_response ?? "verification_failed");
+          await markPaymentStatus(
+            reference,
+            "failed",
+            tx?.gateway_response ?? "verification_failed",
+          );
           return fail();
         }
 
