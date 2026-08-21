@@ -1,13 +1,17 @@
 import { RequirePermission } from "@/components/require-permission";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, CheckCircle2, Sparkles, CreditCard, Calendar,
-  RefreshCw, Loader2, ShieldCheck,
+  RefreshCw, Loader2, ShieldCheck, ExternalLink, AlertTriangle,
 } from "lucide-react";
 import { format as fmtDate, parseISO, isValid as isValidDate } from "date-fns";
 import { useSubscription, PLAN_PRICE_NGN, formatNaira, type PlanTier } from "@/lib/subscription";
 import { PRICING_PLANS } from "@/lib/pricing-plans";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_authenticated/subscriptions")({
   head: () => ({
