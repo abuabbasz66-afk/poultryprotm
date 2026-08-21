@@ -50,7 +50,12 @@ export function useSubscription() {
         daysRemaining: Number(j.days_remaining ?? 0),
         autoRenew: Boolean(j.auto_renew),
         status: (j.status as string) ?? null,
+        paystackSubscriptionCode: (j.paystack_subscription_code as string) ?? null,
+        paystackSubscriptionStatus: (j.paystack_subscription_status as string) ?? null,
+        subscriptionStartedAt: (j.subscription_started_at as string) ?? null,
+        nextPaymentAt: (j.subscription_next_payment_at as string) ?? null,
       };
+
     },
     staleTime: 60_000,
   });
