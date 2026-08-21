@@ -52,7 +52,10 @@ async function handleEvent(payload: any) {
   const d = payload?.data ?? {};
   const customerCode: string | null = d?.customer?.customer_code ?? null;
   const subscriptionCode: string | null =
-    d?.subscription_code ?? d?.subscription?.subscription_code ?? d?.plan_object?.subscription_code ?? null;
+    d?.subscription_code ??
+    d?.subscription?.subscription_code ??
+    d?.plan_object?.subscription_code ??
+    null;
 
   switch (event) {
     case "charge.success": {
@@ -60,7 +63,7 @@ async function handleEvent(payload: any) {
       const pending = reference ? await findPaymentByReference(reference) : null;
 
       let farmId = pending?.farm_id ?? (d?.metadata?.farm_id as string | undefined) ?? null;
-      let plan =
+      const plan =
         (pending?.plan as PaidPlan | undefined) ??
         (d?.metadata?.poultrypro_plan as PaidPlan | undefined) ??
         planFromCode(d?.plan_object?.plan_code ?? d?.plan) ??

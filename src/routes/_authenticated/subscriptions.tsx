@@ -1,15 +1,24 @@
 import { RequirePermission } from "@/components/require-permission";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, CheckCircle2, Sparkles, CreditCard, Calendar,
-  RefreshCw, Loader2, ShieldCheck,
+  RefreshCw, Loader2, ShieldCheck, ExternalLink, AlertTriangle,
 } from "lucide-react";
 import { format as fmtDate, parseISO, isValid as isValidDate } from "date-fns";
 import { useSubscription, PLAN_PRICE_NGN, formatNaira, type PlanTier } from "@/lib/subscription";
 import { PRICING_PLANS } from "@/lib/pricing-plans";
 import { toast } from "sonner";
 
+
+type BillingSearch = { payment?: "success" | "failed" };
+
 export const Route = createFileRoute("/_authenticated/subscriptions")({
+  validateSearch: (search: Record<string, unknown>): BillingSearch => ({
+    payment: search.payment === "success" || search.payment === "failed" ? search.payment : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Subscriptions & Billing — PoultryPro" },
@@ -30,8 +39,108 @@ function fmtDay(iso: string | null | undefined): string {
   return isValidDate(d) ? fmtDate(d, "d MMM yyyy") : "—";
 }
 
+type PaymentRow = {
+  id: string;
+  plan: string;
+  amount_ngn: number;
+  currency: string;
+  reference: string;
+  status: string;
+  paid_at: string | null;
+  created_at: string;
+};
+
+function usePayments(farmId: string | null) {
+  return useQuery({
+    queryKey: ["farm-payments", farmId ?? "none"],
+    enabled: !!farmId,
+    queryFn: async (): Promise<PaymentRow[]> => {
+      const { data, error } = await supabase
+        .from("farm_payments")
+        .select("id, plan, amount_ngn, currency, reference, status, paid_at, created_at")
+        .eq("farm_id", farmId!)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []) as PaymentRow[];
+    },
+  });
+}
+
+async function authHeaders(): Promise<HeadersInit> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token
+    ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+    : { "Content-Type": "application/json" };
+}
+
 function SubscriptionsPage() {
-  const { data, isPending } = useSubscription();
+  const { data, isPending, refetch } = useSubscription();
+  const search = useSearch({ from: "/_authenticated/subscriptions" });
+  const qc = useQueryClient();
+  const [busyPlan, setBusyPlan] = useState<PlanTier | null>(null);
+  const [managing, setManaging] = useState(false);
+  const payments = usePayments(data?.farmId ?? null);
+
+  useEffect(() => {
+    if (!search.payment) return;
+    if (search.payment === "success") {
+      toast.success("Payment verified — your plan is now active.");
+    } else {
+      toast.error("Payment was not completed. You have not been charged for an unsuccessful attempt.");
+    }
+    refetch();
+    qc.invalidateQueries({ queryKey: ["farm-payments"] });
+    window.history.replaceState({}, "", "/subscriptions");
+  }, [search.payment, refetch, qc]);
+
+  async function startCheckout(plan: PlanTier) {
+    if (plan === "basic") {
+      toast("You'll move to Basic when your current paid period ends.");
+      return;
+    }
+    setBusyPlan(plan);
+    try {
+      const res = await fetch("/api/paystack/initialize", {
+        method: "POST",
+        headers: await authHeaders(),
+        body: JSON.stringify({ plan }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body?.authorization_url) {
+        toast.error(
+          body?.error === "forbidden"
+            ? "Only the farm owner can manage billing."
+            : "Could not start checkout. Please try again.",
+        );
+        setBusyPlan(null);
+        return;
+      }
+      toast.success("Redirecting to secure Paystack checkout…");
+      window.location.href = body.authorization_url as string;
+    } catch {
+      toast.error("Network error starting checkout.");
+      setBusyPlan(null);
+    }
+  }
+
+  async function openManage() {
+    setManaging(true);
+    try {
+      const res = await fetch("/api/paystack/manage", { headers: await authHeaders() });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body?.link) {
+        toast.error("No active Paystack subscription to manage yet.");
+        return;
+      }
+      window.open(body.link as string, "_blank", "noopener");
+    } catch {
+      toast.error("Could not open the Paystack management page.");
+    } finally {
+      setManaging(false);
+    }
+  }
 
   if (isPending || !data) {
     return (
@@ -43,7 +152,9 @@ function SubscriptionsPage() {
 
   const currentPlan = data.plan;
   const effective = data.effectivePlan;
-  const isTrial = data.isTrial;
+  const isTrial = data.isTrial && currentPlan === "basic";
+  const paymentFailed = data.paystackSubscriptionStatus === "payment_failed";
+
 
   return (
     <div className="min-h-screen bg-background pb-16">
@@ -73,7 +184,20 @@ function SubscriptionsPage() {
       </header>
 
       <main className="container-x -mt-4 md:-mt-6 space-y-6">
+        {paymentFailed && (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <div className="font-semibold text-foreground">Your last renewal payment failed</div>
+              <p className="text-muted-foreground">
+                Update your card or authorization via “Manage subscription” to keep your paid plan active. Your
+                farm data is safe.
+              </p>
+            </div>
+          </div>
+        )}
         {/* Current plan card */}
+
         <section className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-[var(--shadow-soft)]">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div className="min-w-0">
@@ -99,14 +223,26 @@ function SubscriptionsPage() {
                 {isTrial ? "Trial ends" : "Renews"}
               </div>
               <div className="mt-1 font-semibold text-foreground">
-                {fmtDay(data.trialEndsAt)}
+                {fmtDay(isTrial ? data.trialEndsAt : (data.nextPaymentAt ?? data.trialEndsAt))}
               </div>
               {isTrial && (
                 <div className="text-xs text-muted-foreground">
                   {data.daysRemaining} {data.daysRemaining === 1 ? "day" : "days"} remaining
                 </div>
               )}
+              {data.paystackSubscriptionCode && (
+                <button
+                  type="button"
+                  onClick={openManage}
+                  disabled={managing}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-secondary disabled:opacity-60"
+                >
+                  {managing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="h-3.5 w-3.5" />}
+                  Manage subscription
+                </button>
+              )}
             </div>
+
           </div>
 
           {/* Progress bar for trial */}
@@ -157,30 +293,70 @@ function SubscriptionsPage() {
                 features={p.features}
                 featured={p.featured}
                 current={currentPlan === p.id && !isTrial}
-                onSelect={() => {
-                  if (p.id === "basic") {
-                    toast("You'll move to Basic when your current plan ends.");
-                    return;
-                  }
-                  toast(
-                    `Paystack checkout for ${p.name} (${formatNaira(PLAN_PRICE_NGN[p.id])}/mo) is coming soon.`,
-                  );
-                }}
+                busy={busyPlan === p.id}
+                onSelect={() => startCheckout(p.id)}
               />
             ))}
+
           </div>
         </section>
 
-        {/* Payment history placeholder */}
+        {/* Payment history */}
         <section className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-[var(--shadow-soft)]">
           <h2 className="font-display text-lg font-bold text-foreground">Payment history</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            You haven't made any payments yet. Receipts and invoices will appear here once paid subscriptions go live.
+            Every Paystack transaction for this farm, verified server-side.
           </p>
-          <div className="mt-4 rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-            No payments recorded.
-          </div>
+          {payments.isPending ? (
+            <div className="mt-4 grid place-items-center p-6">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (payments.data?.length ?? 0) === 0 ? (
+            <div className="mt-4 rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              No payments recorded.
+            </div>
+          ) : (
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                    <th className="py-2 pr-3 font-semibold">Date</th>
+                    <th className="py-2 pr-3 font-semibold">Plan</th>
+                    <th className="py-2 pr-3 font-semibold">Amount</th>
+                    <th className="py-2 pr-3 font-semibold">Status</th>
+                    <th className="py-2 pr-3 font-semibold">Reference</th>
+                    <th className="py-2 font-semibold">Paid</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.data!.map((p) => (
+                    <tr key={p.id} className="border-t border-border">
+                      <td className="py-2 pr-3 whitespace-nowrap">{fmtDay(p.created_at)}</td>
+                      <td className="py-2 pr-3 capitalize">{p.plan}</td>
+                      <td className="py-2 pr-3 whitespace-nowrap">{formatNaira(Number(p.amount_ngn))}</td>
+                      <td className="py-2 pr-3">
+                        <span
+                          className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${
+                            p.status === "success"
+                              ? "bg-emerald-500/10 text-emerald-600"
+                              : p.status === "pending"
+                                ? "bg-amber-500/10 text-amber-600"
+                                : "bg-destructive/10 text-destructive"
+                          }`}
+                        >
+                          {p.status.replace("_", " ")}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-3 font-mono text-xs text-muted-foreground break-all">{p.reference}</td>
+                      <td className="py-2 whitespace-nowrap">{fmtDay(p.paid_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
+
 
         <p className="text-center text-xs text-muted-foreground">
           Paid subscriptions will be processed securely via Paystack. Your data is never deleted when a plan
@@ -203,7 +379,7 @@ function InfoTile({ icon, label, value }: { icon: React.ReactNode; label: string
 }
 
 function PlanCard({
-  planId, name, tagline, priceLabel, features, featured, current, onSelect,
+  planId, name, tagline, priceLabel, features, featured, current, busy, onSelect,
 }: {
   planId: PlanTier;
   name: string;
@@ -212,8 +388,10 @@ function PlanCard({
   features: string[];
   featured?: boolean;
   current?: boolean;
+  busy?: boolean;
   onSelect: () => void;
 }) {
+
   return (
     <div
       className={`relative rounded-2xl border p-5 flex flex-col ${
@@ -250,7 +428,7 @@ function PlanCard({
       <button
         type="button"
         onClick={onSelect}
-        disabled={current}
+        disabled={current || busy}
         className={`mt-5 inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed ${
           featured
             ? "bg-[color:var(--gold)] text-[color:var(--ink)] hover:brightness-105"
@@ -259,8 +437,16 @@ function PlanCard({
               : "bg-[color:var(--forest)] text-white hover:brightness-110"
         }`}
       >
-        {current ? "Current plan" : planId === "basic" ? "Downgrade to Basic" : `Upgrade to ${name.replace(" Plan", "")}`}
+        {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+        {busy
+          ? "Starting checkout…"
+          : current
+            ? "Current plan"
+            : planId === "basic"
+              ? "Downgrade to Basic"
+              : `Upgrade to ${name.replace(" Plan", "")}`}
       </button>
+
     </div>
   );
 }

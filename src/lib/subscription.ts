@@ -15,7 +15,12 @@ export type SubscriptionStatus = {
   daysRemaining: number;
   autoRenew: boolean;
   status: string | null;       // farm account status (active/suspended)
+  paystackSubscriptionCode: string | null;
+  paystackSubscriptionStatus: string | null;
+  subscriptionStartedAt: string | null;
+  nextPaymentAt: string | null;
 };
+
 
 function normalizePlan(p: unknown): PlanTier {
   const v = String(p ?? "basic").toLowerCase();
@@ -45,7 +50,12 @@ export function useSubscription() {
         daysRemaining: Number(j.days_remaining ?? 0),
         autoRenew: Boolean(j.auto_renew),
         status: (j.status as string) ?? null,
+        paystackSubscriptionCode: (j.paystack_subscription_code as string) ?? null,
+        paystackSubscriptionStatus: (j.paystack_subscription_status as string) ?? null,
+        subscriptionStartedAt: (j.subscription_started_at as string) ?? null,
+        nextPaymentAt: (j.subscription_next_payment_at as string) ?? null,
       };
+
     },
     staleTime: 60_000,
   });
