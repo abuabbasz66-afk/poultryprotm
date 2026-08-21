@@ -184,7 +184,20 @@ function SubscriptionsPage() {
       </header>
 
       <main className="container-x -mt-4 md:-mt-6 space-y-6">
+        {paymentFailed && (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <div className="font-semibold text-foreground">Your last renewal payment failed</div>
+              <p className="text-muted-foreground">
+                Update your card or authorization via “Manage subscription” to keep your paid plan active. Your
+                farm data is safe.
+              </p>
+            </div>
+          </div>
+        )}
         {/* Current plan card */}
+
         <section className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-[var(--shadow-soft)]">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div className="min-w-0">
