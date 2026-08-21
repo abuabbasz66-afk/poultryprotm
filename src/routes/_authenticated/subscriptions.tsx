@@ -13,7 +13,12 @@ import { PRICING_PLANS } from "@/lib/pricing-plans";
 import { toast } from "sonner";
 
 
+type BillingSearch = { payment?: "success" | "failed" };
+
 export const Route = createFileRoute("/_authenticated/subscriptions")({
+  validateSearch: (search: Record<string, unknown>): BillingSearch => ({
+    payment: search.payment === "success" || search.payment === "failed" ? search.payment : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Subscriptions & Billing — PoultryPro" },
@@ -34,8 +39,108 @@ function fmtDay(iso: string | null | undefined): string {
   return isValidDate(d) ? fmtDate(d, "d MMM yyyy") : "—";
 }
 
+type PaymentRow = {
+  id: string;
+  plan: string;
+  amount_ngn: number;
+  currency: string;
+  reference: string;
+  status: string;
+  paid_at: string | null;
+  created_at: string;
+};
+
+function usePayments(farmId: string | null) {
+  return useQuery({
+    queryKey: ["farm-payments", farmId ?? "none"],
+    enabled: !!farmId,
+    queryFn: async (): Promise<PaymentRow[]> => {
+      const { data, error } = await supabase
+        .from("farm_payments")
+        .select("id, plan, amount_ngn, currency, reference, status, paid_at, created_at")
+        .eq("farm_id", farmId!)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []) as PaymentRow[];
+    },
+  });
+}
+
+async function authHeaders(): Promise<HeadersInit> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token
+    ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+    : { "Content-Type": "application/json" };
+}
+
 function SubscriptionsPage() {
-  const { data, isPending } = useSubscription();
+  const { data, isPending, refetch } = useSubscription();
+  const search = useSearch({ from: "/_authenticated/subscriptions" });
+  const qc = useQueryClient();
+  const [busyPlan, setBusyPlan] = useState<PlanTier | null>(null);
+  const [managing, setManaging] = useState(false);
+  const payments = usePayments(data?.farmId ?? null);
+
+  useEffect(() => {
+    if (!search.payment) return;
+    if (search.payment === "success") {
+      toast.success("Payment verified — your plan is now active.");
+    } else {
+      toast.error("Payment was not completed. You have not been charged for an unsuccessful attempt.");
+    }
+    refetch();
+    qc.invalidateQueries({ queryKey: ["farm-payments"] });
+    window.history.replaceState({}, "", "/subscriptions");
+  }, [search.payment, refetch, qc]);
+
+  async function startCheckout(plan: PlanTier) {
+    if (plan === "basic") {
+      toast("You'll move to Basic when your current paid period ends.");
+      return;
+    }
+    setBusyPlan(plan);
+    try {
+      const res = await fetch("/api/paystack/initialize", {
+        method: "POST",
+        headers: await authHeaders(),
+        body: JSON.stringify({ plan }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body?.authorization_url) {
+        toast.error(
+          body?.error === "forbidden"
+            ? "Only the farm owner can manage billing."
+            : "Could not start checkout. Please try again.",
+        );
+        setBusyPlan(null);
+        return;
+      }
+      toast.success("Redirecting to secure Paystack checkout…");
+      window.location.href = body.authorization_url as string;
+    } catch {
+      toast.error("Network error starting checkout.");
+      setBusyPlan(null);
+    }
+  }
+
+  async function openManage() {
+    setManaging(true);
+    try {
+      const res = await fetch("/api/paystack/manage", { headers: await authHeaders() });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body?.link) {
+        toast.error("No active Paystack subscription to manage yet.");
+        return;
+      }
+      window.open(body.link as string, "_blank", "noopener");
+    } catch {
+      toast.error("Could not open the Paystack management page.");
+    } finally {
+      setManaging(false);
+    }
+  }
 
   if (isPending || !data) {
     return (
@@ -47,7 +152,9 @@ function SubscriptionsPage() {
 
   const currentPlan = data.plan;
   const effective = data.effectivePlan;
-  const isTrial = data.isTrial;
+  const isTrial = data.isTrial && currentPlan === "basic";
+  const paymentFailed = data.paystackSubscriptionStatus === "payment_failed";
+
 
   return (
     <div className="min-h-screen bg-background pb-16">
