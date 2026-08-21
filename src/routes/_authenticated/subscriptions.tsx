@@ -415,7 +415,7 @@ function PlanCard({
       <button
         type="button"
         onClick={onSelect}
-        disabled={current}
+        disabled={current || busy}
         className={`mt-5 inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed ${
           featured
             ? "bg-[color:var(--gold)] text-[color:var(--ink)] hover:brightness-105"
@@ -424,8 +424,16 @@ function PlanCard({
               : "bg-[color:var(--forest)] text-white hover:brightness-110"
         }`}
       >
-        {current ? "Current plan" : planId === "basic" ? "Downgrade to Basic" : `Upgrade to ${name.replace(" Plan", "")}`}
+        {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+        {busy
+          ? "Starting checkout…"
+          : current
+            ? "Current plan"
+            : planId === "basic"
+              ? "Downgrade to Basic"
+              : `Upgrade to ${name.replace(" Plan", "")}`}
       </button>
+
     </div>
   );
 }
