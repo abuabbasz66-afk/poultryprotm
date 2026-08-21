@@ -280,17 +280,11 @@ function SubscriptionsPage() {
                 features={p.features}
                 featured={p.featured}
                 current={currentPlan === p.id && !isTrial}
-                onSelect={() => {
-                  if (p.id === "basic") {
-                    toast("You'll move to Basic when your current plan ends.");
-                    return;
-                  }
-                  toast(
-                    `Paystack checkout for ${p.name} (${formatNaira(PLAN_PRICE_NGN[p.id])}/mo) is coming soon.`,
-                  );
-                }}
+                busy={busyPlan === p.id}
+                onSelect={() => startCheckout(p.id)}
               />
             ))}
+
           </div>
         </section>
 
