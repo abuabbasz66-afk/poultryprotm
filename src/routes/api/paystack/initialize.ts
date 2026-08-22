@@ -5,7 +5,7 @@ import {
   appUrl,
   jsonRes,
   paystackFetch,
-  planCode,
+  resolvePlanCode,
   resolveBillingContext,
   type PaidPlan,
 } from "@/lib/paystack.server";
@@ -62,13 +62,13 @@ export const Route = createFileRoute("/api/paystack/initialize")({
           currency: "NGN",
           reference,
           status: "pending",
-          paystack_plan_code: planCode(plan) ?? null,
+          paystack_plan_code: null,
           metadata: { farm_id: ctx.farmId, user_id: ctx.userId, plan },
         });
         if (insErr) return jsonRes({ error: "could_not_create_payment" }, 500);
 
         const base = appUrl(request);
-        const code = planCode(plan);
+        const code = await resolvePlanCode(plan);
 
         const init = await paystackFetch<{
           status: boolean;

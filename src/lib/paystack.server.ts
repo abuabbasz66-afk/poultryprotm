@@ -28,6 +28,48 @@ export function planCode(plan: PaidPlan): string | undefined {
   return v && v.trim() ? v.trim() : undefined;
 }
 
+const resolvedPlanCodes: Partial<Record<PaidPlan, string>> = {};
+
+/**
+ * Return a plan code that actually exists on the connected Paystack account.
+ * Validates the configured code; if it is missing or belongs to another
+ * account/mode, the monthly plan is created on the fly and reused.
+ * Returns undefined if the plan cannot be resolved (checkout then falls back
+ * to a one-off charge for the correct amount).
+ */
+export async function resolvePlanCode(plan: PaidPlan): Promise<string | undefined> {
+  const cached = resolvedPlanCodes[plan];
+  if (cached) return cached;
+
+  const configured = planCode(plan);
+  if (configured) {
+    const check = await paystackFetch<{ status: boolean }>(`/plan/${configured}`);
+    if (check.ok && check.body?.status) {
+      resolvedPlanCodes[plan] = configured;
+      return configured;
+    }
+    console.warn(`[paystack] configured ${plan} plan code not found on this account; creating one`);
+  }
+
+  const created = await paystackFetch<{ status: boolean; data?: { plan_code: string } }>("/plan", {
+    method: "POST",
+    body: JSON.stringify({
+      name: plan === "standard" ? "PoultryPro Standard" : "PoultryPro Premium",
+      amount: PLAN_AMOUNT_KOBO[plan],
+      interval: "monthly",
+      currency: "NGN",
+    }),
+  });
+  const code = created.body?.data?.plan_code;
+  if (created.ok && created.body?.status && code) {
+    resolvedPlanCodes[plan] = code;
+    console.log(`[paystack] created ${plan} plan ${code} — save it as PAYSTACK_${plan.toUpperCase()}_PLAN_CODE`);
+    return code;
+  }
+  console.error(`[paystack] could not resolve ${plan} plan code; falling back to one-off charge`);
+  return undefined;
+}
+
 export function planFromCode(code: string | null | undefined): PaidPlan | null {
   if (!code) return null;
   if (code === process.env["PAYSTACK_STANDARD_PLAN_CODE"]) return "standard";
