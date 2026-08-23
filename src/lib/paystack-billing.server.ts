@@ -1,9 +1,45 @@
 // Server-only: trusted billing mutations (service role, bypasses RLS).
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { PLAN_AMOUNT_KOBO, planFromCode, type PaidPlan } from "./paystack.server";
+import {
+  PLAN_AMOUNT_KOBO,
+  paystackFetch,
+  planFromCode,
+  type PaidPlan,
+} from "./paystack.server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const admin = supabaseAdmin as any;
+
+/**
+ * Disable an existing Paystack subscription so a plan switch does not leave
+ * two recurring charges running. Paystack requires the subscription's
+ * email_token; fetch it when we do not have it stored.
+ */
+export async function disableSubscription(
+  code: string,
+  emailToken?: string | null,
+): Promise<boolean> {
+  let token = emailToken ?? null;
+  if (!token) {
+    const res = await paystackFetch<{ status: boolean; data?: { email_token?: string } }>(
+      `/subscription/${encodeURIComponent(code)}`,
+    );
+    token = res.body?.data?.email_token ?? null;
+  }
+  if (!token) {
+    console.error(`[paystack] cannot disable subscription ${code}: no email_token`);
+    return false;
+  }
+  const res = await paystackFetch<{ status: boolean; message?: string }>("/subscription/disable", {
+    method: "POST",
+    body: JSON.stringify({ code, token }),
+  });
+  if (!res.ok || !res.body?.status) {
+    console.error(`[paystack] failed to disable subscription ${code}: ${res.body?.message}`);
+    return false;
+  }
+  return true;
+}
 
 export type PaymentRow = {
   id: string;
