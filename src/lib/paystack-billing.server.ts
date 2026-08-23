@@ -128,7 +128,10 @@ export async function activatePaidPlan(opts: {
     auto_renew: true,
   };
   if (opts.customerCode) patch.paystack_customer_code = opts.customerCode;
-  if (opts.subscriptionCode) patch.paystack_subscription_code = opts.subscriptionCode;
+  if (opts.subscriptionCode && opts.subscriptionCode !== prevCode) {
+    patch.paystack_subscription_code = opts.subscriptionCode;
+    patch.paystack_email_token = null; // refreshed by subscription.create webhook
+  }
   if (opts.planCode) patch.paystack_plan_code = opts.planCode;
   if (opts.nextPaymentAt) patch.subscription_next_payment_at = opts.nextPaymentAt;
 
