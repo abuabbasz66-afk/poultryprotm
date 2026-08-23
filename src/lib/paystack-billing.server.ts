@@ -70,6 +70,19 @@ export async function activatePaidPlan(opts: {
 
   if (alreadySuccess) return { idempotent: true };
 
+  // A plan switch starts a brand-new Paystack subscription. Disable the
+  // previous one so the farm is never billed for two plans at once.
+  const { data: prevFarm } = await admin
+    .from("farms")
+    .select("paystack_subscription_code, paystack_email_token")
+    .eq("id", opts.farmId)
+    .maybeSingle();
+  const prevCode = prevFarm?.paystack_subscription_code as string | null | undefined;
+  if (prevCode && prevCode !== opts.subscriptionCode) {
+    await disableSubscription(prevCode, prevFarm?.paystack_email_token ?? null);
+  }
+
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const patch: Record<string, any> = {
     subscription_plan: opts.plan,
