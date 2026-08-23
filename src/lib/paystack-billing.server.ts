@@ -1,9 +1,45 @@
 // Server-only: trusted billing mutations (service role, bypasses RLS).
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { PLAN_AMOUNT_KOBO, planFromCode, type PaidPlan } from "./paystack.server";
+import {
+  PLAN_AMOUNT_KOBO,
+  paystackFetch,
+  planFromCode,
+  type PaidPlan,
+} from "./paystack.server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const admin = supabaseAdmin as any;
+
+/**
+ * Disable an existing Paystack subscription so a plan switch does not leave
+ * two recurring charges running. Paystack requires the subscription's
+ * email_token; fetch it when we do not have it stored.
+ */
+export async function disableSubscription(
+  code: string,
+  emailToken?: string | null,
+): Promise<boolean> {
+  let token = emailToken ?? null;
+  if (!token) {
+    const res = await paystackFetch<{ status: boolean; data?: { email_token?: string } }>(
+      `/subscription/${encodeURIComponent(code)}`,
+    );
+    token = res.body?.data?.email_token ?? null;
+  }
+  if (!token) {
+    console.error(`[paystack] cannot disable subscription ${code}: no email_token`);
+    return false;
+  }
+  const res = await paystackFetch<{ status: boolean; message?: string }>("/subscription/disable", {
+    method: "POST",
+    body: JSON.stringify({ code, token }),
+  });
+  if (!res.ok || !res.body?.status) {
+    console.error(`[paystack] failed to disable subscription ${code}: ${res.body?.message}`);
+    return false;
+  }
+  return true;
+}
 
 export type PaymentRow = {
   id: string;
@@ -70,6 +106,19 @@ export async function activatePaidPlan(opts: {
 
   if (alreadySuccess) return { idempotent: true };
 
+  // A plan switch starts a brand-new Paystack subscription. Disable the
+  // previous one so the farm is never billed for two plans at once.
+  const { data: prevFarm } = await admin
+    .from("farms")
+    .select("paystack_subscription_code, paystack_email_token")
+    .eq("id", opts.farmId)
+    .maybeSingle();
+  const prevCode = prevFarm?.paystack_subscription_code as string | null | undefined;
+  if (prevCode && prevCode !== opts.subscriptionCode) {
+    await disableSubscription(prevCode, prevFarm?.paystack_email_token ?? null);
+  }
+
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const patch: Record<string, any> = {
     subscription_plan: opts.plan,
@@ -79,7 +128,10 @@ export async function activatePaidPlan(opts: {
     auto_renew: true,
   };
   if (opts.customerCode) patch.paystack_customer_code = opts.customerCode;
-  if (opts.subscriptionCode) patch.paystack_subscription_code = opts.subscriptionCode;
+  if (opts.subscriptionCode && opts.subscriptionCode !== prevCode) {
+    patch.paystack_subscription_code = opts.subscriptionCode;
+    patch.paystack_email_token = null; // refreshed by subscription.create webhook
+  }
   if (opts.planCode) patch.paystack_plan_code = opts.planCode;
   if (opts.nextPaymentAt) patch.subscription_next_payment_at = opts.nextPaymentAt;
 
