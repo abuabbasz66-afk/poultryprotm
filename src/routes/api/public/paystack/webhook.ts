@@ -174,12 +174,14 @@ async function handleEvent(payload: any) {
       if (reference) {
         const existing = await findPaymentByReference(reference);
         if (existing) {
-          if (paid && existing.status !== "success" && plan && amountMatches(plan, d?.amount)) {
+          const check = plan ? verifyPaidAmount(plan, d) : null;
+          if (paid && existing.status !== "success" && plan && check?.ok) {
             await activatePaidPlan({
               farmId: existing.farm_id,
               plan,
               reference,
               amountKobo: Number(d.amount),
+              requestedAmountKobo: check.requestedKobo,
               customerCode,
               subscriptionCode,
               planCode: d?.subscription?.plan?.plan_code ?? null,
@@ -187,11 +189,23 @@ async function handleEvent(payload: any) {
               paidAt: d?.paid_at ?? null,
               nextPaymentAt: d?.subscription?.next_payment_date ?? null,
             });
+          } else if (paid && existing.status !== "success") {
+            logVerificationFailure({
+              source: "webhook:invoice",
+              reference,
+              farmId: existing.farm_id,
+              plan,
+              reason: check?.reason ?? "no_plan_resolved",
+              check,
+              txStatus: d?.status ?? null,
+              gatewayResponse: d?.transaction?.gateway_response ?? null,
+            });
           } else if (!paid) {
             await markPaymentStatus(reference, "pending", d?.transaction?.gateway_response ?? null);
           }
         }
       }
+
 
       if (farm?.id) {
         await updateFarm(farm.id, {
