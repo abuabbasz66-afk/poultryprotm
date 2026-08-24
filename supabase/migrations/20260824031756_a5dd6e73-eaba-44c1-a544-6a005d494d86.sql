@@ -1,0 +1,1 @@
+ALTER TABLE public.farm_payments ADD COLUMN IF NOT EXISTS charged_amount_ngn numeric;
