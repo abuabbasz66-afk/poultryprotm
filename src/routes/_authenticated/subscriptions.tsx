@@ -142,6 +142,35 @@ function SubscriptionsPage() {
     }
   }
 
+  async function recoverPayment(reference: string) {
+    setRecovering(reference);
+    try {
+      const res = await fetch("/api/paystack/recover", {
+        method: "POST",
+        headers: await authHeaders(),
+        body: JSON.stringify({ reference }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok && (body?.status === "activated" || body?.status === "already_active")) {
+        toast.success(
+          body.status === "activated"
+            ? "Payment verified — your plan is now active."
+            : "This payment was already applied.",
+        );
+        await refetch();
+        qc.invalidateQueries({ queryKey: ["farm-payments"] });
+      } else {
+        toast.error("Paystack did not confirm this payment as successful.");
+      }
+    } catch {
+      toast.error("Could not re-verify this payment. Please try again.");
+    } finally {
+      setRecovering(null);
+    }
+  }
+
+
+
   if (isPending || !data) {
     return (
       <div className="min-h-screen grid place-items-center bg-background">

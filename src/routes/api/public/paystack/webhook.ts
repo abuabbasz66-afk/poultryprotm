@@ -1,9 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "crypto";
-import { paystackSecret, planFromCode, type PaidPlan } from "@/lib/paystack.server";
+import {
+  logVerificationFailure,
+  paystackSecret,
+  planFromCode,
+  verifyPaidAmount,
+  type PaidPlan,
+} from "@/lib/paystack.server";
 import {
   activatePaidPlan,
-  amountMatches,
   findFarmByPaystack,
   findPaymentByReference,
   markPaymentStatus,
@@ -38,7 +43,28 @@ export const Route = createFileRoute("/api/public/paystack/webhook")({
         try {
           await handleEvent(payload);
         } catch (err) {
-          console.error("[paystack webhook]", err);
+          // Log richly so a genuine failure is diagnosable, then ask Paystack
+          // to retry (5xx) instead of silently dropping a successful payment.
+          const d = payload?.data ?? {};
+          console.error(
+            "[paystack:webhook-error]",
+            JSON.stringify({
+              event: payload?.event ?? null,
+              reference: d?.reference ?? d?.transaction?.reference ?? null,
+              subscription_code: d?.subscription_code ?? null,
+              customer_code: d?.customer?.customer_code ?? null,
+              message: err instanceof Error ? err.message : String(err),
+              stack: err instanceof Error ? err.stack : null,
+            }),
+          );
+          const critical =
+            payload?.event === "charge.success" ||
+            payload?.event === "invoice.create" ||
+            payload?.event === "invoice.update";
+          if (critical) {
+            // 5xx triggers Paystack's retry schedule so the payment is not lost.
+            return new Response("retry", { status: 500 });
+          }
         }
         return new Response("ok", { status: 200 });
       },
@@ -62,6 +88,9 @@ async function handleEvent(payload: any) {
       const reference: string | null = d?.reference ?? null;
       const pending = reference ? await findPaymentByReference(reference) : null;
 
+      // Idempotency: the callback may already have activated this reference.
+      if (pending?.status === "success") return;
+
       let farmId = pending?.farm_id ?? (d?.metadata?.farm_id as string | undefined) ?? null;
       const plan =
         (pending?.plan as PaidPlan | undefined) ??
@@ -74,8 +103,20 @@ async function handleEvent(payload: any) {
         farmId = farm?.id ?? null;
       }
       if (!farmId || !plan || !reference) return;
-      if (!amountMatches(plan, d?.amount)) {
-        await markPaymentStatus(reference, "attention", "amount_mismatch");
+
+      const check = verifyPaidAmount(plan, d);
+      if (!check.ok) {
+        logVerificationFailure({
+          source: "webhook:charge.success",
+          reference,
+          farmId,
+          plan,
+          reason: check.reason ?? "amount_mismatch",
+          check,
+          txStatus: d?.status ?? null,
+          gatewayResponse: d?.gateway_response ?? null,
+        });
+        await markPaymentStatus(reference, "attention", check.reason ?? "amount_mismatch");
         return;
       }
 
@@ -84,6 +125,7 @@ async function handleEvent(payload: any) {
         plan,
         reference,
         amountKobo: Number(d.amount),
+        requestedAmountKobo: check.requestedKobo,
         customerCode,
         subscriptionCode,
         planCode: d?.plan_object?.plan_code ?? d?.plan ?? null,
@@ -94,6 +136,7 @@ async function handleEvent(payload: any) {
       });
       return;
     }
+
 
     case "subscription.create": {
       const plan = planFromCode(d?.plan?.plan_code);
@@ -131,12 +174,14 @@ async function handleEvent(payload: any) {
       if (reference) {
         const existing = await findPaymentByReference(reference);
         if (existing) {
-          if (paid && existing.status !== "success" && plan && amountMatches(plan, d?.amount)) {
+          const check = plan ? verifyPaidAmount(plan, d) : null;
+          if (paid && existing.status !== "success" && plan && check?.ok) {
             await activatePaidPlan({
               farmId: existing.farm_id,
               plan,
               reference,
               amountKobo: Number(d.amount),
+              requestedAmountKobo: check.requestedKobo,
               customerCode,
               subscriptionCode,
               planCode: d?.subscription?.plan?.plan_code ?? null,
@@ -144,11 +189,23 @@ async function handleEvent(payload: any) {
               paidAt: d?.paid_at ?? null,
               nextPaymentAt: d?.subscription?.next_payment_date ?? null,
             });
+          } else if (paid && existing.status !== "success") {
+            logVerificationFailure({
+              source: "webhook:invoice",
+              reference,
+              farmId: existing.farm_id,
+              plan,
+              reason: check?.reason ?? "no_plan_resolved",
+              check,
+              txStatus: d?.status ?? null,
+              gatewayResponse: d?.transaction?.gateway_response ?? null,
+            });
           } else if (!paid) {
             await markPaymentStatus(reference, "pending", d?.transaction?.gateway_response ?? null);
           }
         }
       }
+
 
       if (farm?.id) {
         await updateFarm(farm.id, {

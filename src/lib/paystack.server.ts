@@ -163,3 +163,78 @@ export async function resolveBillingContext(request: Request) {
     email: userData.user.email ?? null,
   } as const;
 }
+
+/** Result of validating a Paystack transaction amount against a plan price. */
+export type AmountCheck = {
+  ok: boolean;
+  reason?: string;
+  expectedKobo: number;
+  requestedKobo: number | null;
+  chargedKobo: number;
+};
+
+/**
+ * Paystack may pass its transaction fee on to the customer, so `amount`
+ * (what the card was charged) can exceed `requested_amount` (what PoultryPro
+ * asked for). Security therefore validates the REQUESTED amount against the
+ * plan price and only requires the charged amount to be >= requested.
+ * When `requested_amount` is missing (older API responses), fall back to an
+ * exact match on `amount`.
+ */
+export function verifyPaidAmount(
+  plan: PaidPlan,
+  tx: { amount?: unknown; requested_amount?: unknown } | null | undefined,
+): AmountCheck {
+  const expectedKobo = PLAN_AMOUNT_KOBO[plan];
+  const chargedKobo = Number(tx?.amount);
+  const rawRequested = tx?.requested_amount;
+  const requestedKobo =
+    rawRequested === null || rawRequested === undefined || Number.isNaN(Number(rawRequested))
+      ? null
+      : Number(rawRequested);
+
+  const base = { expectedKobo, requestedKobo, chargedKobo };
+  if (!Number.isFinite(chargedKobo) || chargedKobo <= 0) {
+    return { ...base, ok: false, reason: "invalid_amount" };
+  }
+  if (requestedKobo === null) {
+    return chargedKobo === expectedKobo
+      ? { ...base, ok: true }
+      : { ...base, ok: false, reason: "amount_mismatch" };
+  }
+  if (requestedKobo !== expectedKobo) {
+    return { ...base, ok: false, reason: "requested_amount_mismatch" };
+  }
+  if (chargedKobo < requestedKobo) {
+    return { ...base, ok: false, reason: "underpaid" };
+  }
+  return { ...base, ok: true };
+}
+
+/** Structured, secret-free log for a rejected payment verification. */
+export function logVerificationFailure(ctx: {
+  source: string;
+  reference: string | null;
+  farmId?: string | null;
+  plan?: string | null;
+  reason: string;
+  check?: AmountCheck | null;
+  txStatus?: string | null;
+  gatewayResponse?: string | null;
+}) {
+  console.error(
+    "[paystack:verify-failed]",
+    JSON.stringify({
+      source: ctx.source,
+      reference: ctx.reference,
+      farm_id: ctx.farmId ?? null,
+      plan: ctx.plan ?? null,
+      reason: ctx.reason,
+      expected_kobo: ctx.check?.expectedKobo ?? null,
+      requested_kobo: ctx.check?.requestedKobo ?? null,
+      charged_kobo: ctx.check?.chargedKobo ?? null,
+      tx_status: ctx.txStatus ?? null,
+      gateway_response: ctx.gatewayResponse ?? null,
+    }),
+  );
+}

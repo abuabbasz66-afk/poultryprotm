@@ -944,6 +944,7 @@ export type Database = {
       farm_payments: {
         Row: {
           amount_ngn: number
+          charged_amount_ngn: number | null
           created_at: string
           currency: string
           farm_id: string
@@ -961,6 +962,7 @@ export type Database = {
         }
         Insert: {
           amount_ngn?: number
+          charged_amount_ngn?: number | null
           created_at?: string
           currency?: string
           farm_id: string
@@ -978,6 +980,7 @@ export type Database = {
         }
         Update: {
           amount_ngn?: number
+          charged_amount_ngn?: number | null
           created_at?: string
           currency?: string
           farm_id?: string
