@@ -73,7 +73,10 @@ export async function activatePaidPlan(opts: {
   farmId: string;
   plan: PaidPlan;
   reference: string;
+  /** Amount actually charged to the customer (kobo, may include Paystack fee). */
   amountKobo: number;
+  /** Amount PoultryPro requested (kobo). Defaults to the plan price. */
+  requestedAmountKobo?: number | null;
   customerCode?: string | null;
   subscriptionCode?: string | null;
   planCode?: string | null;
@@ -86,11 +89,17 @@ export async function activatePaidPlan(opts: {
   const existing = await findPaymentByReference(opts.reference);
   const alreadySuccess = existing?.status === "success";
 
+  // Revenue is always the PoultryPro plan price; the fee-inclusive amount the
+  // customer paid is preserved separately.
+  const planPriceKobo = opts.requestedAmountKobo ?? PLAN_AMOUNT_KOBO[opts.plan];
+  const chargedKobo = Number(opts.amountKobo) || planPriceKobo;
+
   await admin.from("farm_payments").upsert(
     {
       farm_id: opts.farmId,
       plan: opts.plan,
-      amount_ngn: opts.amountKobo / 100,
+      amount_ngn: planPriceKobo / 100,
+      charged_amount_ngn: chargedKobo / 100,
       currency: "NGN",
       reference: opts.reference,
       status: "success",
@@ -99,10 +108,16 @@ export async function activatePaidPlan(opts: {
       paystack_plan_code: opts.planCode ?? null,
       gateway_response: opts.gatewayResponse ?? null,
       paid_at: opts.paidAt ?? new Date().toISOString(),
-      metadata: opts.metadata ?? {},
+      metadata: {
+        ...(opts.metadata ?? {}),
+        requested_amount_kobo: planPriceKobo,
+        charged_amount_kobo: chargedKobo,
+        paystack_fee_kobo: Math.max(0, chargedKobo - planPriceKobo),
+      },
     },
     { onConflict: "reference" },
   );
+
 
   if (alreadySuccess) return { idempotent: true };
 
