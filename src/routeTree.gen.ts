@@ -37,6 +37,7 @@ import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as SuperAdminFarmsFarmIdRouteImport } from './routes/super-admin.farms.$farmId'
 import { Route as ApiPublicWhatsappClickRouteImport } from './routes/api/public/whatsapp-click'
+import { Route as ApiPaystackRecoverRouteImport } from './routes/api/paystack/recover'
 import { Route as ApiPaystackManageRouteImport } from './routes/api/paystack/manage'
 import { Route as ApiPaystackInitializeRouteImport } from './routes/api/paystack/initialize'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -186,6 +187,11 @@ const ApiPublicWhatsappClickRoute = ApiPublicWhatsappClickRouteImport.update({
   path: '/api/public/whatsapp-click',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPaystackRecoverRoute = ApiPaystackRecoverRouteImport.update({
+  id: '/api/paystack/recover',
+  path: '/api/paystack/recover',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPaystackManageRoute = ApiPaystackManageRouteImport.update({
   id: '/api/paystack/manage',
   path: '/api/paystack/manage',
@@ -253,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/weather': typeof AuthenticatedWeatherRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/manage': typeof ApiPaystackManageRoute
+  '/api/paystack/recover': typeof ApiPaystackRecoverRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
   '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
   '/api/public/paystack/callback': typeof ApiPublicPaystackCallbackRoute
@@ -289,6 +296,7 @@ export interface FileRoutesByTo {
   '/weather': typeof AuthenticatedWeatherRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/manage': typeof ApiPaystackManageRoute
+  '/api/paystack/recover': typeof ApiPaystackRecoverRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
   '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
   '/api/public/paystack/callback': typeof ApiPublicPaystackCallbackRoute
@@ -327,6 +335,7 @@ export interface FileRoutesById {
   '/_authenticated/weather': typeof AuthenticatedWeatherRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/manage': typeof ApiPaystackManageRoute
+  '/api/paystack/recover': typeof ApiPaystackRecoverRoute
   '/api/public/whatsapp-click': typeof ApiPublicWhatsappClickRoute
   '/super-admin/farms/$farmId': typeof SuperAdminFarmsFarmIdRoute
   '/api/public/paystack/callback': typeof ApiPublicPaystackCallbackRoute
@@ -365,6 +374,7 @@ export interface FileRouteTypes {
     | '/weather'
     | '/api/paystack/initialize'
     | '/api/paystack/manage'
+    | '/api/paystack/recover'
     | '/api/public/whatsapp-click'
     | '/super-admin/farms/$farmId'
     | '/api/public/paystack/callback'
@@ -401,6 +411,7 @@ export interface FileRouteTypes {
     | '/weather'
     | '/api/paystack/initialize'
     | '/api/paystack/manage'
+    | '/api/paystack/recover'
     | '/api/public/whatsapp-click'
     | '/super-admin/farms/$farmId'
     | '/api/public/paystack/callback'
@@ -438,6 +449,7 @@ export interface FileRouteTypes {
     | '/_authenticated/weather'
     | '/api/paystack/initialize'
     | '/api/paystack/manage'
+    | '/api/paystack/recover'
     | '/api/public/whatsapp-click'
     | '/super-admin/farms/$farmId'
     | '/api/public/paystack/callback'
@@ -460,6 +472,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ApiPaystackInitializeRoute: typeof ApiPaystackInitializeRoute
   ApiPaystackManageRoute: typeof ApiPaystackManageRoute
+  ApiPaystackRecoverRoute: typeof ApiPaystackRecoverRoute
   ApiPublicWhatsappClickRoute: typeof ApiPublicWhatsappClickRoute
   ApiPublicPaystackCallbackRoute: typeof ApiPublicPaystackCallbackRoute
   ApiPublicPaystackWebhookRoute: typeof ApiPublicPaystackWebhookRoute
@@ -666,6 +679,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWhatsappClickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/paystack/recover': {
+      id: '/api/paystack/recover'
+      path: '/api/paystack/recover'
+      fullPath: '/api/paystack/recover'
+      preLoaderRoute: typeof ApiPaystackRecoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/paystack/manage': {
       id: '/api/paystack/manage'
       path: '/api/paystack/manage'
@@ -784,6 +804,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ApiPaystackInitializeRoute: ApiPaystackInitializeRoute,
   ApiPaystackManageRoute: ApiPaystackManageRoute,
+  ApiPaystackRecoverRoute: ApiPaystackRecoverRoute,
   ApiPublicWhatsappClickRoute: ApiPublicWhatsappClickRoute,
   ApiPublicPaystackCallbackRoute: ApiPublicPaystackCallbackRoute,
   ApiPublicPaystackWebhookRoute: ApiPublicPaystackWebhookRoute,
