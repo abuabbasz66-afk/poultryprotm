@@ -1,8 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { appUrl, paystackFetch, planFromCode, type PaidPlan } from "@/lib/paystack.server";
+import {
+  appUrl,
+  logVerificationFailure,
+  paystackFetch,
+  planFromCode,
+  verifyPaidAmount,
+  type PaidPlan,
+} from "@/lib/paystack.server";
 import {
   activatePaidPlan,
-  amountMatches,
   findPaymentByReference,
   markPaymentStatus,
 } from "@/lib/paystack-billing.server";
@@ -21,6 +27,11 @@ export const Route = createFileRoute("/api/public/paystack/callback")({
         const pending = await findPaymentByReference(reference);
         if (!pending) return fail();
 
+        // Already processed (e.g. the webhook won the race) — idempotent success.
+        if (pending.status === "success") {
+          return Response.redirect(`${base}/subscriptions?payment=success`, 302);
+        }
+
         const verify = await paystackFetch<{
           status: boolean;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,30 +40,40 @@ export const Route = createFileRoute("/api/public/paystack/callback")({
 
         const tx = verify.body?.data;
         const plan = (pending.plan as PaidPlan) ?? null;
-        const valid =
-          verify.ok &&
-          verify.body?.status === true &&
-          tx?.status === "success" &&
-          tx?.reference === reference &&
-          tx?.currency === "NGN" &&
-          (plan === "standard" || plan === "premium") &&
-          amountMatches(plan, tx?.amount) &&
-          (!tx?.metadata?.farm_id || tx.metadata.farm_id === pending.farm_id);
+        const planOk = plan === "standard" || plan === "premium";
+        const check = planOk ? verifyPaidAmount(plan, tx) : null;
 
-        if (!valid) {
-          await markPaymentStatus(
+        let reason: string | null = null;
+        if (!verify.ok || verify.body?.status !== true) reason = "paystack_verify_failed";
+        else if (tx?.status !== "success") reason = "transaction_not_successful";
+        else if (tx?.reference !== reference) reason = "reference_mismatch";
+        else if (tx?.currency !== "NGN") reason = "currency_mismatch";
+        else if (!planOk) reason = "invalid_plan";
+        else if (!check?.ok) reason = check?.reason ?? "amount_mismatch";
+        else if (tx?.metadata?.farm_id && tx.metadata.farm_id !== pending.farm_id)
+          reason = "farm_mismatch";
+
+        if (reason) {
+          logVerificationFailure({
+            source: "callback",
             reference,
-            "failed",
-            tx?.gateway_response ?? "verification_failed",
-          );
+            farmId: pending.farm_id,
+            plan,
+            reason,
+            check,
+            txStatus: tx?.status ?? null,
+            gatewayResponse: tx?.gateway_response ?? null,
+          });
+          await markPaymentStatus(reference, "failed", tx?.gateway_response ?? reason);
           return fail();
         }
 
         await activatePaidPlan({
           farmId: pending.farm_id,
-          plan,
+          plan: plan as PaidPlan,
           reference,
           amountKobo: Number(tx.amount),
+          requestedAmountKobo: check?.requestedKobo ?? null,
           customerCode: tx?.customer?.customer_code ?? null,
           subscriptionCode: tx?.plan_object?.subscription_code ?? null,
           planCode: tx?.plan ?? tx?.plan_object?.plan_code ?? null,
@@ -60,6 +81,7 @@ export const Route = createFileRoute("/api/public/paystack/callback")({
           paidAt: tx?.paid_at ?? null,
           metadata: tx?.metadata ?? {},
         });
+
 
         // Cross-check the plan code, if Paystack returned one.
         const codePlan = planFromCode(tx?.plan_object?.plan_code ?? tx?.plan);
