@@ -81,6 +81,8 @@ function SubscriptionsPage() {
   const qc = useQueryClient();
   const [busyPlan, setBusyPlan] = useState<PlanTier | null>(null);
   const [managing, setManaging] = useState(false);
+  const [recovering, setRecovering] = useState<string | null>(null);
+
   const payments = usePayments(data?.farmId ?? null);
 
   useEffect(() => {
@@ -354,7 +356,8 @@ function SubscriptionsPage() {
                     <th className="py-2 pr-3 font-semibold">Amount</th>
                     <th className="py-2 pr-3 font-semibold">Status</th>
                     <th className="py-2 pr-3 font-semibold">Reference</th>
-                    <th className="py-2 font-semibold">Paid</th>
+                    <th className="py-2 pr-3 font-semibold">Paid</th>
+                    <th className="py-2 font-semibold sr-only">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -377,9 +380,27 @@ function SubscriptionsPage() {
                         </span>
                       </td>
                       <td className="py-2 pr-3 font-mono text-xs text-muted-foreground break-all">{p.reference}</td>
-                      <td className="py-2 whitespace-nowrap">{fmtDay(p.paid_at)}</td>
+                      <td className="py-2 pr-3 whitespace-nowrap">{fmtDay(p.paid_at)}</td>
+                      <td className="py-2 whitespace-nowrap text-right">
+                        {p.status !== "success" && (
+                          <button
+                            type="button"
+                            onClick={() => recoverPayment(p.reference)}
+                            disabled={recovering === p.reference}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-60"
+                          >
+                            {recovering === p.reference ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <RefreshCw className="h-3.5 w-3.5" />
+                            )}
+                            Re-verify
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
+
                 </tbody>
               </table>
             </div>
