@@ -81,6 +81,8 @@ function SubscriptionsPage() {
   const qc = useQueryClient();
   const [busyPlan, setBusyPlan] = useState<PlanTier | null>(null);
   const [managing, setManaging] = useState(false);
+  const [recovering, setRecovering] = useState<string | null>(null);
+
   const payments = usePayments(data?.farmId ?? null);
 
   useEffect(() => {
