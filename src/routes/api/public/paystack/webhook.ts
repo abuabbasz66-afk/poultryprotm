@@ -9,6 +9,7 @@ import {
 } from "@/lib/paystack.server";
 import {
   activatePaidPlan,
+  disableSubscription,
   findFarmByPaystack,
   findPaymentByReference,
   markPaymentStatus,
@@ -150,6 +151,14 @@ async function handleEvent(payload: any) {
         farmId = p?.farm_id ?? null;
       }
       if (!farmId) return;
+
+      // This event is the authoritative source of the new subscription code.
+      // Rotate only when both old and new codes are known, so a callback that
+      // omits subscription_code can never disable the newly-created renewal.
+      const previousCode = farm?.paystack_subscription_code ?? null;
+      if (subscriptionCode && previousCode && previousCode !== subscriptionCode) {
+        await disableSubscription(previousCode, farm?.paystack_email_token ?? null);
+      }
 
       await updateFarm(farmId, {
         paystack_customer_code: customerCode,
