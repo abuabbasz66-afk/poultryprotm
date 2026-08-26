@@ -81,12 +81,16 @@ export const Route = createFileRoute("/api/paystack/initialize")({
           reference,
           status: "pending",
           paystack_plan_code: null,
-          metadata: { farm_id: ctx.farmId, user_id: ctx.userId, plan },
+          metadata: { farm_id: ctx.farmId, user_id: ctx.userId, plan, method, channels },
         });
         if (insErr) return jsonRes({ error: "could_not_create_payment" }, 500);
 
         const base = appUrl(request);
-        const code = await resolvePlanCode(plan);
+        // Paystack only supports recurring subscriptions on card authorisations,
+        // so the plan code is attached to card checkouts only. Transfer/bank/USSD
+        // are charged as a one-off month for the same plan price.
+        const code = method === "card" ? await resolvePlanCode(plan) : undefined;
+
 
         const init = await paystackFetch<{
           status: boolean;
