@@ -129,7 +129,11 @@ export async function activatePaidPlan(opts: {
     .eq("id", opts.farmId)
     .maybeSingle();
   const prevCode = prevFarm?.paystack_subscription_code as string | null | undefined;
-  if (prevCode && prevCode !== opts.subscriptionCode) {
+  // Initial-charge verification responses commonly omit subscription_code.
+  // Never disable the stored subscription unless Paystack has identified a
+  // different replacement code; the subscription.create webhook performs the
+  // same rotation once that authoritative new code is available.
+  if (opts.subscriptionCode && prevCode && prevCode !== opts.subscriptionCode) {
     await disableSubscription(prevCode, prevFarm?.paystack_email_token ?? null);
   }
 
@@ -169,11 +173,18 @@ export async function markPaymentStatus(
 export async function findFarmByPaystack(opts: {
   subscriptionCode?: string | null;
   customerCode?: string | null;
-}): Promise<{ id: string; subscription_next_payment_at: string | null } | null> {
+}): Promise<{
+  id: string;
+  subscription_next_payment_at: string | null;
+  paystack_subscription_code: string | null;
+  paystack_email_token: string | null;
+} | null> {
   if (opts.subscriptionCode) {
     const { data } = await admin
       .from("farms")
-      .select("id, subscription_next_payment_at")
+      .select(
+        "id, subscription_next_payment_at, paystack_subscription_code, paystack_email_token",
+      )
       .eq("paystack_subscription_code", opts.subscriptionCode)
       .maybeSingle();
     if (data) return data;
@@ -181,7 +192,9 @@ export async function findFarmByPaystack(opts: {
   if (opts.customerCode) {
     const { data } = await admin
       .from("farms")
-      .select("id, subscription_next_payment_at")
+      .select(
+        "id, subscription_next_payment_at, paystack_subscription_code, paystack_email_token",
+      )
       .eq("paystack_customer_code", opts.customerCode)
       .maybeSingle();
     if (data) return data;
