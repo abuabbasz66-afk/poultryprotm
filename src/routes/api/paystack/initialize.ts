@@ -44,6 +44,8 @@ export const Route = createFileRoute("/api/paystack/initialize")({
         const parsed = bodySchema.safeParse(raw);
         if (!parsed.success) return jsonRes({ error: "invalid_plan" }, 400);
         const plan = parsed.data.plan as PaidPlan;
+        const method = parsed.data.method ?? "card";
+        const channels = method === "card" ? ["card"] : [...FLEXIBLE_CHANNELS];
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
