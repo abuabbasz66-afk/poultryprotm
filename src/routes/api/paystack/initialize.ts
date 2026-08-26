@@ -10,7 +10,23 @@ import {
   type PaidPlan,
 } from "@/lib/paystack.server";
 
-const bodySchema = z.object({ plan: z.enum(["standard", "premium"]) });
+const bodySchema = z.object({
+  plan: z.enum(["standard", "premium"]),
+  /**
+   * "card" keeps the recurring Paystack subscription (Paystack only supports
+   * recurring billing on card authorisations). "flexible" opens the checkout
+   * for Card, Bank, Pay with Transfer and USSD as a one-off month.
+   */
+  method: z.enum(["card", "flexible"]).optional(),
+});
+
+/**
+ * Channels verified as active on this Paystack integration.
+ * Probed against the account: card, bank, bank_transfer, ussd are accepted;
+ * qr, mobile_money, eft and "opay" are rejected with
+ * "No active channel to process transaction", so they are never sent.
+ */
+const FLEXIBLE_CHANNELS = ["card", "bank", "bank_transfer", "ussd"] as const;
 
 export const Route = createFileRoute("/api/paystack/initialize")({
   server: {
