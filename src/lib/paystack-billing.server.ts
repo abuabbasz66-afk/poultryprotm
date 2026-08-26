@@ -81,6 +81,10 @@ export async function activatePaidPlan(opts: {
   subscriptionCode?: string | null;
   planCode?: string | null;
   gatewayResponse?: string | null;
+  /** Paystack channel used (card, bank, bank_transfer, ussd…). */
+  channel?: string | null;
+  /** Paystack gateway fee in kobo, when reported. */
+  feeKobo?: number | null;
   paidAt?: string | null;
   nextPaymentAt?: string | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -112,7 +116,11 @@ export async function activatePaidPlan(opts: {
         ...(opts.metadata ?? {}),
         requested_amount_kobo: planPriceKobo,
         charged_amount_kobo: chargedKobo,
-        paystack_fee_kobo: Math.max(0, chargedKobo - planPriceKobo),
+        paystack_fee_kobo:
+          opts.feeKobo != null && Number.isFinite(Number(opts.feeKobo))
+            ? Number(opts.feeKobo)
+            : Math.max(0, chargedKobo - planPriceKobo),
+        payment_channel: opts.channel ?? null,
       },
     },
     { onConflict: "reference" },
