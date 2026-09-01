@@ -14,6 +14,8 @@ export type SubscriptionStatus = {
   trialEndsAt: string | null;
   daysRemaining: number;
   autoRenew: boolean;
+  /** True when a one-off (transfer/USSD) paid month has ended. */
+  planExpired: boolean;
   status: string | null;       // farm account status (active/suspended)
   paystackSubscriptionCode: string | null;
   paystackSubscriptionStatus: string | null;
@@ -49,6 +51,7 @@ export function useSubscription() {
         trialEndsAt: (j.trial_ends_at as string) ?? null,
         daysRemaining: Number(j.days_remaining ?? 0),
         autoRenew: Boolean(j.auto_renew),
+        planExpired: Boolean(j.plan_expired),
         status: (j.status as string) ?? null,
         paystackSubscriptionCode: (j.paystack_subscription_code as string) ?? null,
         paystackSubscriptionStatus: (j.paystack_subscription_status as string) ?? null,
