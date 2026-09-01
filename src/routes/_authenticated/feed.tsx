@@ -1293,7 +1293,8 @@ function IngredientRow({
             <div className="text-right mr-1">
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Line cost</p>
               <p className="text-sm font-semibold">₦{Math.round(line).toLocaleString()}</p>
-              <p className="text-[10px] text-muted-foreground">₦{perKg.toFixed(2)}/kg · {row?.sharePct.toFixed(0)}%</p>
+              <p className="text-[10px] text-muted-foreground">₦{perKg.toFixed(2)}/kg · {fmtShare(row?.sharePct ?? 0)} of cost</p>
+              <p className="text-[10px] text-muted-foreground">{fmtShare(row?.inclusionPct ?? 0)} of mix</p>
             </div>
           )}
           {isNew ? (
