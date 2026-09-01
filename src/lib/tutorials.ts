@@ -105,6 +105,46 @@ export const TUTORIAL_CATEGORIES: TutorialCategory[] = [
   },
 ];
 
+/**
+ * Recorded walkthrough durations ("m:ss"), keyed by tutorial id.
+ * A tutorial is published automatically when a recording exists here.
+ */
+const TUTORIAL_DURATIONS: Record<string, string> = {
+  "featured-first-5-minutes": "0:39",
+  "gs-welcome": "0:39",
+  "gs-create-farm": "0:33",
+  "gs-rooms": "0:40",
+  "gs-birds": "0:35",
+  "gs-dashboard": "0:39",
+  "dr-production": "0:40",
+  "dr-feed": "0:35",
+  "dr-mortality": "0:31",
+  "dr-water": "0:30",
+  "dr-health": "0:30",
+  "fd-inventory": "0:28",
+  "fd-purchase": "0:28",
+  "fd-usage": "0:28",
+  "fd-formula": "0:39",
+  "fd-costs": "0:28",
+  "hl-records": "0:30",
+  "hl-medication": "0:31",
+  "hl-vaccination": "0:30",
+  "hl-monitoring": "0:28",
+  "fi-income": "0:27",
+  "fi-expenses": "0:27",
+  "fi-profit": "0:28",
+  "fi-analytics": "0:28",
+  "an-analytics": "0:29",
+  "an-trends": "0:32",
+  "an-alerts": "0:28",
+  "an-insights": "0:29",
+  "an-recommendations": "0:30",
+  "ad-multi-farm": "0:28",
+  "ad-staff": "0:33",
+  "ad-billing": "0:28",
+  "ad-settings": "0:28",
+};
+
 function slot(
   id: string,
   title: string,
@@ -114,20 +154,23 @@ function slot(
   order: number,
   keywords: string[] = [],
 ): Tutorial {
+  const duration = TUTORIAL_DURATIONS[id] ?? null;
+  const published = duration !== null;
   return {
     id,
     title,
     description,
     category,
-    video_url: null,
-    thumbnail_url: null,
-    duration: null,
+    video_url: published ? `/tutorials/videos/${id}.mp4` : null,
+    thumbnail_url: published ? `/tutorials/thumbs/${id}.jpg` : null,
+    duration,
     difficulty,
     order,
-    is_published: false,
+    is_published: published,
     keywords,
   };
 }
+
 
 /** The featured "start here" tutorial shown at the top of the Learning Center. */
 export const FEATURED_TUTORIAL: Tutorial = slot(
