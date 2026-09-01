@@ -1201,19 +1201,49 @@ function NutritionPanel({ rows }: { rows: { name: string; weightKg: number }[] }
         <p className="mt-3 text-xs text-muted-foreground">Add ingredient quantities to see the nutrient profile.</p>
       ) : (
         <>
-          <p className="mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">Macro nutrients</p>
-          <div className="mt-1.5 grid grid-cols-2 md:grid-cols-4 gap-2">{render("macro")}</div>
+          <p className="mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">Proximate analysis</p>
+          <div className="mt-1.5 grid grid-cols-2 md:grid-cols-3 gap-2">{render("macro")}</div>
 
           <p className="mt-4 text-[10px] uppercase tracking-widest text-muted-foreground">Minerals & amino acids</p>
-          <div className="mt-1.5 grid grid-cols-2 md:grid-cols-5 gap-2">{render("micro")}</div>
+          <div className="mt-1.5 grid grid-cols-2 md:grid-cols-4 gap-2">{render("micro")}</div>
+
+          {nut.flags.length > 0 && (
+            <div className="mt-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-[11px] text-amber-800 dark:text-amber-200">
+              <p className="font-semibold">Outside laboratory reference range</p>
+              <ul className="mt-1 space-y-0.5">
+                {nut.flags.map((f, i) => (
+                  <li key={i}>
+                    {f.ingredient} · {NUTRIENT_META[f.nutrient].label}: actual {f.actual.toFixed(2)}% vs reference{" "}
+                    {f.kind === "above" ? "maximum" : "minimum"} {f.limit.toFixed(2)}% — actual laboratory value retained.
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="mt-3 rounded-2xl border border-border bg-muted/30 p-3 text-[11px] text-muted-foreground">
             Analysis covers {nut.coveragePct.toFixed(0)}% of the mix weight
-            ({fmtKg(nut.knownKg)} of {fmtKg(nut.totalKg)}).
+            ({fmtKg(nut.knownKg)} of {fmtKg(nut.totalKg)}), of which {fmtKg(nut.labKg)} ({nut.labCoveragePct.toFixed(0)}%)
+            uses laboratory-tested values.
             {nut.unknown.length > 0 && (
               <> Unrecognised ingredients excluded: {nut.unknown.join(", ")}. Rename them to a standard feedstuff name for full accuracy.</>
             )}
           </div>
+
+          <details className="mt-3 rounded-2xl border border-border bg-background p-3">
+            <summary className="cursor-pointer text-[11px] font-medium">Laboratory-Tested Layer Mash Reference</summary>
+            {LAB_FEED_REFERENCES.map((ref) => (
+              <div key={ref.report_number} className="mt-2 text-[11px] text-muted-foreground">
+                <p>
+                  CP {ref.profile.cp}% · Fat {ref.profile.ee}% · Fibre {ref.profile.cf}% · Moisture {ref.profile.moisture}% ·
+                  Ash {ref.profile.ash}% · Methionine {ref.profile.met}% · ME {Math.round(ref.profile.me).toLocaleString()} kcal/kg
+                </p>
+                <p className="mt-1">
+                  {ref.laboratory} · Report {ref.report_number} · {ref.report_date}. Finished-feed reference only — not a raw ingredient.
+                </p>
+              </div>
+            ))}
+          </details>
         </>
       )}
     </section>
