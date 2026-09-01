@@ -1135,9 +1135,87 @@ function FormulaEditor({
           </div>
         )}
       </section>
+
+      {/* Nutrition analysis */}
+      <NutritionPanel rows={cost.rows.map((r) => ({ name: r.name, weightKg: r.weightKg }))} />
     </div>
   );
 }
+
+function NutritionPanel({ rows }: { rows: { name: string; weightKg: number }[] }) {
+  const [specId, setSpecId] = useState(BIRD_SPECS[0].id);
+  const spec = BIRD_SPECS.find((s) => s.id === specId) ?? BIRD_SPECS[0];
+  const nut = useMemo(() => computeNutrition(rows), [rows]);
+
+  const toneCls = (st: string) =>
+    st === "ok" ? "text-[color:var(--forest)]"
+      : st === "low" ? "text-amber-600"
+      : st === "high" ? "text-destructive"
+      : "text-muted-foreground";
+
+  const render = (group: "macro" | "micro") =>
+    NUTRIENT_KEYS.filter((k) => NUTRIENT_META[k].group === group).map((k) => {
+      const meta = NUTRIENT_META[k];
+      const v = nut.totals[k];
+      const st = statusFor(spec, k, v);
+      const r = spec.ranges[k];
+      return (
+        <div key={k} className="rounded-2xl border border-border bg-background p-3">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{meta.label}</p>
+          <p className={"mt-1 font-display text-lg font-semibold " + toneCls(st)}>
+            {v.toFixed(meta.digits)} <span className="text-[10px] font-normal text-muted-foreground">{meta.unit}</span>
+          </p>
+          <p className="text-[10px] text-muted-foreground">
+            {r ? `Target ${r[0]}–${r[1]}${meta.unit === "%" ? "%" : ""}` : "No target"}
+            {st === "low" ? " · low" : st === "high" ? " · high" : st === "ok" ? " · on target" : ""}
+          </p>
+        </div>
+      );
+    });
+
+  return (
+    <section className="rounded-3xl border border-border bg-card p-4 md:p-5">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h3 className="font-display text-base font-semibold">Nutritional Analysis</h3>
+          <p className="text-xs text-muted-foreground">
+            Weighted from ingredient inclusion rates (as-fed basis).
+          </p>
+        </div>
+        <select
+          value={specId}
+          onChange={(e) => setSpecId(e.target.value)}
+          className={inputCls + " max-w-[220px]"}
+        >
+          {BIRD_SPECS.map((s) => (
+            <option key={s.id} value={s.id}>{s.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {nut.totalKg <= 0 ? (
+        <p className="mt-3 text-xs text-muted-foreground">Add ingredient quantities to see the nutrient profile.</p>
+      ) : (
+        <>
+          <p className="mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">Macro nutrients</p>
+          <div className="mt-1.5 grid grid-cols-2 md:grid-cols-4 gap-2">{render("macro")}</div>
+
+          <p className="mt-4 text-[10px] uppercase tracking-widest text-muted-foreground">Minerals & amino acids</p>
+          <div className="mt-1.5 grid grid-cols-2 md:grid-cols-5 gap-2">{render("micro")}</div>
+
+          <div className="mt-3 rounded-2xl border border-border bg-muted/30 p-3 text-[11px] text-muted-foreground">
+            Analysis covers {nut.coveragePct.toFixed(0)}% of the mix weight
+            ({fmtKg(nut.knownKg)} of {fmtKg(nut.totalKg)}).
+            {nut.unknown.length > 0 && (
+              <> Unrecognised ingredients excluded: {nut.unknown.join(", ")}. Rename them to a standard feedstuff name for full accuracy.</>
+            )}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
 
 function IngredientRow({
   row, index, onSave, onDelete,
