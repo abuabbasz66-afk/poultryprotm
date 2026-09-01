@@ -14,6 +14,10 @@ import {
   Baby, Drumstick, GraduationCap, BookOpen,
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
+import { LearningCenter } from "@/components/learning-center";
+import { TUTORIAL_CATEGORIES } from "@/lib/tutorials";
+
+
 
 const HOME_TITLE = "PoultryPro | Smart Poultry Farm Management Platform";
 const HOME_DESC =
@@ -53,7 +57,26 @@ export const Route = createFileRoute("/")({
           },
         }),
       },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "PoultryPro Learning Center",
+          description:
+            "Free tutorials on poultry farm management, poultry production records, feed management, poultry health records, farm finance, poultry analytics and digital poultry farming.",
+          url: "https://poultrypro.life/#learn",
+          itemListElement: TUTORIAL_CATEGORIES.map((c, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            name: c.name,
+            description: c.description,
+            url: `https://poultrypro.life/#learn`,
+          })),
+        }),
+      },
     ],
+
   }),
   component: Index,
 });
@@ -354,9 +377,11 @@ function Index() {
           </a>
           <nav className="hidden md:flex items-center gap-10 text-sm font-medium">
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Features</a>
+            <a href="#learn" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Learn</a>
             <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Pricing</a>
             <a href="#founder" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Founder</a>
             <a href="#roadmap" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Roadmap</a>
+
           </nav>
           {authed ? (
             <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-200">
@@ -409,9 +434,13 @@ function Index() {
               <Link to="/presentation" className="inline-flex items-center gap-2 rounded-full bg-[color:var(--gold)] px-6 py-3 text-sm font-semibold text-[color:var(--ink)] hover:brightness-105 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] transition-all duration-200 shadow-[var(--shadow-lift)]">
                 🚀 Launch Live Demo
               </Link>
+              <a href="#learn" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-secondary hover:-translate-y-0.5 transition-all duration-200">
+                <GraduationCap className="h-4 w-4" /> Explore Tutorials
+              </a>
               <a href="#founder" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-secondary hover:-translate-y-0.5 transition-all duration-200">
                 Meet the Founder
               </a>
+
             </div>
 
             <div className="pt-3">
@@ -1176,7 +1205,10 @@ function Index() {
 
 
 
+      <LearningCenter />
+
       <section id="contact" className="pb-24">
+
         <div className="container-x">
           <div className="relative overflow-hidden rounded-[2.5rem] bg-[color:var(--forest)] text-primary-foreground px-8 md:px-16 py-16 md:py-24">
             <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-[color:var(--gold)]/30 blur-3xl" />
