@@ -14,6 +14,8 @@ import {
   Baby, Drumstick, GraduationCap, BookOpen,
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
+import { LearningCenter } from "@/components/learning-center";
+
 
 const HOME_TITLE = "PoultryPro | Smart Poultry Farm Management Platform";
 const HOME_DESC =
