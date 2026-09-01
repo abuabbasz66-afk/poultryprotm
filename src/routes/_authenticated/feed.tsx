@@ -22,6 +22,7 @@ import {
 } from "@/lib/feed-formulas-data";
 import {
   computeNutrition, BIRD_SPECS, NUTRIENT_KEYS, NUTRIENT_META, statusFor,
+  LAB_INGREDIENTS, LAB_FEED_REFERENCES, lookupIngredient,
 } from "@/lib/feed-nutrition";
 
 
@@ -1201,19 +1202,49 @@ function NutritionPanel({ rows }: { rows: { name: string; weightKg: number }[] }
         <p className="mt-3 text-xs text-muted-foreground">Add ingredient quantities to see the nutrient profile.</p>
       ) : (
         <>
-          <p className="mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">Macro nutrients</p>
-          <div className="mt-1.5 grid grid-cols-2 md:grid-cols-4 gap-2">{render("macro")}</div>
+          <p className="mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">Proximate analysis</p>
+          <div className="mt-1.5 grid grid-cols-2 md:grid-cols-3 gap-2">{render("macro")}</div>
 
           <p className="mt-4 text-[10px] uppercase tracking-widest text-muted-foreground">Minerals & amino acids</p>
-          <div className="mt-1.5 grid grid-cols-2 md:grid-cols-5 gap-2">{render("micro")}</div>
+          <div className="mt-1.5 grid grid-cols-2 md:grid-cols-4 gap-2">{render("micro")}</div>
+
+          {nut.flags.length > 0 && (
+            <div className="mt-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-[11px] text-amber-800 dark:text-amber-200">
+              <p className="font-semibold">Outside laboratory reference range</p>
+              <ul className="mt-1 space-y-0.5">
+                {nut.flags.map((f, i) => (
+                  <li key={i}>
+                    {f.ingredient} · {NUTRIENT_META[f.nutrient].label}: actual {f.actual.toFixed(2)}% vs reference{" "}
+                    {f.kind === "above" ? "maximum" : "minimum"} {f.limit.toFixed(2)}% — actual laboratory value retained.
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="mt-3 rounded-2xl border border-border bg-muted/30 p-3 text-[11px] text-muted-foreground">
             Analysis covers {nut.coveragePct.toFixed(0)}% of the mix weight
-            ({fmtKg(nut.knownKg)} of {fmtKg(nut.totalKg)}).
+            ({fmtKg(nut.knownKg)} of {fmtKg(nut.totalKg)}), of which {fmtKg(nut.labKg)} ({nut.labCoveragePct.toFixed(0)}%)
+            uses laboratory-tested values.
             {nut.unknown.length > 0 && (
               <> Unrecognised ingredients excluded: {nut.unknown.join(", ")}. Rename them to a standard feedstuff name for full accuracy.</>
             )}
           </div>
+
+          <details className="mt-3 rounded-2xl border border-border bg-background p-3">
+            <summary className="cursor-pointer text-[11px] font-medium">Laboratory-Tested Layer Mash Reference</summary>
+            {LAB_FEED_REFERENCES.map((ref) => (
+              <div key={ref.report_number} className="mt-2 text-[11px] text-muted-foreground">
+                <p>
+                  CP {ref.profile.cp}% · Fat {ref.profile.ee}% · Fibre {ref.profile.cf}% · Moisture {ref.profile.moisture}% ·
+                  Ash {ref.profile.ash}% · Methionine {ref.profile.met}% · ME {Math.round(ref.profile.me).toLocaleString()} kcal/kg
+                </p>
+                <p className="mt-1">
+                  {ref.laboratory} · Report {ref.report_number} · {ref.report_date}. Finished-feed reference only — not a raw ingredient.
+                </p>
+              </div>
+            ))}
+          </details>
         </>
       )}
     </section>
@@ -1241,6 +1272,7 @@ function IngredientRow({
     row && row.unit === "bag" && row.unit_weight_kg > 0 ? String(row.unit_weight_kg) : "25",
   );
   const [dirty, setDirty] = useState(false);
+  const [showLab, setShowLab] = useState(false);
 
   const qtyNum = Number(qty) || 0;
   const priceNum = Number(price) || 0;
@@ -1274,6 +1306,8 @@ function IngredientRow({
     setDirty(false);
   }
 
+  const info = lookupIngredient(name);
+
   return (
     <div className={"rounded-2xl border p-3 " + (isNew ? "border-dashed border-[color:var(--forest)]/30 bg-[color:var(--forest)]/5" : "border-border")}>
       <div className="grid grid-cols-12 gap-2 items-end">
@@ -1281,12 +1315,16 @@ function IngredientRow({
           <Field label={isNew ? "Add ingredient" : `#${index} name`}>
             <input
               value={name}
+              list="lab-ingredients"
               onChange={(e) => { setName(e.target.value); setDirty(true); }}
               onBlur={() => dirty && commit()}
               placeholder="e.g. Maize"
               className={inputCls}
             />
           </Field>
+          <datalist id="lab-ingredients">
+            {LAB_INGREDIENTS.map((i) => <option key={i.name} value={i.name} />)}
+          </datalist>
         </div>
         <div className="col-span-4 md:col-span-2">
           <Field label={unit === "bag" ? "Qty (bags)" : "Qty (kg)"}>
@@ -1407,6 +1445,50 @@ function IngredientRow({
             <span> · ₦{perKg.toLocaleString(undefined, { maximumFractionDigits: 2 })}/kg</span>
           )}
         </p>
+      )}
+      {info && (
+        <div className="mt-2 rounded-xl border border-border bg-muted/30 p-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-medium">{info.name.toUpperCase()}</span>
+            {info.lab_tested ? (
+              <button
+                type="button"
+                title={`Nutrition values sourced from laboratory analysis. ${info.laboratory} · Report ${info.report_number} · ${info.report_date}`}
+                onClick={() => setShowLab((s) => !s)}
+                className="rounded-full border border-[color:var(--forest)]/40 bg-[color:var(--forest)]/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-[color:var(--forest)]"
+              >
+                Lab tested
+              </button>
+            ) : (
+              <span className="rounded-full border border-border px-2 py-0.5 text-[9px] uppercase tracking-widest text-muted-foreground">
+                Reference values
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            CP {info.profile.cp.toFixed(2)}% · Fat {info.profile.ee.toFixed(2)}% · Fibre {info.profile.cf.toFixed(2)}%
+            {info.profile.moisture != null && <> · Moisture {info.profile.moisture.toFixed(2)}%</>}
+            {" "}· Ash {info.profile.ash.toFixed(2)}% · ME {Math.round(info.profile.me).toLocaleString()} kcal/kg
+          </p>
+          {showLab && info.lab_tested && (
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Nutrition values sourced from laboratory analysis. {info.laboratory} ({info.lab_division}) ·
+              Report {info.report_number} · {info.report_date}
+              {info.prepared_for ? ` · prepared for ${info.prepared_for}` : ""}.
+            </p>
+          )}
+          {info.reference_limits && Object.entries(info.reference_limits).map(([k, lim]) => {
+            const key = k as keyof typeof info.profile;
+            const actual = info.profile[key];
+            if (actual == null || lim?.max == null || actual <= lim.max) return null;
+            return (
+              <p key={k} className="mt-1 text-[10px] text-amber-700 dark:text-amber-300">
+                {NUTRIENT_META[k as keyof typeof NUTRIENT_META].label} {actual.toFixed(2)}% is above the laboratory
+                reference maximum of {lim.max.toFixed(2)}% — actual value retained.
+              </p>
+            );
+          })}
+        </div>
       )}
     </div>
   );
