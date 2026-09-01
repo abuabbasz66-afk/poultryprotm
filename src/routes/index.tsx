@@ -1182,7 +1182,10 @@ function Index() {
 
 
 
+      <LearningCenter />
+
       <section id="contact" className="pb-24">
+
         <div className="container-x">
           <div className="relative overflow-hidden rounded-[2.5rem] bg-[color:var(--forest)] text-primary-foreground px-8 md:px-16 py-16 md:py-24">
             <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-[color:var(--gold)]/30 blur-3xl" />
