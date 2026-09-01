@@ -411,9 +411,13 @@ function Index() {
               <Link to="/presentation" className="inline-flex items-center gap-2 rounded-full bg-[color:var(--gold)] px-6 py-3 text-sm font-semibold text-[color:var(--ink)] hover:brightness-105 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] transition-all duration-200 shadow-[var(--shadow-lift)]">
                 🚀 Launch Live Demo
               </Link>
+              <a href="#learn" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-secondary hover:-translate-y-0.5 transition-all duration-200">
+                <GraduationCap className="h-4 w-4" /> Explore Tutorials
+              </a>
               <a href="#founder" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-secondary hover:-translate-y-0.5 transition-all duration-200">
                 Meet the Founder
               </a>
+
             </div>
 
             <div className="pt-3">
