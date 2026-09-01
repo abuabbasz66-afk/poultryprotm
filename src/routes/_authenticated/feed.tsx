@@ -1305,6 +1305,8 @@ function IngredientRow({
     setDirty(false);
   }
 
+  const info = lookupIngredient(name);
+
   return (
     <div className={"rounded-2xl border p-3 " + (isNew ? "border-dashed border-[color:var(--forest)]/30 bg-[color:var(--forest)]/5" : "border-border")}>
       <div className="grid grid-cols-12 gap-2 items-end">
@@ -1312,12 +1314,16 @@ function IngredientRow({
           <Field label={isNew ? "Add ingredient" : `#${index} name`}>
             <input
               value={name}
+              list="lab-ingredients"
               onChange={(e) => { setName(e.target.value); setDirty(true); }}
               onBlur={() => dirty && commit()}
               placeholder="e.g. Maize"
               className={inputCls}
             />
           </Field>
+          <datalist id="lab-ingredients">
+            {LAB_INGREDIENTS.map((i) => <option key={i.name} value={i.name} />)}
+          </datalist>
         </div>
         <div className="col-span-4 md:col-span-2">
           <Field label={unit === "bag" ? "Qty (bags)" : "Qty (kg)"}>
