@@ -196,15 +196,3 @@
   animation: hero-fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Hide the Lovable "Edit with Lovable" preview/publish badge overlay. */
-.lovable-badge,
-.lovable-edit-button,
-[data-lovable="edit-button"],
-[data-lovable="badge"],
-a[href*="lovable.dev/editor"],
-a[href*="lovable.app/editor"],
-a[href*="lovableproject.com/editor"] {
-  display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-}
