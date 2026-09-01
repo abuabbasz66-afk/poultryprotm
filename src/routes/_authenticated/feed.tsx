@@ -1114,13 +1114,13 @@ function FormulaEditor({
         {/* Share bar */}
         {cost.totalCost > 0 && (
           <div className="mt-4 space-y-1.5">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Cost composition</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Cost composition (share of total cost)</p>
             <div className="flex h-2.5 overflow-hidden rounded-full bg-muted">
               {cost.rows.map((r, i) => (
                 <div
                   key={r.id}
                   style={{ width: `${r.sharePct}%`, background: shareColor(i) }}
-                  title={`${r.name}: ${r.sharePct.toFixed(1)}%`}
+                  title={`${r.name}: ${fmtShare(r.sharePct)} of cost · ${fmtShare(r.inclusionPct)} of mix`}
                 />
               ))}
             </div>
@@ -1128,7 +1128,7 @@ function FormulaEditor({
               {cost.rows.map((r, i) => (
                 <span key={r.id} className="inline-flex items-center gap-1">
                   <span className="inline-block h-2 w-2 rounded-full" style={{ background: shareColor(i) }} />
-                  {r.name} {r.sharePct.toFixed(0)}%
+                  {r.name} {fmtShare(r.sharePct)} of cost · {fmtShare(r.inclusionPct)} of mix
                 </span>
               ))}
             </div>
