@@ -43,6 +43,9 @@ type PaymentRow = {
   id: string;
   plan: string;
   amount_ngn: number;
+  charged_amount_ngn: number | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  metadata: any;
   currency: string;
   reference: string;
   status: string;
@@ -57,7 +60,7 @@ function usePayments(farmId: string | null) {
     queryFn: async (): Promise<PaymentRow[]> => {
       const { data, error } = await supabase
         .from("farm_payments")
-        .select("id, plan, amount_ngn, currency, reference, status, paid_at, created_at")
+        .select("id, plan, amount_ngn, charged_amount_ngn, metadata, currency, reference, status, paid_at, created_at")
         .eq("farm_id", farmId!)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -82,6 +85,7 @@ function SubscriptionsPage() {
   const [busyPlan, setBusyPlan] = useState<PlanTier | null>(null);
   const [managing, setManaging] = useState(false);
   const [recovering, setRecovering] = useState<string | null>(null);
+  const [payMethod, setPayMethod] = useState<"card" | "flexible">("card");
 
   const payments = usePayments(data?.farmId ?? null);
 
@@ -107,7 +111,7 @@ function SubscriptionsPage() {
       const res = await fetch("/api/paystack/initialize", {
         method: "POST",
         headers: await authHeaders(),
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, method: payMethod }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok || !body?.authorization_url) {
@@ -313,6 +317,43 @@ function SubscriptionsPage() {
               All prices in Nigerian Naira, billed monthly. Cancel anytime — your farm data is always yours.
             </p>
           </div>
+          <div className="mb-4 rounded-2xl border border-border bg-card p-4">
+            <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-semibold">
+              Payment method
+            </div>
+            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {([
+                {
+                  id: "card" as const,
+                  title: "Card — auto-renew monthly",
+                  desc: "Saved securely by Paystack. Renews automatically each month.",
+                },
+                {
+                  id: "flexible" as const,
+                  title: "Transfer, Bank or USSD",
+                  desc: "Pay with Transfer, your bank, or USSD. Covers one month; renew when you're ready.",
+                },
+              ]).map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setPayMethod(m.id)}
+                  className={`rounded-xl border p-3 text-left transition ${
+                    payMethod === m.id
+                      ? "border-[color:var(--forest)] bg-[color:var(--forest)]/5"
+                      : "border-border hover:bg-muted"
+                  }`}
+                >
+                  <div className="text-sm font-semibold text-foreground">{m.title}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">{m.desc}</div>
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              All payment details are handled on Paystack's secure checkout — PoultryPro never sees your card
+              or bank credentials.
+            </p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {PRICING_PLANS.map((p) => (
               <PlanCard
@@ -353,7 +394,9 @@ function SubscriptionsPage() {
                   <tr className="text-left text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
                     <th className="py-2 pr-3 font-semibold">Date</th>
                     <th className="py-2 pr-3 font-semibold">Plan</th>
-                    <th className="py-2 pr-3 font-semibold">Amount</th>
+                    <th className="py-2 pr-3 font-semibold">Plan price</th>
+                    <th className="py-2 pr-3 font-semibold">Charged</th>
+                    <th className="py-2 pr-3 font-semibold">Channel</th>
                     <th className="py-2 pr-3 font-semibold">Status</th>
                     <th className="py-2 pr-3 font-semibold">Reference</th>
                     <th className="py-2 pr-3 font-semibold">Paid</th>
@@ -366,6 +409,17 @@ function SubscriptionsPage() {
                       <td className="py-2 pr-3 whitespace-nowrap">{fmtDay(p.created_at)}</td>
                       <td className="py-2 pr-3 capitalize">{p.plan}</td>
                       <td className="py-2 pr-3 whitespace-nowrap">{formatNaira(Number(p.amount_ngn))}</td>
+                      <td className="py-2 pr-3 whitespace-nowrap">
+                        {p.charged_amount_ngn != null ? formatNaira(Number(p.charged_amount_ngn)) : "—"}
+                        {p.charged_amount_ngn != null && Number(p.charged_amount_ngn) > Number(p.amount_ngn) && (
+                          <span className="ml-1 text-[11px] text-muted-foreground">
+                            (incl. {formatNaira(Number(p.charged_amount_ngn) - Number(p.amount_ngn))} fee)
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2 pr-3 whitespace-nowrap capitalize text-muted-foreground">
+                        {String(p.metadata?.payment_channel ?? p.metadata?.method ?? "—").replace("_", " ")}
+                      </td>
                       <td className="py-2 pr-3">
                         <span
                           className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${
