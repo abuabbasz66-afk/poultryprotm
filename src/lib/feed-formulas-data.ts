@@ -84,9 +84,13 @@ export function computeFormulaCost(f: FeedFormulaWithIngredients, defaultBagKg: 
     const perKg = weightKg > 0 ? cost / weightKg : 0;
     totalKg += weightKg;
     totalCost += cost;
-    return { ...i, weightKg, pricePerKg: perKg, lineCost: cost, sharePct: 0 };
+    return { ...i, weightKg, pricePerKg: perKg, lineCost: cost, sharePct: 0, inclusionPct: 0 };
   });
-  rows.forEach((r) => (r.sharePct = totalCost > 0 ? (r.lineCost / totalCost) * 100 : 0));
+  rows.forEach((r) => {
+    // sharePct = share of TOTAL COST. inclusionPct = share of TOTAL WEIGHT (mix rate).
+    r.sharePct = totalCost > 0 ? (r.lineCost / totalCost) * 100 : 0;
+    r.inclusionPct = totalKg > 0 ? (r.weightKg / totalKg) * 100 : 0;
+  });
   const costPerKg = totalKg > 0 ? totalCost / totalKg : 0;
   const costPerBag = costPerKg * bagKg;
   const bagsProduced = bagKg > 0 ? totalKg / bagKg : 0;
