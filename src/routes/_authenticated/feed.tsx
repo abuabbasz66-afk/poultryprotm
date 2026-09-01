@@ -1272,6 +1272,7 @@ function IngredientRow({
     row && row.unit === "bag" && row.unit_weight_kg > 0 ? String(row.unit_weight_kg) : "25",
   );
   const [dirty, setDirty] = useState(false);
+  const [showLab, setShowLab] = useState(false);
 
   const qtyNum = Number(qty) || 0;
   const priceNum = Number(price) || 0;
