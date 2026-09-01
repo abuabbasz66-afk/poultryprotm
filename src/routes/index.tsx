@@ -354,9 +354,11 @@ function Index() {
           </a>
           <nav className="hidden md:flex items-center gap-10 text-sm font-medium">
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Features</a>
+            <a href="#learn" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Learn</a>
             <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Pricing</a>
             <a href="#founder" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Founder</a>
             <a href="#roadmap" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Roadmap</a>
+
           </nav>
           {authed ? (
             <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-200">
