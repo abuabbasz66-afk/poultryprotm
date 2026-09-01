@@ -1,3 +1,4 @@
+import { friendlyError } from "@/lib/error-message";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Syringe, Pill, Plus, Trash2, Pencil, CalendarClock, AlertTriangle } from "lucide-react";
@@ -87,7 +88,7 @@ export function BroilerHealthPanel({ batch, canWrite, canDelete }: {
     const m = kind === "vacc" ? delVacc : delMed;
     m.mutate(id, {
       onSuccess: () => toast.success("Record deleted"),
-      onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed"),
+      onError: (e) => toast.error(friendlyError(e, "Delete failed")),
     });
   };
 
@@ -245,7 +246,7 @@ function VaccinationDialog({ batch, editing, onClose }: {
       notes,
     }, {
       onSuccess: () => { toast.success(editing ? "Vaccination updated" : "Vaccination recorded"); onClose(); },
-      onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save"),
+      onError: (e) => toast.error(friendlyError(e, "Could not save")),
     });
   };
 
@@ -300,7 +301,7 @@ function MedicationDialog({ batch, editing, onClose }: {
       dosage, start_date: start, end_date: end || null, purpose, notes,
     }, {
       onSuccess: () => { toast.success(editing ? "Medication updated" : "Medication recorded"); onClose(); },
-      onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save"),
+      onError: (e) => toast.error(friendlyError(e, "Could not save")),
     });
   };
 

@@ -1,3 +1,4 @@
+import { friendlyError } from "@/lib/error-message";
 import { useMemo, useState } from "react";
 import {
   Egg, Wheat, Leaf, Clock, Search, Pencil, History as HistoryIcon, Trash2, Plus,
@@ -655,7 +656,7 @@ function PriceSheet({ open, price, bagKg, onClose, onSave }: {
                   effectiveFrom: new Date(effective || Date.now()).toISOString(),
                 });
               } catch (e) {
-                toast.error(e instanceof Error ? e.message : "Could not save the price.");
+                toast.error(friendlyError(e, "Could not save the price."));
               } finally {
                 setBusy(false);
               }

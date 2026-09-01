@@ -1,3 +1,4 @@
+import { friendlyError } from "@/lib/error-message";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
@@ -282,7 +283,7 @@ function BatchDetail({ m, daily, sales, onBack, onRecord, onSell, canWrite, canS
                 if (!confirm(`Delete ${m.batch.name} and all of its records?`)) return;
                 delBatch.mutate(m.batch.id, {
                   onSuccess: () => { toast.success("Batch deleted"); onBack(); },
-                  onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed"),
+                  onError: (e) => toast.error(friendlyError(e, "Delete failed")),
                 });
               }}
             >
@@ -366,7 +367,7 @@ function BatchDetail({ m, daily, sales, onBack, onRecord, onSell, canWrite, canS
                             <button className="text-muted-foreground hover:text-destructive" aria-label="Delete daily record"
                               onClick={() => {
                                 if (!confirm(`Delete the record for ${d.entry_date}?`)) return;
-                                delDaily.mutate(d.id, { onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed") });
+                                delDaily.mutate(d.id, { onError: (e) => toast.error(friendlyError(e, "Delete failed")) });
                               }}>
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
@@ -409,7 +410,7 @@ function BatchDetail({ m, daily, sales, onBack, onRecord, onSell, canWrite, canS
                             <button className="text-muted-foreground hover:text-destructive" aria-label="Delete sale"
                               onClick={() => {
                                 if (!confirm(`Delete the sale recorded on ${s.entry_date}?`)) return;
-                                delSale.mutate(s.id, { onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed") });
+                                delSale.mutate(s.id, { onError: (e) => toast.error(friendlyError(e, "Delete failed")) });
                               }}>
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
@@ -492,7 +493,7 @@ function NewBatchDialog({ onClose }: { onClose: () => void }) {
       target_weight_kg: Number(target) || 2.2,
     }, {
       onSuccess: () => { toast.success("Batch created"); onClose(); },
-      onError: (e) => toast.error(e instanceof Error ? e.message : "Could not create batch"),
+      onError: (e) => toast.error(friendlyError(e, "Could not create batch")),
     });
   };
 
@@ -550,7 +551,7 @@ function DailyDialog({ m, editing, onClose }: { m: BatchMetrics; editing?: Broil
       current_birds: m.batch.current_birds + (editing?.deaths ?? 0),
     }, {
       onSuccess: () => { toast.success(editing ? "Record updated" : "Day recorded"); onClose(); },
-      onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save"),
+      onError: (e) => toast.error(friendlyError(e, "Could not save")),
     });
   };
 
@@ -611,7 +612,7 @@ function SaleDialog({ m, editing, onClose }: { m: BatchMetrics; editing?: Broile
     };
     const handlers = {
       onSuccess: () => { toast.success(editing ? "Sale updated" : "Sale recorded"); onClose(); },
-      onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not save sale"),
+      onError: (e: unknown) => toast.error(friendlyError(e, "Could not save sale")),
     };
     if (editing) upd.mutate({ ...common, id: editing.id, previous_birds: editing.birds }, handlers);
     else rec.mutate(common, handlers);

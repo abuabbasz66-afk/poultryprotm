@@ -1,3 +1,4 @@
+import { friendlyError } from "@/lib/error-message";
 import { RequirePermission } from "@/components/require-permission";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -75,7 +76,7 @@ function SettingsPage() {
       qc.invalidateQueries();
       toast.success("Farm settings saved");
     },
-    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not save settings"),
+    onError: (e: unknown) => toast.error(friendlyError(e, "Could not save settings")),
   });
 
   return (

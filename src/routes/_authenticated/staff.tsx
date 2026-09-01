@@ -1,3 +1,4 @@
+import { friendlyError } from "@/lib/error-message";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -171,7 +172,7 @@ function PeopleTab() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Role updated."); refresh(); },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e)),
   });
 
   const setStatus = useMutation({
@@ -180,7 +181,7 @@ function PeopleTab() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Access updated."); refresh(); },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e)),
   });
 
   const rows = staffQ.data ?? [];
@@ -363,7 +364,7 @@ function InviteDialog({ roles, onClose, onDone }: { roles: RoleRow[]; onClose: (
       );
       onDone();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not create the account.");
+      toast.error(friendlyError(err, "Could not create the account."));
     } finally {
       setBusy(false);
     }
@@ -473,7 +474,7 @@ function ResetDialog({ member, onClose, onDone }: { member: StaffRow; onClose: (
               toast.success("Password reset. Share the new password securely.");
               onDone();
             } catch (err) {
-              toast.error(err instanceof Error ? err.message : "Could not reset the password.");
+              toast.error(friendlyError(err, "Could not reset the password."));
             } finally { setBusy(false); }
           }}
           className="inline-flex items-center gap-2 rounded-xl bg-[color:var(--forest)] px-5 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
@@ -506,7 +507,7 @@ function DeleteDialog({ member, onClose, onDone }: { member: StaffRow; onClose: 
               toast.success("User removed.");
               onDone();
             } catch (err) {
-              toast.error(err instanceof Error ? err.message : "Could not remove the user.");
+              toast.error(friendlyError(err, "Could not remove the user."));
             } finally { setBusy(false); }
           }}
           className="inline-flex items-center gap-2 rounded-xl bg-destructive px-5 py-2.5 text-sm font-medium text-destructive-foreground disabled:opacity-50"
