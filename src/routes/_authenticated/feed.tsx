@@ -1142,7 +1142,7 @@ function FormulaEditor({
 function IngredientRow({
   row, index, onSave, onDelete,
 }: {
-  row: (FormulaIngredient & { pricePerKg: number; lineCost: number; sharePct: number }) | null;
+  row: (FormulaIngredient & { pricePerKg: number; lineCost: number; sharePct: number; inclusionPct: number }) | null;
   index: number;
   onSave: (patch: {
     name: string; quantity_kg: number; price_per_unit: number;
