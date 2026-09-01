@@ -255,10 +255,10 @@ function SubscriptionsPage() {
             </div>
             <div className="text-right">
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
-                {isTrial ? "Trial ends" : "Renews"}
+                {isTrial ? "Trial ends" : data.autoRenew ? "Renews" : data.planExpired ? "Expired" : "Access until"}
               </div>
               <div className="mt-1 font-semibold text-foreground">
-                {fmtDay(isTrial ? data.trialEndsAt : (data.nextPaymentAt ?? data.trialEndsAt))}
+                {fmtDay(isTrial ? data.trialEndsAt : (data.nextPaymentAt ?? (currentPlan === "basic" ? data.trialEndsAt : null)))}
               </div>
               {isTrial && (
                 <div className="text-xs text-muted-foreground">
@@ -294,12 +294,20 @@ function SubscriptionsPage() {
             <InfoTile
               icon={<Calendar className="h-4 w-4" />}
               label="Status"
-              value={isTrial ? "Trial · Active" : currentPlan === "basic" ? "Free" : "Active"}
+              value={
+                isTrial
+                  ? "Trial · Active"
+                  : currentPlan === "basic"
+                    ? "Free"
+                    : data.planExpired
+                      ? "Expired · renew to continue"
+                      : "Active"
+              }
             />
             <InfoTile
               icon={<RefreshCw className="h-4 w-4" />}
               label="Auto-renewal"
-              value={data.autoRenew ? "On" : "Off"}
+              value={data.autoRenew ? "On" : "Off — one-off payment"}
             />
             <InfoTile
               icon={<ShieldCheck className="h-4 w-4" />}
