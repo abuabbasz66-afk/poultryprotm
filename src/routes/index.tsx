@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 import { LearningCenter } from "@/components/learning-center";
+import { TUTORIAL_CATEGORIES } from "@/lib/tutorials";
+
 
 
 const HOME_TITLE = "PoultryPro | Smart Poultry Farm Management Platform";
