@@ -105,19 +105,29 @@ async function handleEvent(payload: any) {
       }
       if (!farmId || !plan || !reference) return;
 
+      const currencyOk = !d?.currency || d.currency === "NGN";
+      const statusOk = !d?.status || d.status === "success";
       const check = verifyPaidAmount(plan, d);
-      if (!check.ok) {
+      if (!check.ok || !currencyOk || !statusOk) {
         logVerificationFailure({
           source: "webhook:charge.success",
           reference,
           farmId,
           plan,
-          reason: check.reason ?? "amount_mismatch",
+          reason: !currencyOk
+            ? "currency_mismatch"
+            : !statusOk
+              ? "transaction_not_successful"
+              : (check.reason ?? "amount_mismatch"),
           check,
           txStatus: d?.status ?? null,
           gatewayResponse: d?.gateway_response ?? null,
         });
-        await markPaymentStatus(reference, "attention", check.reason ?? "amount_mismatch");
+        await markPaymentStatus(
+          reference,
+          "attention",
+          !currencyOk ? "currency_mismatch" : !statusOk ? "not_successful" : (check.reason ?? "amount_mismatch"),
+        );
         return;
       }
 
@@ -131,6 +141,8 @@ async function handleEvent(payload: any) {
         subscriptionCode,
         planCode: d?.plan_object?.plan_code ?? d?.plan ?? null,
         gatewayResponse: d?.gateway_response ?? null,
+        channel: d?.channel ?? null,
+        feeKobo: d?.fees != null ? Number(d.fees) : null,
         paidAt: d?.paid_at ?? null,
         nextPaymentAt: d?.next_payment_date ?? null,
         metadata: d?.metadata ?? {},
@@ -195,6 +207,8 @@ async function handleEvent(payload: any) {
               subscriptionCode,
               planCode: d?.subscription?.plan?.plan_code ?? null,
               gatewayResponse: d?.transaction?.gateway_response ?? null,
+              channel: d?.transaction?.channel ?? null,
+              feeKobo: d?.fees != null ? Number(d.fees) : null,
               paidAt: d?.paid_at ?? null,
               nextPaymentAt: d?.subscription?.next_payment_date ?? null,
             });

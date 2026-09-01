@@ -78,6 +78,8 @@ export const Route = createFileRoute("/api/public/paystack/callback")({
           subscriptionCode: tx?.plan_object?.subscription_code ?? null,
           planCode: tx?.plan ?? tx?.plan_object?.plan_code ?? null,
           gatewayResponse: tx?.gateway_response ?? null,
+          channel: tx?.channel ?? null,
+          feeKobo: tx?.fees != null ? Number(tx.fees) : null,
           paidAt: tx?.paid_at ?? null,
           metadata: tx?.metadata ?? {},
         });
