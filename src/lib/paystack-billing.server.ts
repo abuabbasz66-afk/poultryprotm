@@ -146,13 +146,25 @@ export async function activatePaidPlan(opts: {
   }
 
 
+  // Paystack only creates a recurring subscription for card checkouts (a plan
+  // code is attached). Transfer / bank / USSD payments are one-off months:
+  // nothing will ever charge the farm again, so they must not be advertised as
+  // auto-renewing, and access must expire one month after payment.
+  const startedAt = opts.paidAt ?? new Date().toISOString();
+  const recurring = Boolean(opts.subscriptionCode || opts.planCode || prevCode);
+  const oneMonthAfter = () => {
+    const d = new Date(startedAt);
+    d.setMonth(d.getMonth() + 1);
+    return d.toISOString();
+  };
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const patch: Record<string, any> = {
     subscription_plan: opts.plan,
     plan_updated_at: new Date().toISOString(),
-    subscription_started_at: opts.paidAt ?? new Date().toISOString(),
-    paystack_subscription_status: "active",
-    auto_renew: true,
+    subscription_started_at: startedAt,
+    paystack_subscription_status: recurring ? "active" : "one_time",
+    auto_renew: recurring,
   };
   if (opts.customerCode) patch.paystack_customer_code = opts.customerCode;
   if (opts.subscriptionCode && opts.subscriptionCode !== prevCode) {
@@ -160,7 +172,9 @@ export async function activatePaidPlan(opts: {
     patch.paystack_email_token = null; // refreshed by subscription.create webhook
   }
   if (opts.planCode) patch.paystack_plan_code = opts.planCode;
-  if (opts.nextPaymentAt) patch.subscription_next_payment_at = opts.nextPaymentAt;
+  patch.subscription_next_payment_at = opts.nextPaymentAt ?? (recurring ? undefined : oneMonthAfter());
+  if (patch.subscription_next_payment_at === undefined) delete patch.subscription_next_payment_at;
+
 
   await admin.from("farms").update(patch).eq("id", opts.farmId);
   return { idempotent: false };
