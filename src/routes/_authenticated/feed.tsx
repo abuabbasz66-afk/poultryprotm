@@ -22,6 +22,7 @@ import {
 } from "@/lib/feed-formulas-data";
 import {
   computeNutrition, BIRD_SPECS, NUTRIENT_KEYS, NUTRIENT_META, statusFor,
+  LAB_INGREDIENTS, LAB_FEED_REFERENCES, lookupIngredient,
 } from "@/lib/feed-nutrition";
 
 
