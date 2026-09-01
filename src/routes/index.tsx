@@ -55,7 +55,26 @@ export const Route = createFileRoute("/")({
           },
         }),
       },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "PoultryPro Learning Center",
+          description:
+            "Free tutorials on poultry farm management, poultry production records, feed management, poultry health records, farm finance, poultry analytics and digital poultry farming.",
+          url: "https://poultrypro.life/#learn",
+          itemListElement: TUTORIAL_CATEGORIES.map((c, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            name: c.name,
+            description: c.description,
+            url: `https://poultrypro.life/#learn`,
+          })),
+        }),
+      },
     ],
+
   }),
   component: Index,
 });
