@@ -1445,6 +1445,50 @@ function IngredientRow({
           )}
         </p>
       )}
+      {info && (
+        <div className="mt-2 rounded-xl border border-border bg-muted/30 p-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-medium">{info.name.toUpperCase()}</span>
+            {info.lab_tested ? (
+              <button
+                type="button"
+                title={`Nutrition values sourced from laboratory analysis. ${info.laboratory} · Report ${info.report_number} · ${info.report_date}`}
+                onClick={() => setShowLab((s) => !s)}
+                className="rounded-full border border-[color:var(--forest)]/40 bg-[color:var(--forest)]/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-[color:var(--forest)]"
+              >
+                Lab tested
+              </button>
+            ) : (
+              <span className="rounded-full border border-border px-2 py-0.5 text-[9px] uppercase tracking-widest text-muted-foreground">
+                Reference values
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            CP {info.profile.cp.toFixed(2)}% · Fat {info.profile.ee.toFixed(2)}% · Fibre {info.profile.cf.toFixed(2)}%
+            {info.profile.moisture != null && <> · Moisture {info.profile.moisture.toFixed(2)}%</>}
+            {" "}· Ash {info.profile.ash.toFixed(2)}% · ME {Math.round(info.profile.me).toLocaleString()} kcal/kg
+          </p>
+          {showLab && info.lab_tested && (
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Nutrition values sourced from laboratory analysis. {info.laboratory} ({info.lab_division}) ·
+              Report {info.report_number} · {info.report_date}
+              {info.prepared_for ? ` · prepared for ${info.prepared_for}` : ""}.
+            </p>
+          )}
+          {info.reference_limits && Object.entries(info.reference_limits).map(([k, lim]) => {
+            const key = k as keyof typeof info.profile;
+            const actual = info.profile[key];
+            if (actual == null || lim?.max == null || actual <= lim.max) return null;
+            return (
+              <p key={k} className="mt-1 text-[10px] text-amber-700 dark:text-amber-300">
+                {NUTRIENT_META[k as keyof typeof NUTRIENT_META].label} {actual.toFixed(2)}% is above the laboratory
+                reference maximum of {lim.max.toFixed(2)}% — actual value retained.
+              </p>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
