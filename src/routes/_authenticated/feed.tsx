@@ -20,6 +20,10 @@ import {
   useDeleteFormula, useDuplicateFormula, useSetActiveFormula, useUpsertIngredient, useDeleteIngredient,
   useSetFeedSource, type FeedFormulaWithIngredients, type FormulaIngredient,
 } from "@/lib/feed-formulas-data";
+import {
+  computeNutrition, BIRD_SPECS, NUTRIENT_KEYS, NUTRIENT_META, statusFor,
+} from "@/lib/feed-nutrition";
+
 
 import { useFeedIntelligence } from "@/lib/feed-intelligence";
 import { RoomFeedTab } from "@/components/feed/room-feed-tab";
