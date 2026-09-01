@@ -1114,13 +1114,13 @@ function FormulaEditor({
         {/* Share bar */}
         {cost.totalCost > 0 && (
           <div className="mt-4 space-y-1.5">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Cost composition</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Cost composition (share of total cost)</p>
             <div className="flex h-2.5 overflow-hidden rounded-full bg-muted">
               {cost.rows.map((r, i) => (
                 <div
                   key={r.id}
                   style={{ width: `${r.sharePct}%`, background: shareColor(i) }}
-                  title={`${r.name}: ${r.sharePct.toFixed(1)}%`}
+                  title={`${r.name}: ${fmtShare(r.sharePct)} of cost · ${fmtShare(r.inclusionPct)} of mix`}
                 />
               ))}
             </div>
@@ -1128,7 +1128,7 @@ function FormulaEditor({
               {cost.rows.map((r, i) => (
                 <span key={r.id} className="inline-flex items-center gap-1">
                   <span className="inline-block h-2 w-2 rounded-full" style={{ background: shareColor(i) }} />
-                  {r.name} {r.sharePct.toFixed(0)}%
+                  {r.name} {fmtShare(r.sharePct)} of cost · {fmtShare(r.inclusionPct)} of mix
                 </span>
               ))}
             </div>
@@ -1142,7 +1142,7 @@ function FormulaEditor({
 function IngredientRow({
   row, index, onSave, onDelete,
 }: {
-  row: (FormulaIngredient & { pricePerKg: number; lineCost: number; sharePct: number }) | null;
+  row: (FormulaIngredient & { pricePerKg: number; lineCost: number; sharePct: number; inclusionPct: number }) | null;
   index: number;
   onSave: (patch: {
     name: string; quantity_kg: number; price_per_unit: number;
@@ -1293,7 +1293,8 @@ function IngredientRow({
             <div className="text-right mr-1">
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Line cost</p>
               <p className="text-sm font-semibold">₦{Math.round(line).toLocaleString()}</p>
-              <p className="text-[10px] text-muted-foreground">₦{perKg.toFixed(2)}/kg · {row?.sharePct.toFixed(0)}%</p>
+              <p className="text-[10px] text-muted-foreground">₦{perKg.toFixed(2)}/kg · {fmtShare(row?.sharePct ?? 0)} of cost</p>
+              <p className="text-[10px] text-muted-foreground">{fmtShare(row?.inclusionPct ?? 0)} of mix</p>
             </div>
           )}
           {isNew ? (
@@ -1331,6 +1332,13 @@ function IngredientRow({
 
 const SHARE_COLORS = ["#0d3520", "#c9a24b", "#4a8f5f", "#8c6c2e", "#2b5c3d", "#d4b25c", "#6a4a1e", "#a5c0a0"];
 function shareColor(i: number) { return SHARE_COLORS[i % SHARE_COLORS.length]; }
+/** Percentages: never round a non-zero share down to "0%". */
+function fmtShare(p: number) {
+  if (!Number.isFinite(p) || p <= 0) return "0%";
+  if (p < 1) return `${p.toFixed(1)}%`;
+  if (p < 10) return `${p.toFixed(1)}%`;
+  return `${p.toFixed(0)}%`;
+}
 
 
 
