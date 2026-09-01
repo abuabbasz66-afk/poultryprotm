@@ -1332,6 +1332,13 @@ function IngredientRow({
 
 const SHARE_COLORS = ["#0d3520", "#c9a24b", "#4a8f5f", "#8c6c2e", "#2b5c3d", "#d4b25c", "#6a4a1e", "#a5c0a0"];
 function shareColor(i: number) { return SHARE_COLORS[i % SHARE_COLORS.length]; }
+/** Percentages: never round a non-zero share down to "0%". */
+function fmtShare(p: number) {
+  if (!Number.isFinite(p) || p <= 0) return "0%";
+  if (p < 1) return `${p.toFixed(1)}%`;
+  if (p < 10) return `${p.toFixed(1)}%`;
+  return `${p.toFixed(0)}%`;
+}
 
 
 
