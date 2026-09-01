@@ -159,9 +159,6 @@ export function useFarmId() {
             throw memberErr;
           }
           if (member?.farm_id) {
-            console.info("[farm] resolved via membership", {
-              userId, farmId: member.farm_id, role: member.role_key,
-            });
             return member.farm_id;
           }
 
@@ -175,7 +172,6 @@ export function useFarmId() {
             console.error("[farm] owner lookup failed", { userId, error: error.message });
             throw error;
           }
-          console.info("[farm] resolved via ownership", { userId, farmId: data?.id ?? null });
           return data?.id ?? null;
         },
       });
