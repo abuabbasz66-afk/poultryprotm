@@ -1,3 +1,4 @@
+import { friendlyError } from "@/lib/error-message";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Paperclip } from "lucide-react";
 import { toast } from "sonner";
@@ -92,7 +93,7 @@ export function ExpenseDialog({
       toast.success(editing ? "Expense updated" : "Expense recorded");
       onOpenChange(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save the expense");
+      toast.error(friendlyError(e, "Could not save the expense"));
     } finally {
       setBusy(false);
     }
@@ -245,7 +246,7 @@ export function RevenueDialog({
       toast.success(editing ? "Revenue updated" : "Revenue recorded");
       onOpenChange(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save the sale");
+      toast.error(friendlyError(e, "Could not save the sale"));
     } finally {
       setBusy(false);
     }

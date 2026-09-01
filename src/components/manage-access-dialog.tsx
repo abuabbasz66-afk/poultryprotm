@@ -1,3 +1,4 @@
+import { friendlyError } from "@/lib/error-message";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -71,7 +72,12 @@ export function ManageAccessDialog({ member, onClose }: { member: Member; onClos
       qc.invalidateQueries({ queryKey: ["farm-staff"] });
       onClose();
     },
-    onError: (e: Error) => toast.error(e.message === "forbidden" ? "Only the Farm Owner can change access." : e.message),
+    onError: (e: Error) =>
+      toast.error(
+        e.message === "forbidden"
+          ? "Only the Farm Owner can change access."
+          : friendlyError(e, "Could not update access."),
+      ),
   });
 
   return (
