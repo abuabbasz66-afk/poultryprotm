@@ -143,7 +143,31 @@ function FeedManagementPage() {
   );
 }
 
+/* ------------------------------ Quick actions ----------------------------- */
 
+function FeedQuickActions() {
+  const [open, setOpen] = useState<"purchase" | "adjust" | null>(null);
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setOpen(open === "purchase" ? null : "purchase")}
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[color:var(--forest)] px-4 text-sm font-semibold text-primary-foreground"
+        >
+          <ShoppingCart className="h-4 w-4" /> Add purchase
+        </button>
+        <button
+          onClick={() => setOpen(open === "adjust" ? null : "adjust")}
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border px-4 text-sm font-medium"
+        >
+          <Pencil className="h-4 w-4" /> Adjust stock
+        </button>
+      </div>
+      {open === "purchase" && <PurchaseForm onClose={() => setOpen(null)} />}
+      {open === "adjust" && <AdjustmentForm onClose={() => setOpen(null)} />}
+    </div>
+  );
+}
 
 
 /* -------------------------------- Overview ------------------------------- */
