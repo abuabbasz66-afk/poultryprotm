@@ -3,11 +3,12 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { farmScope, invalidateFarm, useAuthUserId, useFarmId, useFarm, useFeed, useEggProduction } from "@/lib/farm-data";
+import { farmScope, invalidateFarm, useAuthUserId, useFarmId, useFarm, useFeed, useEggs } from "@/lib/farm-data";
 import { useFarmContext } from "@/lib/rbac";
 import { useFeedInventory, type FeedInventoryLot, type FeedLedgerEntry } from "@/lib/feed-inventory-data";
 import { useFeedTypes, type FeedType } from "@/lib/feed-types-data";
 import { toDateKey } from "@/lib/date-key";
+import { totalEggsFromRow } from "@/lib/egg-normalize";
 
 const num = (v: unknown) => (v == null ? 0 : Number(v));
 const today = () => toDateKey(new Date()) ?? new Date().toISOString().slice(0, 10);
@@ -343,7 +344,7 @@ export type FeedCostAnalytics = {
 export function useFeedCostAnalytics(days = 30): FeedCostAnalytics {
   const inv = useFeedInventory();
   const feed = useFeed();
-  const eggs = useEggProduction();
+  const eggs = useEggs();
   const farm = useFarm();
   const bagWeightKg = farm.data?.bag_weight_kg ?? 25;
 
@@ -364,7 +365,7 @@ export function useFeedCostAnalytics(days = 30): FeedCostAnalytics {
     const eggsByDate = new Map<string, number>();
     for (const r of eggRows) {
       const key = toDateKey(r.date) ?? r.date;
-      const total = (r.r2 ?? 0) + (r.r3 ?? 0) + (r.r4 ?? 0) + (r.extra ?? 0);
+      const total = totalEggsFromRow(r);
       eggsByDate.set(key, (eggsByDate.get(key) ?? 0) + total);
     }
 
