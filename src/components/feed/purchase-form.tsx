@@ -7,7 +7,7 @@ import { useAddFeedPurchase, purchaseTotals } from "@/lib/feed-purchases-data";
 import { useFeedTypes } from "@/lib/feed-types-data";
 import { useFarm } from "@/lib/farm-data";
 import { toDateKey } from "@/lib/date-key";
-import { errorMessage } from "@/lib/error-message";
+import { friendlyError } from "@/lib/error-message";
 
 const nairaFmt = (n: number) => `₦${Math.round(n).toLocaleString()}`;
 
@@ -58,7 +58,7 @@ export function PurchaseForm({ onClose }: { onClose: () => void }) {
       toast.success("Feed purchase recorded");
       onClose();
     } catch (e) {
-      toast.error(errorMessage(e, "Unable to save this purchase. Please try again."));
+      toast.error(friendlyError(e, "Unable to save this purchase. Please try again."));
     }
   };
 
