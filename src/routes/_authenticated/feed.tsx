@@ -29,19 +29,26 @@ import {
 
 import { useFeedIntelligence } from "@/lib/feed-intelligence";
 import { RoomFeedTab } from "@/components/feed/room-feed-tab";
+import { PurchaseForm } from "@/components/feed/purchase-form";
+import { AdjustmentForm } from "@/components/feed/adjustment-form";
+import { FeedTypesPanel } from "@/components/feed/feed-types-panel";
+import { IngredientLibrary } from "@/components/feed/ingredient-library";
+import { CostEfficiencyPanel } from "@/components/feed/cost-efficiency-panel";
+import { FeedAttention } from "@/components/feed/feed-attention";
 import { useFarm } from "@/lib/farm-data";
 import { toDateKey } from "@/lib/date-key";
 
 
-type Tab = "overview" | "rooms" | "inventory" | "ledger" | "formulation";
+type Tab = "overview" | "rooms" | "inventory" | "costs" | "ingredients" | "ledger" | "formulation";
+
+const TABS: Tab[] = ["overview", "rooms", "inventory", "costs", "ingredients", "ledger", "formulation"];
 
 export const Route = createFileRoute("/_authenticated/feed")({
   validateSearch: (search: Record<string, unknown>): { tab?: Tab } => {
     const t = search.tab;
-    return t === "inventory" || t === "ledger" || t === "formulation" || t === "overview" || t === "rooms"
-      ? { tab: t }
-      : {};
+    return typeof t === "string" && (TABS as string[]).includes(t) ? { tab: t as Tab } : {};
   },
+
   head: () => ({
     meta: [
       { title: "Feed Management — PoultryPro" },
