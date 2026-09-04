@@ -3031,10 +3031,20 @@ export type Database = {
         Returns: Json
       }
       can: { Args: { _farm: string; _perm: string }; Returns: boolean }
-      can_edit_recent: {
-        Args: { _created: string; _farm: string; _perm: string }
-        Returns: boolean
-      }
+      can_edit_recent:
+        | {
+            Args: { _created: string; _farm: string; _perm: string }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              _created: string
+              _farm: string
+              _perm: string
+              _recorded_by: string
+            }
+            Returns: boolean
+          }
       complete_password_change: { Args: never; Returns: undefined }
       consume_feed_fifo: {
         Args: {
