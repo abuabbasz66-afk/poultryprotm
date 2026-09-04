@@ -6,6 +6,8 @@ import { PermissionDenied } from "@/components/permission-denied";
 import { RecentStaffActivity } from "@/components/recent-staff-activity";
 import { BrokenEggsCard } from "@/components/broken-eggs-card";
 import { RecentActivitiesCard } from "@/components/recent-activities-card";
+import { FarmSetupChecklist } from "@/components/farm-setup-checklist";
+import { TodaysFarm } from "@/components/todays-farm";
 import { RoomComparisonCard } from "@/components/room-comparison-card";
 
 import { AlertsBanner } from "@/components/alerts-banner";
