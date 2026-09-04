@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { HelpHint } from "@/components/academy/help-hint";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft, ArrowDownRight, ArrowUpRight, Plus, Wallet, Receipt, TrendingUp,
@@ -153,6 +154,7 @@ function FinancePage() {
           <p className="mt-1 max-w-2xl text-sm text-primary-foreground/75">
             Every naira in and out of the farm — expenses, revenue, profit and cash flow, calculated automatically.
           </p>
+          <HelpHint slug="fi-profit" label="Learn farm finance" className="mt-3" />
 
           <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {summaryCards.map((c) => (
