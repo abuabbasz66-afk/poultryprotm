@@ -134,6 +134,7 @@ export const LAB_FEED_REFERENCES: IngredientNutrition[] = [
 /** Keyed by a normalised ingredient name. Used only when no lab profile matches. */
 export const INGREDIENT_NUTRIENTS: Record<string, NutrientProfile> = {
   sorghum:            P(3250, 9.0, 2.3, 2.9, 0.03, 0.10, 0.22, 0.16, 1.6),
+  "guinea corn":      P(3250, 9.0, 2.3, 2.9, 0.03, 0.10, 0.22, 0.16, 1.6),
   guineacorn:         P(3250, 9.0, 2.3, 2.9, 0.03, 0.10, 0.22, 0.16, 1.6),
   millet:             P(3000, 11.0, 3.5, 4.0, 0.05, 0.12, 0.28, 0.22, 2.0),
   "full fat soybean": P(3300, 36.0, 5.5, 18.0, 0.25, 0.20, 2.30, 0.53, 4.5),
@@ -165,7 +166,17 @@ export const INGREDIENT_NUTRIENTS: Record<string, NutrientProfile> = {
 
 const norm = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ");
 
-/** Laboratory profile lookup (exact name or alias, then substring). */
+const tokens = (s: string) => norm(s).split(" ").filter(Boolean);
+
+/** True when every token of `key` appears as a whole word in `n` (no partial-word hits). */
+function tokenSubset(key: string, n: string): boolean {
+  const kt = tokens(key);
+  if (!kt.length) return false;
+  const nt = new Set(tokens(n));
+  return kt.every((t) => nt.has(t));
+}
+
+/** Laboratory profile lookup (exact name or alias only). */
 export function lookupLabIngredient(name: string): IngredientNutrition | null {
   const n = norm(name);
   if (!n) return null;
@@ -173,13 +184,18 @@ export function lookupLabIngredient(name: string): IngredientNutrition | null {
     const keys = [norm(ing.name), ...(ing.aliases ?? []).map(norm)];
     if (keys.includes(n)) return ing;
   }
+  return null;
+}
+
+/** Laboratory profile lookup allowing whole-word fuzzy matching (e.g. "yellow maize"). */
+function lookupLabIngredientFuzzy(name: string): IngredientNutrition | null {
+  const n = norm(name);
+  if (!n) return null;
   let best: { len: number; ing: IngredientNutrition } | null = null;
   for (const ing of LAB_INGREDIENTS) {
     for (const k of [norm(ing.name), ...(ing.aliases ?? []).map(norm)]) {
       if (k.length < 3) continue;
-      if (n.includes(k) || k.includes(n)) {
-        if (!best || k.length > best.len) best = { len: k.length, ing };
-      }
+      if (tokenSubset(k, n) && (!best || k.length > best.len)) best = { len: k.length, ing };
     }
   }
   return best?.ing ?? null;
@@ -187,21 +203,45 @@ export function lookupLabIngredient(name: string): IngredientNutrition | null {
 
 /** Full ingredient info: laboratory profile first, generic book values as fallback. */
 export function lookupIngredient(name: string): IngredientNutrition | null {
-  const lab = lookupLabIngredient(name);
-  if (lab) return lab;
+  const exactLab = lookupLabIngredient(name);
+  if (exactLab) return exactLab;
+
   const n = norm(name);
   if (!n) return null;
+
+  // An exact reference-book match beats a loose laboratory name match, so
+  // "broiler concentrate" never picks up Layer Concentrate figures.
   if (INGREDIENT_NUTRIENTS[n]) {
     return { name, profile: INGREDIENT_NUTRIENTS[n], nutrition_source: "Reference Database", lab_tested: false };
   }
+
+  const fuzzyLab = lookupLabIngredientFuzzy(name);
+  if (fuzzyLab) {
+    // Prefer a more specific book entry when one matches more of the typed name.
+    let bookBest: { key: string; profile: NutrientProfile } | null = null;
+    for (const [key, profile] of Object.entries(INGREDIENT_NUTRIENTS)) {
+      if (tokenSubset(key, n) && (!bookBest || key.length > bookBest.key.length)) bookBest = { key, profile };
+    }
+    const labKeyLen = Math.max(
+      ...[norm(fuzzyLab.name), ...(fuzzyLab.aliases ?? []).map(norm)]
+        .filter((k) => tokenSubset(k, n))
+        .map((k) => k.length),
+    );
+    if (bookBest && bookBest.key.length > labKeyLen) {
+      return { name, profile: bookBest.profile, nutrition_source: "Reference Database", lab_tested: false };
+    }
+    return fuzzyLab;
+  }
+
   let best: { key: string; profile: NutrientProfile } | null = null;
   for (const [key, profile] of Object.entries(INGREDIENT_NUTRIENTS)) {
-    if (n.includes(key) || key.includes(n)) {
+    if (tokenSubset(key, n) || n.includes(key)) {
       if (!best || key.length > best.key.length) best = { key, profile };
     }
   }
   return best ? { name, profile: best.profile, nutrition_source: "Reference Database", lab_tested: false } : null;
 }
+
 
 /** Back-compat helper. */
 export function lookupNutrients(name: string): NutrientProfile | null {
