@@ -750,7 +750,7 @@ const setBagWeightKg = (v: number | null) => {
 
           <div className="space-y-6">
             <SectionIntro
-              stage="UNDERSTAND" plan="Standard" title="Farm Analytics"
+              stage="UNDERSTAND" plan="Standard" title="Farm Analytics" helpSlug="an-analytics"
               body="Turn structured farm records into production, financial and operational intelligence."
             />
 
@@ -1657,7 +1657,7 @@ const setBagWeightKg = (v: number | null) => {
         {area === "ai" && canAIArea && planAllowsAI && (
           <div className="space-y-6">
             <SectionIntro
-              stage="PREDICT" plan="Premium" title="PoultryPro AI Intelligence" premium
+              stage="PREDICT" plan="Premium" title="PoultryPro AI Intelligence" premium helpSlug="an-insights"
               body="Progressively applying artificial intelligence to detect abnormal farm patterns, forecast production and support earlier evidence-based decisions."
             />
             <div id="ai-insights" className="scroll-mt-24" />
