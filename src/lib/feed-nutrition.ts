@@ -134,6 +134,7 @@ export const LAB_FEED_REFERENCES: IngredientNutrition[] = [
 /** Keyed by a normalised ingredient name. Used only when no lab profile matches. */
 export const INGREDIENT_NUTRIENTS: Record<string, NutrientProfile> = {
   sorghum:            P(3250, 9.0, 2.3, 2.9, 0.03, 0.10, 0.22, 0.16, 1.6),
+  "guinea corn":      P(3250, 9.0, 2.3, 2.9, 0.03, 0.10, 0.22, 0.16, 1.6),
   guineacorn:         P(3250, 9.0, 2.3, 2.9, 0.03, 0.10, 0.22, 0.16, 1.6),
   millet:             P(3000, 11.0, 3.5, 4.0, 0.05, 0.12, 0.28, 0.22, 2.0),
   "full fat soybean": P(3300, 36.0, 5.5, 18.0, 0.25, 0.20, 2.30, 0.53, 4.5),
