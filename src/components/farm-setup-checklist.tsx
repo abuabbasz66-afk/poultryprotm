@@ -11,7 +11,7 @@ type Step = {
   hint: string;
   done: boolean;
   to: string;
-  search?: Record<string, string>;
+  search?: Record<string, string | undefined>;
   hash?: string;
 };
 
