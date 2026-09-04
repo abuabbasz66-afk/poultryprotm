@@ -1,4 +1,5 @@
 import { RequirePermission } from "@/components/require-permission";
+import { HelpHint } from "@/components/academy/help-hint";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -79,6 +80,7 @@ function FeedManagementPage() {
           <p className="text-sm text-primary-foreground/80">
             Live inventory, movement ledger and predictive stock alerts for {farm.data?.name ?? "your farm"}.
           </p>
+          <HelpHint slug="fd-inventory" label="Learn feed management" className="mt-3" />
 
           {/* Sticky summary strip */}
           <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">

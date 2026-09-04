@@ -6,6 +6,9 @@ import { PermissionDenied } from "@/components/permission-denied";
 import { RecentStaffActivity } from "@/components/recent-staff-activity";
 import { BrokenEggsCard } from "@/components/broken-eggs-card";
 import { RecentActivitiesCard } from "@/components/recent-activities-card";
+import { FarmSetupChecklist } from "@/components/farm-setup-checklist";
+import { TodaysFarm } from "@/components/todays-farm";
+import { HelpHint } from "@/components/academy/help-hint";
 import { RoomComparisonCard } from "@/components/room-comparison-card";
 
 import { AlertsBanner } from "@/components/alerts-banner";
@@ -747,7 +750,7 @@ const setBagWeightKg = (v: number | null) => {
 
           <div className="space-y-6">
             <SectionIntro
-              stage="UNDERSTAND" plan="Standard" title="Farm Analytics"
+              stage="UNDERSTAND" plan="Standard" title="Farm Analytics" helpSlug="an-analytics"
               body="Turn structured farm records into production, financial and operational intelligence."
             />
 
@@ -962,9 +965,12 @@ const setBagWeightKg = (v: number | null) => {
         {area === "records" && (
           <div className="space-y-6">
             <SectionIntro
-              stage="CAPTURE" plan="Basic" title="Farm Records"
+              stage="CAPTURE" plan="Basic" title="Farm Records" helpSlug="dr-production"
               body="Digitise daily poultry activities and maintain structured operational records across production, feed, flock health, mortality and farm rooms."
             />
+
+            <FarmSetupChecklist />
+            <TodaysFarm />
 
         {/* 1 — Recent Activities */}
         <RecentActivitiesCard eggs={eggs} feed={feed} mortality={mortality} health={health} prices={canPrices ? prices : []} bagWeightKg={bagKg} canViewAll={canAudit} />
@@ -1651,7 +1657,7 @@ const setBagWeightKg = (v: number | null) => {
         {area === "ai" && canAIArea && planAllowsAI && (
           <div className="space-y-6">
             <SectionIntro
-              stage="PREDICT" plan="Premium" title="PoultryPro AI Intelligence" premium
+              stage="PREDICT" plan="Premium" title="PoultryPro AI Intelligence" premium helpSlug="an-insights"
               body="Progressively applying artificial intelligence to detect abnormal farm patterns, forecast production and support earlier evidence-based decisions."
             />
             <div id="ai-insights" className="scroll-mt-24" />
@@ -2011,8 +2017,8 @@ function AreaTab({ active, onClick, num, stage, title, shortLabel, state, icon: 
 
 
 
-function SectionIntro({ stage, plan, title, body, premium }: {
-  stage: string; plan: string; title: string; body: string; premium?: boolean;
+function SectionIntro({ stage, plan, title, body, premium, helpSlug }: {
+  stage: string; plan: string; title: string; body: string; premium?: boolean; helpSlug?: string;
 }) {
   return (
     <div className={"rounded-3xl border p-5 md:p-6 " + (premium
@@ -2030,6 +2036,7 @@ function SectionIntro({ stage, plan, title, body, premium }: {
       </div>
       <h2 className="mt-1 font-display text-2xl md:text-3xl font-semibold">{title}</h2>
       <p className="mt-1 text-sm text-muted-foreground max-w-3xl">{body}</p>
+      <HelpHint slug={helpSlug} label="How this works" className="mt-3" />
     </div>
   );
 }
