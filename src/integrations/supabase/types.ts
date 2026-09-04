@@ -14,6 +14,177 @@ export type Database = {
   }
   public: {
     Tables: {
+      academy_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      academy_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          tutorial_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          tutorial_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          tutorial_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_events_tutorial_id_fkey"
+            columns: ["tutorial_id"]
+            isOneToOne: false
+            referencedRelation: "academy_tutorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academy_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          tutorial_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          tutorial_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          tutorial_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_progress_tutorial_id_fkey"
+            columns: ["tutorial_id"]
+            isOneToOne: false
+            referencedRelation: "academy_tutorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academy_tutorials: {
+        Row: {
+          category_id: string
+          created_at: string
+          description: string
+          difficulty: string
+          duration_seconds: number | null
+          id: string
+          is_archived: boolean
+          is_featured: boolean
+          is_published: boolean
+          keywords: string[]
+          slug: string
+          sort_order: number
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          description?: string
+          difficulty?: string
+          duration_seconds?: number | null
+          id?: string
+          is_archived?: boolean
+          is_featured?: boolean
+          is_published?: boolean
+          keywords?: string[]
+          slug: string
+          sort_order?: number
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          description?: string
+          difficulty?: string
+          duration_seconds?: number | null
+          id?: string
+          is_archived?: boolean
+          is_featured?: boolean
+          is_published?: boolean
+          keywords?: string[]
+          slug?: string
+          sort_order?: number
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_tutorials_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "academy_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_audit_log: {
         Row: {
           action_type: string
@@ -2408,6 +2579,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      academy_admin_stats: { Args: never; Returns: Json }
       admin_active_support_session: {
         Args: { _farm_id: string }
         Returns: {

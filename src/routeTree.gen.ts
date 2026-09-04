@@ -19,6 +19,8 @@ import { Route as PresentationRouteImport } from './routes/presentation'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AcademyIndexRouteImport } from './routes/academy.index'
+import { Route as AcademySlugRouteImport } from './routes/academy.$slug'
 import { Route as AuthenticatedWeatherRouteImport } from './routes/_authenticated/weather'
 import { Route as AuthenticatedSubscriptionsRouteImport } from './routes/_authenticated/subscriptions'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
@@ -29,6 +31,7 @@ import { Route as AuthenticatedPricesRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedPriceHistoryRouteImport } from './routes/_authenticated/price-history'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
+import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
 import { Route as AuthenticatedFinanceRouteImport } from './routes/_authenticated/finance'
 import { Route as AuthenticatedFeedRouteImport } from './routes/_authenticated/feed'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -95,6 +98,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AcademyIndexRoute = AcademyIndexRouteImport.update({
+  id: '/academy/',
+  path: '/academy/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcademySlugRoute = AcademySlugRouteImport.update({
+  id: '/academy/$slug',
+  path: '/academy/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedWeatherRoute = AuthenticatedWeatherRouteImport.update({
   id: '/weather',
   path: '/weather',
@@ -145,6 +158,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
 const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
   id: '/import',
   path: '/import',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHelpRoute = AuthenticatedHelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFinanceRoute = AuthenticatedFinanceRouteImport.update({
@@ -247,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/feed': typeof AuthenticatedFeedRoute
   '/finance': typeof AuthenticatedFinanceRoute
+  '/help': typeof AuthenticatedHelpRoute
   '/import': typeof AuthenticatedImportRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/price-history': typeof AuthenticatedPriceHistoryRoute
@@ -257,6 +276,8 @@ export interface FileRoutesByFullPath {
   '/staff': typeof AuthenticatedStaffRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/weather': typeof AuthenticatedWeatherRoute
+  '/academy/$slug': typeof AcademySlugRoute
+  '/academy/': typeof AcademyIndexRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/manage': typeof ApiPaystackManageRoute
   '/api/paystack/recover': typeof ApiPaystackRecoverRoute
@@ -284,6 +305,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/feed': typeof AuthenticatedFeedRoute
   '/finance': typeof AuthenticatedFinanceRoute
+  '/help': typeof AuthenticatedHelpRoute
   '/import': typeof AuthenticatedImportRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/price-history': typeof AuthenticatedPriceHistoryRoute
@@ -294,6 +316,8 @@ export interface FileRoutesByTo {
   '/staff': typeof AuthenticatedStaffRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/weather': typeof AuthenticatedWeatherRoute
+  '/academy/$slug': typeof AcademySlugRoute
+  '/academy': typeof AcademyIndexRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/manage': typeof ApiPaystackManageRoute
   '/api/paystack/recover': typeof ApiPaystackRecoverRoute
@@ -323,6 +347,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/feed': typeof AuthenticatedFeedRoute
   '/_authenticated/finance': typeof AuthenticatedFinanceRoute
+  '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/price-history': typeof AuthenticatedPriceHistoryRoute
@@ -333,6 +358,8 @@ export interface FileRoutesById {
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/_authenticated/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/_authenticated/weather': typeof AuthenticatedWeatherRoute
+  '/academy/$slug': typeof AcademySlugRoute
+  '/academy/': typeof AcademyIndexRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/manage': typeof ApiPaystackManageRoute
   '/api/paystack/recover': typeof ApiPaystackRecoverRoute
@@ -362,6 +389,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/feed'
     | '/finance'
+    | '/help'
     | '/import'
     | '/onboarding'
     | '/price-history'
@@ -372,6 +400,8 @@ export interface FileRouteTypes {
     | '/staff'
     | '/subscriptions'
     | '/weather'
+    | '/academy/$slug'
+    | '/academy/'
     | '/api/paystack/initialize'
     | '/api/paystack/manage'
     | '/api/paystack/recover'
@@ -399,6 +429,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/feed'
     | '/finance'
+    | '/help'
     | '/import'
     | '/onboarding'
     | '/price-history'
@@ -409,6 +440,8 @@ export interface FileRouteTypes {
     | '/staff'
     | '/subscriptions'
     | '/weather'
+    | '/academy/$slug'
+    | '/academy'
     | '/api/paystack/initialize'
     | '/api/paystack/manage'
     | '/api/paystack/recover'
@@ -437,6 +470,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/feed'
     | '/_authenticated/finance'
+    | '/_authenticated/help'
     | '/_authenticated/import'
     | '/_authenticated/onboarding'
     | '/_authenticated/price-history'
@@ -447,6 +481,8 @@ export interface FileRouteTypes {
     | '/_authenticated/staff'
     | '/_authenticated/subscriptions'
     | '/_authenticated/weather'
+    | '/academy/$slug'
+    | '/academy/'
     | '/api/paystack/initialize'
     | '/api/paystack/manage'
     | '/api/paystack/recover'
@@ -470,6 +506,8 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
   TermsRoute: typeof TermsRoute
+  AcademySlugRoute: typeof AcademySlugRoute
+  AcademyIndexRoute: typeof AcademyIndexRoute
   ApiPaystackInitializeRoute: typeof ApiPaystackInitializeRoute
   ApiPaystackManageRoute: typeof ApiPaystackManageRoute
   ApiPaystackRecoverRoute: typeof ApiPaystackRecoverRoute
@@ -553,6 +591,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/academy/': {
+      id: '/academy/'
+      path: '/academy'
+      fullPath: '/academy/'
+      preLoaderRoute: typeof AcademyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/academy/$slug': {
+      id: '/academy/$slug'
+      path: '/academy/$slug'
+      fullPath: '/academy/$slug'
+      preLoaderRoute: typeof AcademySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/weather': {
       id: '/_authenticated/weather'
       path: '/weather'
@@ -621,6 +673,13 @@ declare module '@tanstack/react-router' {
       path: '/import'
       fullPath: '/import'
       preLoaderRoute: typeof AuthenticatedImportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/help': {
+      id: '/_authenticated/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof AuthenticatedHelpRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/finance': {
@@ -745,6 +804,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFeedRoute: typeof AuthenticatedFeedRoute
   AuthenticatedFinanceRoute: typeof AuthenticatedFinanceRoute
+  AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPriceHistoryRoute: typeof AuthenticatedPriceHistoryRoute
@@ -764,6 +824,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFeedRoute: AuthenticatedFeedRoute,
   AuthenticatedFinanceRoute: AuthenticatedFinanceRoute,
+  AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPriceHistoryRoute: AuthenticatedPriceHistoryRoute,
@@ -802,6 +863,8 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuperAdminRoute: SuperAdminRouteWithChildren,
   TermsRoute: TermsRoute,
+  AcademySlugRoute: AcademySlugRoute,
+  AcademyIndexRoute: AcademyIndexRoute,
   ApiPaystackInitializeRoute: ApiPaystackInitializeRoute,
   ApiPaystackManageRoute: ApiPaystackManageRoute,
   ApiPaystackRecoverRoute: ApiPaystackRecoverRoute,

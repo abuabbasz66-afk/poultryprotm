@@ -290,6 +290,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     heading: "Workspace",
     items: [
+      { label: "Help Centre", icon: GraduationCap, to: "/help" },
       { label: "Staff & Users", icon: Users, to: "/staff", permission: "staff.manage" },
       { label: "Import CSV", icon: Upload, to: "/import", permission: "production.write" },
       { label: "Settings", icon: Settings, to: "/settings", permission: "settings.write" },
