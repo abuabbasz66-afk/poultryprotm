@@ -114,6 +114,8 @@ function FeedManagementPage() {
             <TabBtn active={tab === "overview"} onClick={() => setTab("overview")} icon={Sparkles}>Overview</TabBtn>
             <TabBtn active={tab === "rooms"} onClick={() => setTab("rooms")} icon={LayoutGrid}>Rooms</TabBtn>
             <TabBtn active={tab === "inventory"} onClick={() => setTab("inventory")} icon={Package}>Warehouse</TabBtn>
+            <TabBtn active={tab === "costs"} onClick={() => setTab("costs")} icon={TrendingDown}>Cost &amp; Efficiency</TabBtn>
+            <TabBtn active={tab === "ingredients"} onClick={() => setTab("ingredients")} icon={Wheat}>Ingredients</TabBtn>
             <TabBtn active={tab === "ledger"} onClick={() => setTab("ledger")} icon={ClipboardList}>Ledger</TabBtn>
             <TabBtn active={tab === "formulation"} onClick={() => setTab("formulation")} icon={Beaker}>Formulation</TabBtn>
           </div>
@@ -121,12 +123,22 @@ function FeedManagementPage() {
       </nav>
 
       <main className="mx-auto max-w-6xl px-4 py-6 space-y-6">
-        {tab === "overview" && <OverviewTab />}
+        <FeedQuickActions />
+        {tab === "overview" && (
+          <>
+            <FeedAttention />
+            <FeedTypesPanel />
+            <OverviewTab />
+          </>
+        )}
         {tab === "rooms" && <RoomFeedTab />}
         {tab === "inventory" && <InventoryTab />}
+        {tab === "costs" && <CostEfficiencyPanel />}
+        {tab === "ingredients" && <IngredientLibrary />}
         {tab === "ledger" && <LedgerTab />}
         {tab === "formulation" && <FormulationTab />}
       </main>
+
     </div>
   );
 }
