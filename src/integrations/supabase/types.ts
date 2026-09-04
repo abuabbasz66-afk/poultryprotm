@@ -1007,6 +1007,86 @@ export type Database = {
           },
         ]
       }
+      farm_ingredients: {
+        Row: {
+          ash_pct: number | null
+          calcium_pct: number | null
+          category: string
+          cost_per_kg: number | null
+          cp_pct: number | null
+          created_at: string
+          created_by: string | null
+          farm_id: string
+          fat_pct: number | null
+          fibre_pct: number | null
+          id: string
+          lysine_pct: number | null
+          me_kcal_kg: number | null
+          methionine_pct: number | null
+          moisture_pct: number | null
+          name: string
+          notes: string | null
+          phosphorus_pct: number | null
+          source: string
+          test_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          ash_pct?: number | null
+          calcium_pct?: number | null
+          category?: string
+          cost_per_kg?: number | null
+          cp_pct?: number | null
+          created_at?: string
+          created_by?: string | null
+          farm_id: string
+          fat_pct?: number | null
+          fibre_pct?: number | null
+          id?: string
+          lysine_pct?: number | null
+          me_kcal_kg?: number | null
+          methionine_pct?: number | null
+          moisture_pct?: number | null
+          name: string
+          notes?: string | null
+          phosphorus_pct?: number | null
+          source?: string
+          test_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ash_pct?: number | null
+          calcium_pct?: number | null
+          category?: string
+          cost_per_kg?: number | null
+          cp_pct?: number | null
+          created_at?: string
+          created_by?: string | null
+          farm_id?: string
+          fat_pct?: number | null
+          fibre_pct?: number | null
+          id?: string
+          lysine_pct?: number | null
+          me_kcal_kg?: number | null
+          methionine_pct?: number | null
+          moisture_pct?: number | null
+          name?: string
+          notes?: string | null
+          phosphorus_pct?: number | null
+          source?: string
+          test_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_ingredients_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farm_member_permissions: {
         Row: {
           created_at: string
@@ -1431,6 +1511,60 @@ export type Database = {
           },
         ]
       }
+      feed_formula_versions: {
+        Row: {
+          cost_per_kg: number | null
+          created_at: string
+          created_by: string | null
+          farm_id: string
+          formula_id: string
+          id: string
+          name: string
+          snapshot: Json
+          total_kg: number | null
+          version: number
+        }
+        Insert: {
+          cost_per_kg?: number | null
+          created_at?: string
+          created_by?: string | null
+          farm_id: string
+          formula_id: string
+          id?: string
+          name: string
+          snapshot?: Json
+          total_kg?: number | null
+          version: number
+        }
+        Update: {
+          cost_per_kg?: number | null
+          created_at?: string
+          created_by?: string | null
+          farm_id?: string
+          formula_id?: string
+          id?: string
+          name?: string
+          snapshot?: Json
+          total_kg?: number | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_formula_versions_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_formula_versions_formula_id_fkey"
+            columns: ["formula_id"]
+            isOneToOne: false
+            referencedRelation: "feed_formulas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feed_formulas: {
         Row: {
           bag_weight_kg: number | null
@@ -1474,59 +1608,94 @@ export type Database = {
       }
       feed_inventory: {
         Row: {
+          bag_size_kg: number | null
+          bags: number | null
           batch_number: string | null
           created_at: string
+          created_by: string | null
+          expense_id: string | null
           expiry_date: string | null
           farm_id: string
           feed_type: string
+          feed_type_id: string | null
           id: string
           initial_kg: number
           note: string | null
           purchase_date: string
+          reference: string | null
           remaining_kg: number
           source: string
           supplier: string | null
+          total_cost: number | null
           unit_cost_per_kg: number
           updated_at: string
         }
         Insert: {
+          bag_size_kg?: number | null
+          bags?: number | null
           batch_number?: string | null
           created_at?: string
+          created_by?: string | null
+          expense_id?: string | null
           expiry_date?: string | null
           farm_id: string
           feed_type: string
+          feed_type_id?: string | null
           id?: string
           initial_kg: number
           note?: string | null
           purchase_date?: string
+          reference?: string | null
           remaining_kg: number
           source?: string
           supplier?: string | null
+          total_cost?: number | null
           unit_cost_per_kg?: number
           updated_at?: string
         }
         Update: {
+          bag_size_kg?: number | null
+          bags?: number | null
           batch_number?: string | null
           created_at?: string
+          created_by?: string | null
+          expense_id?: string | null
           expiry_date?: string | null
           farm_id?: string
           feed_type?: string
+          feed_type_id?: string | null
           id?: string
           initial_kg?: number
           note?: string | null
           purchase_date?: string
+          reference?: string | null
           remaining_kg?: number
           source?: string
           supplier?: string | null
+          total_cost?: number | null
           unit_cost_per_kg?: number
           updated_at?: string
         }
         Relationships: [
           {
+            foreignKeyName: "feed_inventory_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "farm_expenses"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "feed_inventory_farm_id_fkey"
             columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_inventory_feed_type_id_fkey"
+            columns: ["feed_type_id"]
+            isOneToOne: false
+            referencedRelation: "feed_types"
             referencedColumns: ["id"]
           },
         ]
@@ -1581,6 +1750,53 @@ export type Database = {
             columns: ["inventory_id"]
             isOneToOne: false
             referencedRelation: "feed_inventory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feed_types: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          farm_id: string
+          id: string
+          is_active: boolean
+          low_stock_kg: number
+          material_class: string
+          name: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          farm_id: string
+          id?: string
+          is_active?: boolean
+          low_stock_kg?: number
+          material_class?: string
+          name: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          farm_id?: string
+          id?: string
+          is_active?: boolean
+          low_stock_kg?: number
+          material_class?: string
+          name?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_types_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
             referencedColumns: ["id"]
           },
         ]
