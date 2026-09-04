@@ -1207,7 +1207,7 @@ function Index() {
 
 
 
-      <LearningCenter />
+      
 
       <section id="contact" className="pb-24">
 
