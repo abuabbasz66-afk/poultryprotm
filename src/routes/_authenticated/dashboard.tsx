@@ -966,6 +966,9 @@ const setBagWeightKg = (v: number | null) => {
               body="Digitise daily poultry activities and maintain structured operational records across production, feed, flock health, mortality and farm rooms."
             />
 
+            <FarmSetupChecklist />
+            <TodaysFarm />
+
         {/* 1 — Recent Activities */}
         <RecentActivitiesCard eggs={eggs} feed={feed} mortality={mortality} health={health} prices={canPrices ? prices : []} bagWeightKg={bagKg} canViewAll={canAudit} />
 
