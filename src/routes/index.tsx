@@ -779,6 +779,8 @@ function Index() {
         </div>
       </section>
 
+      <AcademySection />
+
       <section id="operations" className="py-20 md:py-24">
         <div className="container-x">
           <div className="max-w-2xl">
