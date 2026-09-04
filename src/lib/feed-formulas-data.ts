@@ -268,3 +268,83 @@ export function useSetFeedSource() {
     onSuccess: () => invalidateFarm(qc, farmId),
   });
 }
+
+/* ------------------------------- Versioning ------------------------------- */
+
+export type FormulaVersion = {
+  id: string;
+  farm_id: string;
+  formula_id: string;
+  version: number;
+  name: string;
+  snapshot: unknown;
+  cost_per_kg: number | null;
+  total_kg: number | null;
+  created_at: string;
+};
+
+export function useFormulaVersions(formulaId: string | null) {
+  const { data: farmId } = useFarmId();
+  return useQuery({
+    queryKey: [...farmScope(farmId), "formula-versions", formulaId] as const,
+    enabled: !!farmId && !!formulaId,
+    queryFn: async (): Promise<FormulaVersion[]> => {
+      const { data, error } = await supabase
+        .from("feed_formula_versions")
+        .select("*")
+        .eq("formula_id", formulaId!)
+        .order("version", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((r) => ({
+        ...r,
+        cost_per_kg: r.cost_per_kg == null ? null : Number(r.cost_per_kg),
+        total_kg: r.total_kg == null ? null : Number(r.total_kg),
+      })) as FormulaVersion[];
+    },
+  });
+}
+
+/** Snapshot the current state of a formula before it is changed again. */
+export function useSaveFormulaVersion() {
+  const qc = useQueryClient();
+  const { data: farmId } = useFarmId();
+  return useMutation({
+    mutationFn: async (input: {
+      formula: FeedFormulaWithIngredients;
+      costPerKg: number;
+      totalKg: number;
+    }) => {
+      if (!farmId) throw new Error("No farm");
+      const { data: last } = await supabase
+        .from("feed_formula_versions")
+        .select("version")
+        .eq("formula_id", input.formula.id)
+        .order("version", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const nextVersion = ((last?.version as number | undefined) ?? 0) + 1;
+      const { error } = await supabase.from("feed_formula_versions").insert({
+        farm_id: farmId,
+        formula_id: input.formula.id,
+        version: nextVersion,
+        name: input.formula.name,
+        snapshot: {
+          notes: input.formula.notes,
+          bag_weight_kg: input.formula.bag_weight_kg,
+          ingredients: input.formula.ingredients.map((i) => ({
+            name: i.name,
+            quantity_kg: i.quantity_kg,
+            unit: i.unit,
+            unit_weight_kg: i.unit_weight_kg,
+            price_per_unit: i.price_per_unit,
+          })),
+        },
+        cost_per_kg: input.costPerKg,
+        total_kg: input.totalKg,
+      });
+      if (error) throw error;
+      return nextVersion;
+    },
+    onSuccess: () => invalidateFarm(qc, farmId),
+  });
+}

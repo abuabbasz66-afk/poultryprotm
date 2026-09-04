@@ -21,6 +21,12 @@ export type FeedInventoryLot = {
   expiry_date: string | null;
   note: string | null;
   created_at: string;
+  feed_type_id: string | null;
+  bags: number | null;
+  bag_size_kg: number | null;
+  total_cost: number | null;
+  reference: string | null;
+  expense_id: string | null;
 };
 
 export type FeedLedgerEntry = {
@@ -46,7 +52,7 @@ export function useFeedInventory() {
     queryFn: async (): Promise<FeedInventoryLot[]> => {
       const { data, error } = await supabase
         .from("feed_inventory")
-        .select("id, farm_id, feed_type, source, initial_kg, remaining_kg, unit_cost_per_kg, supplier, batch_number, purchase_date, expiry_date, note, created_at")
+        .select("id, farm_id, feed_type, source, initial_kg, remaining_kg, unit_cost_per_kg, supplier, batch_number, purchase_date, expiry_date, note, created_at, feed_type_id, bags, bag_size_kg, total_cost, reference, expense_id")
         .eq("farm_id", farmId!)
         .order("purchase_date", { ascending: false })
         .order("created_at", { ascending: false });
@@ -56,6 +62,9 @@ export function useFeedInventory() {
         initial_kg: num(r.initial_kg),
         remaining_kg: num(r.remaining_kg),
         unit_cost_per_kg: num(r.unit_cost_per_kg),
+        bags: r.bags == null ? null : Number(r.bags),
+        bag_size_kg: r.bag_size_kg == null ? null : Number(r.bag_size_kg),
+        total_cost: r.total_cost == null ? null : Number(r.total_cost),
       })) as FeedInventoryLot[];
     },
   });

@@ -29,19 +29,26 @@ import {
 
 import { useFeedIntelligence } from "@/lib/feed-intelligence";
 import { RoomFeedTab } from "@/components/feed/room-feed-tab";
+import { PurchaseForm } from "@/components/feed/purchase-form";
+import { AdjustmentForm } from "@/components/feed/adjustment-form";
+import { FeedTypesPanel } from "@/components/feed/feed-types-panel";
+import { IngredientLibrary } from "@/components/feed/ingredient-library";
+import { CostEfficiencyPanel } from "@/components/feed/cost-efficiency-panel";
+import { FeedAttention } from "@/components/feed/feed-attention";
 import { useFarm } from "@/lib/farm-data";
 import { toDateKey } from "@/lib/date-key";
 
 
-type Tab = "overview" | "rooms" | "inventory" | "ledger" | "formulation";
+type Tab = "overview" | "rooms" | "inventory" | "costs" | "ingredients" | "ledger" | "formulation";
+
+const TABS: Tab[] = ["overview", "rooms", "inventory", "costs", "ingredients", "ledger", "formulation"];
 
 export const Route = createFileRoute("/_authenticated/feed")({
   validateSearch: (search: Record<string, unknown>): { tab?: Tab } => {
     const t = search.tab;
-    return t === "inventory" || t === "ledger" || t === "formulation" || t === "overview" || t === "rooms"
-      ? { tab: t }
-      : {};
+    return typeof t === "string" && (TABS as string[]).includes(t) ? { tab: t as Tab } : {};
   },
+
   head: () => ({
     meta: [
       { title: "Feed Management — PoultryPro" },
@@ -107,6 +114,8 @@ function FeedManagementPage() {
             <TabBtn active={tab === "overview"} onClick={() => setTab("overview")} icon={Sparkles}>Overview</TabBtn>
             <TabBtn active={tab === "rooms"} onClick={() => setTab("rooms")} icon={LayoutGrid}>Rooms</TabBtn>
             <TabBtn active={tab === "inventory"} onClick={() => setTab("inventory")} icon={Package}>Warehouse</TabBtn>
+            <TabBtn active={tab === "costs"} onClick={() => setTab("costs")} icon={TrendingDown}>Cost &amp; Efficiency</TabBtn>
+            <TabBtn active={tab === "ingredients"} onClick={() => setTab("ingredients")} icon={Wheat}>Ingredients</TabBtn>
             <TabBtn active={tab === "ledger"} onClick={() => setTab("ledger")} icon={ClipboardList}>Ledger</TabBtn>
             <TabBtn active={tab === "formulation"} onClick={() => setTab("formulation")} icon={Beaker}>Formulation</TabBtn>
           </div>
@@ -114,17 +123,51 @@ function FeedManagementPage() {
       </nav>
 
       <main className="mx-auto max-w-6xl px-4 py-6 space-y-6">
-        {tab === "overview" && <OverviewTab />}
+        <FeedQuickActions />
+        {tab === "overview" && (
+          <>
+            <FeedAttention />
+            <FeedTypesPanel />
+            <OverviewTab />
+          </>
+        )}
         {tab === "rooms" && <RoomFeedTab />}
         {tab === "inventory" && <InventoryTab />}
+        {tab === "costs" && <CostEfficiencyPanel />}
+        {tab === "ingredients" && <IngredientLibrary />}
         {tab === "ledger" && <LedgerTab />}
         {tab === "formulation" && <FormulationTab />}
       </main>
+
     </div>
   );
 }
 
+/* ------------------------------ Quick actions ----------------------------- */
 
+function FeedQuickActions() {
+  const [open, setOpen] = useState<"purchase" | "adjust" | null>(null);
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setOpen(open === "purchase" ? null : "purchase")}
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[color:var(--forest)] px-4 text-sm font-semibold text-primary-foreground"
+        >
+          <ShoppingCart className="h-4 w-4" /> Add purchase
+        </button>
+        <button
+          onClick={() => setOpen(open === "adjust" ? null : "adjust")}
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border px-4 text-sm font-medium"
+        >
+          <Pencil className="h-4 w-4" /> Adjust stock
+        </button>
+      </div>
+      {open === "purchase" && <PurchaseForm onClose={() => setOpen(null)} />}
+      {open === "adjust" && <AdjustmentForm onClose={() => setOpen(null)} />}
+    </div>
+  );
+}
 
 
 /* -------------------------------- Overview ------------------------------- */
