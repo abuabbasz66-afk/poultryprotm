@@ -14,7 +14,7 @@ import {
   Baby, Drumstick, GraduationCap, BookOpen,
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
-import { LearningCenter } from "@/components/learning-center";
+import { AcademySection } from "@/components/academy/academy-section";
 import { TUTORIAL_CATEGORIES } from "@/lib/tutorials";
 
 
@@ -62,16 +62,16 @@ export const Route = createFileRoute("/")({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "ItemList",
-          name: "PoultryPro Learning Center",
+          name: "PoultryPro Academy",
           description:
             "Free tutorials on poultry farm management, poultry production records, feed management, poultry health records, farm finance, poultry analytics and digital poultry farming.",
-          url: "https://poultrypro.life/#learn",
+          url: "https://poultrypro.life/academy",
           itemListElement: TUTORIAL_CATEGORIES.map((c, i) => ({
             "@type": "ListItem",
             position: i + 1,
             name: c.name,
             description: c.description,
-            url: `https://poultrypro.life/#learn`,
+            url: `https://poultrypro.life/academy`,
           })),
         }),
       },
@@ -379,7 +379,7 @@ function Index() {
           </a>
           <nav className="hidden md:flex items-center gap-10 text-sm font-medium">
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Features</a>
-            <a href="#learn" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Learn</a>
+            <a href="#academy" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Learn</a>
             <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Pricing</a>
             <a href="#founder" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Founder</a>
             <a href="#roadmap" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Roadmap</a>
@@ -436,7 +436,7 @@ function Index() {
               <Link to="/presentation" className="inline-flex items-center gap-2 rounded-full bg-[color:var(--gold)] px-6 py-3 text-sm font-semibold text-[color:var(--ink)] hover:brightness-105 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] transition-all duration-200 shadow-[var(--shadow-lift)]">
                 🚀 Launch Live Demo
               </Link>
-              <a href="#learn" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-secondary hover:-translate-y-0.5 transition-all duration-200">
+              <a href="#academy" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-secondary hover:-translate-y-0.5 transition-all duration-200">
                 <GraduationCap className="h-4 w-4" /> Explore Tutorials
               </a>
               <a href="#founder" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-secondary hover:-translate-y-0.5 transition-all duration-200">
