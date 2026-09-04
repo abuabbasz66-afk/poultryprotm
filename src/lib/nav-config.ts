@@ -29,6 +29,7 @@ import {
   Drumstick,
   Baby,
   CloudSun,
+  GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 
