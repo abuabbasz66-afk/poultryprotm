@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import type { ExportDescriptor, Row, SummaryLine } from "./registry";
+import { neutralizeFormula } from "./csv";
 
 const CURRENCY_FMT = '₦#,##0.00;[Red]-₦#,##0.00;"-"';
 const NUMBER_FMT = "#,##0.###";

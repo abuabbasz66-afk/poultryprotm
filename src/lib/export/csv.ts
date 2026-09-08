@@ -1,8 +1,17 @@
 import { zipSync, strToU8 } from "fflate";
 import type { ExportDescriptor, Row } from "./registry";
 
+/**
+ * Neutralise spreadsheet formula injection: a value that opens with =, +, -, @,
+ * tab or CR is executed as a formula by Excel/Sheets, so prefix it with a quote.
+ */
+export function neutralizeFormula(value: string | number | null): string | number | null {
+  if (typeof value !== "string") return value;
+  return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+}
+
 function cell(v: string | number | null) {
-  const s = v == null ? "" : String(v);
+  const s = v == null ? "" : String(neutralizeFormula(v));
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
