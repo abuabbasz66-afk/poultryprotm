@@ -94,12 +94,16 @@ function BroilersPage() {
             force on the day each bag was fed, so profitability is never an estimate.
           </p>
         </div>
-        {can("rooms.write") && (
-          <Button onClick={() => setShowBatch(true)} className="rounded-full">
-            <Plus className="mr-1.5 h-4 w-4" /> New Batch
-          </Button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          <ExportRecordsButton section="broilers" />
+          {can("rooms.write") && (
+            <Button onClick={() => setShowBatch(true)} className="rounded-full">
+              <Plus className="mr-1.5 h-4 w-4" /> New Batch
+            </Button>
+          )}
+        </div>
       </header>
+
 
       {/* Farm-wide broiler summary */}
       <section className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
