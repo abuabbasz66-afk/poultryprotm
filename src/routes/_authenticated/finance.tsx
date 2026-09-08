@@ -158,6 +158,7 @@ function FinancePage() {
           <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-9 w-[150px]" />
           <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-9 w-[150px]" />
           <div className="ml-auto flex flex-wrap gap-2">
+            <ExportRecordsButton section="finance" />
             {canWriteExpense && (
               <Button size="sm" variant="outline" onClick={() => { setEditingExpense(null); setExpenseOpen(true); }}>
                 <Plus className="mr-1 h-4 w-4" /> Expense
@@ -169,6 +170,7 @@ function FinancePage() {
               </Button>
             )}
           </div>
+
         </div>
 
         {tab === "overview" && (
