@@ -9,6 +9,7 @@
  */
 
 import { toDateKey } from "@/lib/date-key";
+import { EXPENSE_CATEGORIES, REVENUE_CATEGORIES } from "@/lib/finance-catalog";
 import { collectedFromRow, brokenFromRow } from "@/lib/egg-normalize";
 
 export type ColumnType = "text" | "number" | "currency" | "date";
@@ -58,6 +59,10 @@ const sum = (rows: Row[], f: (r: Row) => number) => rows.reduce((a, r) => a + f(
 const money = (v: number) =>
   `NGN ${Math.round(v).toLocaleString("en-NG")}`;
 
+const expenseCategory = (v: unknown) =>
+  EXPENSE_CATEGORIES.find((c) => c.key === s(v))?.label ?? s(v);
+const revenueCategory = (v: unknown) =>
+  REVENUE_CATEGORIES.find((c) => c.key === s(v))?.label ?? s(v);
 const avg = (rows: Row[], f: (r: Row) => number) => (rows.length ? sum(rows, f) / rows.length : 0);
 
 /** Normalised business date of a row for a descriptor (YYYY-MM-DD or null). */
@@ -355,7 +360,7 @@ export const EXPORT_DESCRIPTORS: ExportDescriptor[] = [
     fileName: "finance_expenses",
     columns: [
       { header: "Date", value: (r) => s(r.entry_date), type: "date" },
-      { header: "Category", value: (r) => s(r.category) },
+      { header: "Category", value: (r) => expenseCategory(r.category) },
       { header: "Subcategory", value: (r) => s(r.subcategory) },
       { header: "Description", value: (r) => s(r.description) },
       { header: "Amount", value: (r) => n(r.amount), type: "currency" },
@@ -379,7 +384,7 @@ export const EXPORT_DESCRIPTORS: ExportDescriptor[] = [
     fileName: "finance_revenue",
     columns: [
       { header: "Date", value: (r) => s(r.entry_date), type: "date" },
-      { header: "Category", value: (r) => s(r.category) },
+      { header: "Category", value: (r) => revenueCategory(r.category) },
       { header: "Item", value: (r) => s(r.item) },
       { header: "Quantity", value: (r) => n(r.quantity), type: "number" },
       { header: "Unit", value: (r) => s(r.unit) },
