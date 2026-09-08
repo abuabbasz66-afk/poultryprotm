@@ -8,6 +8,7 @@ import {
 import { toast } from "sonner";
 import { usePermissions } from "@/lib/rbac";
 import { PermissionDenied } from "@/components/permission-denied";
+import { ExportRecordsButton } from "@/components/export/export-button";
 import { useEffectivePrice } from "@/lib/effective-price";
 import { toDateKey } from "@/lib/date-key";
 import { cn } from "@/lib/utils";
