@@ -3,7 +3,7 @@ import { HelpHint } from "@/components/academy/help-hint";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft, ArrowDownRight, ArrowUpRight, Plus, Wallet, Receipt, TrendingUp,
-  PiggyBank, FileSpreadsheet, FileText, Download, Pencil, Trash2, Filter,
+  PiggyBank, Pencil, Trash2, Filter,
 } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PermissionDenied } from "@/components/permission-denied";
 import { ExpenseDialog, RevenueDialog } from "@/components/finance/finance-dialogs";
+import { ExportRecordsButton } from "@/components/export/export-button";
 import { usePermissions } from "@/lib/rbac";
 import { useEggs, useRooms } from "@/lib/farm-data";
 import {
@@ -26,7 +27,7 @@ import {
   unitEconomics,
 } from "@/lib/finance-analytics";
 import { EXPENSE_CATEGORIES, REVENUE_CATEGORIES } from "@/lib/finance-catalog";
-import { exportCsv, exportExcel, exportPdf, type ExportColumn } from "@/lib/finance-export";
+
 import { cn } from "@/lib/utils";
 
 type Tab = "overview" | "expenses" | "revenue" | "reports";
@@ -103,28 +104,6 @@ function FinancePage() {
     return <PermissionDenied hint="Financial records are available to the Farm Owner." />;
   }
 
-  const expenseColumns: ExportColumn<ExpenseRow>[] = [
-    { header: "Date", value: (r) => r.entry_date },
-    { header: "Category", value: (r) => EXPENSE_CATEGORIES.find((c) => c.key === r.category)?.label ?? r.category },
-    { header: "Subcategory", value: (r) => r.subcategory },
-    { header: "Description", value: (r) => r.description ?? "" },
-    { header: "Supplier", value: (r) => r.supplier ?? "" },
-    { header: "Payment", value: (r) => r.payment_method },
-    { header: "Amount (NGN)", value: (r) => r.amount },
-    { header: "Recorded by", value: (r) => r.recorded_by_name ?? "" },
-  ];
-  const revenueColumns: ExportColumn<RevenueRow>[] = [
-    { header: "Date", value: (r) => r.entry_date },
-    { header: "Category", value: (r) => REVENUE_CATEGORIES.find((c) => c.key === r.category)?.label ?? r.category },
-    { header: "Item", value: (r) => r.item },
-    { header: "Quantity", value: (r) => r.quantity },
-    { header: "Unit", value: (r) => r.unit },
-    { header: "Unit price (NGN)", value: (r) => r.unit_price },
-    { header: "Amount (NGN)", value: (r) => r.amount },
-    { header: "Customer", value: (r) => r.customer ?? "" },
-    { header: "Payment", value: (r) => r.payment_method },
-  ];
-
   const summaryCards = [
     { label: "Total revenue", value: naira(totals.revenue) },
     { label: "Total expenses", value: naira(totals.expenses) },
@@ -132,16 +111,6 @@ function FinancePage() {
     { label: "Profit margin", value: `${totals.margin.toFixed(1)}%` },
   ];
 
-  const runExport = (kind: "csv" | "excel" | "pdf", which: "expenses" | "revenue") => {
-    const rows = which === "expenses" ? filteredExpenses : filteredRevenue;
-    if (!rows.length) { toast.error("No records in the selected period."); return; }
-    const title = which === "expenses" ? "Expense Report" : "Revenue Report";
-    const filename = `poultrypro-${which}-${from}_to_${to}`;
-    const columns = (which === "expenses" ? expenseColumns : revenueColumns) as ExportColumn<never>[];
-    if (kind === "csv") exportCsv(rows as never[], columns, filename);
-    else if (kind === "excel") exportExcel(rows as never[], columns, filename, `${title} · ${from} → ${to}`);
-    else exportPdf(rows as never[], columns, `PoultryPro ${title}`, `${from} → ${to}`, summaryCards.map((c) => ({ label: c.label, value: c.value })));
-  };
 
   return (
     <div className="min-h-screen bg-[color:var(--bg)] pb-20">
@@ -190,6 +159,7 @@ function FinancePage() {
           <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-9 w-[150px]" />
           <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-9 w-[150px]" />
           <div className="ml-auto flex flex-wrap gap-2">
+            <ExportRecordsButton section="finance" />
             {canWriteExpense && (
               <Button size="sm" variant="outline" onClick={() => { setEditingExpense(null); setExpenseOpen(true); }}>
                 <Plus className="mr-1 h-4 w-4" /> Expense
@@ -201,6 +171,7 @@ function FinancePage() {
               </Button>
             )}
           </div>
+
         </div>
 
         {tab === "overview" && (
@@ -262,8 +233,8 @@ function FinancePage() {
             <TableHead
               title={`Expenses (${filteredExpenses.length})`}
               total={naira(totals.expenses)}
-              onExport={(k) => runExport(k, "expenses")}
             />
+
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
@@ -313,8 +284,8 @@ function FinancePage() {
             <TableHead
               title={`Revenue (${filteredRevenue.length})`}
               total={naira(totals.revenue)}
-              onExport={(k) => runExport(k, "revenue")}
             />
+
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
@@ -379,13 +350,10 @@ function FinancePage() {
                   <Row label="Cost per bird" value={naira(econ.costPerBird)} />
                 </tbody>
               </table>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" onClick={() => runExport("csv", "expenses")}><Download className="mr-1 h-4 w-4" /> Expenses CSV</Button>
-                <Button size="sm" variant="outline" onClick={() => runExport("excel", "expenses")}><FileSpreadsheet className="mr-1 h-4 w-4" /> Expenses Excel</Button>
-                <Button size="sm" variant="outline" onClick={() => runExport("csv", "revenue")}><Download className="mr-1 h-4 w-4" /> Revenue CSV</Button>
-                <Button size="sm" variant="outline" onClick={() => runExport("excel", "revenue")}><FileSpreadsheet className="mr-1 h-4 w-4" /> Revenue Excel</Button>
-                <Button size="sm" onClick={() => runExport("pdf", "expenses")}><FileText className="mr-1 h-4 w-4" /> Print / PDF</Button>
+              <div className="mt-4">
+                <ExportRecordsButton section="finance" label="Export financial records" />
               </div>
+
             </div>
 
             <div className="grid gap-3 lg:grid-cols-2">
@@ -459,21 +427,18 @@ function ListCard({ title, rows }: { title: string; rows: { key: string; label: 
   );
 }
 
-function TableHead({ title, total, onExport }: { title: string; total: string; onExport: (k: "csv" | "excel" | "pdf") => void }) {
+function TableHead({ title, total }: { title: string; total: string }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
       <div>
         <h2 className="font-display text-base font-semibold">{title}</h2>
         <p className="text-xs text-muted-foreground">Period total {total}</p>
       </div>
-      <div className="flex gap-2">
-        <Button size="sm" variant="outline" onClick={() => onExport("csv")}><Download className="mr-1 h-4 w-4" /> CSV</Button>
-        <Button size="sm" variant="outline" onClick={() => onExport("excel")}><FileSpreadsheet className="mr-1 h-4 w-4" /> Excel</Button>
-        <Button size="sm" variant="outline" onClick={() => onExport("pdf")}><FileText className="mr-1 h-4 w-4" /> PDF</Button>
-      </div>
+      <ExportRecordsButton section="finance" />
     </div>
   );
 }
+
 
 function Row({ label, value, strong, indent }: { label: string; value: string; strong?: boolean; indent?: boolean }) {
   return (

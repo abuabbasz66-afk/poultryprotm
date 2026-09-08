@@ -1,5 +1,6 @@
 import { RequirePermission } from "@/components/require-permission";
 import { HelpHint } from "@/components/academy/help-hint";
+import { ExportRecordsButton } from "@/components/export/export-button";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -81,7 +82,11 @@ function FeedManagementPage() {
             <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1 text-xs text-primary-foreground/90 hover:bg-white/10">
               <ArrowLeft className="h-3.5 w-3.5" /> Dashboard
             </Link>
-            <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] tracking-[0.18em] uppercase">Feed Ops</span>
+            <div className="flex items-center gap-2">
+              <ExportRecordsButton section="feed" variant="secondary" />
+              <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] tracking-[0.18em] uppercase">Feed Ops</span>
+            </div>
+
           </div>
           <h1 className="mt-4 font-display text-2xl md:text-3xl font-semibold">Feed Management</h1>
           <p className="text-sm text-primary-foreground/80">

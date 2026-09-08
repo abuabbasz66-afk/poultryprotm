@@ -945,6 +945,62 @@ export type Database = {
           },
         ]
       }
+      export_audit_log: {
+        Row: {
+          actor_name: string | null
+          created_at: string
+          export_label: string
+          farm_id: string
+          format: string
+          id: string
+          range_from: string | null
+          range_label: string
+          range_to: string | null
+          record_types: string[]
+          row_count: number
+          scope: string
+          user_id: string
+        }
+        Insert: {
+          actor_name?: string | null
+          created_at?: string
+          export_label: string
+          farm_id: string
+          format: string
+          id?: string
+          range_from?: string | null
+          range_label: string
+          range_to?: string | null
+          record_types?: string[]
+          row_count?: number
+          scope: string
+          user_id: string
+        }
+        Update: {
+          actor_name?: string | null
+          created_at?: string
+          export_label?: string
+          farm_id?: string
+          format?: string
+          id?: string
+          range_from?: string | null
+          range_label?: string
+          range_to?: string | null
+          record_types?: string[]
+          row_count?: number
+          scope?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "export_audit_log_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farm_expenses: {
         Row: {
           amount: number
