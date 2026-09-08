@@ -379,13 +379,10 @@ function FinancePage() {
                   <Row label="Cost per bird" value={naira(econ.costPerBird)} />
                 </tbody>
               </table>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" onClick={() => runExport("csv", "expenses")}><Download className="mr-1 h-4 w-4" /> Expenses CSV</Button>
-                <Button size="sm" variant="outline" onClick={() => runExport("excel", "expenses")}><FileSpreadsheet className="mr-1 h-4 w-4" /> Expenses Excel</Button>
-                <Button size="sm" variant="outline" onClick={() => runExport("csv", "revenue")}><Download className="mr-1 h-4 w-4" /> Revenue CSV</Button>
-                <Button size="sm" variant="outline" onClick={() => runExport("excel", "revenue")}><FileSpreadsheet className="mr-1 h-4 w-4" /> Revenue Excel</Button>
-                <Button size="sm" onClick={() => runExport("pdf", "expenses")}><FileText className="mr-1 h-4 w-4" /> Print / PDF</Button>
+              <div className="mt-4">
+                <ExportRecordsButton section="finance" label="Export financial records" />
               </div>
+
             </div>
 
             <div className="grid gap-3 lg:grid-cols-2">
