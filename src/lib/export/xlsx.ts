@@ -41,7 +41,8 @@ export async function buildWorkbook(opts: {
   summary.addRow([]);
   const shead = summary.addRow(["Metric", "Value"]);
   shead.font = { bold: true, name: "Arial" };
-  for (const line of opts.summary) summary.addRow([line.label, line.value]);
+  for (const line of opts.summary)
+    summary.addRow([neutralizeFormula(line.label), neutralizeFormula(line.value)]);
 
   for (const { desc, rows } of opts.sheets) {
     const name = desc.label.replace(/[\\/*?:[\]]/g, " ").slice(0, 31);
