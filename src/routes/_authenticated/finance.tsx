@@ -103,28 +103,6 @@ function FinancePage() {
     return <PermissionDenied hint="Financial records are available to the Farm Owner." />;
   }
 
-  const expenseColumns: ExportColumn<ExpenseRow>[] = [
-    { header: "Date", value: (r) => r.entry_date },
-    { header: "Category", value: (r) => EXPENSE_CATEGORIES.find((c) => c.key === r.category)?.label ?? r.category },
-    { header: "Subcategory", value: (r) => r.subcategory },
-    { header: "Description", value: (r) => r.description ?? "" },
-    { header: "Supplier", value: (r) => r.supplier ?? "" },
-    { header: "Payment", value: (r) => r.payment_method },
-    { header: "Amount (NGN)", value: (r) => r.amount },
-    { header: "Recorded by", value: (r) => r.recorded_by_name ?? "" },
-  ];
-  const revenueColumns: ExportColumn<RevenueRow>[] = [
-    { header: "Date", value: (r) => r.entry_date },
-    { header: "Category", value: (r) => REVENUE_CATEGORIES.find((c) => c.key === r.category)?.label ?? r.category },
-    { header: "Item", value: (r) => r.item },
-    { header: "Quantity", value: (r) => r.quantity },
-    { header: "Unit", value: (r) => r.unit },
-    { header: "Unit price (NGN)", value: (r) => r.unit_price },
-    { header: "Amount (NGN)", value: (r) => r.amount },
-    { header: "Customer", value: (r) => r.customer ?? "" },
-    { header: "Payment", value: (r) => r.payment_method },
-  ];
-
   const summaryCards = [
     { label: "Total revenue", value: naira(totals.revenue) },
     { label: "Total expenses", value: naira(totals.expenses) },
@@ -132,16 +110,6 @@ function FinancePage() {
     { label: "Profit margin", value: `${totals.margin.toFixed(1)}%` },
   ];
 
-  const runExport = (kind: "csv" | "excel" | "pdf", which: "expenses" | "revenue") => {
-    const rows = which === "expenses" ? filteredExpenses : filteredRevenue;
-    if (!rows.length) { toast.error("No records in the selected period."); return; }
-    const title = which === "expenses" ? "Expense Report" : "Revenue Report";
-    const filename = `poultrypro-${which}-${from}_to_${to}`;
-    const columns = (which === "expenses" ? expenseColumns : revenueColumns) as ExportColumn<never>[];
-    if (kind === "csv") exportCsv(rows as never[], columns, filename);
-    else if (kind === "excel") exportExcel(rows as never[], columns, filename, `${title} · ${from} → ${to}`);
-    else exportPdf(rows as never[], columns, `PoultryPro ${title}`, `${from} → ${to}`, summaryCards.map((c) => ({ label: c.label, value: c.value })));
-  };
 
   return (
     <div className="min-h-screen bg-[color:var(--bg)] pb-20">
