@@ -156,6 +156,9 @@ function RearingPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <ExportRecordsButton section="brooding" label="Export Brooding Records" />
+          <ExportRecordsButton section="rearing" label="Export Rearing Records" />
+
           {writable && (
             <button
               onClick={() => setShowSettings(true)}
