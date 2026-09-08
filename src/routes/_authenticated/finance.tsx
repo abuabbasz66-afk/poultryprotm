@@ -262,8 +262,8 @@ function FinancePage() {
             <TableHead
               title={`Expenses (${filteredExpenses.length})`}
               total={naira(totals.expenses)}
-              onExport={(k) => runExport(k, "expenses")}
             />
+
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
