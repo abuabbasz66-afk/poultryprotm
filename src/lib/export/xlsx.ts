@@ -59,7 +59,7 @@ export async function buildWorkbook(opts: {
         const v = c.value(r);
         if (c.type === "date") return asDate(v);
         if (c.type === "number" || c.type === "currency") return Number(v ?? 0);
-        return v ?? "";
+        return neutralizeFormula(v) ?? "";
       });
       ws.addRow(values);
     }
