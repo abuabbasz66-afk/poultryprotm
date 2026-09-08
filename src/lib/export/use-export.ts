@@ -107,7 +107,7 @@ export function useRecordExport() {
         for (const { desc, rows } of sections) {
           if (!desc.summary || !rows.length) continue;
           for (const line of desc.summary(rows)) {
-            summary.push({ label: `${desc.label} — ${line.label}`, value: line.value });
+            summary.push({ label: `${desc.label} · ${line.label}`, value: line.value });
           }
         }
         const totalRows = sections.reduce((a, s) => a + s.rows.length, 0);

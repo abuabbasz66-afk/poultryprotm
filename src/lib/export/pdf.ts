@@ -21,7 +21,7 @@ function fmtCell(v: string | number | null, type?: string) {
   if (type === "date") return fmtDate(v);
   if (type === "currency") {
     const n = Number(v ?? 0);
-    return `₦${n.toLocaleString("en-NG", { maximumFractionDigits: 2 })}`;
+    return `NGN ${n.toLocaleString("en-NG", { maximumFractionDigits: 2 })}`;
   }
   if (type === "number") {
     const n = Number(v ?? 0);
