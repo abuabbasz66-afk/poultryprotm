@@ -9,6 +9,7 @@ import { RecentActivitiesCard } from "@/components/recent-activities-card";
 import { FarmSetupChecklist } from "@/components/farm-setup-checklist";
 import { TodaysFarm } from "@/components/todays-farm";
 import { HelpHint } from "@/components/academy/help-hint";
+import { ExportRecordsButton } from "@/components/export/export-button";
 import { RoomComparisonCard } from "@/components/room-comparison-card";
 
 import { AlertsBanner } from "@/components/alerts-banner";
@@ -968,6 +969,10 @@ const setBagWeightKg = (v: number | null) => {
               stage="CAPTURE" plan="Basic" title="Farm Records" helpSlug="dr-production"
               body="Digitise daily poultry activities and maintain structured operational records across production, feed, flock health, mortality and farm rooms."
             />
+
+            <div className="flex justify-end">
+              <ExportRecordsButton section="records" />
+            </div>
 
             <FarmSetupChecklist />
             <TodaysFarm />

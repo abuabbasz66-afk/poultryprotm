@@ -1,5 +1,6 @@
 import { RequirePermission } from "@/components/require-permission";
 import { HelpHint } from "@/components/academy/help-hint";
+import { ExportRecordsButton } from "@/components/export/export-button";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
