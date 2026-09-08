@@ -459,21 +459,18 @@ function ListCard({ title, rows }: { title: string; rows: { key: string; label: 
   );
 }
 
-function TableHead({ title, total, onExport }: { title: string; total: string; onExport: (k: "csv" | "excel" | "pdf") => void }) {
+function TableHead({ title, total }: { title: string; total: string }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
       <div>
         <h2 className="font-display text-base font-semibold">{title}</h2>
         <p className="text-xs text-muted-foreground">Period total {total}</p>
       </div>
-      <div className="flex gap-2">
-        <Button size="sm" variant="outline" onClick={() => onExport("csv")}><Download className="mr-1 h-4 w-4" /> CSV</Button>
-        <Button size="sm" variant="outline" onClick={() => onExport("excel")}><FileSpreadsheet className="mr-1 h-4 w-4" /> Excel</Button>
-        <Button size="sm" variant="outline" onClick={() => onExport("pdf")}><FileText className="mr-1 h-4 w-4" /> PDF</Button>
-      </div>
+      <ExportRecordsButton section="finance" />
     </div>
   );
 }
+
 
 function Row({ label, value, strong, indent }: { label: string; value: string; strong?: boolean; indent?: boolean }) {
   return (
