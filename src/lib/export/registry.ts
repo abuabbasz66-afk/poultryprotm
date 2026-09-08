@@ -56,7 +56,8 @@ const n = (v: unknown) => {
 const s = (v: unknown) => (v == null ? "" : String(v));
 const sum = (rows: Row[], f: (r: Row) => number) => rows.reduce((a, r) => a + f(r), 0);
 const money = (v: number) =>
-  `₦${Math.round(v).toLocaleString("en-NG")}`;
+  `NGN ${Math.round(v).toLocaleString("en-NG")}`;
+
 const avg = (rows: Row[], f: (r: Row) => number) => (rows.length ? sum(rows, f) / rows.length : 0);
 
 /** Normalised business date of a row for a descriptor (YYYY-MM-DD or null). */
