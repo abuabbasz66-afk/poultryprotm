@@ -3,7 +3,7 @@ import { HelpHint } from "@/components/academy/help-hint";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft, ArrowDownRight, ArrowUpRight, Plus, Wallet, Receipt, TrendingUp,
-  PiggyBank, FileSpreadsheet, FileText, Download, Pencil, Trash2, Filter,
+  PiggyBank, Pencil, Trash2, Filter,
 } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PermissionDenied } from "@/components/permission-denied";
 import { ExpenseDialog, RevenueDialog } from "@/components/finance/finance-dialogs";
+import { ExportRecordsButton } from "@/components/export/export-button";
 import { usePermissions } from "@/lib/rbac";
 import { useEggs, useRooms } from "@/lib/farm-data";
 import {
@@ -26,7 +27,7 @@ import {
   unitEconomics,
 } from "@/lib/finance-analytics";
 import { EXPENSE_CATEGORIES, REVENUE_CATEGORIES } from "@/lib/finance-catalog";
-import { exportCsv, exportExcel, exportPdf, type ExportColumn } from "@/lib/finance-export";
+
 import { cn } from "@/lib/utils";
 
 type Tab = "overview" | "expenses" | "revenue" | "reports";
