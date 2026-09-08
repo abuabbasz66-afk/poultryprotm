@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   fetchMetNo,
   fetchOpenMeteo,
@@ -34,6 +35,9 @@ const FRESH_MS = 30 * 60_000; // reuse a forecast for 30 minutes
 const STALE_MS = 12 * 60 * 60_000; // beyond this, a cached forecast is useless
 
 export const getFarmWeather = createServerFn({ method: "GET" })
+  // Signed-in users only: the handler calls paid third-party providers and
+  // writes the shared weather cache with the service-role client.
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: Input) => ({
     latitude: num(input?.latitude),
     longitude: num(input?.longitude),

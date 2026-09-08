@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import type { ExportDescriptor, Row, SummaryLine } from "./registry";
+import { neutralizeFormula } from "./csv";
 
 const CURRENCY_FMT = '₦#,##0.00;[Red]-₦#,##0.00;"-"';
 const NUMBER_FMT = "#,##0.###";
@@ -40,7 +41,8 @@ export async function buildWorkbook(opts: {
   summary.addRow([]);
   const shead = summary.addRow(["Metric", "Value"]);
   shead.font = { bold: true, name: "Arial" };
-  for (const line of opts.summary) summary.addRow([line.label, line.value]);
+  for (const line of opts.summary)
+    summary.addRow([neutralizeFormula(line.label), neutralizeFormula(line.value)]);
 
   for (const { desc, rows } of opts.sheets) {
     const name = desc.label.replace(/[\\/*?:[\]]/g, " ").slice(0, 31);
@@ -58,7 +60,7 @@ export async function buildWorkbook(opts: {
         const v = c.value(r);
         if (c.type === "date") return asDate(v);
         if (c.type === "number" || c.type === "currency") return Number(v ?? 0);
-        return v ?? "";
+        return neutralizeFormula(v) ?? "";
       });
       ws.addRow(values);
     }
