@@ -144,7 +144,7 @@ export function useRecordExport() {
           download(blob, `${base}.xlsx`);
         } else {
           const { buildPdf } = await import("./pdf");
-          const blob = buildPdf({
+          const blob = await buildPdf({
             title: input.title,
             farmName,
             periodText,
