@@ -7,6 +7,7 @@ import { Settings as SettingsIcon, UserCircle, Save, Scale, Check } from "lucide
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useFarm, useFarmId } from "@/lib/farm-data";
+import { ExportHistoryCard } from "@/components/export/export-history";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -146,6 +147,8 @@ function SettingsPage() {
             </div>
           </div>
         </section>
+
+        <ExportHistoryCard />
 
         <div className="flex justify-end">
           <button
