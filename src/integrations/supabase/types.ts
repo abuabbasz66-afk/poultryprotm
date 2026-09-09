@@ -1892,6 +1892,101 @@ export type Database = {
           },
         ]
       }
+      flock_vaccination_schedules: {
+        Row: {
+          age_days: number
+          age_label: string
+          anchor_source: string
+          batch_id: string
+          created_at: string
+          disease: string
+          farm_id: string
+          id: string
+          note: string | null
+          programme_id: string
+          programme_item_id: string | null
+          programme_name: string
+          programme_version: number
+          route: string
+          scheduled_date: string
+          sequence: number
+          status: string
+          updated_at: string
+          vaccine: string
+        }
+        Insert: {
+          age_days: number
+          age_label: string
+          anchor_source?: string
+          batch_id: string
+          created_at?: string
+          disease: string
+          farm_id: string
+          id?: string
+          note?: string | null
+          programme_id: string
+          programme_item_id?: string | null
+          programme_name: string
+          programme_version?: number
+          route: string
+          scheduled_date: string
+          sequence?: number
+          status?: string
+          updated_at?: string
+          vaccine: string
+        }
+        Update: {
+          age_days?: number
+          age_label?: string
+          anchor_source?: string
+          batch_id?: string
+          created_at?: string
+          disease?: string
+          farm_id?: string
+          id?: string
+          note?: string | null
+          programme_id?: string
+          programme_item_id?: string | null
+          programme_name?: string
+          programme_version?: number
+          route?: string
+          scheduled_date?: string
+          sequence?: number
+          status?: string
+          updated_at?: string
+          vaccine?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flock_vaccination_schedules_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "layer_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flock_vaccination_schedules_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flock_vaccination_schedules_programme_id_fkey"
+            columns: ["programme_id"]
+            isOneToOne: false
+            referencedRelation: "vaccination_programmes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flock_vaccination_schedules_programme_item_id_fkey"
+            columns: ["programme_item_id"]
+            isOneToOne: false
+            referencedRelation: "vaccination_programme_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       health_records: {
         Row: {
           created_at: string
@@ -2202,6 +2297,7 @@ export type Database = {
           created_at: string
           current_birds: number
           farm_id: string
+          hatch_date: string | null
           id: string
           name: string
           notes: string | null
@@ -2222,6 +2318,7 @@ export type Database = {
           created_at?: string
           current_birds?: number
           farm_id: string
+          hatch_date?: string | null
           id?: string
           name: string
           notes?: string | null
@@ -2242,6 +2339,7 @@ export type Database = {
           created_at?: string
           current_birds?: number
           farm_id?: string
+          hatch_date?: string | null
           id?: string
           name?: string
           notes?: string | null
@@ -2776,6 +2874,257 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vaccination_programme_items: {
+        Row: {
+          age_days: number
+          age_label: string
+          created_at: string
+          disease: string
+          farm_id: string | null
+          id: string
+          note: string | null
+          programme_id: string
+          route: string
+          sequence: number
+          updated_at: string
+          vaccine: string
+        }
+        Insert: {
+          age_days: number
+          age_label: string
+          created_at?: string
+          disease: string
+          farm_id?: string | null
+          id?: string
+          note?: string | null
+          programme_id: string
+          route: string
+          sequence?: number
+          updated_at?: string
+          vaccine: string
+        }
+        Update: {
+          age_days?: number
+          age_label?: string
+          created_at?: string
+          disease?: string
+          farm_id?: string | null
+          id?: string
+          note?: string | null
+          programme_id?: string
+          route?: string
+          sequence?: number
+          updated_at?: string
+          vaccine?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vaccination_programme_items_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaccination_programme_items_programme_id_fkey"
+            columns: ["programme_id"]
+            isOneToOne: false
+            referencedRelation: "vaccination_programmes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vaccination_programmes: {
+        Row: {
+          bird_type: string
+          created_at: string
+          created_by: string | null
+          farm_id: string | null
+          id: string
+          is_active: boolean
+          is_baseline: boolean
+          name: string
+          notes: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          bird_type?: string
+          created_at?: string
+          created_by?: string | null
+          farm_id?: string | null
+          id?: string
+          is_active?: boolean
+          is_baseline?: boolean
+          name: string
+          notes?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          bird_type?: string
+          created_at?: string
+          created_by?: string | null
+          farm_id?: string | null
+          id?: string
+          is_active?: boolean
+          is_baseline?: boolean
+          name?: string
+          notes?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vaccination_programmes_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vaccination_records: {
+        Row: {
+          administration_method: string | null
+          at_hatchery: boolean
+          attachment_path: string | null
+          batch_id: string | null
+          batch_number: string | null
+          bird_age_days: number | null
+          bird_type: string
+          birds_present: number | null
+          birds_vaccinated: number | null
+          created_at: string
+          deleted_at: string | null
+          disease: string
+          dose: string | null
+          expiry_date: string | null
+          farm_id: string
+          hatchery_name: string | null
+          id: string
+          manufacturer: string | null
+          notes: string | null
+          person_responsible: string | null
+          programme_id: string | null
+          recorded_by: string | null
+          recorded_by_name: string | null
+          room_id: string | null
+          route: string | null
+          schedule_id: string | null
+          scheduled_date: string | null
+          updated_at: string
+          vaccination_date: string
+          vaccine: string
+          veterinarian: string | null
+          water_volume_litres: number | null
+        }
+        Insert: {
+          administration_method?: string | null
+          at_hatchery?: boolean
+          attachment_path?: string | null
+          batch_id?: string | null
+          batch_number?: string | null
+          bird_age_days?: number | null
+          bird_type?: string
+          birds_present?: number | null
+          birds_vaccinated?: number | null
+          created_at?: string
+          deleted_at?: string | null
+          disease: string
+          dose?: string | null
+          expiry_date?: string | null
+          farm_id: string
+          hatchery_name?: string | null
+          id?: string
+          manufacturer?: string | null
+          notes?: string | null
+          person_responsible?: string | null
+          programme_id?: string | null
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          room_id?: string | null
+          route?: string | null
+          schedule_id?: string | null
+          scheduled_date?: string | null
+          updated_at?: string
+          vaccination_date: string
+          vaccine: string
+          veterinarian?: string | null
+          water_volume_litres?: number | null
+        }
+        Update: {
+          administration_method?: string | null
+          at_hatchery?: boolean
+          attachment_path?: string | null
+          batch_id?: string | null
+          batch_number?: string | null
+          bird_age_days?: number | null
+          bird_type?: string
+          birds_present?: number | null
+          birds_vaccinated?: number | null
+          created_at?: string
+          deleted_at?: string | null
+          disease?: string
+          dose?: string | null
+          expiry_date?: string | null
+          farm_id?: string
+          hatchery_name?: string | null
+          id?: string
+          manufacturer?: string | null
+          notes?: string | null
+          person_responsible?: string | null
+          programme_id?: string | null
+          recorded_by?: string | null
+          recorded_by_name?: string | null
+          room_id?: string | null
+          route?: string | null
+          schedule_id?: string | null
+          scheduled_date?: string | null
+          updated_at?: string
+          vaccination_date?: string
+          vaccine?: string
+          veterinarian?: string | null
+          water_volume_litres?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vaccination_records_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "layer_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaccination_records_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaccination_records_programme_id_fkey"
+            columns: ["programme_id"]
+            isOneToOne: false
+            referencedRelation: "vaccination_programmes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaccination_records_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaccination_records_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "flock_vaccination_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       weather_cache: {
         Row: {
