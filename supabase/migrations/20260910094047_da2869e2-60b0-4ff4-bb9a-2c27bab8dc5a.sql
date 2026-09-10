@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.validate_vaccination_scope() FROM PUBLIC, anon, authenticated;

@@ -27,6 +27,8 @@ export type LayerBatch = {
   birds_placed: number;
   current_birds: number;
   placement_date: string;
+  /** Actual hatch date when known — preferred anchor for vaccination schedules. */
+  hatch_date: string | null;
   start_age_days: number;
   room: string | null;
   room_id: string | null;
@@ -368,7 +370,7 @@ export function useLayerBatches() {
       const { data, error } = await supabase
         .from("layer_batches")
         .select(
-          "id, farm_id, name, bird_type, breed, birds_placed, current_birds, placement_date, start_age_days, room, room_id, source, notes, status, transferred_at, transferred_room_id, created_at",
+          "id, farm_id, name, bird_type, breed, birds_placed, current_birds, placement_date, hatch_date, start_age_days, room, room_id, source, notes, status, transferred_at, transferred_room_id, created_at",
         )
         .eq("farm_id", farmId!)
         .order("placement_date", { ascending: false });
