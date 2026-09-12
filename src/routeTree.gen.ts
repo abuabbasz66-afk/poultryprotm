@@ -35,6 +35,7 @@ import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedSubscriptionsRouteImport } from './routes/_authenticated/subscriptions'
+import { Route as AuthenticatedVaccinationRouteImport } from './routes/_authenticated/vaccination'
 import { Route as AuthenticatedWeatherRouteImport } from './routes/_authenticated/weather'
 import { Route as AcademyIndexRouteImport } from './routes/academy.index'
 import { Route as AcademySlugRouteImport } from './routes/academy.$slug'
@@ -180,6 +181,12 @@ const AuthenticatedSubscriptionsRoute =
     path: '/subscriptions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedVaccinationRoute =
+  AuthenticatedVaccinationRouteImport.update({
+    id: '/vaccination',
+    path: '/vaccination',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedWeatherRoute = AuthenticatedWeatherRouteImport.update({
   id: '/weather',
   path: '/weather',
@@ -275,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
+  '/vaccination': typeof AuthenticatedVaccinationRoute
   '/weather': typeof AuthenticatedWeatherRoute
   '/academy/$slug': typeof AcademySlugRoute
   '/academy/': typeof AcademyIndexRoute
@@ -315,6 +323,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
+  '/vaccination': typeof AuthenticatedVaccinationRoute
   '/weather': typeof AuthenticatedWeatherRoute
   '/academy/$slug': typeof AcademySlugRoute
   '/academy': typeof AcademyIndexRoute
@@ -357,6 +366,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/_authenticated/subscriptions': typeof AuthenticatedSubscriptionsRoute
+  '/_authenticated/vaccination': typeof AuthenticatedVaccinationRoute
   '/_authenticated/weather': typeof AuthenticatedWeatherRoute
   '/academy/$slug': typeof AcademySlugRoute
   '/academy/': typeof AcademyIndexRoute
@@ -399,6 +409,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/staff'
     | '/subscriptions'
+    | '/vaccination'
     | '/weather'
     | '/academy/$slug'
     | '/academy/'
@@ -439,6 +450,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/staff'
     | '/subscriptions'
+    | '/vaccination'
     | '/weather'
     | '/academy/$slug'
     | '/academy'
@@ -480,6 +492,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/staff'
     | '/_authenticated/subscriptions'
+    | '/_authenticated/vaccination'
     | '/_authenticated/weather'
     | '/academy/$slug'
     | '/academy/'
@@ -703,6 +716,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSubscriptionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/vaccination': {
+      id: '/_authenticated/vaccination'
+      path: '/vaccination'
+      fullPath: '/vaccination'
+      preLoaderRoute: typeof AuthenticatedVaccinationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/weather': {
       id: '/_authenticated/weather'
       path: '/weather'
@@ -814,6 +834,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
   AuthenticatedSubscriptionsRoute: typeof AuthenticatedSubscriptionsRoute
+  AuthenticatedVaccinationRoute: typeof AuthenticatedVaccinationRoute
   AuthenticatedWeatherRoute: typeof AuthenticatedWeatherRoute
 }
 
@@ -834,6 +855,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
   AuthenticatedSubscriptionsRoute: AuthenticatedSubscriptionsRoute,
+  AuthenticatedVaccinationRoute: AuthenticatedVaccinationRoute,
   AuthenticatedWeatherRoute: AuthenticatedWeatherRoute,
 }
 

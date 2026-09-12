@@ -132,6 +132,12 @@ export const NAV_SECTIONS: NavSection[] = [
         permission: "health.read",
       },
       {
+        label: "Vaccination",
+        icon: Syringe,
+        to: "/vaccination",
+        permission: "health.read",
+      },
+      {
         label: "Medication & Vaccination",
         icon: Syringe,
         to: "/dashboard",
