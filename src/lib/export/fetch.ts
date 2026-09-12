@@ -29,11 +29,16 @@ export async function fetchDescriptorRows(
   let page = 0;
 
   for (;;) {
+    // A deterministic order is required: paged reads without one can repeat
+    // rows on one page and skip them on the next.
     let q = supabase
       .from(desc.table as never)
       .select("*")
       .eq("farm_id", farmId)
+      .order(desc.dateField, { ascending: true })
+      .order("id", { ascending: true })
       .range(page * PAGE, page * PAGE + PAGE - 1);
+
 
     if (desc.dateKind === "iso" && range.from) q = q.gte(desc.dateField, range.from);
     if (desc.dateKind === "iso" && range.to) {
