@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as OfflineRouteImport } from './routes/offline'
 import { Route as PresentationRouteImport } from './routes/presentation'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -62,6 +63,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OfflineRoute = OfflineRouteImport.update({
+  id: '/offline',
+  path: '/offline',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PresentationRoute = PresentationRouteImport.update({
@@ -259,6 +265,7 @@ const LovableEmailTransactionalPreviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/offline': typeof OfflineRoute
   '/presentation': typeof PresentationRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -300,6 +307,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/offline': typeof OfflineRoute
   '/presentation': typeof PresentationRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -343,6 +351,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/offline': typeof OfflineRoute
   '/presentation': typeof PresentationRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -386,6 +395,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/offline'
     | '/presentation'
     | '/pricing'
     | '/privacy'
@@ -427,6 +437,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/offline'
     | '/presentation'
     | '/pricing'
     | '/privacy'
@@ -469,6 +480,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/offline'
     | '/presentation'
     | '/pricing'
     | '/privacy'
@@ -512,6 +524,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  OfflineRoute: typeof OfflineRoute
   PresentationRoute: typeof PresentationRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -553,6 +566,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/offline': {
+      id: '/offline'
+      path: '/offline'
+      fullPath: '/offline'
+      preLoaderRoute: typeof OfflineRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/presentation': {
@@ -878,6 +898,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  OfflineRoute: OfflineRoute,
   PresentationRoute: PresentationRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
