@@ -263,7 +263,18 @@ function VaccinationPage() {
 
       {/* Timelines */}
       <section className="mt-8 space-y-4">
-        <h2 className="font-display text-lg font-semibold">Flock vaccination timeline</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-display text-lg font-semibold">Flock vaccination timeline</h2>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>All statuses</SelectItem>
+              {openStatuses.map((s) => (
+                <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {!batches.length && (
           <EmptyState
@@ -344,18 +355,7 @@ function VaccinationPage() {
 
       {/* History */}
       <section className="mt-8 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-lg font-semibold">Vaccination history</h2>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>All statuses</SelectItem>
-              {openStatuses.map((s) => (
-                <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <h2 className="font-display text-lg font-semibold">Vaccination history</h2>
 
         {!historyRows.length ? (
           <div className="rounded-2xl border border-border p-6">
