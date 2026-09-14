@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.demo_greenfield_data() TO anon, authenticated;
