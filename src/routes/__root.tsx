@@ -198,6 +198,9 @@ function RootComponent() {
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
         <WhatsAppWidget />
+        <ConnectionIndicator />
+        <InstallPrompt />
+        <UpdatePrompt />
         <Toaster position="top-right" richColors closeButton />
       </OfflineProvider>
     </QueryClientProvider>
