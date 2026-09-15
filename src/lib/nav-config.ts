@@ -138,14 +138,6 @@ export const NAV_SECTIONS: NavSection[] = [
         permission: "health.read",
       },
       {
-        label: "Medication records",
-        icon: Syringe,
-        to: "/dashboard",
-        search: { area: "records" },
-        hash: "health",
-        permission: "health.read",
-      },
-      {
         label: "Bird Management",
         icon: Bird,
         to: "/dashboard",
