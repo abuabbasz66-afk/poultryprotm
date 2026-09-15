@@ -15,6 +15,9 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { WhatsAppWidget } from "@/components/whatsapp-widget";
 import { OfflineProvider } from "@/components/offline-provider";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
+import { UpdatePrompt } from "@/components/pwa/update-prompt";
+import { ConnectionIndicator } from "@/components/pwa/connection-indicator";
 
 function NotFoundComponent() {
   return (
@@ -80,7 +83,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#1F4435" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "PoultryPro" },
+      { name: "application-name", content: "PoultryPro" },
       { title: "PoultryPro™ — Smart Poultry Farm Management" },
       { name: "description", content: "PoultryPro is an intelligent, data-driven platform empowering poultry farmers across Africa to improve productivity, profitability, and sustainability." },
       { name: "author", content: "Abubakar Sadiq Abbas" },
@@ -96,7 +105,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/favicon.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+      { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
+      { rel: "icon", type: "image/png", sizes: "512x512", href: "/icon-512.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" },
@@ -187,6 +198,9 @@ function RootComponent() {
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
         <WhatsAppWidget />
+        <ConnectionIndicator />
+        <InstallPrompt />
+        <UpdatePrompt />
         <Toaster position="top-right" richColors closeButton />
       </OfflineProvider>
     </QueryClientProvider>
