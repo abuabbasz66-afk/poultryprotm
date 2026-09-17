@@ -17,6 +17,7 @@ import { WhatsAppWidget } from "@/components/whatsapp-widget";
 import { OfflineProvider } from "@/components/offline-provider";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { UpdatePrompt } from "@/components/pwa/update-prompt";
+import { AppBadge } from "@/components/pwa/app-badge";
 import { ConnectionIndicator } from "@/components/pwa/connection-indicator";
 
 function NotFoundComponent() {
@@ -201,6 +202,7 @@ function RootComponent() {
         <ConnectionIndicator />
         <InstallPrompt />
         <UpdatePrompt />
+          <AppBadge />
         <Toaster position="top-right" richColors closeButton />
       </OfflineProvider>
     </QueryClientProvider>

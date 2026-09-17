@@ -53,6 +53,9 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
         setSyncUser(next);
         if (next) void syncNow({ silent: true });
       }
+      if (event === "TOKEN_REFRESHED" && !session) {
+        toast.error("Your session expired. Sign in again to sync pending records.", { id: "pp-session" });
+      }
     });
 
     return () => {
