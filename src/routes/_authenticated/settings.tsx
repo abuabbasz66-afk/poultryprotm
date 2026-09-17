@@ -3,11 +3,13 @@ import { RequirePermission } from "@/components/require-permission";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Settings as SettingsIcon, UserCircle, Save, Scale, Check } from "lucide-react";
+import { Settings as SettingsIcon, UserCircle, Save, Scale, Check, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useFarm, useFarmId } from "@/lib/farm-data";
 import { ExportHistoryCard } from "@/components/export/export-history";
+import { InstallAction } from "@/components/pwa/install-action";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -150,14 +152,25 @@ function SettingsPage() {
 
         <ExportHistoryCard />
 
+        <section className="rounded-lg border border-border bg-card p-5 shadow-[var(--shadow-soft)] md:p-6">
+          <div className="flex items-start gap-3">
+            <Smartphone className="mt-0.5 h-5 w-5 text-primary" />
+            <div className="min-w-0 flex-1">
+              <h2 className="font-display text-xl font-semibold">PoultryPro on this device</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Install the app for quick access from your home screen.</p>
+              <div className="mt-4"><InstallAction /></div>
+            </div>
+          </div>
+        </section>
+
         <div className="flex justify-end">
-          <button
+          <Button
             onClick={() => save.mutate(form)}
             disabled={save.isPending || !farmId}
-            className="inline-flex items-center gap-2 rounded-full bg-[color:var(--forest)] px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-[var(--shadow-soft)] transition hover:opacity-90 disabled:opacity-50"
+            className="rounded-full px-5"
           >
             <Save className="h-4 w-4" /> {save.isPending ? "Saving…" : "Save changes"}
-          </button>
+          </Button>
         </div>
       </main>
     </div>

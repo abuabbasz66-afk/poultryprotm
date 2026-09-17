@@ -4,9 +4,11 @@
  */
 import { useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function UpdatePrompt() {
   const [waiting, setWaiting] = useState<ServiceWorker | null>(null);
+  const [later, setLater] = useState(false);
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
@@ -29,25 +31,25 @@ export function UpdatePrompt() {
     };
   }, []);
 
-  if (!waiting) return null;
+  if (!waiting || later) return null;
 
   return (
     <div
       role="status"
-      className="fixed inset-x-3 top-3 z-[60] mx-auto max-w-sm rounded-xl border border-border bg-card p-3 shadow-lg"
+      className="mobile-safe-top fixed inset-x-3 top-0 z-[60] mx-auto max-w-sm rounded-xl border border-border bg-card p-3 shadow-lg sm:top-3"
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-medium text-foreground">New PoultryPro version available.</p>
-        <button
+        <div className="min-w-0"><p className="text-xs font-medium text-foreground">New PoultryPro version available.</p><p className="mt-0.5 text-[11px] text-muted-foreground">Update now to get the latest improvements.</p></div>
+        <div className="flex shrink-0 gap-1"><Button type="button" variant="ghost" size="sm" onClick={() => setLater(true)}>Later</Button><Button
           type="button"
           onClick={() => {
             waiting.postMessage({ type: "SKIP_WAITING" });
             window.location.reload();
           }}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+          size="sm"
         >
           <RefreshCw className="h-3.5 w-3.5" /> Update
-        </button>
+        </Button></div>
       </div>
     </div>
   );
