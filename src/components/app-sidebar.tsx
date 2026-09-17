@@ -9,6 +9,7 @@ import { usePermissions, roleStyle } from "@/lib/rbac";
 import { flushCurrentLocation } from "@/lib/last-location";
 import { SyncStatus } from "@/components/sync-status";
 import { AlertsBell } from "@/components/alerts-bell";
+import { MobileNavigation } from "@/components/mobile-navigation";
 
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { cn } from "@/lib/utils";
@@ -99,7 +100,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Mobile top bar */}
-      <div className="lg:hidden sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-white/10 bg-[color:var(--forest)] px-4 py-2.5 text-primary-foreground">
+      <div className="mobile-safe-top lg:hidden sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-white/10 bg-[color:var(--forest)] px-4 py-2.5 text-primary-foreground">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <button
             onClick={() => setMobileOpen(true)}
@@ -137,9 +138,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <div className={cn("transition-[padding] duration-300", collapsed ? "lg:pl-[76px]" : "lg:pl-[264px]")}>
+      <div className={cn("mobile-app-content transition-[padding] duration-300", collapsed ? "lg:pl-[76px]" : "lg:pl-[264px]")}>
         {children}
       </div>
+      <MobileNavigation />
     </div>
   );
 }

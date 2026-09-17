@@ -32,7 +32,7 @@ export function ConnectionIndicator() {
       role="status"
       aria-live="polite"
       className={cn(
-        "fixed bottom-3 left-1/2 z-[55] -translate-x-1/2 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-md",
+        "fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 z-[55] -translate-x-1/2 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-md lg:bottom-3",
         online
           ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-200"
           : "border-amber-500/40 bg-amber-500/15 text-amber-800 dark:text-amber-200",
@@ -40,7 +40,7 @@ export function ConnectionIndicator() {
     >
       <span className="inline-flex items-center gap-1.5">
         {online ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-        {online ? "Connected" : "Offline — reconnecting..."}
+        {online ? "Connected" : "Offline — records will sync when connection returns."}
       </span>
     </div>
   );

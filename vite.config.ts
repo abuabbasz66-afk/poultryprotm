@@ -29,6 +29,7 @@ export default defineConfig({
         filename: "sw.js",
         manifest: false,
         workbox: {
+          cleanupOutdatedCaches: true,
           navigateFallback: "/",
           navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//, /^\/_serverFn\//],
           globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
@@ -36,13 +37,13 @@ export default defineConfig({
             {
               urlPattern: ({ request }) => request.mode === "navigate",
               handler: "NetworkFirst",
-              options: { cacheName: "pp-html", networkTimeoutSeconds: 5 },
+              options: { cacheName: "pp-html", networkTimeoutSeconds: 5, expiration: { maxEntries: 20, maxAgeSeconds: 604800 } },
             },
             {
               urlPattern: ({ request, sameOrigin }) =>
                 sameOrigin && ["style", "script", "worker", "font", "image"].includes(request.destination),
               handler: "CacheFirst",
-              options: { cacheName: "pp-assets", expiration: { maxEntries: 200 } },
+              options: { cacheName: "pp-assets", expiration: { maxEntries: 200, maxAgeSeconds: 2592000 } },
             },
           ],
         },
