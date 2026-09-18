@@ -367,6 +367,7 @@ function VaccinationPage() {
             )}
           </div>
         ) : (
+          <>
           <div className="space-y-2 md:hidden">
             {historyRows.map((r) => {
               const variance = scheduleVariance(r.scheduled_date, r.vaccination_date);
@@ -437,6 +438,7 @@ function VaccinationPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </section>
 
