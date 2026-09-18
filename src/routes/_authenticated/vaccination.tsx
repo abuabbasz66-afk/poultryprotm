@@ -367,7 +367,18 @@ function VaccinationPage() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-border">
+          <>
+          <div className="space-y-2 md:hidden">
+            {historyRows.map((r) => {
+              const variance = scheduleVariance(r.scheduled_date, r.vaccination_date);
+              return <article key={r.id} className="rounded-lg border border-border p-3">
+                <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-medium">{r.vaccine}</p><p className="text-xs text-muted-foreground">{r.disease} · {batches.find((b) => b.id === r.batch_id)?.name ?? "Flock"}</p></div><span className="shrink-0 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-[11px] text-emerald-700">{variance?.label ?? "Completed"}</span></div>
+                <dl className="mt-3 grid grid-cols-2 gap-2 text-xs"><div><dt className="text-muted-foreground">Date</dt><dd>{formatDate(r.vaccination_date)}</dd></div><div><dt className="text-muted-foreground">Route</dt><dd>{r.route ?? "—"}</dd></div><div><dt className="text-muted-foreground">Birds</dt><dd>{r.birds_vaccinated?.toLocaleString() ?? "—"}</dd></div><div><dt className="text-muted-foreground">Administrator</dt><dd className="truncate">{r.person_responsible ?? r.recorded_by_name ?? "—"}</dd></div></dl>
+                <div className="mt-2 flex justify-end gap-1"><Button size="icon" variant="ghost" aria-label="View" onClick={() => setDetail(r)}><Eye /></Button>{writable && <Button size="icon" variant="ghost" aria-label="Edit" onClick={() => { setEditing(r); setPresetSchedule(null); setRecordOpen(true); }}><Pencil /></Button>}{deletable && <Button size="icon" variant="ghost" aria-label="Delete" onClick={() => onDelete(r)}><Trash2 /></Button>}</div>
+              </article>;
+            })}
+          </div>
+          <div className="hidden overflow-x-auto rounded-2xl border border-border md:block">
             <table className="w-full min-w-[860px] text-sm">
               <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
@@ -427,6 +438,7 @@ function VaccinationPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </section>
 
