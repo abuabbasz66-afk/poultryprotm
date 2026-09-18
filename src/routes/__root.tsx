@@ -202,7 +202,7 @@ function RootComponent() {
         <ConnectionIndicator />
         <InstallPrompt />
         <UpdatePrompt />
-          <AppBadge />
+        <AppBadge />
         <Toaster position="top-right" richColors closeButton />
       </OfflineProvider>
     </QueryClientProvider>

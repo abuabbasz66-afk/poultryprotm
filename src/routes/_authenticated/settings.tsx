@@ -10,6 +10,7 @@ import { useFarm, useFarmId } from "@/lib/farm-data";
 import { ExportHistoryCard } from "@/components/export/export-history";
 import { InstallAction } from "@/components/pwa/install-action";
 import { Button } from "@/components/ui/button";
+import { NotificationPreferences } from "@/components/pwa/notification-preferences";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -151,6 +152,7 @@ function SettingsPage() {
         </section>
 
         <ExportHistoryCard />
+        <NotificationPreferences />
 
         <section className="rounded-lg border border-border bg-card p-5 shadow-[var(--shadow-soft)] md:p-6">
           <div className="flex items-start gap-3">

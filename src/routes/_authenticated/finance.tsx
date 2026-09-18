@@ -235,7 +235,17 @@ function FinancePage() {
               total={naira(totals.expenses)}
             />
 
-            <div className="overflow-x-auto">
+            <div className="space-y-2 p-3 md:hidden">
+              {filteredExpenses.map((r) => (
+                <article key={r.id} className="rounded-lg border border-border p-3">
+                  <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-medium">{r.subcategory}</p><p className="text-xs text-muted-foreground">{EXPENSE_CATEGORIES.find((c) => c.key === r.category)?.label ?? r.category} · {r.entry_date}</p></div><strong className="shrink-0 text-sm">{naira(r.amount)}</strong></div>
+                  {(r.supplier || r.description) && <p className="mt-2 text-xs text-muted-foreground">{[r.supplier, r.description].filter(Boolean).join(" · ")}</p>}
+                  {canWriteExpense && <div className="mt-2 flex justify-end gap-1"><button className="min-h-11 min-w-11 rounded-md p-2 hover:bg-muted" onClick={() => { setEditingExpense(r); setExpenseOpen(true); }} aria-label="Edit expense"><Pencil className="mx-auto h-4 w-4" /></button><button className="min-h-11 min-w-11 rounded-md p-2 text-destructive hover:bg-destructive/10" aria-label="Delete expense" onClick={() => delExpense.mutate(r.id, { onSuccess: () => toast.success("Expense deleted") })}><Trash2 className="mx-auto h-4 w-4" /></button></div>}
+                </article>
+              ))}
+              {!filteredExpenses.length && <p className="py-8 text-center text-sm text-muted-foreground">No expenses recorded in this period.</p>}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
                   <tr>
@@ -286,7 +296,17 @@ function FinancePage() {
               total={naira(totals.revenue)}
             />
 
-            <div className="overflow-x-auto">
+            <div className="space-y-2 p-3 md:hidden">
+              {filteredRevenue.map((r) => (
+                <article key={r.id} className="rounded-lg border border-border p-3">
+                  <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-medium">{r.item}</p><p className="text-xs text-muted-foreground">{REVENUE_CATEGORIES.find((c) => c.key === r.category)?.label ?? r.category} · {r.entry_date}</p></div><strong className="shrink-0 text-sm">{naira(r.amount)}</strong></div>
+                  <p className="mt-2 text-xs text-muted-foreground">{r.quantity} {r.unit} at {naira(r.unit_price)}{r.customer ? ` · ${r.customer}` : ""}</p>
+                  {canWriteRevenue && <div className="mt-2 flex justify-end gap-1"><button className="min-h-11 min-w-11 rounded-md p-2 hover:bg-muted" onClick={() => { setEditingRevenue(r); setRevenueOpen(true); }} aria-label="Edit revenue"><Pencil className="mx-auto h-4 w-4" /></button><button className="min-h-11 min-w-11 rounded-md p-2 text-destructive hover:bg-destructive/10" aria-label="Delete revenue" onClick={() => delRevenue.mutate(r.id, { onSuccess: () => toast.success("Revenue deleted") })}><Trash2 className="mx-auto h-4 w-4" /></button></div>}
+                </article>
+              ))}
+              {!filteredRevenue.length && <p className="py-8 text-center text-sm text-muted-foreground">No revenue recorded in this period.</p>}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
                   <tr>
