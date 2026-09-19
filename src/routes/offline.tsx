@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { WifiOff, RefreshCw } from "lucide-react";
 import { useSyncState } from "@/lib/offline/status";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/offline")({
   component: OfflinePage,
@@ -33,13 +34,13 @@ function OfflinePage() {
         <p className="mt-4 text-xs font-medium text-muted-foreground">
           {online ? "Connected" : "Offline — reconnecting..."}
         </p>
-        <button
+        <Button
           type="button"
           onClick={() => window.location.reload()}
-          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+          className="mt-6"
         >
           <RefreshCw className="h-4 w-4" /> Try again
-        </button>
+        </Button>
       </div>
     </div>
   );
