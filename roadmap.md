@@ -4,6 +4,6 @@
 - [x] Add permission-aware mobile bottom navigation and grouped More menu
 - [ ] Refine mobile dashboard and quick actions using live data
 - [x] Improve high-use mobile forms and high-density record tables
-- [ ] Extend safe offline coverage and standardize queue/error/session UX
+- [x] Extend safe offline coverage and standardize queue/error/session UX
 - [x] Add notification preferences and feature-detected badging readiness
 - [ ] Validate phone, tablet, desktop, offline, installed, auth, permissions, reports, and exports

@@ -25,7 +25,10 @@ export function NotificationPreferences() {
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const [prefs, setPrefs] = useState<PreferenceMap>({});
   const storageKey = userId ? `pp-notification-preferences:${userId}` : null;
-  const visible = useMemo(() => CATEGORIES.filter((item) => !item.permission || can(item.permission)), [can]);
+  const visible = useMemo(
+    () => CATEGORIES.filter((item) => !("permission" in item) || can(item.permission)),
+    [can],
+  );
 
   useEffect(() => {
     const available = typeof window !== "undefined" && "Notification" in window;

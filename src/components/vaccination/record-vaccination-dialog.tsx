@@ -264,8 +264,8 @@ export function RecordVaccinationDialog({
     };
 
     try {
-      await save.mutateAsync(payload);
-      toast.success(editing ? "Vaccination record updated." : "Vaccination recorded.");
+      const result = await save.mutateAsync(payload);
+      toast.success(result.queued ? "Saved on this device. It will sync when connected." : editing ? "Vaccination record updated." : "Vaccination recorded.");
       onOpenChange(false);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not save the vaccination.");

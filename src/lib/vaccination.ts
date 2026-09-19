@@ -13,6 +13,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthUserId, useFarmId, invalidateFarm, farmScope } from "@/lib/farm-data";
 import { useFarmContext } from "@/lib/rbac";
+import { runOrQueue } from "@/lib/offline/data";
 
 // ============= CONSTANTS =============
 
@@ -443,15 +444,25 @@ export function useSaveVaccinationRecord() {
       if (id) {
         const { error } = await supabase.from("vaccination_records").update(rest).eq("id", id);
         if (error) throw error;
-        return;
+        return { queued: false };
       }
-      const { error } = await supabase.from("vaccination_records").insert({
+      const row = {
         ...rest,
         farm_id: farmId,
         recorded_by: userId,
         recorded_by_name: actorName,
+      };
+      return runOrQueue({
+        userId,
+        farmId,
+        table: "vaccination_records",
+        op: "insert",
+        payload: row,
+        perform: async (rowId) => {
+          const { error } = await supabase.from("vaccination_records").insert({ id: rowId, ...row });
+          if (error) throw error;
+        },
       });
-      if (error) throw error;
     },
     onSuccess: () => invalidateFarm(qc, farmId),
   });
