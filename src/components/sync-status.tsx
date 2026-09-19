@@ -4,6 +4,7 @@ import { useSyncState } from "@/lib/offline/status";
 import { syncNow } from "@/lib/offline/sync-engine";
 import { ConflictDialog } from "@/components/conflict-dialog";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 function formatLastSync(iso: string | null) {
   if (!iso) return "Never";
@@ -92,28 +93,29 @@ export function SyncStatus({ compact = false }: { compact?: boolean }) {
             </dl>
 
             {s.conflicts > 0 && (
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => {
                   setOpen(false);
                   setConflictsOpen(true);
                 }}
-                className="mt-3 flex w-full items-center gap-2 rounded-lg border border-amber-400/50 bg-amber-50 px-2.5 py-2 text-left text-xs font-semibold text-amber-900 transition hover:bg-amber-100"
+                className="mt-3 h-auto w-full justify-start whitespace-normal border-amber-400/50 bg-amber-50 px-2.5 py-2 text-left text-xs text-amber-900 hover:bg-amber-100"
               >
                 <AlertTriangle className="h-3.5 w-3.5" />
                 {s.conflicts} record{s.conflicts > 1 ? "s" : ""} need review
-              </button>
+              </Button>
             )}
 
-            <button
+            <Button
               type="button"
               disabled={!s.online || s.phase === "syncing"}
               onClick={() => void syncNow()}
-              className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+              className="mt-3 w-full"
             >
               <RefreshCw className={cn("h-3.5 w-3.5", s.phase === "syncing" && "animate-spin")} />
               Sync now
-            </button>
+            </Button>
           </div>
         </>
       )}

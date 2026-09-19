@@ -1462,8 +1462,8 @@ function HealthDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) 
         notes: f.notes,
       },
       {
-        onSuccess: () => {
-          toast.success("Health record saved");
+        onSuccess: (result) => {
+          toast.success(result.queued ? "Saved on this device. It will sync when connected." : "Health record saved");
           onClose();
         },
         onError: (e2) => toast.error((e2 as Error).message),

@@ -15,6 +15,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthUserId, useFarmId, invalidateFarm, farmScope } from "@/lib/farm-data";
+import { runOrQueue } from "@/lib/offline/data";
 
 // ============= TYPES =============
 
@@ -654,7 +655,7 @@ export function useDeleteLayerWeight() {
 
 export function useRecordLayerHealth() {
   const qc = useQueryClient();
-  const { farmId } = useCtx();
+  const { farmId, userId } = useCtx();
   return useMutation({
     networkMode: "always",
     mutationFn: async (input: {
@@ -668,7 +669,7 @@ export function useRecordLayerHealth() {
       notes?: string | null;
     }) => {
       if (!farmId) throw new Error("No farm found for this user.");
-      const { error } = await supabase.from("layer_batch_health").insert({
+      const row = {
         farm_id: farmId,
         batch_id: input.batch_id,
         kind: input.kind,
@@ -678,8 +679,18 @@ export function useRecordLayerHealth() {
         administered_by: input.administered_by?.trim() || null,
         status: input.status ?? "done",
         notes: input.notes?.trim() || null,
+      };
+      return runOrQueue({
+        userId,
+        farmId,
+        table: "layer_batch_health",
+        op: "insert",
+        payload: row,
+        perform: async (rowId) => {
+          const { error } = await supabase.from("layer_batch_health").insert({ id: rowId, ...row });
+          if (error) throw error;
+        },
       });
-      if (error) throw error;
     },
     onSuccess: () => invalidateFarm(qc, farmId),
   });
