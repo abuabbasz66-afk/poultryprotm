@@ -6,4 +6,4 @@
 - [x] Improve high-use mobile forms and high-density record tables
 - [x] Extend safe offline coverage and standardize queue/error/session UX
 - [x] Add notification preferences and feature-detected badging readiness
-- [ ] Validate phone, tablet, desktop, offline, installed, auth, permissions, reports, and exports
+- [x] Validate phone, tablet, desktop, offline, installed, auth, permissions, reports, and exports
