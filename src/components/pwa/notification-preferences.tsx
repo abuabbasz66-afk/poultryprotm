@@ -1,62 +1,65 @@
-import { useEffect, useMemo, useState } from "react";
-import { Bell, BellOff } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Bell, BellOff, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useAuthUserId } from "@/lib/farm-data";
-import { usePermissions } from "@/lib/rbac";
-
-const CATEGORIES = [
-  { key: "production", label: "Production", permission: "production.read" },
-  { key: "feed", label: "Feed", permission: "feed.read" },
-  { key: "mortality", label: "Mortality", permission: "mortality.read" },
-  { key: "health", label: "Health & medication", permission: "health.read" },
-  { key: "vaccination", label: "Vaccination", permission: "health.read" },
-  { key: "finance", label: "Finance", permission: "financials.read" },
-  { key: "system", label: "System & sync" },
-] as const;
-
-type PreferenceMap = Record<string, boolean>;
+import { useFarmAlerts } from "@/lib/alerts";
+import {
+  NOTIFY_CATEGORIES, categoryEnabled, loadPrefs, markAllNotified, notificationsSupported,
+  savePrefs, showNotification, type NotifyPrefs,
+} from "@/lib/notifications";
 
 export function NotificationPreferences() {
   const { data: userId } = useAuthUserId();
-  const { can } = usePermissions();
+  const { alerts } = useFarmAlerts();
   const [supported, setSupported] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>("default");
-  const [prefs, setPrefs] = useState<PreferenceMap>({});
-  const storageKey = userId ? `pp-notification-preferences:${userId}` : null;
-  const visible = useMemo(
-    () => CATEGORIES.filter((item) => !("permission" in item) || can(item.permission)),
-    [can],
-  );
+  const [prefs, setPrefs] = useState<NotifyPrefs>({ enabled: true });
 
   useEffect(() => {
-    const available = typeof window !== "undefined" && "Notification" in window;
+    const available = notificationsSupported();
     setSupported(available);
     if (available) setPermission(Notification.permission);
   }, []);
 
   useEffect(() => {
-    if (!storageKey) return;
-    try {
-      const saved = JSON.parse(window.localStorage.getItem(storageKey) ?? "{}") as PreferenceMap;
-      setPrefs(saved);
-    } catch {
-      setPrefs({});
-    }
-  }, [storageKey]);
+    setPrefs(loadPrefs(userId));
+  }, [userId]);
 
-  const persist = (next: PreferenceMap) => {
+  const update = (next: NotifyPrefs) => {
     setPrefs(next);
-    if (storageKey) window.localStorage.setItem(storageKey, JSON.stringify(next));
+    savePrefs(userId, next);
   };
 
-  const requestPermission = async () => {
+  const enableOnDevice = async () => {
     if (!supported) return;
     const next = await Notification.requestPermission();
     setPermission(next);
-    if (next === "granted") toast.success("Notifications enabled on this device.");
-    else if (next === "denied") toast.error("Notifications are blocked in this browser’s settings.");
+    if (next === "granted") {
+      // Existing alerts are treated as already seen so the farmer is not flooded.
+      markAllNotified(userId, alerts);
+      update({ ...prefs, enabled: true });
+      await showNotification({
+        tag: "pp-welcome",
+        title: "PoultryPro alerts are on",
+        body: "You will now get farm alerts on this phone.",
+        url: "/alerts",
+      });
+      toast.success("Alerts will now show on this device.");
+    } else if (next === "denied") {
+      toast.error("Notifications are blocked. Allow them in your browser settings for this site.");
+    }
+  };
+
+  const sendTest = async () => {
+    const ok = await showNotification({
+      tag: "pp-test",
+      title: "Test alert — PoultryPro",
+      body: "This is how a farm alert will appear on your phone.",
+      url: "/alerts",
+    });
+    if (!ok) toast.error("Could not show a notification on this device.");
   };
 
   return (
@@ -64,30 +67,67 @@ export function NotificationPreferences() {
       <div className="flex items-start gap-3">
         {permission === "denied" ? <BellOff className="mt-0.5 h-5 w-5 text-muted-foreground" /> : <Bell className="mt-0.5 h-5 w-5 text-primary" />}
         <div className="min-w-0 flex-1">
-          <h2 className="font-display text-xl font-semibold">Notifications</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Choose which farm reminders this device may show.</p>
+          <h2 className="font-display text-xl font-semibold">Farm alerts on this phone</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Get mortality, feed, production, price and staff alerts as notifications on this device.
+          </p>
+
           {!supported ? (
-            <p className="mt-4 text-sm text-muted-foreground">Notifications are not available in this browser.</p>
+            <p className="mt-4 text-sm text-muted-foreground">
+              This browser cannot show notifications. Install PoultryPro on your phone and open it from the home screen.
+            </p>
           ) : permission !== "granted" ? (
-            <div className="mt-4">
-              <Button type="button" variant="outline" onClick={requestPermission} disabled={permission === "denied"}>
-                <Bell /> {permission === "denied" ? "Blocked in browser settings" : "Enable notifications"}
+            <div className="mt-4 space-y-2">
+              <Button type="button" onClick={enableOnDevice} disabled={permission === "denied"}>
+                <Bell /> {permission === "denied" ? "Blocked in browser settings" : "Turn on alerts"}
+              </Button>
+              {permission === "denied" && (
+                <p className="text-xs text-muted-foreground">
+                  Open your browser site settings for PoultryPro and allow notifications, then reload.
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700">
+                Alerts are active on this device
+              </span>
+              <Button type="button" variant="outline" size="sm" onClick={sendTest}>
+                <Send /> Send a test alert
               </Button>
             </div>
-          ) : null}
-          <div className="mt-5 divide-y divide-border">
-            {visible.map((item) => (
+          )}
+
+          <label className="mt-5 flex min-h-12 items-center justify-between gap-4 border-b border-border py-2 text-sm font-medium">
+            <span>All farm alerts</span>
+            <Switch
+              aria-label="All farm alerts"
+              checked={prefs.enabled !== false}
+              onCheckedChange={(checked) => update({ ...prefs, enabled: checked })}
+            />
+          </label>
+
+          <div className="divide-y divide-border">
+            {NOTIFY_CATEGORIES.map((item) => (
               <label key={item.key} className="flex min-h-12 items-center justify-between gap-4 py-2 text-sm">
-                <span>{item.label}</span>
+                <span className="min-w-0">
+                  <span className="block">{item.label}</span>
+                  <span className="block text-xs text-muted-foreground">{item.hint}</span>
+                </span>
                 <Switch
-                  aria-label={`${item.label} notifications`}
-                  checked={prefs[item.key] ?? true}
-                  onCheckedChange={(checked) => persist({ ...prefs, [item.key]: checked })}
+                  aria-label={`${item.label} alerts`}
+                  disabled={prefs.enabled === false}
+                  checked={categoryEnabled({ ...prefs, enabled: true }, item.key)}
+                  onCheckedChange={(checked) => update({ ...prefs, [item.key]: checked })}
                 />
               </label>
             ))}
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">Remote background alerts will become available when push delivery is configured.</p>
+
+          <p className="mt-3 text-xs text-muted-foreground">
+            Alerts appear while PoultryPro is installed and running in the background. Delivery when the app is fully
+            closed for a long time needs a push service, which is not set up yet.
+          </p>
         </div>
       </div>
     </section>
