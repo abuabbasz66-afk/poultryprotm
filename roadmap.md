@@ -7,3 +7,7 @@
 - [x] Extend safe offline coverage and standardize queue/error/session UX
 - [x] Add notification preferences and feature-detected badging readiness
 - [x] Validate phone, tablet, desktop, offline, installed, auth, permissions, reports, and exports
+
+## Landing page (2026-09-20)
+- [x] Remove "Revenue tracked", "Premium farms", "Profit analysed" stats from landing page
+- [x] Remove "Doctorate in Business Administration (DBA) — In View" founder credential

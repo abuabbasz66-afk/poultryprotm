@@ -664,9 +664,7 @@ function Index() {
                 { k: fmtStat(live?.mortality_records), v: "Mortality records logged" },
                 { k: fmtStat(live?.health_records), v: "Health records logged" },
                 { k: fmtStat(live?.eggs), v: "Eggs recorded" },
-                { k: fmtStat(live?.premium_farms), v: "Premium farms" },
-                { k: fmtMoney(live?.revenue_tracked), v: "Revenue tracked" },
-                { k: fmtMoney(live?.profit_analysed), v: "Profit analysed" },
+
               ].map((x) => (
                 <div key={x.v} className="rounded-2xl border border-border bg-card p-5">
                   <div className="font-display text-2xl sm:text-3xl font-semibold text-[color:var(--forest)] break-words">
@@ -923,7 +921,6 @@ function Index() {
               {[
                 { icon: Cpu, t: "MICT & B.Sc. Computer Science" },
                 { icon: Wallet, t: "MBA — Business Administration" },
-                { icon: GraduationCap, t: "Doctorate in Business Administration (DBA) — In View" },
                 { icon: Leaf, t: "Agribusiness & Digital Transformation" },
                 { icon: MapPin, t: "Based in Katsina State, Nigeria" },
               ].map((x) => (

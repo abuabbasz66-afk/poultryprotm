@@ -28,7 +28,9 @@ export function loadPrefs(userId: string | null | undefined): NotifyPrefs {
   try {
     const raw = window.localStorage.getItem(PREFS_KEY(userId));
     const parsed = raw ? (JSON.parse(raw) as NotifyPrefs) : null;
-    return parsed && typeof parsed === "object" ? { enabled: true, ...parsed } : { enabled: true };
+    if (!parsed || typeof parsed !== "object") return { enabled: true };
+    return { ...parsed, enabled: parsed.enabled !== false };
+
   } catch {
     return { enabled: true };
   }
