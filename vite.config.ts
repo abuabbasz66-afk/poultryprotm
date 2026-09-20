@@ -29,7 +29,9 @@ export default defineConfig({
         filename: "sw.js",
         manifest: false,
         workbox: {
+          importScripts: ["/notification-click.js"],
           cleanupOutdatedCaches: true,
+
           navigateFallback: "/",
           navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//, /^\/_serverFn\//],
           globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],

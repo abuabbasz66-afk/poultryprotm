@@ -10,6 +10,8 @@ import { flushCurrentLocation } from "@/lib/last-location";
 import { SyncStatus } from "@/components/sync-status";
 import { AlertsBell } from "@/components/alerts-bell";
 import { MobileNavigation } from "@/components/mobile-navigation";
+import { AlertNotifier } from "@/components/pwa/alert-notifier";
+
 
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { cn } from "@/lib/utils";
@@ -87,8 +89,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
+      <AlertNotifier />
       {/* Desktop sidebar */}
       <aside
+
         className={cn(
           "hidden lg:flex fixed inset-y-0 left-0 z-40 flex-col border-r border-white/10",
           "bg-gradient-to-b from-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground",
