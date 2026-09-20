@@ -9,5 +9,5 @@
 - [x] Validate phone, tablet, desktop, offline, installed, auth, permissions, reports, and exports
 
 ## Landing page (2026-09-20)
-- [ ] Remove "Revenue tracked", "Premium farms", "Profit analysed" stats from landing page
-- [ ] Remove "Doctorate in Business Administration (DBA) — In View" founder credential
+- [x] Remove "Revenue tracked", "Premium farms", "Profit analysed" stats from landing page
+- [x] Remove "Doctorate in Business Administration (DBA) — In View" founder credential
