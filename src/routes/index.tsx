@@ -197,7 +197,6 @@ const recognition = [
   { icon: FileText, title: "Katsina Post", desc: "Article recognising the PoultryPro innovation" },
   
   { icon: Trophy, title: "3MTT", desc: "Fellow of the Week" },
-  { icon: Trophy, title: "Airtel Sponsored 3MTT NextGen Knowledge Showcase", desc: "Winner" },
   { icon: Trophy, title: "NXTGEN National Innovation Challenge", desc: "Finalist — Abuja" },
   { icon: Trophy, title: "NXTGEN Innovation Challenge — International Grand Finale", desc: "Selected — London, United Kingdom" },
   { icon: Handshake, title: "Poultry Association of Nigeria", desc: "PoultryPro presented to the Katsina Chapter" },
@@ -445,13 +444,6 @@ function Index() {
 
             </div>
 
-            <div className="pt-3">
-              <span className="inline-flex items-center gap-2 rounded-full border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 px-4 py-2 text-xs sm:text-sm font-medium text-foreground">
-                <Trophy className="h-4 w-4 text-[color:var(--gold)]" />
-                <span className="font-semibold">Winner</span>
-                <span className="text-muted-foreground">— Airtel Sponsored 3MTT NextGen Knowledge Showcase</span>
-              </span>
-            </div>
           </div>
 
           <div className="lg:col-span-6 relative hero-fade-up" style={{ animationDelay: "120ms" }}>

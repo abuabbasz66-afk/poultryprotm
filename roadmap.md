@@ -11,3 +11,5 @@
 ## Landing page (2026-09-20)
 - [x] Remove "Revenue tracked", "Premium farms", "Profit analysed" stats from landing page
 - [x] Remove "Doctorate in Business Administration (DBA) — In View" founder credential
+- [x] Remove Airtel Sponsored 3MTT NextGen winner recognition
+- [x] Preserve the mobile bottom navigation alongside the sidebar navigation
