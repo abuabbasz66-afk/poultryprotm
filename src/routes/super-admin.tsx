@@ -6,7 +6,7 @@ import {
   ShieldCheck, ArrowLeft, Loader2, AlertTriangle, Bell, Settings,
   TrendingUp, TrendingDown, UserPlus, Building2, CheckCircle2,
   PauseCircle, Sparkles, DollarSign, PieChart as PieIcon,
-  LineChart as LineIcon, Database, Mail, Server, HardDrive,
+  LineChart as LineIcon, Database, Mail, Server, HardDrive, GraduationCap, Video,
   Zap, Megaphone, Wrench, ShieldPlus, UserMinus, Send, PackagePlus,
   Wheat, Skull, Stethoscope, Pill, Upload, MoreVertical, Trash2,
   KeyRound, Eye, Pencil, MessageCircle, Download, FileDown, Smartphone, Globe,
@@ -17,7 +17,7 @@ import {
   AreaChart, Area,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthUserId } from "@/lib/farm-data";
 import {
   useIsSuperAdmin, usePlatformStats, useAdminAccounts, useAdminFarms,
@@ -33,6 +33,8 @@ import {
   downloadCsv, downloadPdf, type WhatsAppStats, type WhatsAppClickRow,
 } from "@/lib/whatsapp-analytics";
 import { useActivityLog, usePlatformTimeseries } from "@/lib/admin-monitoring";
+import { getVideoProvider, useAcademyCategories, useAllAcademyTutorials, validateVideoUrl } from "@/lib/academy";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/super-admin")({
   ssr: false,
@@ -49,7 +51,7 @@ export const Route = createFileRoute("/super-admin")({
 type Tab =
   | "overview" | "accounts" | "farms" | "subscriptions"
   | "activity" | "activity-log" | "live-feed" | "analytics"
-  | "whatsapp" | "intelligence" | "health" | "audit";
+  | "whatsapp" | "intelligence" | "health" | "academy" | "audit";
 
 const NAV: { id: Tab; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -63,6 +65,7 @@ const NAV: { id: Tab; label: string; icon: any }[] = [
   { id: "whatsapp", label: "WhatsApp Enquiries", icon: MessageCircle },
   { id: "intelligence", label: "AI Intelligence", icon: Brain },
   { id: "health", label: "Platform Health", icon: HeartPulse },
+  { id: "academy", label: "Academy", icon: GraduationCap },
   { id: "audit", label: "Admin Audit Log", icon: FileText },
 ];
 
@@ -259,10 +262,191 @@ function SuperAdminPage() {
           {tab === "whatsapp" && <WhatsAppTab userId={userId} />}
           {tab === "intelligence" && <IntelligenceTab userId={userId} />}
           {tab === "health" && <HealthTab userId={userId} />}
+          {tab === "academy" && <AcademyAdminTab userId={userId} />}
           {tab === "audit" && <AuditTab userId={userId} />}
         </main>
 
       </div>
+    </div>
+  );
+}
+
+type VideoHealthRow = {
+  tutorial_id: string;
+  provider: string;
+  status: "PASS" | "WARNING" | "FAIL" | "NOT_TESTED";
+  url_status: string;
+  playback_status: string;
+  detail: string | null;
+  checked_at: string | null;
+};
+
+async function verifyDirectVideo(url: string, thumbnailUrl: string | null) {
+  const urlResponse = await fetch(url, { method: "HEAD", cache: "no-store" }).catch(() => null);
+  const thumbnailResponse = thumbnailUrl
+    ? await fetch(thumbnailUrl, { method: "HEAD", cache: "no-store" }).catch(() => null)
+    : null;
+  if (!urlResponse?.ok) return { status: "FAIL" as const, urlStatus: "UNREACHABLE", playbackStatus: "FAILED", detail: "Video URL could not be reached." };
+  if (!thumbnailResponse?.ok) return { status: "WARNING" as const, urlStatus: "REACHABLE", playbackStatus: "NOT_VERIFIED", detail: "Video is reachable, but its thumbnail could not be loaded." };
+
+  return new Promise<{ status: "PASS" | "FAIL"; urlStatus: string; playbackStatus: string; detail: string }>((resolve) => {
+    const video = document.createElement("video");
+    let settled = false;
+    const finish = (result: { status: "PASS" | "FAIL"; urlStatus: string; playbackStatus: string; detail: string }) => {
+      if (settled) return;
+      settled = true;
+      video.pause();
+      video.removeAttribute("src");
+      resolve(result);
+    };
+    const timer = window.setTimeout(() => finish({ status: "FAIL", urlStatus: "REACHABLE", playbackStatus: "FAILED", detail: "The media did not become playable within 15 seconds." }), 15_000);
+    video.muted = true;
+    video.preload = "auto";
+    video.playsInline = true;
+    video.onerror = () => { window.clearTimeout(timer); finish({ status: "FAIL", urlStatus: "REACHABLE", playbackStatus: "FAILED", detail: "The browser could not decode or play this media." }); };
+    video.onplaying = () => {
+      window.setTimeout(() => {
+        const advanced = video.currentTime > 0;
+        window.clearTimeout(timer);
+        finish(advanced
+          ? { status: "PASS", urlStatus: "REACHABLE", playbackStatus: "VERIFIED", detail: "Playback decoded successfully and the playhead advanced." }
+          : { status: "FAIL", urlStatus: "REACHABLE", playbackStatus: "FAILED", detail: "Playback started but the playhead did not advance." });
+      }, 650);
+    };
+    video.src = url;
+    video.play().catch(() => { window.clearTimeout(timer); finish({ status: "FAIL", urlStatus: "REACHABLE", playbackStatus: "FAILED", detail: "The browser rejected playback." }); });
+  });
+}
+
+function AcademyAdminTab({ userId }: { userId: string }) {
+  const tutorialsQ = useAllAcademyTutorials();
+  const categoriesQ = useAcademyCategories();
+  const queryClient = useQueryClient();
+  const [checking, setChecking] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState("");
+
+  const healthQ = useQuery({
+    queryKey: ["academy", "video-health"],
+    queryFn: async (): Promise<VideoHealthRow[]> => {
+      const { data, error } = await supabase.from("academy_video_health").select("tutorial_id,provider,status,url_status,playback_status,detail,checked_at");
+      if (error) throw error;
+      return (data ?? []) as VideoHealthRow[];
+    },
+  });
+  const categories = new Map((categoriesQ.data ?? []).map((category) => [category.id, category.name]));
+  const health = new Map((healthQ.data ?? []).map((row) => [row.tutorial_id, row]));
+  const published = (tutorialsQ.data ?? []).filter((tutorial) => tutorial.is_published && !tutorial.is_archived);
+  const totals = published.reduce((sum, tutorial) => {
+    const status = health.get(tutorial.id)?.status ?? "NOT_TESTED";
+    sum[status] += 1;
+    return sum;
+  }, { PASS: 0, WARNING: 0, FAIL: 0, NOT_TESTED: 0 });
+
+  const runChecks = async () => {
+    setChecking(true);
+    try {
+      for (const tutorial of published) {
+        const provider = getVideoProvider(tutorial.video_url);
+        let result: { status: "PASS" | "WARNING" | "FAIL"; urlStatus: string; playbackStatus: string; detail: string };
+        if (!tutorial.video_url || provider === "missing" || provider === "other") {
+          result = { status: "FAIL", urlStatus: "UNREACHABLE", playbackStatus: "FAILED", detail: "The video URL is missing or unsupported." };
+        } else if (provider === "direct" || provider === "storage") {
+          result = await verifyDirectVideo(tutorial.video_url, tutorial.thumbnail_url);
+        } else {
+          const response = await fetch(tutorial.video_url, { method: "HEAD", mode: "no-cors", cache: "no-store" }).catch(() => null);
+          result = { status: "WARNING", urlStatus: response ? "REACHABLE" : "NOT_TESTED", playbackStatus: "NOT_VERIFIED", detail: "URL reachable — playback not automatically verified." };
+        }
+        const { error } = await supabase.from("academy_video_health").upsert({
+          tutorial_id: tutorial.id,
+          provider,
+          status: result.status,
+          url_status: result.urlStatus,
+          playback_status: result.playbackStatus,
+          detail: result.detail,
+          checked_at: new Date().toISOString(),
+          checked_by: userId,
+        });
+        if (error) throw error;
+      }
+      await healthQ.refetch();
+      toast.success("Academy video check completed");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Video check could not be completed");
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const saveUrl = async () => {
+    if (!editingId) return;
+    const validation = validateVideoUrl(videoUrl);
+    if (!validation.valid) { toast.error(validation.message); return; }
+    const { error } = await supabase.from("academy_tutorials").update({ video_url: videoUrl.trim() }).eq("id", editingId);
+    if (error) { toast.error(error.message); return; }
+    await queryClient.invalidateQueries({ queryKey: ["academy", "tutorials"] });
+    setEditingId(null);
+    toast.success("Tutorial video URL updated");
+  };
+
+  if (tutorialsQ.isPending || healthQ.isPending) return <Loader />;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Academy Video Health</h1>
+          <p className="mt-1 text-sm text-[#12281c]/65">Real browser checks for every published tutorial. No HTTP-only result is marked working.</p>
+        </div>
+        <Button onClick={() => void runChecks()} disabled={checking}>
+          {checking ? <Loader2 className="animate-spin" /> : <Video />} Check all videos
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <StatCard label="Published" value={published.length} />
+        <StatCard label="🟢 Working" value={totals.PASS} />
+        <StatCard label="🟡 Needs Review" value={totals.WARNING} />
+        <StatCard label="🔴 Broken" value={totals.FAIL} />
+        <StatCard label="⚪ Not Tested" value={totals.NOT_TESTED} />
+      </div>
+
+      <div className="overflow-x-auto rounded-xl border border-[#12281c]/10 bg-white">
+        <table className="min-w-[980px] w-full text-sm">
+          <thead className="bg-[#f6f2e6] text-left text-xs uppercase text-[#12281c]/65">
+            <tr><Th>Tutorial</Th><Th>Category</Th><Th>Provider</Th><Th>Status</Th><Th>URL</Th><Th>Playback</Th><Th>Last checked</Th><Th>Action</Th></tr>
+          </thead>
+          <tbody className="divide-y divide-[#12281c]/10">
+            {published.map((tutorial) => {
+              const row = health.get(tutorial.id);
+              const status = row?.status ?? "NOT_TESTED";
+              const label = status === "PASS" ? "🟢 Working" : status === "WARNING" ? "🟡 Needs Review" : status === "FAIL" ? "🔴 Broken" : "⚪ Not Tested";
+              return (
+                <tr key={tutorial.id}>
+                  <Td><div className="font-medium">{tutorial.title}</div><div className="max-w-[260px] truncate text-xs text-[#12281c]/55" title={row?.detail ?? undefined}>{row?.detail ?? "Awaiting an administrator playback check."}</div></Td>
+                  <Td>{categories.get(tutorial.category_id) ?? "—"}</Td>
+                  <Td className="capitalize">{row?.provider ?? getVideoProvider(tutorial.video_url)}</Td>
+                  <Td>{label}</Td><Td>{row?.url_status ?? "NOT_TESTED"}</Td><Td>{row?.playback_status ?? "NOT_TESTED"}</Td>
+                  <Td>{fmtDT(row?.checked_at)}</Td>
+                  <Td><Button size="sm" variant="outline" onClick={() => { setEditingId(tutorial.id); setVideoUrl(tutorial.video_url ?? ""); }}>Edit URL</Button></Td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {editingId && (
+        <section className="rounded-xl border border-[#12281c]/10 bg-white p-4">
+          <h2 className="text-lg font-semibold">Edit tutorial video URL</h2>
+          <label className="mt-3 block text-sm" htmlFor="academy-video-url">Video URL</label>
+          <input id="academy-video-url" value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} className="mt-1 w-full rounded-md border border-[#12281c]/20 px-3 py-2" />
+          <p className={`mt-2 text-sm ${validateVideoUrl(videoUrl).valid ? "text-emerald-700" : "text-amber-700"}`}>
+            {validateVideoUrl(videoUrl).valid ? "✓ Valid video URL" : "⚠ Please check this video URL."}
+          </p>
+          <div className="mt-4 flex gap-2"><Button onClick={() => void saveUrl()}>Save URL</Button><Button variant="outline" onClick={() => setEditingId(null)}>Cancel</Button></div>
+        </section>
+      )}
     </div>
   );
 }

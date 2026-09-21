@@ -88,6 +88,9 @@ export type Database = {
           completed_at: string | null
           created_at: string
           id: string
+          last_position_seconds: number
+          last_watched_at: string | null
+          progress_percent: number
           tutorial_id: string
           updated_at: string
           user_id: string
@@ -97,6 +100,9 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           id?: string
+          last_position_seconds?: number
+          last_watched_at?: string | null
+          progress_percent?: number
           tutorial_id: string
           updated_at?: string
           user_id: string
@@ -106,6 +112,9 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           id?: string
+          last_position_seconds?: number
+          last_watched_at?: string | null
+          progress_percent?: number
           tutorial_id?: string
           updated_at?: string
           user_id?: string
@@ -181,6 +190,88 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "academy_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academy_video_health: {
+        Row: {
+          checked_at: string | null
+          checked_by: string | null
+          detail: string | null
+          playback_status: string
+          provider: string
+          status: string
+          tutorial_id: string
+          updated_at: string
+          url_status: string
+        }
+        Insert: {
+          checked_at?: string | null
+          checked_by?: string | null
+          detail?: string | null
+          playback_status?: string
+          provider: string
+          status?: string
+          tutorial_id: string
+          updated_at?: string
+          url_status?: string
+        }
+        Update: {
+          checked_at?: string | null
+          checked_by?: string | null
+          detail?: string | null
+          playback_status?: string
+          provider?: string
+          status?: string
+          tutorial_id?: string
+          updated_at?: string
+          url_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_video_health_tutorial_id_fkey"
+            columns: ["tutorial_id"]
+            isOneToOne: true
+            referencedRelation: "academy_tutorials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academy_video_reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          resolved_at: string | null
+          resolved_by: string | null
+          tutorial_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          tutorial_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          tutorial_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_video_reports_tutorial_id_fkey"
+            columns: ["tutorial_id"]
+            isOneToOne: false
+            referencedRelation: "academy_tutorials"
             referencedColumns: ["id"]
           },
         ]

@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { Clock, Play, CheckCircle2, GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDuration, type AcademyTutorial, type AcademyDifficulty } from "@/lib/academy";
@@ -10,13 +11,15 @@ export const DIFFICULTY_CLASS: Record<AcademyDifficulty, string> = {
 };
 
 function Thumbnail({ tutorial }: { tutorial: AcademyTutorial }) {
-  if (tutorial.thumbnail_url) {
+  const [broken, setBroken] = useState(false);
+  if (tutorial.thumbnail_url && !broken) {
     return (
       <img
         src={tutorial.thumbnail_url}
         alt={`${tutorial.title} tutorial thumbnail`}
         loading="lazy"
         decoding="async"
+        onError={() => setBroken(true)}
         className="h-full w-full object-cover"
       />
     );

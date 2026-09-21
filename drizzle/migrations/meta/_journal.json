@@ -29,6 +29,13 @@
       "when": 1790031192003,
       "tag": "0003_extend_fixed_live_demo_aggregates",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790033092683,
+      "tag": "0004_academy_video_health_and_playback_progress",
+      "breakpoints": true
     }
   ]
 }
