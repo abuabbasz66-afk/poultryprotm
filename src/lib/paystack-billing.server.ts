@@ -1,4 +1,5 @@
 // Server-only: trusted billing mutations (service role, bypasses RLS).
+import { logServerSecurityEvent } from "@/lib/security-log.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   PLAN_AMOUNT_KOBO,
@@ -128,6 +129,17 @@ export async function activatePaidPlan(opts: {
 
 
   if (alreadySuccess) return { idempotent: true };
+
+  void logServerSecurityEvent("payment_verified", {
+    farmId: opts.farmId,
+    detail: `Payment verified and ${opts.plan} plan activated`,
+    metadata: { reference: opts.reference, plan: opts.plan, amount_kobo: chargedKobo },
+  });
+  void logServerSecurityEvent("subscription_changed", {
+    farmId: opts.farmId,
+    detail: `Subscription set to ${opts.plan}`,
+    metadata: { reference: opts.reference, plan: opts.plan },
+  });
 
   // A plan switch starts a brand-new Paystack subscription. Disable the
   // previous one so the farm is never billed for two plans at once.
