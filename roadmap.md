@@ -21,9 +21,9 @@
 - [x] Test every stage, desktop/mobile layout, loading/failure states, and read-only behavior
 
 ## Academy video audit and UX upgrade (2026-09-22)
-- [ ] Audit all 33 published tutorials and record truthful playback results
-- [ ] Add provider-safe premium player, failures, progress, and completion behavior
-- [ ] Improve Academy discovery, featured content, categories, and learner shelves
-- [ ] Add admin Academy video health, URL validation, and video reporting
-- [ ] Verify desktop, mobile, refresh, navigation, slow network, and supported browsers
-- [ ] Deliver final audit totals and exact tutorials needing attention
+- [x] Audit all 33 published tutorials and record truthful playback results
+- [x] Add provider-safe premium player, failures, progress, and completion behavior
+- [x] Improve Academy discovery, featured content, categories, and learner shelves
+- [x] Add admin Academy video health, URL validation, and video reporting
+- [x] Verify desktop, mobile, refresh, navigation, slow network, and supported browsers
+- [x] Deliver final audit totals and exact tutorials needing attention
