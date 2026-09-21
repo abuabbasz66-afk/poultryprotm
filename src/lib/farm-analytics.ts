@@ -285,6 +285,39 @@ export function computeDailyFinancialSeries(input: {
   });
 }
 
+/**
+ * Calendar months (YYYY-MM, ascending) for which the farm has at least one
+ * profit-relevant record (egg production or feed usage). Generated from live
+ * rows only — never hardcoded — and future months are excluded.
+ */
+export function availableFinancialMonths(eggs: EggRow[], feed: Feed[]): string[] {
+  const now = new Date();
+  const cap = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+  const set = new Set<string>();
+  const add = (raw: string | null | undefined) => {
+    const k = toDateKey(raw);
+    if (!k) return;
+    const ym = k.slice(0, 7);
+    if (ym <= cap) set.add(ym);
+  };
+  for (const e of eggs) add(e.date);
+  for (const f of feed) add(f.date);
+  set.add(cap); // the current month is always selectable
+  return Array.from(set).sort();
+}
+
+/** Inclusive calendar range for a YYYY-MM month, clamped to today. */
+export function monthRange(ym: string): DateRange {
+  const [y, m] = ym.split("-").map(Number);
+  const start = `${ym}-01`;
+  const lastDay = new Date(y, m, 0);
+  const now = new Date();
+  const end = ymd(lastDay > now ? now : lastDay);
+  const label = `${["January","February","March","April","May","June","July","August","September","October","November","December"][m - 1]} ${y}`;
+  return { start, end, label, preset: "custom" };
+}
+
+
 // ---------------------------------------------------------------------------
 // Production rate & target gap
 // ---------------------------------------------------------------------------
@@ -561,6 +594,11 @@ export type DashboardMetrics = {
   healthScore: FarmHealthScore;
   dailySeriesMonth: DailyFinancialPoint[];   // this-month per-day joined series
   dailySeriesAllTime: DailyFinancialPoint[]; // full history per-day joined series
+  /** Same engine, any range — used by the Profit Overview period selector. */
+  seriesFor: (range: DateRange) => DailyFinancialPoint[];
+  /** Months (YYYY-MM) with profit-relevant records, ascending. */
+  financialMonths: string[];
+
   todayMortality: number;
   monthlyMortality: number;
   allTimeMortality: number;
@@ -637,6 +675,14 @@ export function computeDashboardMetrics(input: {
     range: rangeFromPreset("all"),
     eggs: input.eggs, feed: input.feed, eggPrice, costPerKg, bagWeightKg, eggPriceOn, costPerKgOn,
   });
+  // One shared closure so any period (month, all time, custom range) is valued
+  // with exactly the same effective-dated engine as the fixed series above.
+  const seriesFor = (range: DateRange) => computeDailyFinancialSeries({
+    range, eggs: input.eggs, feed: input.feed, eggPrice, costPerKg, bagWeightKg, eggPriceOn, costPerKgOn,
+  });
+  const financialMonths = availableFinancialMonths(input.eggs, input.feed);
+
+
 
   const productionRate = computeProductionRate({
     eggs: input.eggs,
@@ -662,7 +708,7 @@ export function computeDashboardMetrics(input: {
     population,
     today, month, allTime,
     productionRate, comparison, highestRoom, feed, healthScore,
-    dailySeriesMonth, dailySeriesAllTime,
+    dailySeriesMonth, dailySeriesAllTime, seriesFor, financialMonths,
     todayMortality: today.mortalityCount,
     monthlyMortality: month.mortalityCount,
     allTimeMortality: allTime.mortalityCount,
