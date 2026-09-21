@@ -335,17 +335,9 @@ const setBagWeightKg = (v: number | null) => {
     [eggs, roomSeries],
   );
 
-  // Monthly profit chart — one point per calendar day, joining production and
-  // feed by date via the shared engine. Cost is real (not a baseline).
-  const profitData = useMemo(
-    () => metrics.dailySeriesMonth.map(d => ({
-      name: d.label,
-      Revenue: d.revenue,
-      Cost: d.feedCost,
-      Profit: d.profit,
-    })),
-    [metrics.dailySeriesMonth],
-  );
+  // Period profit chart lives in <ProfitOverviewCard/>, driven by
+  // metrics.seriesFor so every period uses the shared analytics engine.
+
 
   // All-time profit series — cumulative totals from farm's first recorded day
   // through today. Runs entirely off the shared analytics engine so the
