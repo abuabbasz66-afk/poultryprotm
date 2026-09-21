@@ -1,78 +1,48 @@
-# PoultryPro Security Hardening
+# PoultryPro Live Demo Redesign
 
-A review of the current setup first: the app is already in good shape in most of the areas the brief covers. Every farm table has row-level protection, roles and permissions already live in the database (not the browser), payments are verified server-side with signed webhooks, spreadsheet formula injection is already neutralised, exports already run through the signed-in user's own permissions, and the only file store (receipts) is private. So this is a hardening pass on real gaps, not a rebuild.
+## Goal
+Turn `/presentation` into a fast, premium, seven-stage farm command-centre walkthrough using only the fixed ABZ Global Resources historical demonstration dataset. The authenticated farm application, users, subscriptions, permissions, and production records remain untouched.
 
-## What is already covered (no work needed)
+## What will change
 
-- Farm-by-farm isolation: all 59 data tables enforce access rules in the database; farm identity is always derived server-side, never from the browser.
-- Roles and permissions are data-driven (`farm_roles`, `role_permissions`, per-member overrides) and checked in the database.
-- Paystack: server-side verification, plan price checked server-side, signed webhooks, secrets held outside the app code.
-- Exports: run as the signed-in user with their own permissions; every export is written to an export audit log.
-- Activity and security logging already exists (`security_events`, `admin_audit_log`, `platform_activity_log`, `export_audit_log`).
-- Super-admin area is gated by a database role check, not a hidden link.
-- Receipts storage bucket is private.
-- No secrets in the app code or browser bundle.
+### 1. Keep one safe, read-only demo data boundary
+- Preserve the existing zero-argument `demo_greenfield_data()` call and its server-fixed demonstration farm; no URL, browser value, or visitor input can select a farm.
+- Extend that function only where the walkthrough needs missing read-only aggregates: room-level production history, real expense totals/categories, health/vaccination counts, and any genuinely available feed inventory/weather summary.
+- Return aggregate or limited historical data only. Do not expose owner details, staff identities, notes, receipts, payments, authentication data, or records from any other farm.
+- Remove the hardcoded fallback prices from the demo response. Missing source values become `null` and display “Not available in this demonstration.”
+- No production table, production row, user, authentication rule, subscription rule, or RLS policy changes.
 
-## Gaps to fix
+### 2. Replace the 12-slide tour with seven focused stages
+1. **Overview** — branded PoultryPro welcome, ABZ historical-data disclosure, real birds/eggs/days/feed metrics, and immediate “Start Farm Walkthrough” / “Explore Dashboard” actions.
+2. **Production** — selectable 7/30/90-day/all-time chart, room selector, eggs/crates/production percentage where supportable, room comparison, and evidence-based farm intelligence.
+3. **Feed** — usage, daily average, cost, cost/kg, stock/runway when available, trend chart, and a factual “What the data says” review panel.
+4. **Health** — mortality, mortality rate/trend, health and vaccination activity, with non-diagnostic risk language.
+5. **Finance** — daily/monthly/all-time controls, revenue, feed cost, other expenses, profit/margin, and real expense breakdown.
+6. **Intelligence** — full-width synthesis of only supported production, feed, mortality, health, finance, abnormal-activity, and weather signals; no fake AI output or unsupported confidence claims.
+7. **Take Action** — “Now imagine this for your farm,” Capture/Understand/Predict, Create Free Account, Request a Demo, and Return to PoultryPro.
 
-### 1. Weather cache table has no access rules
-Protection is switched on but no rules exist, so nothing can read or write it through the data layer. Add an explicit read-only rule for signed-in users and keep writes server-side.
+### 3. Premium interactive experience
+- Use the existing PoultryPro forest/gold/cream tokens, typography, logo/available poultry imagery, icons, and lightweight chart patterns.
+- Add a concise command-centre header, historical/read-only badges, “Farm Health Today” cards, short “Why this matters” callouts, and restrained entrance transitions that respect reduced-motion settings.
+- Replace autoplay/presentation controls with fixed stage navigation, direct section selection, Previous/Next, “Step X of 7,” and a thin progress indicator.
+- Keep controls large and touchable, charts readable, KPI grids stacked on small screens, and prevent horizontal page overflow.
 
-### 2. Staff roster write rules (flagged by the scanner)
-Confirm and tighten who can add, edit, remove staff rows, and prevent farm ownership being reassigned through an update.
+### 4. Loading, missing-data, and failure states
+- Replace the old loader with “Preparing your farm intelligence…” and a subtle progress treatment.
+- If the request fails, show “Demo data could not be loaded,” Retry Demo, and Return to PoultryPro.
+- Never render zero as if it were a known measurement when the source is absent.
+- Weather appears only when valid demonstration data exists; otherwise show the requested unavailable message.
 
-### 3. Database helper functions callable by anyone
-53 internal helper functions are currently callable by any signed-in visitor. Audit each one and revoke access from everything that is not intentionally called by the app or used by the access rules.
+## Technical approach
+- Refactor the oversized presentation route into small presentation-only components and pure calculation helpers; do not import authenticated dashboard hooks that could request the current visitor’s farm.
+- Reuse existing calculation conventions for production, feed, mortality, and finance while adapting them to the fixed aggregate demo response.
+- Use lightweight SVG charts for quick loading and reliable rendering across desktop and mobile.
+- Keep route-specific metadata unique and add the required social metadata fields without exposing a private image URL.
 
-### 4. Two-factor authentication (new)
-- Add a Security area in account settings with authenticator-app two-factor sign-in: enrol with a QR code, verify, list and remove devices.
-- Sign-in prompts for the 6-digit code when the account has it enabled.
-- Required for PoultryPro platform administrators; optional for everyone else. No existing user is locked out.
-
-### 5. Session security panel (new)
-In the same Security area: current device, browser, last active and sign-in time, plus "Sign out of all other devices". No tokens shown or logged.
-
-### 6. Security audit events (extend, not duplicate)
-Keep the existing `security_events` table and add the missing event types: two-factor on/off, farm access denied, export created, payment verified/failed, subscription changed, webhook received/rejected, member added/removed. Wire the events that are currently unlogged.
-
-### 7. Rate limiting on sensitive endpoints
-Gentle, per-account limits on sign-in attempts, password reset, payment verification and export generation — tuned so farmers on unstable connections are never blocked.
-
-### 8. Security headers
-Add content, transport, referrer and frame protections at the server response level, then verify the whole app still works (charts, images, payments, maps).
-
-### 9. Input validation at the server
-Server-side checks on bird counts, quantities, prices, dates and uploaded/imported files: no negative counts, no impossible dates, size and type limits on uploads, structure checks on imported files.
-
-### 10. Platform Security Dashboard (new admin page)
-A new tab in the existing super-admin area, visible only to platform administrators:
-- Overview: failed and successful sign-ins, permission denials, recent admin actions, payment verification failures, webhook failures, recent exports, active alerts.
-- Audit log with filters by person, farm, event, date and severity.
-- Sign-in security: recent failures, unusual events, two-factor status of administrators.
-- Farm access: new members, role changes, permission changes, denials.
-- Payment security: verification failures, duplicate attempts, webhook failures, subscription anomalies.
-No secrets displayed.
-
-### 11. Written recovery procedure
-A short document covering backups, how a restore is performed, who is responsible, and what to check afterwards.
-
-## Penetration tests before sign-off
-
-Run against the live database with two real separate farm accounts and a staff account, confirming each is refused:
-read/insert/update/delete another farm's records; a manager promoting themselves to owner; staff reading billing; a read-only member creating production records; a signed-out visitor reading farm records; a tampered farm id in a request; a room or flock id belonging to another farm; an export request for another farm.
-Results reported back with pass/fail per test.
-
-## Order of work
-
-1. Database gaps (items 1-3) and the penetration tests.
-2. Audit events, validation, rate limiting (6, 7, 9).
-3. Two-factor and session security (4, 5).
-4. Security dashboard (10), headers (8), recovery document (11).
-
-## Technical notes
-
-- All changes are additive migrations plus new UI; no table is replaced, no data migrated, no existing route or permission removed.
-- Two-factor uses Supabase Auth's built-in TOTP factors (`mfa.enroll` / `challenge` / `verify`), so no custom secret storage.
-- Rate limiting: Supabase Auth's own limits for sign-in and reset; a small counter table for export and payment verification endpoints.
-- Security headers set in the server response handler, with a report-first content policy to avoid breaking charts, PDF generation or Paystack.
-- The security dashboard reads through new security-definer reporting functions restricted to `is_super_admin()`, mirroring the existing admin functions.
+## Verification
+- Check the fixed demo function cannot accept or derive a caller-supplied farm ID and remains read-only.
+- Verify every displayed value against the demonstration response and every missing value against the unavailable state.
+- Test the complete flow: Landing Page → Launch Live Demo → Overview → Production → Feed → Health → Finance → Intelligence → Take Action.
+- Exercise period and room controls, direct stage navigation, Previous/Next, retry behavior, account/demo/home actions, and reduced-motion behavior.
+- Test desktop (1280px), tablet, and phone widths, including iPhone safe areas, touch targets, chart readability, and no horizontal overflow.
+- Confirm the authenticated farm application and its routes are unchanged and the preview build is healthy.
