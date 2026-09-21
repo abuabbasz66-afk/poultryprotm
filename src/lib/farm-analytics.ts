@@ -594,6 +594,11 @@ export type DashboardMetrics = {
   healthScore: FarmHealthScore;
   dailySeriesMonth: DailyFinancialPoint[];   // this-month per-day joined series
   dailySeriesAllTime: DailyFinancialPoint[]; // full history per-day joined series
+  /** Same engine, any range — used by the Profit Overview period selector. */
+  seriesFor: (range: DateRange) => DailyFinancialPoint[];
+  /** Months (YYYY-MM) with profit-relevant records, ascending. */
+  financialMonths: string[];
+
   todayMortality: number;
   monthlyMortality: number;
   allTimeMortality: number;
