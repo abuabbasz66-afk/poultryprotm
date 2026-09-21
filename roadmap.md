@@ -15,7 +15,7 @@
 - [x] Preserve the mobile bottom navigation alongside the sidebar navigation
 
 ## Live Demo redesign (2026-09-21)
-- [ ] Inspect the existing public presentation route, demo data boundary, and reusable analytics
-- [ ] Redesign the read-only walkthrough into seven interactive command-centre stages
-- [ ] Preserve the fixed ABZ demonstration dataset and expose unavailable metrics honestly
-- [ ] Test landing-to-demo navigation, every stage, mobile layout, failure/retry, and read-only behavior
+- [x] Inspect the existing public presentation route, demo data boundary, and reusable analytics
+- [x] Redesign the read-only walkthrough into seven interactive command-centre stages
+- [x] Preserve the fixed ABZ demonstration dataset and expose unavailable metrics honestly
+- [x] Test every stage, desktop/mobile layout, loading/failure states, and read-only behavior
