@@ -243,6 +243,7 @@ function AuthPage() {
           }
           throw new Error("We couldn't process that request right now. Please try again shortly.");
         }
+        void logSecurityEvent("password_reset_request", { identifier: trimmed });
         toast.success(
           "If an account exists for this email, password reset instructions have been sent. Please check your inbox and spam folder.",
         );
@@ -277,6 +278,49 @@ function AuthPage() {
       </div>
     );
   }
+
+  if (mfaPending) {
+    return (
+      <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center px-6">
+        <form onSubmit={submitMfa} className="w-full max-w-sm rounded-2xl border border-border bg-white p-6 text-center shadow-sm">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Enter your code</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Open your authenticator app and type the 6-digit code for PoultryPro.
+          </p>
+          <input
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            autoFocus
+            maxLength={6}
+            value={mfaCode}
+            onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ""))}
+            placeholder="123456"
+            className="mt-5 w-full rounded-xl border border-input bg-background px-3 py-3 text-center font-mono text-lg tracking-[0.4em] outline-none focus:border-[color:var(--forest)]"
+          />
+          {msg && <p className="mt-3 text-sm text-destructive">{msg}</p>}
+          <button
+            type="submit"
+            disabled={mfaBusy || mfaCode.length !== 6}
+            className="mt-4 w-full rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {mfaBusy ? "Checking…" : "Continue"}
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              setMfaPending(false);
+              setMfaCode("");
+            }}
+            className="mt-3 w-full text-sm text-muted-foreground hover:text-foreground"
+          >
+            Use a different account
+          </button>
+        </form>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] hero-fade-up">
