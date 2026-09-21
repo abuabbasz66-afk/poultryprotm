@@ -13,3 +13,8 @@
 - [x] Remove "Doctorate in Business Administration (DBA) — In View" founder credential
 - [x] Remove Airtel Sponsored 3MTT NextGen winner recognition
 - [x] Preserve the mobile bottom navigation alongside the sidebar navigation
+
+## Security hardening (2026-09-21)
+- [x] Phase A — farm identity/ownership guard, staff roster write policies, privileged routine sweep, cross-farm attack tests
+- [x] Phase B — optional two-step sign-in (required for platform admins), session panel, extended security event logging
+- [ ] Phase C — platform security dashboard, protective response headers (CSP report-only), safer error messages, abuse rate limits
