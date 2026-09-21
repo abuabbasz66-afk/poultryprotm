@@ -19,3 +19,11 @@
 - [x] Redesign the read-only walkthrough into seven interactive command-centre stages
 - [x] Preserve the fixed ABZ demonstration dataset and expose unavailable metrics honestly
 - [x] Test every stage, desktop/mobile layout, loading/failure states, and read-only behavior
+
+## Academy video audit and UX upgrade (2026-09-22)
+- [ ] Audit all 33 published tutorials and record truthful playback results
+- [ ] Add provider-safe premium player, failures, progress, and completion behavior
+- [ ] Improve Academy discovery, featured content, categories, and learner shelves
+- [ ] Add admin Academy video health, URL validation, and video reporting
+- [ ] Verify desktop, mobile, refresh, navigation, slow network, and supported browsers
+- [ ] Deliver final audit totals and exact tutorials needing attention
