@@ -1,5 +1,5 @@
-// Server-only Paystack helpers. Never import { logServerSecurityEvent } from "@/lib/security-log.server";
-import from client components.
+// Server-only Paystack helpers. Never import from client components.
+import { logServerSecurityEvent } from "@/lib/security-log.server";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
