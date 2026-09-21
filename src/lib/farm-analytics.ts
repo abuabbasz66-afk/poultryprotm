@@ -675,6 +675,14 @@ export function computeDashboardMetrics(input: {
     range: rangeFromPreset("all"),
     eggs: input.eggs, feed: input.feed, eggPrice, costPerKg, bagWeightKg, eggPriceOn, costPerKgOn,
   });
+  // One shared closure so any period (month, all time, custom range) is valued
+  // with exactly the same effective-dated engine as the fixed series above.
+  const seriesFor = (range: DateRange) => computeDailyFinancialSeries({
+    range, eggs: input.eggs, feed: input.feed, eggPrice, costPerKg, bagWeightKg, eggPriceOn, costPerKgOn,
+  });
+  const financialMonths = availableFinancialMonths(input.eggs, input.feed);
+
+
 
   const productionRate = computeProductionRate({
     eggs: input.eggs,
