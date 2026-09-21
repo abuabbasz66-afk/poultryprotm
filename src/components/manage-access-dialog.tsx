@@ -1,4 +1,3 @@
-import { logSecurityEvent } from "@/lib/security-events";
 import { friendlyError } from "@/lib/error-message";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -64,7 +63,6 @@ export function ManageAccessDialog({ member, onClose }: { member: Member; onClos
         _custom: isCustom,
         _permissions: isCustom ? buildPermissions(current) : [],
       });
-      if (!error) void logSecurityEvent("permission_changed", { detail: "Staff permissions updated" });
       if (error) throw error;
     },
     onSuccess: () => {

@@ -1,4 +1,3 @@
-import { logSecurityEvent } from "@/lib/security-events";
 import { friendlyError } from "@/lib/error-message";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -170,7 +169,6 @@ function PeopleTab() {
   const setRole = useMutation({
     mutationFn: async ({ memberId, role }: { memberId: string; role: string }) => {
       const { error } = await supabase.rpc("farm_staff_set_role", { _member_id: memberId, _role: role });
-      if (!error) void logSecurityEvent("role_changed", { detail: `Role changed to ${role}`, metadata: { member_id: memberId } });
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Role updated."); refresh(); },
@@ -180,12 +178,6 @@ function PeopleTab() {
   const setStatus = useMutation({
     mutationFn: async ({ memberId, status }: { memberId: string; status: string }) => {
       const { error } = await supabase.rpc("farm_staff_set_status", { _member_id: memberId, _status: status });
-      if (!error) {
-        void logSecurityEvent(
-          status === "removed" ? "member_removed" : status === "suspended" ? "account_suspended" : "account_reactivated",
-          { detail: `Staff status set to ${status}`, metadata: { member_id: memberId } },
-        );
-      }
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Access updated."); refresh(); },

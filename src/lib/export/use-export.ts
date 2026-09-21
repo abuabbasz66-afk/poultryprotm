@@ -5,7 +5,6 @@
  * and a whole-farm export behave identically.
  */
 
-import { logSecurityEvent } from "@/lib/security-events";
 import { useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthUserId, useFarm, useFarmId } from "@/lib/farm-data";
@@ -180,10 +179,6 @@ export function useRecordExport() {
               row_count: totalRows,
             })
             .then(() => undefined, () => undefined);
-          void logSecurityEvent("export_created", {
-            detail: `${input.title} (${input.format.toUpperCase()}, ${totalRows} records)`,
-            metadata: { scope: input.scopeLabel, range: periodText },
-          });
         }
 
         return { totalRows };

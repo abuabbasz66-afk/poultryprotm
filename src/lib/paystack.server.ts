@@ -1,5 +1,4 @@
 // Server-only Paystack helpers. Never import from client components.
-import { logServerSecurityEvent } from "@/lib/security-log.server";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -238,14 +237,4 @@ export function logVerificationFailure(ctx: {
       gateway_response: ctx.gatewayResponse ?? null,
     }),
   );
-  void logServerSecurityEvent("payment_failed", {
-    farmId: ctx.farmId ?? null,
-    detail: `${ctx.source}: ${ctx.reason}`,
-    metadata: {
-      reference: ctx.reference,
-      plan: ctx.plan ?? null,
-      expected_kobo: ctx.check?.expectedKobo ?? null,
-      charged_kobo: ctx.check?.chargedKobo ?? null,
-    },
-  });
 }
