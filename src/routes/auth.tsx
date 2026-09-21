@@ -147,6 +147,10 @@ function AuthPage() {
     let cancelled = false;
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session || cancelled) return;
+      if (await needsTotpChallenge()) {
+        if (!cancelled) setMfaPending(true);
+        return;
+      }
       setResuming(true);
       const destination = await resolveDestination().catch(() => redirectTo);
       if (!cancelled) navigate({ to: destination });
@@ -221,9 +225,11 @@ function AuthPage() {
         void logSecurityEvent("login", { identifier: loginEmail });
         await qc.cancelQueries();
         qc.clear();
-        setResuming(true);
-        const destination = await resolveDestination().catch(() => redirectTo);
-        navigate({ to: destination });
+        if (await needsTotpChallenge()) {
+          setMfaPending(true);
+          return;
+        }
+        await finishSignIn();
       } else {
         const trimmed = email.trim().toLowerCase();
         if (!trimmed) throw new Error("Please enter your email address.");
