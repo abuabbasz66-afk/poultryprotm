@@ -708,7 +708,7 @@ export function computeDashboardMetrics(input: {
     population,
     today, month, allTime,
     productionRate, comparison, highestRoom, feed, healthScore,
-    dailySeriesMonth, dailySeriesAllTime,
+    dailySeriesMonth, dailySeriesAllTime, seriesFor, financialMonths,
     todayMortality: today.mortalityCount,
     monthlyMortality: month.mortalityCount,
     allTimeMortality: allTime.mortalityCount,
