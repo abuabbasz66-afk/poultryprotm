@@ -11,6 +11,7 @@ import { TodaysFarm } from "@/components/todays-farm";
 import { HelpHint } from "@/components/academy/help-hint";
 import { ExportRecordsButton } from "@/components/export/export-button";
 import { RoomComparisonCard } from "@/components/room-comparison-card";
+import { ProfitOverviewCard } from "@/components/finance/profit-overview-card";
 
 import { AlertsBanner } from "@/components/alerts-banner";
 
