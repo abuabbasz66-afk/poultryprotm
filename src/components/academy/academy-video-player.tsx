@@ -26,7 +26,9 @@ export function AcademyVideoPlayer({ tutorial, initialPosition = 0, onProgress, 
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const [slow, setSlow] = useState(false);
-  const [percent, setPercent] = useState(0);
+  const [percent, setPercent] = useState(() => tutorial.duration_seconds && initialPosition > 0
+    ? Math.min(100, (initialPosition / tutorial.duration_seconds) * 100)
+    : 0);
   const [attempt, setAttempt] = useState(0);
   const completedRef = useRef(false);
   const lastSavedRef = useRef(0);
@@ -183,9 +185,7 @@ export function AcademyVideoPlayer({ tutorial, initialPosition = 0, onProgress, 
           <span>{percent >= 85 ? "Completed" : percent > 0 ? "In progress" : "Not started"}</span>
           <span>{Math.round(percent)}%</span>
         </div>
-        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
-          <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${percent}%` }} />
-        </div>
+        <progress value={percent} max={100} className="mt-1 block h-1.5 w-full accent-primary" />
       </div>
     </section>
   );

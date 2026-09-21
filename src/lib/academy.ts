@@ -177,8 +177,7 @@ export async function saveTutorialPlayback(
   const { error } = await supabase.from("academy_progress").upsert({
     user_id: userId,
     tutorial_id: tutorialId,
-    completed,
-    completed_at: completed ? new Date().toISOString() : null,
+    ...(completed ? { completed: true, completed_at: new Date().toISOString() } : {}),
     progress_percent: Math.min(100, Math.max(0, percent)),
     last_position_seconds: Math.max(0, position),
     last_watched_at: new Date().toISOString(),
