@@ -7,7 +7,7 @@ import { useAuthUserId } from "@/lib/farm-data";
 import { useFarmAlerts } from "@/lib/alerts";
 import {
   NOTIFY_CATEGORIES, categoryEnabled, loadPrefs, markAllNotified, notificationsSupported,
-  savePrefs, showNotification, type NotifyPrefs,
+  notificationServiceReady, savePrefs, showNotification, type NotifyPrefs,
 } from "@/lib/notifications";
 
 export function NotificationPreferences() {
@@ -16,11 +16,19 @@ export function NotificationPreferences() {
   const [supported, setSupported] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const [prefs, setPrefs] = useState<NotifyPrefs>({ enabled: true });
+  const [workerReady, setWorkerReady] = useState(false);
+  const [checkingWorker, setCheckingWorker] = useState(false);
 
   useEffect(() => {
     const available = notificationsSupported();
     setSupported(available);
-    if (available) setPermission(Notification.permission);
+    if (available) {
+      setPermission(Notification.permission);
+      if (Notification.permission === "granted") {
+        setCheckingWorker(true);
+        void notificationServiceReady().then(setWorkerReady).finally(() => setCheckingWorker(false));
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -40,26 +48,34 @@ export function NotificationPreferences() {
       // Existing alerts are treated as already seen so the farmer is not flooded.
       markAllNotified(userId, alerts);
       update({ ...prefs, enabled: true });
-      await showNotification({
+      setCheckingWorker(true);
+      const ok = await showNotification({
         tag: "pp-welcome",
         title: "PoultryPro alerts are on",
         body: "You will now get farm alerts on this phone.",
         url: "/alerts",
       });
-      toast.success("Alerts will now show on this device.");
+      setWorkerReady(ok);
+      setCheckingWorker(false);
+      if (ok) toast.success("Alerts will now show on this device.");
+      else toast.error("Notification setup did not finish. Close and reopen PoultryPro, then try again.");
     } else if (next === "denied") {
       toast.error("Notifications are blocked. Allow them in your browser settings for this site.");
     }
   };
 
   const sendTest = async () => {
+    setCheckingWorker(true);
     const ok = await showNotification({
       tag: "pp-test",
       title: "Test alert — PoultryPro",
       body: "This is how a farm alert will appear on your phone.",
       url: "/alerts",
     });
-    if (!ok) toast.error("Could not show a notification on this device.");
+    setWorkerReady(ok);
+    setCheckingWorker(false);
+    if (ok) toast.success("Test alert sent.");
+    else toast.error("Notification setup is not ready. Close and reopen PoultryPro, then try again.");
   };
 
   return (
@@ -87,13 +103,22 @@ export function NotificationPreferences() {
                 </p>
               )}
             </div>
-          ) : (
+          ) : workerReady ? (
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700">
                 Alerts are active on this device
               </span>
-              <Button type="button" variant="outline" size="sm" onClick={sendTest}>
+              <Button type="button" variant="outline" size="sm" onClick={sendTest} disabled={checkingWorker}>
                 <Send /> Send a test alert
+              </Button>
+            </div>
+          ) : (
+            <div className="mt-4 space-y-2">
+              <p className="text-sm text-muted-foreground">
+                {checkingWorker ? "Finishing notification setup…" : "Notification setup needs to be completed on this device."}
+              </p>
+              <Button type="button" variant="outline" size="sm" onClick={sendTest} disabled={checkingWorker}>
+                <Send /> {checkingWorker ? "Setting up…" : "Complete setup and test"}
               </Button>
             </div>
           )}

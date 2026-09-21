@@ -7,6 +7,7 @@
  * closed) needs a push provider and is not configured yet.
  */
 import type { AlertCategory, AlertSeverity, FarmAlert } from "@/lib/alerts";
+import { ensureServiceWorkerRegistration } from "@/pwa/register";
 
 export const NOTIFY_CATEGORIES: { key: AlertCategory; label: string; hint: string }[] = [
   { key: "health", label: "Health & disease risk", hint: "Mortality spikes, disease and vaccination risk" },
@@ -80,16 +81,16 @@ export function notificationPermission(): NotificationPermission {
 
 async function swRegistration(): Promise<ServiceWorkerRegistration | null> {
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return null;
-  try {
-    return (await navigator.serviceWorker.getRegistration()) ?? null;
-  } catch {
-    return null;
-  }
+  return ensureServiceWorkerRegistration();
+}
+
+export async function notificationServiceReady(): Promise<boolean> {
+  return Boolean(await swRegistration());
 }
 
 const URGENCY: Record<AlertSeverity, boolean> = { critical: true, warning: false, info: false };
 
-/** Show one notification. Falls back to a page notification when no worker is active. */
+/** Show one notification through the active app worker (required on mobile browsers). */
 export async function showNotification(options: {
   tag: string;
   title: string;
@@ -108,16 +109,9 @@ export async function showNotification(options: {
     vibrate: [100, 50, 100],
   };
   const reg = await swRegistration();
-  if (reg) {
-    try {
-      await reg.showNotification(options.title, payload);
-      return true;
-    } catch {
-      /* fall through */
-    }
-  }
+  if (!reg) return false;
   try {
-    new Notification(options.title, payload);
+    await reg.showNotification(options.title, payload);
     return true;
   } catch {
     return false;
