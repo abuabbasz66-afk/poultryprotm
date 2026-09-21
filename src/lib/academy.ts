@@ -42,6 +42,31 @@ export type AcademyTutorial = {
   updated_at: string;
 };
 
+export type AcademyProgress = {
+  tutorial_id: string;
+  completed: boolean;
+  progress_percent: number;
+  last_position_seconds: number;
+  last_watched_at: string | null;
+};
+
+export type VideoProvider = "youtube" | "vimeo" | "direct" | "storage" | "other" | "missing";
+
+export function getVideoProvider(url: string | null | undefined): VideoProvider {
+  if (!url?.trim()) return "missing";
+  if (/(^|\/\/)(www\.)?(youtube\.com|youtu\.be)(\/|$)/i.test(url)) return "youtube";
+  if (/(^|\/\/)(www\.)?vimeo\.com(\/|$)/i.test(url)) return "vimeo";
+  if (/\/storage\/v1\/object\//i.test(url)) return "storage";
+  if (/\.mp4(?:[?#].*)?$/i.test(url)) return "direct";
+  return "other";
+}
+
+export function validateVideoUrl(url: string): { valid: boolean; provider: VideoProvider; message: string } {
+  const provider = getVideoProvider(url);
+  const valid = provider !== "missing" && provider !== "other";
+  return { valid, provider, message: valid ? "Valid video URL" : "Please check this video URL." };
+}
+
 const CATEGORY_COLUMNS = "id,name,slug,description,icon,sort_order,is_active";
 const TUTORIAL_COLUMNS =
   "id,category_id,title,slug,description,video_url,thumbnail_url,duration_seconds,difficulty,keywords,is_published,is_featured,is_archived,sort_order,created_at,updated_at";
@@ -132,15 +157,42 @@ export function useAcademyProgress() {
   return useQuery({
     queryKey: ["academy", "progress", userId ?? "anon"],
     enabled: !!userId,
-    queryFn: async (): Promise<Set<string>> => {
+    queryFn: async (): Promise<AcademyProgress[]> => {
       const { data, error } = await supabase
         .from("academy_progress")
-        .select("tutorial_id,completed")
-        .eq("completed", true);
+        .select("tutorial_id,completed,progress_percent,last_position_seconds,last_watched_at");
       if (error) throw error;
-      return new Set((data ?? []).map((r) => r.tutorial_id as string));
+      return (data ?? []) as AcademyProgress[];
     },
   });
+}
+
+export async function saveTutorialPlayback(
+  tutorialId: string,
+  userId: string,
+  position: number,
+  percent: number,
+) {
+  const completed = percent >= 85;
+  const { error } = await supabase.from("academy_progress").upsert({
+    user_id: userId,
+    tutorial_id: tutorialId,
+    completed,
+    completed_at: completed ? new Date().toISOString() : null,
+    progress_percent: Math.min(100, Math.max(0, percent)),
+    last_position_seconds: Math.max(0, position),
+    last_watched_at: new Date().toISOString(),
+  }, { onConflict: "user_id,tutorial_id" });
+  if (error) throw error;
+}
+
+export async function reportTutorialVideo(tutorialId: string, userId: string) {
+  const { error } = await supabase.from("academy_video_reports").insert({
+    tutorial_id: tutorialId,
+    user_id: userId,
+    reason: "Video could not be loaded",
+  });
+  if (error) throw error;
 }
 
 export function useSetTutorialCompletion() {

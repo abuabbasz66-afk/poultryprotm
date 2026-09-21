@@ -29,6 +29,11 @@ export function AcademyBrowser({
     () => new Map(categories.map((c) => [c.id, c.name])),
     [categories],
   );
+  const publishedCategoryIds = useMemo(() => new Set(tutorials.map((tutorial) => tutorial.category_id)), [tutorials]);
+  const completedIds = useMemo(
+    () => new Set((completed ?? []).filter((item) => item.completed).map((item) => item.tutorial_id)),
+    [completed],
+  );
 
   const visible = useMemo(() => {
     const byCat = active === "all" ? tutorials : tutorials.filter((t) => t.category_id === active);
@@ -53,7 +58,7 @@ export function AcademyBrowser({
         <FilterChip active={active === "all"} onClick={() => setActive("all")}>
           All
         </FilterChip>
-        {categories.map((c) => (
+        {categories.filter((c) => publishedCategoryIds.has(c.id)).map((c) => (
           <FilterChip key={c.id} active={active === c.id} onClick={() => setActive(c.id)}>
             {c.name}
           </FilterChip>
@@ -69,7 +74,7 @@ export function AcademyBrowser({
       ) : visible.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-10 text-center">
           <GraduationCap className="mx-auto h-8 w-8 text-muted-foreground" />
-          <p className="mt-3 font-medium">No tutorial matches that search</p>
+          <p className="mt-3 font-medium">No tutorials found</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Try another word, or browse a category above.
           </p>
@@ -81,7 +86,7 @@ export function AcademyBrowser({
               key={t.id}
               tutorial={t}
               categoryName={catName.get(t.category_id)}
-              completed={showProgress && !!completed?.has(t.id)}
+              completed={showProgress && completedIds.has(t.id)}
             />
           ))}
         </div>
@@ -97,6 +102,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
         "rounded-full border px-4 py-2 text-sm font-medium transition",
         active

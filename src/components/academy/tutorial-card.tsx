@@ -10,13 +10,15 @@ export const DIFFICULTY_CLASS: Record<AcademyDifficulty, string> = {
 };
 
 function Thumbnail({ tutorial }: { tutorial: AcademyTutorial }) {
-  if (tutorial.thumbnail_url) {
+  const [broken, setBroken] = React.useState(false);
+  if (tutorial.thumbnail_url && !broken) {
     return (
       <img
         src={tutorial.thumbnail_url}
         alt={`${tutorial.title} tutorial thumbnail`}
         loading="lazy"
         decoding="async"
+        onError={() => setBroken(true)}
         className="h-full w-full object-cover"
       />
     );
