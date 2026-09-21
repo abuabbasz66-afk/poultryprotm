@@ -285,6 +285,39 @@ export function computeDailyFinancialSeries(input: {
   });
 }
 
+/**
+ * Calendar months (YYYY-MM, ascending) for which the farm has at least one
+ * profit-relevant record (egg production or feed usage). Generated from live
+ * rows only — never hardcoded — and future months are excluded.
+ */
+export function availableFinancialMonths(eggs: EggRow[], feed: Feed[]): string[] {
+  const now = new Date();
+  const cap = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+  const set = new Set<string>();
+  const add = (raw: string | null | undefined) => {
+    const k = toDateKey(raw);
+    if (!k) return;
+    const ym = k.slice(0, 7);
+    if (ym <= cap) set.add(ym);
+  };
+  for (const e of eggs) add(e.date);
+  for (const f of feed) add(f.date);
+  set.add(cap); // the current month is always selectable
+  return Array.from(set).sort();
+}
+
+/** Inclusive calendar range for a YYYY-MM month, clamped to today. */
+export function monthRange(ym: string): DateRange {
+  const [y, m] = ym.split("-").map(Number);
+  const start = `${ym}-01`;
+  const lastDay = new Date(y, m, 0);
+  const now = new Date();
+  const end = ymd(lastDay > now ? now : lastDay);
+  const label = `${["January","February","March","April","May","June","July","August","September","October","November","December"][m - 1]} ${y}`;
+  return { start, end, label, preset: "custom" };
+}
+
+
 // ---------------------------------------------------------------------------
 // Production rate & target gap
 // ---------------------------------------------------------------------------
