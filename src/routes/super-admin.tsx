@@ -33,6 +33,9 @@ import {
   downloadCsv, downloadPdf, type WhatsAppStats, type WhatsAppClickRow,
 } from "@/lib/whatsapp-analytics";
 import { useActivityLog, usePlatformTimeseries } from "@/lib/admin-monitoring";
+import { hasVerifiedTotp, isTwoFactorSatisfied } from "@/lib/mfa";
+import { TwoFactorCard } from "@/components/security/two-factor-card";
+import { logSecurityEvent } from "@/lib/security-events";
 
 export const Route = createFileRoute("/super-admin")({
   ssr: false,
