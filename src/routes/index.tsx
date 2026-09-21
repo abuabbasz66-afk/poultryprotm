@@ -369,7 +369,7 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/60">
+      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
         <div className="container-x flex h-16 items-center justify-between">
           <a href="#top" className="flex items-center gap-2.5">
             <img src={logoAsset.url} alt="PoultryPro" width={40} height={40} className="h-9 w-9 object-contain" />
