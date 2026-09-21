@@ -197,6 +197,7 @@ const recognition = [
   { icon: FileText, title: "Katsina Post", desc: "Article recognising the PoultryPro innovation" },
   
   { icon: Trophy, title: "3MTT", desc: "Fellow of the Week" },
+  { icon: Trophy, title: "Airtel 3MTT NextGen Knowledge Showcase", desc: "Winner — Airtel Sponsored" },
   { icon: Trophy, title: "NXTGEN National Innovation Challenge", desc: "Finalist — Abuja" },
   { icon: Trophy, title: "NXTGEN Innovation Challenge — International Grand Finale", desc: "Selected — London, United Kingdom" },
   { icon: Handshake, title: "Poultry Association of Nigeria", desc: "PoultryPro presented to the Katsina Chapter" },
@@ -442,6 +443,14 @@ function Index() {
                 Meet the Founder
               </a>
 
+            </div>
+
+            <div className="inline-flex items-center gap-3 rounded-2xl border border-[color:var(--gold)]/50 bg-[color:var(--gold)]/10 px-4 py-3">
+              <Trophy className="h-5 w-5 flex-none text-[color:var(--gold)]" />
+              <div>
+                <div className="text-sm font-semibold text-[color:var(--forest)]">Winner — Airtel Sponsored 3MTT NextGen Knowledge Showcase</div>
+                <div className="text-xs text-muted-foreground">National recognition for farm innovation</div>
+              </div>
             </div>
 
           </div>
