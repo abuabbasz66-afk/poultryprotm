@@ -4,7 +4,7 @@ import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 /** Slim public header for Academy pages, matching the landing brand. */
 export function AcademyPublicHeader() {
   return (
-    <header className="border-b border-border bg-background/95 backdrop-blur">
+    <header className="border-b border-border bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur">
       <div className="container-x flex h-16 items-center justify-between gap-4">
         <Link to="/" className="flex items-center gap-2">
           <img src={logoAsset.url} alt="PoultryPro" className="h-8 w-8 rounded-lg object-contain" />
