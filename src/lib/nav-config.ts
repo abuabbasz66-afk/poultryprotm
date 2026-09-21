@@ -30,6 +30,7 @@ import {
   Baby,
   CloudSun,
   GraduationCap,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -293,6 +294,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Staff & Users", icon: Users, to: "/staff", permission: "staff.manage" },
       { label: "Import CSV", icon: Upload, to: "/import", permission: "production.write" },
       { label: "Settings", icon: Settings, to: "/settings", permission: "settings.write" },
+      { label: "Security", icon: ShieldCheck, to: "/security" },
       {
         label: "Farm Profile",
         icon: UserCircle,

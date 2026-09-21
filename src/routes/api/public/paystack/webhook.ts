@@ -1,3 +1,4 @@
+import { logServerSecurityEvent } from "@/lib/security-log.server";
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "crypto";
 import {
@@ -30,6 +31,9 @@ export const Route = createFileRoute("/api/public/paystack/webhook")({
       POST: async ({ request }) => {
         const raw = await request.text();
         if (!validSignature(raw, request.headers.get("x-paystack-signature"))) {
+          void logServerSecurityEvent("webhook_rejected", {
+            detail: "Paystack webhook rejected: signature did not match",
+          });
           return new Response("invalid signature", { status: 401 });
         }
 

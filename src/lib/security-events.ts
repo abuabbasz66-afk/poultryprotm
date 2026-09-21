@@ -14,24 +14,50 @@ export type SecurityEventType =
   | "login_failed"
   | "logout"
   | "password_change"
+  | "password_reset_request"
   | "staff_created"
   | "role_changed"
+  | "permission_changed"
+  | "member_removed"
   | "account_suspended"
   | "account_reactivated"
   | "room_created"
-  | "room_culled";
+  | "room_culled"
+  | "mfa_enabled"
+  | "mfa_disabled"
+  | "mfa_verified"
+  | "sessions_revoked"
+  | "access_denied"
+  | "export_created"
+  | "payment_verified"
+  | "payment_failed"
+  | "subscription_changed"
+  | "admin_action";
 
 export const EVENT_LABELS: Record<string, string> = {
   login: "Staff login",
   login_failed: "Failed login attempt",
   logout: "Logout",
   password_change: "Password change",
+  password_reset_request: "Password reset requested",
   staff_created: "Staff account created",
   role_changed: "Role changed",
+  permission_changed: "Permissions changed",
+  member_removed: "Staff member removed",
   account_suspended: "Account suspended",
   account_reactivated: "Account reactivated",
   room_created: "Room created",
   room_culled: "Room culled",
+  mfa_enabled: "Two-step sign-in enabled",
+  mfa_disabled: "Two-step sign-in disabled",
+  mfa_verified: "Two-step code verified",
+  sessions_revoked: "Signed out of other devices",
+  access_denied: "Access denied",
+  export_created: "Records exported",
+  payment_verified: "Payment verified",
+  payment_failed: "Payment verification failed",
+  subscription_changed: "Subscription changed",
+  admin_action: "Platform admin action",
 };
 
 type Client = {

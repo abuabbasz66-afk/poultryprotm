@@ -8,6 +8,13 @@
       "when": 1789963543219,
       "tag": "0000_security_hardening_permissions_payments_definers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790028467270,
+      "tag": "0001_security_hardening_phase_a",
+      "breakpoints": true
     }
   ]
 }
