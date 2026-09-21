@@ -15,6 +15,13 @@
       "when": 1790029403552,
       "tag": "0001_harden_definer_feed_fifo_and_public_analytics_inserts",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790029420736,
+      "tag": "0002_feed_stock_helper_allow_write_permission",
+      "breakpoints": true
     }
   ]
 }
