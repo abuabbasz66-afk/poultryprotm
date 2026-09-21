@@ -116,6 +116,25 @@ function SuperAdminPage() {
   const adminEmail = useAdminEmail();
   const now = useLiveClock();
 
+  // Platform administrators must have two-step sign-in in place, and this
+  // session must have satisfied it, before the console opens.
+  const [mfaState, setMfaState] = useState<"checking" | "ok" | "required">("checking");
+  useEffect(() => {
+    let cancelled = false;
+    if (!isAdmin) return;
+    void (async () => {
+      const [enrolled, satisfied] = await Promise.all([hasVerifiedTotp(), isTwoFactorSatisfied()]);
+      if (!cancelled) setMfaState(enrolled && satisfied ? "ok" : "required");
+    })();
+    return () => { cancelled = true; };
+  }, [isAdmin]);
+
+  useEffect(() => {
+    if (!userId || isAdmin || rolePending) return;
+    void logSecurityEvent("access_denied", { detail: "Attempted to open the platform admin console" });
+  }, [userId, isAdmin, rolePending]);
+
+
   if (userPending || rolePending) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0f1f16] text-[#f5efe0]">
@@ -150,7 +169,32 @@ function SuperAdminPage() {
     );
   }
 
+  if (mfaState !== "ok") {
+    return (
+      <div className="min-h-screen bg-[#f6f2e6] px-4 py-10">
+        <div className="mx-auto max-w-2xl space-y-4">
+          <div className="rounded-2xl bg-[#0f1f16] p-6 text-[#f5efe0]">
+            <h1 className="font-display text-2xl font-semibold">Administrator verification</h1>
+            <p className="mt-2 text-sm opacity-80">
+              {mfaState === "checking"
+                ? "Checking your account security…"
+                : "Platform administrator accounts must use two-step sign-in. Set it up below, then sign out and sign back in to continue."}
+            </p>
+          </div>
+          {mfaState === "required" && <TwoFactorCard required />}
+          <button
+            onClick={() => navigate({ to: "/dashboard" })}
+            className="rounded-md bg-[#c9a24a] px-4 py-2 font-semibold text-[#0f1f16]"
+          >
+            Back to farm dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const active = NAV.find((n) => n.id === tab)!;
+
 
   return (
     <div className="min-h-screen bg-[#f6f2e6] text-[#12281c]">
