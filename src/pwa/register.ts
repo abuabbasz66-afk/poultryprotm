@@ -8,6 +8,8 @@
 
 const SW_URL = "/sw.js";
 
+let registrationPromise: Promise<ServiceWorkerRegistration | null> | null = null;
+
 function blocked(): boolean {
   if (typeof window === "undefined") return true;
   if (!import.meta.env.PROD) return true;
@@ -37,13 +39,54 @@ async function unregisterMatching() {
   }
 }
 
-export function registerServiceWorker() {
-  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+async function waitForPageLoad(): Promise<void> {
+  if (document.readyState !== "loading") return;
+  await new Promise<void>((resolve) => window.addEventListener("load", () => resolve(), { once: true }));
+}
+
+async function waitForActiveWorker(registration: ServiceWorkerRegistration): Promise<ServiceWorkerRegistration | null> {
+  if (registration.active) return registration;
+  const worker = registration.installing ?? registration.waiting;
+  if (!worker) return null;
+
+  return new Promise((resolve) => {
+    const timeout = window.setTimeout(() => resolve(null), 10_000);
+    const onStateChange = () => {
+      if (worker.state === "activated") {
+        window.clearTimeout(timeout);
+        worker.removeEventListener("statechange", onStateChange);
+        resolve(registration);
+      } else if (worker.state === "redundant") {
+        window.clearTimeout(timeout);
+        worker.removeEventListener("statechange", onStateChange);
+        resolve(null);
+      }
+    };
+    worker.addEventListener("statechange", onStateChange);
+  });
+}
+
+/** Registers the single app worker and resolves only when it can show notifications. */
+export function ensureServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return Promise.resolve(null);
   if (blocked()) {
     void unregisterMatching();
-    return;
+    return Promise.resolve(null);
   }
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register(SW_URL, { scope: "/" }).catch(() => {});
-  });
+
+  if (!registrationPromise) {
+    registrationPromise = (async () => {
+      await waitForPageLoad();
+      const registration = await navigator.serviceWorker.register(SW_URL, { scope: "/" });
+      return waitForActiveWorker(registration);
+    })().catch(() => {
+      registrationPromise = null;
+      return null;
+    });
+  }
+  return registrationPromise;
+}
+
+export function registerServiceWorker() {
+  void ensureServiceWorkerRegistration();
 }
