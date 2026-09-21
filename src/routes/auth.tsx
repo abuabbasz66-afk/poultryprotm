@@ -7,6 +7,7 @@ import heroAsset from "@/assets/hero-layer-birds.jpg.asset.json";
 import { toast } from "sonner";
 import { homeRouteForRole } from "@/lib/rbac";
 import { logSecurityEvent } from "@/lib/security-events";
+import { needsTotpChallenge, verifyChallenge } from "@/lib/mfa";
 import { resolveResumeDestination } from "@/lib/last-location";
 import {
   ArrowLeft, Eye, EyeOff, Check, ShieldCheck, Lock, CloudUpload,
@@ -94,6 +95,34 @@ function AuthPage() {
 
   const redirectTo = search.redirect && search.redirect.startsWith("/") ? search.redirect : "/dashboard";
   const [resuming, setResuming] = useState(false);
+
+  // Two-step sign-in: the password is accepted, but the session still needs a
+  // code from the account's authenticator app before it can reach farm data.
+  const [mfaPending, setMfaPending] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaBusy, setMfaBusy] = useState(false);
+
+  const finishSignIn = async () => {
+    setResuming(true);
+    const destination = await resolveDestination().catch(() => redirectTo);
+    navigate({ to: destination });
+  };
+
+  const submitMfa = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMfaBusy(true);
+    setMsg(null);
+    try {
+      await verifyChallenge(mfaCode);
+      setMfaPending(false);
+      setMfaCode("");
+      await finishSignIn();
+    } catch (err) {
+      setMsg("That code did not match. Please try the next code from your app.");
+    } finally {
+      setMfaBusy(false);
+    }
+  };
 
   // Where should this user land? Their last valid location when they have one,
   // otherwise their permitted default dashboard.
