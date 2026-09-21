@@ -33,6 +33,21 @@ function HelpCentre() {
   const catName = useMemo(() => new Map(categories.map((c) => [c.id, c.name])), [categories]);
 
   const featured = tutorials.filter((t) => t.is_featured).slice(0, 3);
+  const progressById = useMemo(() => new Map((completed ?? []).map((item) => [item.tutorial_id, item])), [completed]);
+  const completedIds = useMemo(() => new Set((completed ?? []).filter((item) => item.completed).map((item) => item.tutorial_id)), [completed]);
+  const continueLearning = useMemo(
+    () => tutorials.filter((tutorial) => {
+      const item = progressById.get(tutorial.id);
+      return item && !item.completed && item.progress_percent > 0;
+    }).sort((a, b) => (progressById.get(b.id)?.last_watched_at ?? "").localeCompare(progressById.get(a.id)?.last_watched_at ?? "")).slice(0, 3),
+    [tutorials, progressById],
+  );
+  const recentlyWatched = useMemo(
+    () => tutorials.filter((tutorial) => !!progressById.get(tutorial.id)?.last_watched_at)
+      .sort((a, b) => (progressById.get(b.id)?.last_watched_at ?? "").localeCompare(progressById.get(a.id)?.last_watched_at ?? "")).slice(0, 3),
+    [tutorials, progressById],
+  );
+  const completedTutorials = useMemo(() => tutorials.filter((tutorial) => completedIds.has(tutorial.id)).slice(0, 3), [tutorials, completedIds]);
   const recent = useMemo(
     () =>
       [...tutorials]
@@ -46,10 +61,10 @@ function HelpCentre() {
   const recommended = useMemo(
     () =>
       tutorials
-        .filter((t) => !completed?.has(t.id))
+        .filter((t) => !completedIds.has(t.id))
         .sort((a, b) => a.sort_order - b.sort_order)
         .slice(0, 3),
-    [tutorials, completed],
+    [tutorials, completedIds],
   );
 
   return (
@@ -70,10 +85,13 @@ function HelpCentre() {
         </Link>
       </header>
 
-      <Shelf title="Recommended for you" icon={Sparkles} items={recommended} catName={catName} completed={completed} />
-      <Shelf title="Featured" icon={GraduationCap} items={featured} catName={catName} completed={completed} />
-      <Shelf title="Getting started" icon={GraduationCap} items={gettingStarted} catName={catName} completed={completed} />
-      <Shelf title="Recently added" icon={Clock3} items={recent} catName={catName} completed={completed} />
+      <Shelf title="Continue Learning" icon={Clock3} items={continueLearning} catName={catName} completed={completedIds} />
+      <Shelf title="Recently Watched" icon={Clock3} items={recentlyWatched} catName={catName} completed={completedIds} />
+      <Shelf title="Completed" icon={GraduationCap} items={completedTutorials} catName={catName} completed={completedIds} />
+      <Shelf title="Recommended Next" icon={Sparkles} items={recommended} catName={catName} completed={completedIds} />
+      <Shelf title="Featured Tutorials" icon={GraduationCap} items={featured} catName={catName} completed={completedIds} />
+      <Shelf title="Getting Started" icon={GraduationCap} items={gettingStarted} catName={catName} completed={completedIds} />
+      <Shelf title="Recently Added" icon={Clock3} items={recent} catName={catName} completed={completedIds} />
 
       <section className="space-y-5">
         <h2 className="font-display text-xl font-semibold">Browse all tutorials</h2>

@@ -5,12 +5,14 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AcademyPublicHeader } from "@/components/academy/public-header";
+import { AcademyVideoPlayer } from "@/components/academy/academy-video-player";
+import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/site-footer";
 import { TutorialCard } from "@/components/academy/tutorial-card";
 import { DIFFICULTY_CLASS } from "@/components/academy/tutorial-card";
 import { useAuthUserId } from "@/lib/farm-data";
 import {
-  formatDuration, trackTutorialView, useAcademyCategories, useAcademyProgress,
+  formatDuration, reportTutorialVideo, saveTutorialPlayback, trackTutorialView, useAcademyCategories, useAcademyProgress,
   useAcademyTutorial, useAcademyTutorials, useSetTutorialCompletion,
 } from "@/lib/academy";
 import { cn } from "@/lib/utils";
@@ -60,7 +62,8 @@ function TutorialPlayerPage() {
     if (tutorial?.id && userId) void trackTutorialView(tutorial.id, userId);
   }, [tutorial?.id, userId]);
 
-  const completed = !!(tutorial && completedSet?.has(tutorial.id));
+  const progress = completedSet?.find((item) => item.tutorial_id === tutorial?.id);
+  const completed = !!progress?.completed;
   const duration = formatDuration(tutorial?.duration_seconds);
 
   return (
@@ -89,23 +92,13 @@ function TutorialPlayerPage() {
         ) : (
           <div className="mt-6 grid gap-8 lg:grid-cols-12">
             <div className="lg:col-span-8">
-              <div className="overflow-hidden rounded-2xl border border-border bg-black">
-                {tutorial.video_url ? (
-                  <video
-                    key={tutorial.video_url}
-                    src={tutorial.video_url}
-                    poster={tutorial.thumbnail_url ?? undefined}
-                    controls
-                    preload="metadata"
-                    playsInline
-                    className="aspect-video w-full"
-                  />
-                ) : (
-                  <div className="flex aspect-video w-full items-center justify-center text-sm text-primary-foreground/70">
-                    Video coming soon
-                  </div>
-                )}
-              </div>
+              <AcademyVideoPlayer
+                tutorial={tutorial}
+                initialPosition={progress?.last_position_seconds ?? 0}
+                onProgress={userId ? (position, percent) => void saveTutorialPlayback(tutorial.id, userId, position, percent) : undefined}
+                onComplete={userId && !completed ? () => setCompletion.mutate({ tutorialId: tutorial.id, completed: true }) : undefined}
+                onReport={userId ? () => void reportTutorialVideo(tutorial.id, userId).then(() => toast.success("Video report sent")).catch(() => toast.error("Could not send the report")) : undefined}
+              />
 
               <div className="mt-5 flex flex-wrap items-center gap-2 text-xs">
                 {category && (
@@ -126,10 +119,23 @@ function TutorialPlayerPage() {
               <h1 className="mt-3 font-display text-2xl font-semibold md:text-3xl">{tutorial.title}</h1>
               <p className="mt-2 text-muted-foreground">{tutorial.description}</p>
 
+              <section className="mt-6 border-t border-border pt-5">
+                <h2 className="font-display text-xl font-semibold">What you’ll learn</h2>
+                <ul className="mt-3 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+                  {(tutorial.keywords.length > 0 ? tutorial.keywords : [tutorial.description]).map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 flex-none text-primary" />
+                      <span>{item.charAt(0).toUpperCase() + item.slice(1)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
               {userId && (
-                <button
+                <Button
                   type="button"
                   disabled={setCompletion.isPending}
+                  aria-pressed={completed}
                   onClick={() =>
                     setCompletion.mutate(
                       { tutorialId: tutorial.id, completed: !completed },
@@ -141,7 +147,7 @@ function TutorialPlayerPage() {
                     )
                   }
                   className={cn(
-                    "mt-5 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition",
+                    "mt-5 rounded-full",
                     completed
                       ? "bg-primary/10 text-primary"
                       : "bg-[color:var(--forest)] text-primary-foreground hover:brightness-110",
@@ -149,7 +155,7 @@ function TutorialPlayerPage() {
                 >
                   {completed ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
                   {completed ? "Completed" : "Mark as Complete"}
-                </button>
+                </Button>
               )}
 
               <div className="mt-8 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:justify-between">
