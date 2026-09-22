@@ -95,7 +95,7 @@ function TutorialPlayerPage() {
               <AcademyVideoPlayer
                 tutorial={tutorial}
                 initialPosition={progress?.last_position_seconds ?? 0}
-                onProgress={userId ? (position, percent) => void saveTutorialPlayback(tutorial.id, userId, position, percent) : undefined}
+                onProgress={userId ? (position, percent) => { void saveTutorialPlayback(tutorial.id, userId, position, percent).catch(() => {}); } : undefined}
                 onComplete={userId && !completed ? () => setCompletion.mutate({ tutorialId: tutorial.id, completed: true }) : undefined}
                 onReport={userId ? () => void reportTutorialVideo(tutorial.id, userId).then(() => toast.success("Video report sent")).catch(() => toast.error("Could not send the report")) : undefined}
               />
