@@ -54,11 +54,14 @@ export function AcademyVideoPlayer({ tutorial, initialPosition = 0, onProgress, 
     if (!video || !Number.isFinite(video.duration) || video.duration <= 0) return;
     const nextPercent = Math.min(100, (video.currentTime / video.duration) * 100);
     setPercent(nextPercent);
-    if (video.currentTime - lastSavedRef.current >= 5 || nextPercent >= 85) {
+    // Throttle saves to once every 5s of playback, plus a single final save
+    // when the tutorial crosses the 85% completion threshold.
+    const crossedThreshold = nextPercent >= 85 && !completedRef.current;
+    if (Math.abs(video.currentTime - lastSavedRef.current) >= 5 || crossedThreshold) {
       lastSavedRef.current = video.currentTime;
       onProgress?.(Math.floor(video.currentTime), nextPercent);
     }
-    if (nextPercent >= 85 && !completedRef.current) {
+    if (crossedThreshold) {
       completedRef.current = true;
       onComplete?.();
     }
