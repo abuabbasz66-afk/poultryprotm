@@ -3650,6 +3650,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_active_farm_member: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
       landing_platform_stats: { Args: never; Returns: Json }
       log_security_event: {

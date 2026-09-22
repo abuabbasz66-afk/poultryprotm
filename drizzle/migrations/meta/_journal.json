@@ -36,6 +36,13 @@
       "when": 1790033092683,
       "tag": "0004_academy_video_health_and_playback_progress",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790098228542,
+      "tag": "0005_scope_role_catalogue_reads_to_farm_members",
+      "breakpoints": true
     }
   ]
 }
