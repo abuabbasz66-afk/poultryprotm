@@ -2691,6 +2691,47 @@ export type Database = {
           },
         ]
       }
+      product_events: {
+        Row: {
+          created_at: string
+          event_name: string
+          farm_id: string | null
+          id: string
+          metadata: Json
+          resource_id: string | null
+          resource_type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_name: string
+          farm_id?: string | null
+          id?: string
+          metadata?: Json
+          resource_id?: string | null
+          resource_type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_name?: string
+          farm_id?: string | null
+          id?: string
+          metadata?: Json
+          resource_id?: string | null
+          resource_type?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_events_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           permission: string
@@ -2883,6 +2924,68 @@ export type Database = {
         }
         Relationships: []
       }
+      user_feedback: {
+        Row: {
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          farm_id: string | null
+          farm_size: string | null
+          id: string
+          kind: string
+          main_challenge: string | null
+          message: string | null
+          preferred_contact: string | null
+          reason: string | null
+          sentiment: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          farm_id?: string | null
+          farm_size?: string | null
+          id?: string
+          kind: string
+          main_challenge?: string | null
+          message?: string | null
+          preferred_contact?: string | null
+          reason?: string | null
+          sentiment?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          farm_id?: string | null
+          farm_size?: string | null
+          id?: string
+          kind?: string
+          main_challenge?: string | null
+          message?: string | null
+          preferred_contact?: string | null
+          reason?: string | null
+          sentiment?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_feedback_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_last_location: {
         Row: {
           context_id: string | null
@@ -2929,6 +3032,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_onboarding: {
+        Row: {
+          checklist_dismissed_at: string | null
+          checkout_reminder_dismissed_at: string | null
+          completed_at: string | null
+          created_at: string
+          feedback_prompt_dismissed_at: string | null
+          first_insight_seen_at: string | null
+          goal_set_at: string | null
+          phone: string | null
+          primary_goal: string | null
+          updated_at: string
+          upgrade_prompt_dismissed_at: string | null
+          user_id: string
+          whatsapp_consent: boolean
+        }
+        Insert: {
+          checklist_dismissed_at?: string | null
+          checkout_reminder_dismissed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          feedback_prompt_dismissed_at?: string | null
+          first_insight_seen_at?: string | null
+          goal_set_at?: string | null
+          phone?: string | null
+          primary_goal?: string | null
+          updated_at?: string
+          upgrade_prompt_dismissed_at?: string | null
+          user_id: string
+          whatsapp_consent?: boolean
+        }
+        Update: {
+          checklist_dismissed_at?: string | null
+          checkout_reminder_dismissed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          feedback_prompt_dismissed_at?: string | null
+          first_insight_seen_at?: string | null
+          goal_set_at?: string | null
+          phone?: string | null
+          primary_goal?: string | null
+          updated_at?: string
+          upgrade_prompt_dismissed_at?: string | null
+          user_id?: string
+          whatsapp_consent?: boolean
+        }
+        Relationships: []
       }
       user_presence: {
         Row: {
@@ -3330,6 +3481,8 @@ export type Database = {
       admin_farm_intelligence: { Args: { _farm_id: string }; Returns: Json }
       admin_farm_summary: { Args: { _farm_id: string }; Returns: Json }
       admin_get_settings: { Args: never; Returns: Json }
+      admin_growth_dropoff: { Args: never; Returns: Json }
+      admin_growth_stats: { Args: never; Returns: Json }
       admin_intelligence_summary: { Args: never; Returns: Json }
       admin_list_accounts: {
         Args: never
@@ -3410,6 +3563,32 @@ export type Database = {
           subscription_plan: string
           users_count: number
         }[]
+      }
+      admin_list_feedback: {
+        Args: { _limit?: number }
+        Returns: {
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          farm_id: string | null
+          farm_size: string | null
+          id: string
+          kind: string
+          main_challenge: string | null
+          message: string | null
+          preferred_contact: string | null
+          reason: string | null
+          sentiment: string | null
+          status: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "user_feedback"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       admin_list_notifications: {
         Args: { _include_archived?: boolean; _limit?: number }
@@ -3553,6 +3732,7 @@ export type Database = {
       }
       current_farm_id: { Args: never; Returns: string }
       demo_greenfield_data: { Args: never; Returns: Json }
+      farm_activation_status: { Args: never; Returns: Json }
       farm_activity_log: {
         Args: { _limit?: number }
         Returns: {
@@ -3686,6 +3866,16 @@ export type Database = {
       price_key: { Args: { _category: string; _item: string }; Returns: string }
       resolve_login_email: { Args: { _identifier: string }; Returns: string }
       touch_member_login: { Args: never; Returns: undefined }
+      track_product_event: {
+        Args: {
+          _event_name: string
+          _farm_id?: string
+          _metadata?: Json
+          _resource_id?: string
+          _resource_type?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "user" | "super_admin"
