@@ -89,6 +89,21 @@ function OnboardingPage() {
         await supabase.from("rooms").insert(rows);
       }
 
+      // Growth: remember the farmer's stated goal and record the real events.
+      if (farm?.id) {
+        await supabase
+          .from("user_onboarding")
+          .upsert(
+            { user_id: userRes.user.id, primary_goal: goal, goal_set_at: new Date().toISOString() },
+            { onConflict: "user_id" },
+          );
+        trackEvent("ACCOUNT_CREATED");
+        trackEvent("ONBOARDING_GOAL_SET", { metadata: { goal } });
+        trackEvent("FARM_CREATED", { farmId: farm.id, resourceType: "farm", resourceId: farm.id });
+        if (parsedRooms && parsedRooms > 0) trackEvent("ROOM_CREATED", { farmId: farm.id });
+      }
+
+
       // Fire-and-forget: sends welcome email to the new user and notification
       // email to super admins. The audit log + in-app notification are created
       // by the trg_farm_created_notify trigger, so this only handles email.
