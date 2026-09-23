@@ -6,6 +6,7 @@ import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { notifyNewAccount } from "@/lib/notify-new-account.functions";
+import { ONBOARDING_GOALS, trackEvent } from "@/lib/growth";
 
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
@@ -35,6 +36,7 @@ function OnboardingPage() {
   const [birdType, setBirdType] = useState<string>("Layers");
   const [birdCount, setBirdCount] = useState<string>("");
   const [roomsCount, setRoomsCount] = useState<string>("");
+  const [goal, setGoal] = useState<string>("production");
   const [checking, setChecking] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
