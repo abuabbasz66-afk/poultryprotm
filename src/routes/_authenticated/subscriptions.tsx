@@ -10,6 +10,7 @@ import {
 import { format as fmtDate, parseISO, isValid as isValidDate } from "date-fns";
 import { useSubscription, PLAN_PRICE_NGN, formatNaira, type PlanTier } from "@/lib/subscription";
 import { PRICING_PLANS } from "@/lib/pricing-plans";
+import { trackEvent } from "@/lib/growth";
 import { toast } from "sonner";
 
 
@@ -89,12 +90,20 @@ function SubscriptionsPage() {
 
   const payments = usePayments(data?.farmId ?? null);
 
+  // Pricing page view — recorded once per visit to the subscriptions page.
+  useEffect(() => {
+    if (!data?.farmId) return;
+    trackEvent("PRICING_VIEWED", { farmId: data.farmId });
+  }, [data?.farmId]);
+
   useEffect(() => {
     if (!search.payment) return;
     if (search.payment === "success") {
       toast.success("Payment verified — your plan is now active.");
+      trackEvent("PAYMENT_SUCCESS", { farmId: data?.farmId ?? null });
     } else {
       toast.error("Payment was not completed. You have not been charged for an unsuccessful attempt.");
+      trackEvent("PAYMENT_FAILED", { farmId: data?.farmId ?? null });
     }
     refetch();
     qc.invalidateQueries({ queryKey: ["farm-payments"] });
@@ -107,6 +116,10 @@ function SubscriptionsPage() {
       return;
     }
     setBusyPlan(plan);
+    // Analytics only — the plan is activated server-side after Paystack
+    // verification, never from the browser.
+    trackEvent("UPGRADE_CLICKED", { farmId: data?.farmId ?? null, metadata: { plan } });
+    trackEvent("CHECKOUT_STARTED", { farmId: data?.farmId ?? null, metadata: { plan, method: payMethod } });
     try {
       const res = await fetch("/api/paystack/initialize", {
         method: "POST",

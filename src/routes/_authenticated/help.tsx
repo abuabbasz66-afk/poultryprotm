@@ -4,6 +4,7 @@ import { GraduationCap, Sparkles, Clock3, ArrowRight } from "lucide-react";
 import { AcademyBrowser } from "@/components/academy/academy-browser";
 import { TutorialCard } from "@/components/academy/tutorial-card";
 import { useAcademyCategories, useAcademyProgress, useAcademyTutorials } from "@/lib/academy";
+import { FarmSetupChecklist } from "@/components/farm-setup-checklist";
 
 export const Route = createFileRoute("/_authenticated/help")({
   head: () => ({
@@ -84,6 +85,8 @@ function HelpCentre() {
           Open the full Academy <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </header>
+
+      <FarmSetupChecklist forceOpen />
 
       <Shelf title="Continue Learning" icon={Clock3} items={continueLearning} catName={catName} completed={completedIds} />
       <Shelf title="Recently Watched" icon={Clock3} items={recentlyWatched} catName={catName} completed={completedIds} />

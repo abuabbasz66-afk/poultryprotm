@@ -35,6 +35,7 @@ import {
 import { useActivityLog, usePlatformTimeseries } from "@/lib/admin-monitoring";
 import { getVideoProvider, useAcademyCategories, useAllAcademyTutorials, validateVideoUrl } from "@/lib/academy";
 import { Button } from "@/components/ui/button";
+import { AdminGrowthTab } from "@/components/growth/admin-growth-tab";
 
 export const Route = createFileRoute("/super-admin")({
   ssr: false,
@@ -51,7 +52,7 @@ export const Route = createFileRoute("/super-admin")({
 type Tab =
   | "overview" | "accounts" | "farms" | "subscriptions"
   | "activity" | "activity-log" | "live-feed" | "analytics"
-  | "whatsapp" | "intelligence" | "health" | "academy" | "audit";
+  | "whatsapp" | "intelligence" | "health" | "academy" | "growth" | "audit";
 
 const NAV: { id: Tab; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -66,6 +67,7 @@ const NAV: { id: Tab; label: string; icon: any }[] = [
   { id: "intelligence", label: "AI Intelligence", icon: Brain },
   { id: "health", label: "Platform Health", icon: HeartPulse },
   { id: "academy", label: "Academy", icon: GraduationCap },
+  { id: "growth", label: "Growth", icon: TrendingUp },
   { id: "audit", label: "Admin Audit Log", icon: FileText },
 ];
 
@@ -263,6 +265,7 @@ function SuperAdminPage() {
           {tab === "intelligence" && <IntelligenceTab userId={userId} />}
           {tab === "health" && <HealthTab userId={userId} />}
           {tab === "academy" && <AcademyAdminTab userId={userId} />}
+          {tab === "growth" && <AdminGrowthTab enabled={!!isAdmin} />}
           {tab === "audit" && <AuditTab userId={userId} />}
         </main>
 

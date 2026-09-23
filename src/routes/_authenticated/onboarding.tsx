@@ -6,6 +6,7 @@ import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { notifyNewAccount } from "@/lib/notify-new-account.functions";
+import { ONBOARDING_GOALS, trackEvent } from "@/lib/growth";
 
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
@@ -35,6 +36,7 @@ function OnboardingPage() {
   const [birdType, setBirdType] = useState<string>("Layers");
   const [birdCount, setBirdCount] = useState<string>("");
   const [roomsCount, setRoomsCount] = useState<string>("");
+  const [goal, setGoal] = useState<string>("production");
   const [checking, setChecking] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,6 +88,21 @@ function OnboardingPage() {
         }));
         await supabase.from("rooms").insert(rows);
       }
+
+      // Growth: remember the farmer's stated goal and record the real events.
+      if (farm?.id) {
+        await supabase
+          .from("user_onboarding")
+          .upsert(
+            { user_id: userRes.user.id, primary_goal: goal, goal_set_at: new Date().toISOString() },
+            { onConflict: "user_id" },
+          );
+        trackEvent("ACCOUNT_CREATED");
+        trackEvent("ONBOARDING_GOAL_SET", { metadata: { goal } });
+        trackEvent("FARM_CREATED", { farmId: farm.id, resourceType: "farm", resourceId: farm.id });
+        if (parsedRooms && parsedRooms > 0) trackEvent("ROOM_CREATED", { farmId: farm.id });
+      }
+
 
       // Fire-and-forget: sends welcome email to the new user and notification
       // email to super admins. The audit log + in-app notification are created
@@ -181,6 +198,27 @@ function OnboardingPage() {
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
             </Field>
           </div>
+
+          <Field label="What do you most want PoultryPro to help with?">
+            <div className="grid gap-2">
+              {ONBOARDING_GOALS.map((g) => (
+                <button
+                  key={g.key}
+                  type="button"
+                  onClick={() => setGoal(g.key)}
+                  aria-pressed={goal === g.key}
+                  className={`flex min-h-[52px] w-full items-center justify-between gap-3 rounded-md border px-3 py-2 text-left text-sm transition ${
+                    goal === g.key ? "border-primary bg-primary/5 font-medium" : "border-input hover:bg-secondary"
+                  }`}
+                >
+                  <span>
+                    <span className="block">{g.label}</span>
+                    <span className="block text-xs text-muted-foreground">{g.hint}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </Field>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 

@@ -43,6 +43,13 @@
       "when": 1790098228542,
       "tag": "0005_scope_role_catalogue_reads_to_farm_members",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790139321340,
+      "tag": "0006_growth_activation_and_product_events",
+      "breakpoints": true
     }
   ]
 }

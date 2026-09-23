@@ -1,6 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Sparkles, LineChart as LineChartIcon, Brain, Check } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { PRICING_PLANS } from "@/lib/pricing-plans";
+import { useFarm } from "@/lib/farm-data";
+import { trackEvent } from "@/lib/growth";
 
 export type UpgradeTier = "standard" | "premium";
 
@@ -55,9 +59,20 @@ export function UpgradeDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
+  const { data: farm } = useFarm();
+  const farmId = farm?.id ?? null;
+
+  useEffect(() => {
+    if (!open || !tier) return;
+    trackEvent("UPGRADE_VIEWED", { farmId, metadata: { tier } });
+    if (tier === "premium") trackEvent("PREMIUM_FEATURE_VIEWED", { farmId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, tier, farmId]);
+
   if (!tier) return null;
   const c = CONTENT[tier];
   const Icon = c.icon;
+  const plan = PRICING_PLANS.find((p) => p.id === tier);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg overflow-hidden p-0">
@@ -117,7 +132,7 @@ export function UpgradeDialog({
             </Link>
           </DialogFooter>
           <p className="mt-3 text-center text-[11px] text-muted-foreground">
-            View plan details on your Subscriptions page.
+            {plan ? `${plan.name} — ${plan.priceLabel}. Cancel any time.` : "View plan details on your Subscriptions page."}
           </p>
         </div>
       </DialogContent>

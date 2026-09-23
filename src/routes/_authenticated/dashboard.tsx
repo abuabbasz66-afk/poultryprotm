@@ -8,6 +8,8 @@ import { BrokenEggsCard } from "@/components/broken-eggs-card";
 import { RecentActivitiesCard } from "@/components/recent-activities-card";
 import { FarmSetupChecklist } from "@/components/farm-setup-checklist";
 import { TodaysFarm } from "@/components/todays-farm";
+import { FirstRunPanel } from "@/components/growth/first-run-panel";
+import { FeedbackPrompt } from "@/components/growth/feedback-prompt";
 import { HelpHint } from "@/components/academy/help-hint";
 import { ExportRecordsButton } from "@/components/export/export-button";
 import { RoomComparisonCard } from "@/components/room-comparison-card";
@@ -940,7 +942,9 @@ const setBagWeightKg = (v: number | null) => {
             </div>
 
             <FarmSetupChecklist />
+            <FirstRunPanel />
             <TodaysFarm />
+            <FeedbackPrompt />
 
         {/* 1 — Recent Activities */}
         <RecentActivitiesCard eggs={eggs} feed={feed} mortality={mortality} health={health} prices={canPrices ? prices : []} bagWeightKg={bagKg} canViewAll={canAudit} />
