@@ -89,12 +89,20 @@ function SubscriptionsPage() {
 
   const payments = usePayments(data?.farmId ?? null);
 
+  // Pricing page view — recorded once per visit to the subscriptions page.
+  useEffect(() => {
+    if (!data?.farmId) return;
+    trackEvent("PRICING_VIEWED", { farmId: data.farmId });
+  }, [data?.farmId]);
+
   useEffect(() => {
     if (!search.payment) return;
     if (search.payment === "success") {
       toast.success("Payment verified — your plan is now active.");
+      trackEvent("PAYMENT_SUCCESS", { farmId: data?.farmId ?? null });
     } else {
       toast.error("Payment was not completed. You have not been charged for an unsuccessful attempt.");
+      trackEvent("PAYMENT_FAILED", { farmId: data?.farmId ?? null });
     }
     refetch();
     qc.invalidateQueries({ queryKey: ["farm-payments"] });
