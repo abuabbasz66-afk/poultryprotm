@@ -199,6 +199,27 @@ function OnboardingPage() {
             </Field>
           </div>
 
+          <Field label="What do you most want PoultryPro to help with?">
+            <div className="grid gap-2">
+              {ONBOARDING_GOALS.map((g) => (
+                <button
+                  key={g.key}
+                  type="button"
+                  onClick={() => setGoal(g.key)}
+                  aria-pressed={goal === g.key}
+                  className={`flex min-h-[52px] w-full items-center justify-between gap-3 rounded-md border px-3 py-2 text-left text-sm transition ${
+                    goal === g.key ? "border-primary bg-primary/5 font-medium" : "border-input hover:bg-secondary"
+                  }`}
+                >
+                  <span>
+                    <span className="block">{g.label}</span>
+                    <span className="block text-xs text-muted-foreground">{g.hint}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </Field>
+
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <button type="submit" disabled={submitting}
