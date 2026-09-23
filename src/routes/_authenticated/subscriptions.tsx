@@ -10,6 +10,7 @@ import {
 import { format as fmtDate, parseISO, isValid as isValidDate } from "date-fns";
 import { useSubscription, PLAN_PRICE_NGN, formatNaira, type PlanTier } from "@/lib/subscription";
 import { PRICING_PLANS } from "@/lib/pricing-plans";
+import { trackEvent } from "@/lib/growth";
 import { toast } from "sonner";
 
 
@@ -115,6 +116,10 @@ function SubscriptionsPage() {
       return;
     }
     setBusyPlan(plan);
+    // Analytics only — the plan is activated server-side after Paystack
+    // verification, never from the browser.
+    trackEvent("UPGRADE_CLICKED", { farmId: data?.farmId ?? null, metadata: { plan } });
+    trackEvent("CHECKOUT_STARTED", { farmId: data?.farmId ?? null, metadata: { plan, method: payMethod } });
     try {
       const res = await fetch("/api/paystack/initialize", {
         method: "POST",
