@@ -50,6 +50,13 @@
       "when": 1790139321340,
       "tag": "0006_growth_activation_and_product_events",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790144795197,
+      "tag": "0007_customer_engagement_and_communication_consent",
+      "breakpoints": true
     }
   ]
 }

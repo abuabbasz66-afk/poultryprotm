@@ -962,6 +962,48 @@ export type Database = {
           },
         ]
       }
+      communication_preferences: {
+        Row: {
+          consent_date: string | null
+          consent_source: string | null
+          created_at: string
+          marketing_opt_in: boolean
+          phone: string | null
+          phone_contact_opt_in: boolean
+          sms_opt_in: boolean
+          subscription_notifications_opt_in: boolean
+          updated_at: string
+          user_id: string
+          whatsapp_opt_in: boolean
+        }
+        Insert: {
+          consent_date?: string | null
+          consent_source?: string | null
+          created_at?: string
+          marketing_opt_in?: boolean
+          phone?: string | null
+          phone_contact_opt_in?: boolean
+          sms_opt_in?: boolean
+          subscription_notifications_opt_in?: boolean
+          updated_at?: string
+          user_id: string
+          whatsapp_opt_in?: boolean
+        }
+        Update: {
+          consent_date?: string | null
+          consent_source?: string | null
+          created_at?: string
+          marketing_opt_in?: boolean
+          phone?: string | null
+          phone_contact_opt_in?: boolean
+          sms_opt_in?: boolean
+          subscription_notifications_opt_in?: boolean
+          updated_at?: string
+          user_id?: string
+          whatsapp_opt_in?: boolean
+        }
+        Relationships: []
+      }
       egg_production: {
         Row: {
           broken_extra: number
@@ -1029,6 +1071,115 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "egg_production_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      engagement_call_requests: {
+        Row: {
+          created_at: string
+          farm_id: string | null
+          handled_at: string | null
+          handled_by: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+          reason: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          farm_id?: string | null
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          reason?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          farm_id?: string | null
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          reason?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engagement_call_requests_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      engagement_messages: {
+        Row: {
+          body: string
+          campaign_key: string
+          category: string
+          channel: string
+          created_at: string
+          farm_id: string | null
+          id: string
+          outcome: string | null
+          phone: string | null
+          responded_at: string | null
+          segment: string | null
+          sent_at: string
+          sent_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          campaign_key: string
+          category: string
+          channel: string
+          created_at?: string
+          farm_id?: string | null
+          id?: string
+          outcome?: string | null
+          phone?: string | null
+          responded_at?: string | null
+          segment?: string | null
+          sent_at?: string
+          sent_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          campaign_key?: string
+          category?: string
+          channel?: string
+          created_at?: string
+          farm_id?: string | null
+          id?: string
+          outcome?: string | null
+          phone?: string | null
+          responded_at?: string | null
+          segment?: string | null
+          sent_at?: string
+          sent_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engagement_messages_farm_id_fkey"
             columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "farms"
@@ -3478,6 +3629,64 @@ export type Database = {
         Returns: Json
       }
       admin_end_support: { Args: { _session_id: string }; Returns: undefined }
+      admin_engagement_audience: {
+        Args: { _limit?: number; _segment?: string }
+        Returns: {
+          active_days: number
+          block_reason: string
+          can_send_marketing: boolean
+          email: string
+          expires_at: string
+          farm_id: string
+          farm_name: string
+          farm_status: string
+          full_name: string
+          has_feed: boolean
+          has_finance: boolean
+          has_health: boolean
+          has_production: boolean
+          last_activity: string
+          last_message_at: string
+          marketing_opt_in: boolean
+          messages_24h: number
+          messages_7d: number
+          phone: string
+          phone_contact_opt_in: boolean
+          plan: string
+          registered_at: string
+          segment: string
+          sms_opt_in: boolean
+          user_id: string
+          whatsapp_opt_in: boolean
+        }[]
+      }
+      admin_engagement_history: {
+        Args: { _limit?: number; _user_id?: string }
+        Returns: {
+          body: string
+          campaign_key: string
+          category: string
+          channel: string
+          created_at: string
+          farm_id: string | null
+          id: string
+          outcome: string | null
+          phone: string | null
+          responded_at: string | null
+          segment: string | null
+          sent_at: string
+          sent_by: string | null
+          status: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "engagement_messages"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      admin_engagement_stats: { Args: never; Returns: Json }
       admin_farm_intelligence: { Args: { _farm_id: string }; Returns: Json }
       admin_farm_summary: { Args: { _farm_id: string }; Returns: Json }
       admin_get_settings: { Args: never; Returns: Json }
@@ -3541,6 +3750,22 @@ export type Database = {
           new_value: Json
           previous_value: Json
           reason: string
+        }[]
+      }
+      admin_list_call_requests: {
+        Args: { _limit?: number }
+        Returns: {
+          created_at: string
+          email: string
+          farm_id: string
+          farm_name: string
+          id: string
+          notes: string
+          phone: string
+          plan: string
+          reason: string
+          status: string
+          user_id: string
         }[]
       }
       admin_list_farms: {
@@ -3629,6 +3854,19 @@ export type Database = {
           trial_ends_at: string
         }[]
       }
+      admin_log_engagement_message: {
+        Args: {
+          _body: string
+          _campaign_key: string
+          _category: string
+          _channel: string
+          _farm_id?: string
+          _phone?: string
+          _segment?: string
+          _user_id: string
+        }
+        Returns: Json
+      }
       admin_mark_all_notifications_read: { Args: never; Returns: undefined }
       admin_mark_notification_read: {
         Args: { _id: string }
@@ -3638,6 +3876,14 @@ export type Database = {
       admin_platform_timeseries: { Args: { _days?: number }; Returns: Json }
       admin_set_account_status: {
         Args: { _farm_id: string; _new_status: string; _reason?: string }
+        Returns: Json
+      }
+      admin_set_call_request: {
+        Args: { _id: string; _notes?: string; _status: string }
+        Returns: Json
+      }
+      admin_set_engagement_status: {
+        Args: { _id: string; _outcome?: string; _status: string }
         Returns: Json
       }
       admin_set_setting: {
@@ -3732,6 +3978,7 @@ export type Database = {
       }
       current_farm_id: { Args: never; Returns: string }
       demo_greenfield_data: { Args: never; Returns: Json }
+      engagement_frequency_limits: { Args: never; Returns: Json }
       farm_activation_status: { Args: never; Returns: Json }
       farm_activity_log: {
         Args: { _limit?: number }
@@ -3864,6 +4111,10 @@ export type Database = {
       }
       presentation_demo_data: { Args: never; Returns: Json }
       price_key: { Args: { _category: string; _item: string }; Returns: string }
+      request_support_call: {
+        Args: { _phone?: string; _reason?: string }
+        Returns: Json
+      }
       resolve_login_email: { Args: { _identifier: string }; Returns: string }
       touch_member_login: { Args: never; Returns: undefined }
       track_product_event: {
