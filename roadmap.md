@@ -27,3 +27,13 @@
 - [x] Add admin Academy video health, URL validation, and video reporting
 - [x] Verify desktop, mobile, refresh, navigation, slow network, and supported browsers
 - [x] Deliver final audit totals and exact tutorials needing attention
+
+## Growth, activation & conversion (2026-09-23)
+- [x] product_events, user_onboarding, user_feedback tables + RPCs (migration 0006)
+- [x] Client tracking helper (src/lib/growth.ts), fire-and-forget
+- [x] Goal question in farm setup; goal-personalised getting-started checklist (DB-backed, reopenable from Help)
+- [x] First-run empty state + first insight from real records
+- [x] Upgrade dialog + checkout event tracking (server-side verification unchanged)
+- [x] Feedback prompt after 3+ active days
+- [x] Admin > Growth dashboard (stats, funnel, drop-off, feedback)
+- [ ] Real Paystack test payment acceptance run (not performed - would be a live charge)
