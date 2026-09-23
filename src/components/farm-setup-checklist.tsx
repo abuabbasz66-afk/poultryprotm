@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { Check, ChevronRight, X, ListChecks, PartyPopper } from "lucide-react";
 import { useFarm, useRooms, useEggs, useFeed } from "@/lib/farm-data";
