@@ -265,6 +265,7 @@ function SuperAdminPage() {
           {tab === "intelligence" && <IntelligenceTab userId={userId} />}
           {tab === "health" && <HealthTab userId={userId} />}
           {tab === "academy" && <AcademyAdminTab userId={userId} />}
+          {tab === "growth" && <AdminGrowthTab enabled={!!isAdmin} />}
           {tab === "audit" && <AuditTab userId={userId} />}
         </main>
 
