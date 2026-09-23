@@ -191,7 +191,7 @@ export function useEngagementAudience(segment: string | null, enabled: boolean) 
     staleTime: 30_000,
     queryFn: async (): Promise<AudienceRow[]> => {
       const { data, error } = await supabase.rpc("admin_engagement_audience", {
-        _segment: segment,
+        _segment: segment ?? undefined,
         _limit: 500,
       });
       if (error) throw error;
@@ -236,7 +236,7 @@ export function useEngagementHistory(userId: string | null, enabled: boolean) {
     staleTime: 15_000,
     queryFn: async (): Promise<EngagementMessage[]> => {
       const { data, error } = await supabase.rpc("admin_engagement_history", {
-        _user_id: userId,
+        _user_id: userId ?? undefined,
         _limit: 200,
       });
       if (error) throw error;
@@ -264,9 +264,9 @@ export function useLogEngagementMessage() {
         _category: input.category,
         _channel: input.channel,
         _body: input.body,
-        _farm_id: input.farmId,
-        _segment: input.segment,
-        _phone: input.phone,
+        _farm_id: input.farmId ?? undefined,
+        _segment: input.segment ?? undefined,
+        _phone: input.phone ?? undefined,
       });
       if (error) throw error;
       const j = (data ?? {}) as { ok?: boolean; reason?: string };
@@ -331,7 +331,7 @@ export function useSetCallRequest() {
       const { error } = await supabase.rpc("admin_set_call_request", {
         _id: input.id,
         _status: input.status,
-        _notes: input.notes ?? null,
+        _notes: input.notes ?? undefined,
       });
       if (error) throw error;
     },
