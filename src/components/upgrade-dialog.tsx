@@ -132,7 +132,7 @@ export function UpgradeDialog({
             </Link>
           </DialogFooter>
           <p className="mt-3 text-center text-[11px] text-muted-foreground">
-            View plan details on your Subscriptions page.
+            {plan ? `${plan.name} — ${plan.priceLabel}. Cancel any time.` : "View plan details on your Subscriptions page."}
           </p>
         </div>
       </DialogContent>
