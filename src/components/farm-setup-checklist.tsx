@@ -107,24 +107,30 @@ export function FarmSetupChecklist({ forceOpen = false }: { forceOpen?: boolean 
   const next = ordered.find((s) => !s.done);
   const complete = doneCount === steps.length;
 
+  const justCompleted = complete && !!farmId && !onboarding?.completedAt;
+
+  // Record completion once. Never during render.
+  useEffect(() => {
+    if (!justCompleted || !farmId) return;
+    save.mutate({ completed_at: new Date().toISOString() });
+    trackEvent("ONBOARDING_COMPLETED", { farmId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [justCompleted, farmId]);
+
   if (!farmId) return null;
-  if (complete && (onboarding?.completedAt || !forceOpen) && !forceOpen) {
-    if (!onboarding?.completedAt) {
-      // Record completion once, then stop showing the checklist.
-      save.mutate({ completed_at: new Date().toISOString() });
-      trackEvent("ONBOARDING_COMPLETED", { farmId });
-      return (
-        <section className="rounded-3xl border border-[color:var(--gold)]/50 bg-card p-5 shadow-[var(--shadow-soft)]">
-          <h2 className="inline-flex items-center gap-2 font-display text-lg font-semibold">
-            <PartyPopper className="h-5 w-5 text-[color:var(--gold)]" /> Your farm is ready
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            You're now ready to get the most out of PoultryPro.
-          </p>
-        </section>
-      );
-    }
-    return null;
+
+  if (complete && !forceOpen) {
+    if (!justCompleted) return null;
+    return (
+      <section className="rounded-3xl border border-[color:var(--gold)]/50 bg-card p-5 shadow-[var(--shadow-soft)]">
+        <h2 className="inline-flex items-center gap-2 font-display text-lg font-semibold">
+          <PartyPopper className="h-5 w-5 text-[color:var(--gold)]" /> Your farm is ready
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          You're now ready to get the most out of PoultryPro.
+        </p>
+      </section>
+    );
   }
   if (!forceOpen && onboarding?.checklistDismissedAt) return null;
 
