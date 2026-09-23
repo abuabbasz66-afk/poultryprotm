@@ -56,9 +56,9 @@ export function AdminGrowthTab({ enabled = true }: { enabled?: boolean }) {
         <Stat label="Checkout started" value={s.checkout_started_farms.toLocaleString()} />
         <Stat label="Paying farms" value={s.paid_farms.toLocaleString()} />
         <Stat
-          label="Activated → paid"
-          value={`${pct(s.paid_farms, s.activated_farms)}%`}
-          sub="Share of activated farms that paid"
+          label="Farms on a paid plan"
+          value={`${pct(s.paid_farms, s.total_farms)}%`}
+          sub="Share of all farms that are paying"
         />
         <Stat label="Cancellations recorded" value={s.cancelled_events.toLocaleString()} />
       </div>
