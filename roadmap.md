@@ -37,3 +37,13 @@
 - [x] Feedback prompt after 3+ active days
 - [x] Admin > Growth dashboard (stats, funnel, drop-off, feedback)
 - [ ] Real Paystack test payment acceptance run (not performed - would be a live charge)
+
+## Customer engagement & retention (2026-09-23)
+- [x] Communication consent (WhatsApp/SMS/phone/marketing/account) with consent date + source
+- [x] Real-data segmentation (11 segments) from farms, records, activity and payment events
+- [x] 11 approved, personalised message templates (service vs promotional)
+- [x] Frequency control: 1/24h, 3/7d promotional, configurable; stops on paid plan or opt-out
+- [x] Admin → Customer Engagement: stats, segments, composer, message history, call requests
+- [x] "Request a call" for farmers + admin call queue
+- [ ] Automatic sending (needs an approved WhatsApp Business / SMS provider account)
+- [ ] Delivery/read receipts (only available with a provider account)
