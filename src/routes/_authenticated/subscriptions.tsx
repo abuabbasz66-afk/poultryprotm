@@ -106,10 +106,38 @@ function SubscriptionsPage() {
       trackEvent("PAYMENT_SUCCESS", { farmId: data?.farmId ?? null });
     } else if (search.payment === "pending") {
       toast.info("Payment received — we're confirming it with Paystack. Your plan will activate shortly.");
-      setTimeout(() => {
-        refetch();
-        qc.invalidateQueries({ queryKey: ["farm-payments"] });
-      }, 8000);
+      // Keep checking for ~1 minute. After a few checks, ask the server to
+      // re-verify the payment with Paystack (server-side verification only).
+      void (async () => {
+        let recoveryTried = false;
+        for (let i = 0; i < 12; i++) {
+          await new Promise((r) => setTimeout(r, 5000));
+          const r = await payments.refetch();
+          const pending = (r.data ?? []).find((p) => p.status === "pending");
+          if (!pending) {
+            await refetch();
+            const ok = (r.data ?? [])[0]?.status === "success";
+            if (ok) toast.success("Payment verified — your plan is now active.");
+            return;
+          }
+          if (i >= 2 && !recoveryTried) {
+            recoveryTried = true;
+            try {
+              await fetch("/api/paystack/recover", {
+                method: "POST",
+                headers: await authHeaders(),
+                body: JSON.stringify({ reference: pending.reference }),
+              });
+            } catch {
+              /* keep polling */
+            }
+          }
+        }
+        toast.info(
+          "Still confirming your payment. Use \"Re-verify\" in Payment history below if your plan hasn't updated.",
+          { duration: 10000 },
+        );
+      })();
     } else {
       toast.error("Payment was not completed. You have not been charged for an unsuccessful attempt.");
       trackEvent("PAYMENT_FAILED", { farmId: data?.farmId ?? null });
