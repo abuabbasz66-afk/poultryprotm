@@ -44,6 +44,7 @@ export function useCommunicationPrefs() {
       const { data, error } = await supabase
         .from("communication_preferences")
         .select("*")
+        .eq("user_id", userId!)
         .maybeSingle();
       if (error) throw error;
       if (!data) return EMPTY_PREFS;
@@ -116,6 +117,7 @@ export function useMyCallRequests() {
       const { data, error } = await supabase
         .from("engagement_call_requests")
         .select("id, reason, status, created_at")
+        .eq("user_id", userId!)
         .order("created_at", { ascending: false })
         .limit(5);
       if (error) throw error;

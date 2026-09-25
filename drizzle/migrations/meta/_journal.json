@@ -57,6 +57,13 @@
       "when": 1790144795197,
       "tag": "0007_customer_engagement_and_communication_consent",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790309437414,
+      "tag": "0008_restore_engagement_grants_and_has_role",
+      "breakpoints": true
     }
   ]
 }
