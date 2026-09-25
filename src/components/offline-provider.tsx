@@ -32,6 +32,15 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
 
     startSyncEngine();
     registerServiceWorker();
+    void import("@/lib/native").then(({ initNativeShell }) =>
+      initNativeShell(() => {
+        if (window.history.length > 1 && window.location.pathname !== "/dashboard") {
+          window.history.back();
+          return true;
+        }
+        return false;
+      }),
+    );
 
     const unsubOutbox = onOutboxChange(() => {
       void refreshPendingCount(activeUser);
