@@ -14,11 +14,14 @@ import { trackEvent } from "@/lib/growth";
 import { toast } from "sonner";
 
 
-type BillingSearch = { payment?: "success" | "failed" };
+type BillingSearch = { payment?: "success" | "failed" | "pending" };
 
 export const Route = createFileRoute("/_authenticated/subscriptions")({
   validateSearch: (search: Record<string, unknown>): BillingSearch => ({
-    payment: search.payment === "success" || search.payment === "failed" ? search.payment : undefined,
+    payment:
+      search.payment === "success" || search.payment === "failed" || search.payment === "pending"
+        ? search.payment
+        : undefined,
   }),
   head: () => ({
     meta: [
@@ -101,6 +104,12 @@ function SubscriptionsPage() {
     if (search.payment === "success") {
       toast.success("Payment verified — your plan is now active.");
       trackEvent("PAYMENT_SUCCESS", { farmId: data?.farmId ?? null });
+    } else if (search.payment === "pending") {
+      toast.info("Payment received — we're confirming it with Paystack. Your plan will activate shortly.");
+      setTimeout(() => {
+        refetch();
+        qc.invalidateQueries({ queryKey: ["farm-payments"] });
+      }, 8000);
     } else {
       toast.error("Payment was not completed. You have not been charged for an unsuccessful attempt.");
       trackEvent("PAYMENT_FAILED", { farmId: data?.farmId ?? null });
