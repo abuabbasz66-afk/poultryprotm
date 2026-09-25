@@ -77,8 +77,14 @@ export function SyncStatus({ compact = false }: { compact?: boolean }) {
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               {s.online
-                ? "Records upload automatically."
-                : "Your records are being saved on this device and will upload automatically."}
+                ? s.phase === "syncing"
+                  ? "Syncing farm records..."
+                  : s.lastError
+                    ? "Some records could not sync. Tap Sync now to retry."
+                    : s.pending > 0
+                      ? "Records are waiting to upload (Pending Sync)."
+                      : "All farm records are synced."
+                : "You're offline. Your farm records will sync when connection returns."}
             </p>
 
             <dl className="mt-3 space-y-1.5 text-xs">

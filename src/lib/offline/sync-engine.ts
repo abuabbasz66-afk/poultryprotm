@@ -110,7 +110,7 @@ export async function syncNow(opts: { silent?: boolean } = {}): Promise<void> {
 
   running = true;
   setSyncState({ online: true, phase: "syncing", lastError: null });
-  if (!opts.silent) notify("syncing", "Synchronising records…");
+  if (!opts.silent) notify("syncing", "Syncing farm records...");
 
   let uploaded = 0;
   let failed = 0;
@@ -147,13 +147,14 @@ export async function syncNow(opts: { silent?: boolean } = {}): Promise<void> {
     await metaSet(LAST_SYNC_KEY, now);
     setSyncState({ phase: conflicted ? "online" : "synced", lastSyncAt: now, lastError: null });
     if (uploaded && !opts.silent) {
-      notify("done", `All records successfully synchronised (${uploaded}).`);
+      notify("done", `All farm records are synced (${uploaded}).`);
     }
     if (conflicted) notify("conflict", `${conflicted} record${conflicted > 1 ? "s" : ""} need your review.`);
     onDrained?.();
   } else {
     backoff = Math.min(backoff ? backoff * 2 : 5_000, 120_000);
-    setSyncState({ phase: isOnline() ? "online" : "offline", lastError: "Some records are still waiting to upload." });
+    setSyncState({ phase: isOnline() ? "online" : "offline", lastError: "Some records could not sync. Tap to review." });
+    if (!opts.silent) notify("error", "Some records could not sync. Tap to review.");
     setTimeout(() => void syncNow({ silent: true }), backoff);
   }
   if (uploaded) onDrained?.();
@@ -169,13 +170,13 @@ export function startSyncEngine() {
 
   window.addEventListener("online", () => {
     setSyncState({ online: true, phase: "online" });
-    notify("restored", "Internet connection restored.");
+    notify("restored", "Connected");
     void syncNow();
   });
 
   window.addEventListener("offline", () => {
     setSyncState({ online: false, phase: "offline" });
-    notify("offline", "Working offline. Your records are being saved on this device.");
+    notify("offline", "You're offline. Your farm records will sync when connection returns.");
   });
 
   window.addEventListener("focus", () => {

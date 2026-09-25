@@ -40,7 +40,7 @@ export function ConnectionIndicator() {
     >
       <span className="inline-flex items-center gap-1.5">
         {online ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-        {online ? "Connected" : "Offline — records will sync when connection returns."}
+        {online ? "Connected" : "You're offline. Your farm records will sync when connection returns."}
       </span>
     </div>
   );
