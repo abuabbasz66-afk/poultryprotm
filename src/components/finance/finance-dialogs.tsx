@@ -142,6 +142,11 @@ export function ExpenseDialog({
           </div>
           <div className="sm:col-span-2">
             <Label className="flex items-center gap-1.5"><Paperclip className="h-3.5 w-3.5" /> Receipt (optional)</Label>
+            {isNativeApp() && (
+              <Button type="button" variant="outline" className="mt-1.5 w-full" onClick={async () => { const f = await takeReceiptPhoto(); if (f) setFile(f); }}>
+                {file ? `Photo attached: ${file.name}` : "Take photo of receipt"}
+              </Button>
+            )}
             <Input type="file" accept="image/*,application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="mt-1.5" />
           </div>
           <div className="sm:col-span-2">
