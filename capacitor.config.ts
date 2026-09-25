@@ -11,9 +11,15 @@ const config: CapacitorConfig = {
     cleartext: false,
     allowNavigation: ["poultrypro.life", "www.poultrypro.life", "checkout.paystack.com", "*.paystack.com", "*.paystack.co"],
   },
-  android: { allowMixedContent: false },
+  android: {
+    allowMixedContent: false,
+    // Never allow Chrome remote debugging of the WebView in store builds.
+    webContentsDebuggingEnabled: false,
+    captureInput: true,
+  },
   plugins: {
-    SplashScreen: { launchShowDuration: 1500, backgroundColor: "#ffffff", showSpinner: false },
+    SplashScreen: { launchShowDuration: 1500, backgroundColor: "#ffffff", showSpinner: false, androidScaleType: "CENTER_INSIDE" },
+    StatusBar: { style: "LIGHT", backgroundColor: "#ffffff", overlaysWebView: false },
   },
 };
 
