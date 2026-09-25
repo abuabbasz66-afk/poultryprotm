@@ -17,6 +17,7 @@ import {
 } from "@/lib/finance-data";
 import { dayKey } from "@/lib/finance-analytics";
 import { useFarmId } from "@/lib/farm-data";
+import { isNativeApp, takeReceiptPhoto } from "@/lib/native";
 
 const field = "mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-[color:var(--forest)]";
 
