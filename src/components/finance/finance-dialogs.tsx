@@ -17,6 +17,7 @@ import {
 } from "@/lib/finance-data";
 import { dayKey } from "@/lib/finance-analytics";
 import { useFarmId } from "@/lib/farm-data";
+import { isNativeApp, takeReceiptPhoto } from "@/lib/native";
 
 const field = "mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-[color:var(--forest)]";
 
@@ -143,7 +144,11 @@ export function ExpenseDialog({
           <div className="sm:col-span-2">
             <Label className="flex items-center gap-1.5"><Paperclip className="h-3.5 w-3.5" /> Receipt (optional)</Label>
             {isNativeApp() && (
-              <Button type="button" variant="outline" className="mt-1.5 w-full" onClick={async () => { const f = await takeReceiptPhoto(); if (f) setFile(f); }}>
+              <Button type="button" variant="outline" className="mt-1.5 min-h-11 w-full" onClick={async () => {
+                const r = await takeReceiptPhoto();
+                if (r.status === "ok") setFile(r.file);
+                else if (r.status !== "cancelled") toast.error(r.message);
+              }}>
                 {file ? `Photo attached: ${file.name}` : "Take photo of receipt"}
               </Button>
             )}
