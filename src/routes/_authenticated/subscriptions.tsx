@@ -15,7 +15,9 @@ import { toast } from "sonner";
 
 
 type BillingSearch = { payment?: "success" | "failed" | "pending" };
-...
+
+export const Route = createFileRoute("/_authenticated/subscriptions")({
+  validateSearch: (search: Record<string, unknown>): BillingSearch => ({
     payment:
       search.payment === "success" || search.payment === "failed" || search.payment === "pending"
         ? search.payment
