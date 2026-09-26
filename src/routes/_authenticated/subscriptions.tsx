@@ -151,7 +151,7 @@ function SubscriptionsPage() {
               : rows.length === 1
                 ? rows[0]
                 : undefined;
-            if (!row) continue await refetch(); // keep polling; refresh plan data
+            if (!row) continue; // keep polling until the row is visible
             if (row.status === "success") {
               await refetch();
               toast.success("Payment verified — your plan is now active.");
