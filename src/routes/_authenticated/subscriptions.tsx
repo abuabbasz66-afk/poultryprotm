@@ -1,6 +1,6 @@
 import { RequirePermission } from "@/components/require-permission";
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -99,6 +99,8 @@ function SubscriptionsPage() {
     trackEvent("PRICING_VIEWED", { farmId: data.farmId });
   }, [data?.farmId]);
 
+  const pendingPollRef = useRef(false);
+
   useEffect(() => {
     if (!search.payment) return;
     if (search.payment === "success") {
@@ -108,36 +110,73 @@ function SubscriptionsPage() {
       toast.info("Payment received — we're confirming it with Paystack. Your plan will activate shortly.");
       // Keep checking for ~1 minute. After a few checks, ask the server to
       // re-verify the payment with Paystack (server-side verification only).
+      // NOTE: the payments query is `enabled: !!farmId`, so wait until the
+      // farm is loaded — refetch() on a disabled query resolves with no data.
+      if (!data?.farmId) return;
+      if (pendingPollRef.current) return;
+      pendingPollRef.current = true;
+      let cancelled = false;
       void (async () => {
-        let recoveryTried = false;
-        for (let i = 0; i < 12; i++) {
-          await new Promise((r) => setTimeout(r, 5000));
-          const r = await payments.refetch();
-          const pending = (r.data ?? []).find((p) => p.status === "pending");
-          if (!pending) {
+        try {
+          let reference: string | null = null;
+          let recoveryTried = false;
+          for (let i = 0; i < 12; i++) {
+            await new Promise((r) => setTimeout(r, 5000));
+            if (cancelled) return;
+            const r = await payments.refetch();
+            const rows = (r.data ?? []) as PaymentRow[];
+            const pending = rows.find((p) => p.status === "pending");
+            if (pending) reference = pending.reference;
+
+            if (pending) {
+              if (i >= 2 && !recoveryTried) {
+                recoveryTried = true;
+                try {
+                  await fetch("/api/paystack/recover", {
+                    method: "POST",
+                    headers: await authHeaders(),
+                    body: JSON.stringify({ reference: pending.reference }),
+                  });
+                } catch {
+                  /* keep polling */
+                }
+              }
+              continue;
+            }
+
+            // No pending row — the payment either resolved or the row isn't
+            // visible yet. Only give up once we can see the row's outcome.
+            const row = reference
+              ? rows.find((p) => p.reference === reference)
+              : rows.length === 1
+                ? rows[0]
+                : undefined;
+            if (!row) continue; // keep polling until the row is visible
+            if (row.status === "success") {
+              await refetch();
+              toast.success("Payment verified — your plan is now active.");
+              return;
+            }
+            if (row.status === "pending") continue;
+            // Resolved as failed / attention etc.
             await refetch();
-            const ok = (r.data ?? [])[0]?.status === "success";
-            if (ok) toast.success("Payment verified — your plan is now active.");
+            toast.error(
+              "Paystack did not confirm this payment as successful. Use \"Re-verify\" in Payment history below.",
+              { duration: 10000 },
+            );
             return;
           }
-          if (i >= 2 && !recoveryTried) {
-            recoveryTried = true;
-            try {
-              await fetch("/api/paystack/recover", {
-                method: "POST",
-                headers: await authHeaders(),
-                body: JSON.stringify({ reference: pending.reference }),
-              });
-            } catch {
-              /* keep polling */
-            }
-          }
+          toast.info(
+            "Still confirming your payment. Use \"Re-verify\" in Payment history below if your plan hasn't updated.",
+            { duration: 10000 },
+          );
+        } finally {
+          pendingPollRef.current = false;
         }
-        toast.info(
-          "Still confirming your payment. Use \"Re-verify\" in Payment history below if your plan hasn't updated.",
-          { duration: 10000 },
-        );
       })();
+      return () => {
+        cancelled = true;
+      };
     } else {
       toast.error("Payment was not completed. You have not been charged for an unsuccessful attempt.");
       trackEvent("PAYMENT_FAILED", { farmId: data?.farmId ?? null });
@@ -145,7 +184,7 @@ function SubscriptionsPage() {
     refetch();
     qc.invalidateQueries({ queryKey: ["farm-payments"] });
     window.history.replaceState({}, "", "/subscriptions");
-  }, [search.payment, refetch, qc]);
+  }, [search.payment, data?.farmId, payments.refetch, refetch, qc]);
 
   async function startCheckout(plan: PlanTier) {
     if (plan === "basic") {
