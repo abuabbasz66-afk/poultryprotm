@@ -67,4 +67,4 @@
 
 - [x] Replace the left sidebar with a two-row horizontal header driven by the shared navigation catalogue
 - [x] Preserve alerts, sync status, farm access, profile, permissions, premium labels, and mobile bottom navigation
-- [ ] Validate route completeness, dropdown behavior, active states, laptop/tablet fit, mobile separation, and production build
+- [x] Validate route completeness, dropdown behavior, active states, laptop/tablet fit, mobile separation, and production build
