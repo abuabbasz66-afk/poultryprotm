@@ -39,6 +39,7 @@ export function MobileNavigation() {
     const visibleSections = NAV_SECTIONS.map((section) => {
       const items: NavLeaf[] = [];
       for (const parent of section.items) {
+        if (!allowed(parent)) continue;
         for (const candidate of [parent, ...(parent.children ?? [])]) {
           const key = navDestinationKey(candidate);
           if (!allowed(candidate) || seen.has(key)) continue;
