@@ -100,7 +100,7 @@ function ageShift(flock: FlockProfile, tempC: number): number {
   if (tempC < 24) return 0;
   const age = flock.ageDays;
   if (flock.kind === "broiler" && age != null) return age >= 29 ? 2 : age >= 22 ? 1 : 0;
-  if (flock.kind === "layer" && age != null && age >= 140) return 0.5;
+  if (flock.kind === "layer" && age != null && age >= 140) return 0.25;
   return 0;
 }
 
