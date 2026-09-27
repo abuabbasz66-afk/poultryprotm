@@ -90,7 +90,7 @@ function humidityShift(tempC: number, rh: number | null): number {
   if (!hasHumidity(rh) || tempC < 24) return 0;
   if (rh >= 80) return 3;
   if (rh >= 70) return 2;
-  if (rh >= 60) return 1;
+  if (rh >= 60) return 0.5;
   if (rh < 40) return -1;
   return 0;
 }
@@ -100,7 +100,7 @@ function ageShift(flock: FlockProfile, tempC: number): number {
   if (tempC < 24) return 0;
   const age = flock.ageDays;
   if (flock.kind === "broiler" && age != null) return age >= 29 ? 2 : age >= 22 ? 1 : 0;
-  if (flock.kind === "layer" && age != null && age >= 140) return 1;
+  if (flock.kind === "layer" && age != null && age >= 140) return 0.5;
   return 0;
 }
 
