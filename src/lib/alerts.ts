@@ -11,6 +11,13 @@ import { detectMortalityPatterns } from "@/lib/mortality-pattern";
 import { describeEvent } from "@/lib/security-events";
 import { toDateKey } from "@/lib/date-key";
 import { useRoomFeedAnalytics, fmtGrams } from "@/lib/feed-per-bird";
+import { useFarmIntelligence } from "@/lib/intelligence/use-farm-intelligence";
+import type { IntelCategory } from "@/lib/intelligence/engine";
+
+const INTEL_TO_LEGACY: Record<IntelCategory, AlertCategory> = {
+  production: "health", mortality: "health", health: "health", weather: "health",
+  feed: "operations", inventory: "operations", operations: "operations", finance: "price",
+};
 
 /**
  * Smart Alerts engine.
@@ -164,6 +171,7 @@ export function useFarmAlerts(): { alerts: FarmAlert[]; loading: boolean } {
   const canAudit = !permsLoading && can("audit.read");
   const eventsQ = useSecurityEvents(canAudit, 60);
   const roomFeed = useRoomFeedAnalytics();
+  const { data: intel } = useFarmIntelligence();
 
   const alerts = useMemo<FarmAlert[]>(() => {
     const out: FarmAlert[] = [];
@@ -235,46 +243,21 @@ export function useFarmAlerts(): { alerts: FarmAlert[]; loading: boolean } {
       }
     }
 
-    // ---- 3. Operational alerts --------------------------------------------
-    if (can("production.read")) {
-      const today = todayKey();
-      const hour = new Date().getHours();
-      const loggedToday = eggs.some((e) => toDateKey(e.date) === today);
-      if (!loggedToday && hour >= 18 && eggs.length > 0) {
-        out.push({
-          id: `missed-production:${today}`,
-          category: "operations",
-          severity: "warning",
-          title: "No production recorded today",
-          message: "Egg collection has not been logged yet today. Record it before the day closes so analytics stay accurate.",
-          at: new Date().toISOString(),
-          to: "/dashboard",
-          search: { area: "records" },
-          hash: "production",
-        });
-      }
-    }
-
-    if (can("feed.read") && feed.length > 0) {
-      const today = todayKey();
-      const todayFeed = feedOnDay(feed, today);
-      const prior: number[] = [];
-      for (let i = 1; i <= 7; i++) prior.push(feedOnDay(feed, dayOffsetKey(i)));
-      const active = prior.filter((v) => v > 0);
-      const avg = active.length >= 3 ? active.reduce((s, v) => s + v, 0) / active.length : 0;
-      if (avg > 0 && todayFeed > 0 && todayFeed < avg * 0.7) {
-        const drop = ((avg - todayFeed) / avg) * 100;
-        out.push({
-          id: `feed-drop:${today}`,
-          category: "operations",
-          severity: drop >= 40 ? "warning" : "info",
-          title: "Feed intake dropped sharply",
-          message: `Feed given today is ${drop.toFixed(0)}% below the recent daily average. A sudden drop in intake often comes before a health problem.`,
-          at: new Date().toISOString(),
-          to: "/feed",
-          search: { tab: "overview" },
-        });
-      }
+    // ---- 3. Farm Intelligence alerts (production, mortality, feed, stock,
+    // health, weather, finance, operations) — one per condition, see
+    // src/lib/intelligence/engine.ts.
+    for (const a of intel.alerts) {
+      out.push({
+        id: `intel:${a.key}:${a.refDate}`,
+        category: INTEL_TO_LEGACY[a.category],
+        severity: a.severity === "critical" ? "critical" : a.severity === "warning" ? "warning" : "info",
+        title: a.title,
+        message: a.happened,
+        at: new Date(`${a.refDate}T12:00:00`).toISOString(),
+        to: a.action.to,
+        search: a.action.search,
+        hash: a.action.hash,
+      });
     }
 
     // ---- 3b. Room-level feed status alerts --------------------------------
@@ -338,7 +321,7 @@ export function useFarmAlerts(): { alerts: FarmAlert[]; loading: boolean } {
   }, [
     can, canAudit, isPremium,
     eggsQ.data, roomsQ.data, mortQ.data, feedQ.data, healthQ.data, priceQ.data, eventsQ.data,
-    roomFeed.latest, roomFeed.rooms,
+    roomFeed.latest, roomFeed.rooms, intel,
   ]);
 
   const loading = permsLoading || eggsQ.isPending || roomsQ.isPending;
