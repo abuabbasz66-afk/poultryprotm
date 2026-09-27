@@ -38,7 +38,7 @@ export function setSyncCompleteHandler(fn: () => void) {
 
 export async function forgetUser(userId: string) {
   await wipeUser(userId);
-  setSyncState({ pending: 0, conflicts: 0, lastSyncAt: null });
+  setSyncState({ pending: 0, failed: 0, conflicts: 0, lastSyncAt: null });
 }
 
 const LAST_SYNC_KEY = "lastSyncAt";
