@@ -55,3 +55,8 @@
 - [x] Remove the duplicate mobile hamburger drawer while preserving the desktop sidebar
 - [x] Drive the bottom bar and complete More menu from the shared permission-aware navigation catalogue
 - [x] Validate small-phone navigation, active states, browser back, and desktop sidebar
+
+## Desktop navigation redesign (2026-09-27)
+- [x] Replace the left sidebar with a two-row horizontal header driven by the shared navigation catalogue
+- [x] Preserve alerts, sync status, farm access, profile, permissions, premium labels, and mobile bottom navigation
+- [ ] Validate route completeness, dropdown behavior, active states, laptop/tablet fit, mobile separation, and production build

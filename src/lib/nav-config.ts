@@ -45,6 +45,8 @@ export type NavLeaf = {
   permission?: string;
   /** Places this existing destination in the mobile bottom bar. */
   mobileLabel?: string;
+  /** Places this existing destination directly in the desktop top navigation. */
+  desktopLabel?: string;
 };
 
 export type NavEntry = NavLeaf & { children?: NavLeaf[] };
@@ -71,6 +73,7 @@ export const NAV_SECTIONS: NavSection[] = [
         search: { area: "records" },
         permission: "dashboard.view",
         mobileLabel: "Home",
+        desktopLabel: "Home",
       },
       { label: "Alerts", icon: Bell, to: "/alerts", permission: "dashboard.view" },
 
@@ -82,6 +85,7 @@ export const NAV_SECTIONS: NavSection[] = [
         hash: "production",
         permission: "production.read",
         mobileLabel: "Production",
+        desktopLabel: "Production",
       },
       {
         label: "Feed Management",
@@ -90,6 +94,7 @@ export const NAV_SECTIONS: NavSection[] = [
         search: { tab: "overview" },
         permission: "feed.read",
         mobileLabel: "Feed",
+        desktopLabel: "Feed",
         children: [
           {
             label: "Overview",
@@ -137,6 +142,7 @@ export const NAV_SECTIONS: NavSection[] = [
         hash: "health",
         permission: "health.read",
         mobileLabel: "Health",
+        desktopLabel: "Health",
       },
       {
         label: "Vaccination schedule",
@@ -235,6 +241,7 @@ export const NAV_SECTIONS: NavSection[] = [
         to: "/dashboard",
         search: { area: "analytics" },
         permission: "reports.read",
+        desktopLabel: "Analytics",
       },
       {
         label: "AI Insights",
@@ -243,6 +250,7 @@ export const NAV_SECTIONS: NavSection[] = [
         search: { area: "ai" },
         premium: true,
         permission: "ai.view",
+        desktopLabel: "AI",
         children: [
           {
             label: "Production Insights",

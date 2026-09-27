@@ -88,7 +88,7 @@ export function MobileNavigation() {
     <>
       <nav
         aria-label="Primary mobile navigation"
-        className="mobile-safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur lg:hidden"
+        className="mobile-safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur md:hidden"
       >
         <div className="mx-auto grid max-w-lg grid-cols-5 px-1 pt-1">
           {primary.map((item) => {
@@ -130,7 +130,7 @@ export function MobileNavigation() {
 
       {moreOpen && (
         <div
-          className="fixed inset-0 z-50 lg:hidden"
+          className="fixed inset-0 z-50 md:hidden"
           role="dialog"
           aria-modal="true"
           aria-label="More PoultryPro modules"
