@@ -23,7 +23,13 @@ function formatLastSync(iso: string | null) {
  * Header pill showing connectivity + synchronisation state, pending record
  * count, last sync time and a manual "Sync Now" action.
  */
-export function SyncStatus({ compact = false, surface = false }: { compact?: boolean; surface?: boolean }) {
+export function SyncStatus({
+  compact = false,
+  surface = false,
+}: {
+  compact?: boolean;
+  surface?: boolean;
+}) {
   const s = useSyncState();
   const [open, setOpen] = useState(false);
   const [conflictsOpen, setConflictsOpen] = useState(false);
