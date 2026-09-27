@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   useEggs, useFarmId, useFeed, useHealth, useMortality, usePriceHistory, useRooms,
-  type EggRow, type Feed,
 } from "@/lib/farm-data";
 import { useEffectivePlan } from "@/lib/subscription";
 import { usePermissions } from "@/lib/rbac";
@@ -132,26 +131,6 @@ export function useAlertReadState() {
 
 const naira = (n: number) =>
   `₦${Math.round(n).toLocaleString("en-NG")}`;
-
-function todayKey(): string {
-  return toDateKey(new Date())!;
-}
-
-function dayOffsetKey(offset: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - offset);
-  return toDateKey(d)!;
-}
-
-function eggTotal(e: EggRow): number {
-  return (e.r2 + e.r3 + e.r4) * 30 + e.extra;
-}
-
-function feedOnDay(feed: Feed[], key: string): number {
-  return feed
-    .filter((f) => toDateKey(f.date) === key)
-    .reduce((s, f) => s + Number(f.bags || 0), 0);
-}
 
 // ---------------------------------------------------------------------------
 // Main hook
