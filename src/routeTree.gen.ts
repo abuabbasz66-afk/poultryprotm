@@ -32,6 +32,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPriceHistoryRouteImport } from './routes/_authenticated/price-history'
 import { Route as AuthenticatedPricesRouteImport } from './routes/_authenticated/prices'
 import { Route as AuthenticatedRearingRouteImport } from './routes/_authenticated/rearing'
+import { Route as AuthenticatedRecycleBinRouteImport } from './routes/_authenticated/recycle-bin'
 import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
@@ -166,6 +167,11 @@ const AuthenticatedRearingRoute = AuthenticatedRearingRouteImport.update({
   path: '/rearing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRecycleBinRoute = AuthenticatedRecycleBinRouteImport.update({
+  id: '/recycle-bin',
+  path: '/recycle-bin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSalesRoute = AuthenticatedSalesRouteImport.update({
   id: '/sales',
   path: '/sales',
@@ -285,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/price-history': typeof AuthenticatedPriceHistoryRoute
   '/prices': typeof AuthenticatedPricesRoute
   '/rearing': typeof AuthenticatedRearingRoute
+  '/recycle-bin': typeof AuthenticatedRecycleBinRoute
   '/sales': typeof AuthenticatedSalesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
@@ -327,6 +334,7 @@ export interface FileRoutesByTo {
   '/price-history': typeof AuthenticatedPriceHistoryRoute
   '/prices': typeof AuthenticatedPricesRoute
   '/rearing': typeof AuthenticatedRearingRoute
+  '/recycle-bin': typeof AuthenticatedRecycleBinRoute
   '/sales': typeof AuthenticatedSalesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/staff': typeof AuthenticatedStaffRoute
@@ -371,6 +379,7 @@ export interface FileRoutesById {
   '/_authenticated/price-history': typeof AuthenticatedPriceHistoryRoute
   '/_authenticated/prices': typeof AuthenticatedPricesRoute
   '/_authenticated/rearing': typeof AuthenticatedRearingRoute
+  '/_authenticated/recycle-bin': typeof AuthenticatedRecycleBinRoute
   '/_authenticated/sales': typeof AuthenticatedSalesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
@@ -415,6 +424,7 @@ export interface FileRouteTypes {
     | '/price-history'
     | '/prices'
     | '/rearing'
+    | '/recycle-bin'
     | '/sales'
     | '/settings'
     | '/staff'
@@ -457,6 +467,7 @@ export interface FileRouteTypes {
     | '/price-history'
     | '/prices'
     | '/rearing'
+    | '/recycle-bin'
     | '/sales'
     | '/settings'
     | '/staff'
@@ -500,6 +511,7 @@ export interface FileRouteTypes {
     | '/_authenticated/price-history'
     | '/_authenticated/prices'
     | '/_authenticated/rearing'
+    | '/_authenticated/recycle-bin'
     | '/_authenticated/sales'
     | '/_authenticated/settings'
     | '/_authenticated/staff'
@@ -708,6 +720,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRearingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/recycle-bin': {
+      id: '/_authenticated/recycle-bin'
+      path: '/recycle-bin'
+      fullPath: '/recycle-bin'
+      preLoaderRoute: typeof AuthenticatedRecycleBinRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/sales': {
       id: '/_authenticated/sales'
       path: '/sales'
@@ -850,6 +869,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPriceHistoryRoute: typeof AuthenticatedPriceHistoryRoute
   AuthenticatedPricesRoute: typeof AuthenticatedPricesRoute
   AuthenticatedRearingRoute: typeof AuthenticatedRearingRoute
+  AuthenticatedRecycleBinRoute: typeof AuthenticatedRecycleBinRoute
   AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
@@ -871,6 +891,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPriceHistoryRoute: AuthenticatedPriceHistoryRoute,
   AuthenticatedPricesRoute: AuthenticatedPricesRoute,
   AuthenticatedRearingRoute: AuthenticatedRearingRoute,
+  AuthenticatedRecycleBinRoute: AuthenticatedRecycleBinRoute,
   AuthenticatedSalesRoute: AuthenticatedSalesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRoute,
