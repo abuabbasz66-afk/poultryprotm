@@ -71,6 +71,13 @@
       "when": 1790510188685,
       "tag": "0009_recycle_bin",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790515719871,
+      "tag": "0010_farm_alert_states",
+      "breakpoints": true
     }
   ]
 }

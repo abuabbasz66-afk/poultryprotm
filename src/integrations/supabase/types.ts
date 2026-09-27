@@ -1276,6 +1276,74 @@ export type Database = {
           },
         ]
       }
+      farm_alert_states: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_key: string
+          category: string
+          created_at: string
+          farm_id: string
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          message: string | null
+          resolved_at: string | null
+          room: string | null
+          severity: string
+          source: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_key: string
+          category: string
+          created_at?: string
+          farm_id: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          message?: string | null
+          resolved_at?: string | null
+          room?: string | null
+          severity: string
+          source?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_key?: string
+          category?: string
+          created_at?: string
+          farm_id?: string
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          message?: string | null
+          resolved_at?: string | null
+          room?: string | null
+          severity?: string
+          source?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_alert_states_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farm_expenses: {
         Row: {
           amount: number

@@ -1366,6 +1366,8 @@ const setBagWeightKg = (v: number | null) => {
 
         {/* 8 — Mortality Log */}
           {/* Mortality */}
+          <div id="mortality" className="scroll-mt-24" />
+
           <Card>
             <CardHeader
               title={<span className="inline-flex items-center gap-2"><Skull className="h-5 w-5 text-destructive" /> Mortality Log</span>}
