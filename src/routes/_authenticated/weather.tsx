@@ -20,6 +20,9 @@ import { useBroilerBatches, batchAgeDays } from "@/lib/broiler-data";
 import { useLayerBatches, batchAgeDays as layerAgeDays } from "@/lib/layer-rearing";
 import { computeProductionSeries } from "@/lib/production-percent";
 import { cn } from "@/lib/utils";
+import {
+  ACTION_EMOJI, SEVERITY_META, buildGuidance, priorityActions, severityRank, type Guidance,
+} from "@/lib/weather-guidance";
 
 export const Route = createFileRoute("/_authenticated/weather")({
   head: () => ({
@@ -293,9 +296,11 @@ function WeatherPage() {
           )}
 
 
+          <WeatherAdvisoryCard weather={weather} flocks={flocks} />
+
           <CurrentConditions weather={weather} flocks={flocks} />
 
-          <section className="grid gap-4 lg:grid-cols-2">
+          <section id="flock-advisory" className="grid scroll-mt-24 gap-4 lg:grid-cols-2">
             {flocks.map((f) => (
               <FlockAdvisory key={f.label} flock={f} weather={weather} />
             ))}
@@ -403,6 +408,7 @@ function FlockAdvisory({
     rainChance: today?.rainChance ?? weather.current.rainChance,
     peak: peak?.label ?? null,
   });
+  const g = guidanceFor(flock, weather);
 
   return (
     <article className="rounded-3xl border p-5">
@@ -422,14 +428,36 @@ function FlockAdvisory({
           Peak heat-risk period: {peak.label}
         </p>
       )}
-      <ul className="mt-3 space-y-2 text-sm">
-        {lines.map((l, i) => (
-          <li key={i} className={cn("flex gap-2", i === lines.length - 1 && "text-xs text-muted-foreground")}>
-            <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", RISK_META[level].dot)} aria-hidden />
-            <span>{l}</span>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <SeverityBadge g={g} />
+      </div>
+      <p className="mt-2 text-sm leading-relaxed">{g.message}</p>
+      <ul className="mt-3 grid gap-1.5 text-sm sm:grid-cols-2">
+        {g.actions.map((a) => (
+          <li key={a.text} className="flex gap-2">
+            <span aria-hidden>{ACTION_EMOJI[a.kind]}</span>
+            <span>{a.text}</span>
           </li>
         ))}
       </ul>
+      {g.notes.length > 0 && (
+        <ul className="mt-3 space-y-1.5 rounded-xl bg-muted/50 p-3 text-xs text-muted-foreground">
+          {g.notes.map((n) => (
+            <li key={n}>{n}</li>
+          ))}
+        </ul>
+      )}
+      <details className="mt-3 text-sm">
+        <summary className="cursor-pointer text-xs font-medium text-muted-foreground">More detail for today</summary>
+        <ul className="mt-2 space-y-2">
+          {lines.map((l, i) => (
+            <li key={i} className={cn("flex gap-2", i === lines.length - 1 && "text-xs text-muted-foreground")}>
+              <span className={cn("mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full", RISK_META[level].dot)} aria-hidden />
+              <span>{l}</span>
+            </li>
+          ))}
+        </ul>
+      </details>
     </article>
   );
 }
@@ -551,6 +579,71 @@ function TomorrowAlert({
           <li className="text-xs text-muted-foreground">Forecast for {new Date(`${alert.day.date}T00:00:00`).toLocaleDateString()} at {weather.place}.</li>
         </ul>
       )}
+    </section>
+  );
+}
+
+/** Local hour at the farm (hourly times are already in the farm's timezone). */
+function farmHour(weather: FarmWeather) {
+  const t = weather.hourly[0]?.time;
+  const h = t ? Number(t.slice(11, 13)) : NaN;
+  return Number.isFinite(h) ? h : new Date().getHours();
+}
+
+function guidanceFor(flock: FlockProfile, weather: FarmWeather): Guidance {
+  return buildGuidance(flock, {
+    tempC: weather.current.tempC,
+    humidity: weather.current.humidity,
+    hour: farmHour(weather),
+    weather,
+  });
+}
+
+function SeverityBadge({ g }: { g: Guidance }) {
+  const m = SEVERITY_META[g.severity];
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wide", m.badge)}>
+      <span aria-hidden>{m.emoji}</span> {g.label}
+    </span>
+  );
+}
+
+function WeatherAdvisoryCard({ weather, flocks }: { weather: FarmWeather; flocks: FlockProfile[] }) {
+  const all = flocks.map((f) => guidanceFor(f, weather));
+  const g = all.reduce((a, b) => (severityRank(b.severity) > severityRank(a.severity) ? b : a), all[0]!);
+  const cur = weather.current;
+  const humidityKnown = g.humidity != null;
+  const trend = g.notes.find((n) => n.startsWith("☀️") || n.startsWith("🌧️"));
+  return (
+    <section className={cn("rounded-3xl border-2 bg-card p-5 shadow-sm", SEVERITY_META[g.severity].ring)}>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wide">Weather Advisory</h2>
+        <span className="text-xs text-muted-foreground">{conditionLabel(cur.code)}</span>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">🐔 {g.flockLine}</p>
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-lg font-semibold tabular-nums">
+        <span>🌡️ {Math.round(cur.tempC)}°C</span>
+        {humidityKnown && <span>💧 {Math.round(cur.humidity)}% RH</span>}
+      </div>
+      <div className="mt-3">
+        <SeverityBadge g={g} />
+      </div>
+      <p className="mt-3 text-sm leading-relaxed">{g.message}</p>
+      <p className="mt-4 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Priority actions</p>
+      <ul className="mt-2 flex flex-wrap gap-2">
+        {priorityActions(g).map((a) => (
+          <li key={a.text} className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs font-medium">
+            <span aria-hidden>{ACTION_EMOJI[a.kind]}</span> {a.text}
+          </li>
+        ))}
+      </ul>
+      {trend && <p className="mt-3 text-xs text-muted-foreground">{trend}</p>}
+      <a
+        href="#flock-advisory"
+        className="mt-4 inline-flex items-center rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90"
+      >
+        View advisory
+      </a>
     </section>
   );
 }
