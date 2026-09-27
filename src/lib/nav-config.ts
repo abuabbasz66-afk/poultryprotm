@@ -43,6 +43,8 @@ export type NavLeaf = {
   premium?: boolean;
   /** Permission required to see this entry. Omitted = visible to every role. */
   permission?: string;
+  /** Places this existing destination in the mobile bottom bar. */
+  mobileLabel?: string;
 };
 
 export type NavEntry = NavLeaf & { children?: NavLeaf[] };
@@ -68,6 +70,7 @@ export const NAV_SECTIONS: NavSection[] = [
         to: "/dashboard",
         search: { area: "records" },
         permission: "dashboard.view",
+        mobileLabel: "Home",
       },
       { label: "Alerts", icon: Bell, to: "/alerts", permission: "dashboard.view" },
 
@@ -78,6 +81,7 @@ export const NAV_SECTIONS: NavSection[] = [
         search: { area: "records" },
         hash: "production",
         permission: "production.read",
+        mobileLabel: "Production",
       },
       {
         label: "Feed Management",
@@ -85,6 +89,7 @@ export const NAV_SECTIONS: NavSection[] = [
         to: "/feed",
         search: { tab: "overview" },
         permission: "feed.read",
+        mobileLabel: "Feed",
         children: [
           {
             label: "Overview",
@@ -131,6 +136,7 @@ export const NAV_SECTIONS: NavSection[] = [
         search: { area: "records" },
         hash: "health",
         permission: "health.read",
+        mobileLabel: "Health",
       },
       {
         label: "Vaccination schedule",
@@ -146,7 +152,12 @@ export const NAV_SECTIONS: NavSection[] = [
         hash: "rooms",
         permission: "rooms.read",
       },
-      { label: "Weather & Bird Advisory", icon: CloudSun, to: "/weather", permission: "dashboard.view" },
+      {
+        label: "Weather & Bird Advisory",
+        icon: CloudSun,
+        to: "/weather",
+        permission: "dashboard.view",
+      },
       { label: "Layer Brooding & Rearing", icon: Baby, to: "/rearing", permission: "rooms.read" },
       { label: "Broilers", icon: Drumstick, to: "/broilers", permission: "rooms.read" },
       {
@@ -305,3 +316,35 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
 ];
+
+export type NavLocation = {
+  pathname: string;
+  search: Record<string, unknown>;
+  hash: string;
+};
+
+function isDefaultNavValue(key: string, value: string) {
+  if (key === "area") return value === "records";
+  if (key === "tab") return value === "overview";
+  return false;
+}
+
+export function navDestinationKey(item: NavLeaf) {
+  const search = Object.entries(item.search ?? {}).sort(([a], [b]) => a.localeCompare(b));
+  return JSON.stringify([item.to, search, item.hash ?? ""]);
+}
+
+export function isNavLeafActive(item: NavLeaf, location: NavLocation) {
+  if (location.pathname !== item.to) return false;
+  for (const [key, expected] of Object.entries(item.search ?? {})) {
+    const actual = location.search?.[key];
+    if (actual == null) {
+      if (!isDefaultNavValue(key, expected)) return false;
+    } else if (String(actual) !== expected) {
+      return false;
+    }
+  }
+  const currentHash = location.hash.replace(/^#/, "");
+  if (item.hash) return currentHash === item.hash;
+  return currentHash.length === 0;
+}
