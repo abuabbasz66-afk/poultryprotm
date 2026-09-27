@@ -47,3 +47,6 @@
 - [x] "Request a call" for farmers + admin call queue
 - [ ] Automatic sending (needs an approved WhatsApp Business / SMS provider account)
 - [ ] Delivery/read receipts (only available with a provider account)
+
+## Data reliability (2026-09-27)
+- [x] Egg offline sync on farm_id+date, outbox coalescing, error states/retry, farm-scoped overlay, conflict re-base, unit tests

@@ -11,13 +11,22 @@ import { STORE_CACHE, hasIndexedDB, idbGet, idbPut, seal, unseal } from "./db";
 import { applyPending, enqueue, listOutbox, newLocalId, type OutboxItem } from "./outbox";
 import { isOnline, setSyncState } from "./status";
 
-type CacheRow = { id: string; userId: string; key: string; updatedAt: string; value: Awaited<ReturnType<typeof seal>> };
+type CacheRow = {
+  id: string;
+  userId: string;
+  key: string;
+  updatedAt: string;
+  value: Awaited<ReturnType<typeof seal>>;
+};
 
 function cacheId(userId: string, key: string) {
   return `${userId}::${key}`;
 }
 
-export async function readCache<T>(userId: string | null | undefined, key: string): Promise<T | undefined> {
+export async function readCache<T>(
+  userId: string | null | undefined,
+  key: string,
+): Promise<T | undefined> {
   if (!hasIndexedDB() || !userId) return undefined;
   try {
     const row = await idbGet<CacheRow>(STORE_CACHE, cacheId(userId, key));
@@ -28,7 +37,11 @@ export async function readCache<T>(userId: string | null | undefined, key: strin
   }
 }
 
-export async function writeCache<T>(userId: string | null | undefined, key: string, value: T): Promise<void> {
+export async function writeCache<T>(
+  userId: string | null | undefined,
+  key: string,
+  value: T,
+): Promise<void> {
   if (!hasIndexedDB() || !userId) return;
   try {
     await idbPut<CacheRow>(STORE_CACHE, {
@@ -81,7 +94,9 @@ export async function offlineList<T extends { id: string }>(opts: {
   }
   if (table && userId) {
     const pending = await listOutbox(userId);
-    rows = applyPending(rows, pending, table);
+    // Farm-scoped cache keys look like "farm:<farmId>:<name>".
+    const farmId = /^farm:([^:]+):/.exec(cacheKey)?.[1];
+    rows = applyPending(rows, pending, table, farmId && farmId !== "none" ? farmId : null);
   }
   return rows;
 }
@@ -146,10 +161,13 @@ export async function runOrQueue(opts: {
   return { queued: true, localId: item.id };
 }
 
-export async function refreshPendingCount(userId: string | null | undefined): Promise<OutboxItem[]> {
+export async function refreshPendingCount(
+  userId: string | null | undefined,
+): Promise<OutboxItem[]> {
   const items = await listOutbox(userId);
   setSyncState({
-    pending: items.filter((i) => i.status !== "conflict").length,
+    pending: items.filter((i) => i.status === "pending").length,
+    failed: items.filter((i) => i.status === "error").length,
     conflicts: items.filter((i) => i.status === "conflict").length,
   });
   return items;

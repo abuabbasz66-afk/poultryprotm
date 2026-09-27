@@ -53,7 +53,11 @@ function openDb(): Promise<IDBDatabase> {
   return dbPromise;
 }
 
-function tx<T>(store: string, mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+function tx<T>(
+  store: string,
+  mode: IDBTransactionMode,
+  fn: (s: IDBObjectStore) => IDBRequest<T>,
+): Promise<T> {
   return openDb().then(
     (db) =>
       new Promise<T>((resolve, reject) => {
@@ -102,7 +106,10 @@ async function getUserKey(userId: string): Promise<CryptoKey | null> {
     try {
       const existing = await idbGet<StoredKey>(STORE_KEYS, `k:${userId}`);
       if (existing?.key) return existing.key;
-      const key = await sc.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+      const key = await sc.generateKey({ name: "AES-GCM", length: 256 }, false, [
+        "encrypt",
+        "decrypt",
+      ]);
       await idbPut<StoredKey>(STORE_KEYS, { id: `k:${userId}`, key });
       return key;
     } catch {
@@ -125,14 +132,21 @@ export async function seal(userId: string, value: unknown): Promise<Sealed> {
   return { iv: iv.buffer, ct };
 }
 
-export async function unseal<T>(userId: string, sealed: Sealed | undefined): Promise<T | undefined> {
+export async function unseal<T>(
+  userId: string,
+  sealed: Sealed | undefined,
+): Promise<T | undefined> {
   if (!sealed) return undefined;
   if ("plain" in sealed) return JSON.parse(sealed.plain) as T;
   const key = await getUserKey(userId);
   const sc = subtle();
   if (!key || !sc) return undefined;
   try {
-    const buf = await sc.decrypt({ name: "AES-GCM", iv: new Uint8Array(sealed.iv) }, key, sealed.ct);
+    const buf = await sc.decrypt(
+      { name: "AES-GCM", iv: new Uint8Array(sealed.iv) },
+      key,
+      sealed.ct,
+    );
     return JSON.parse(new TextDecoder().decode(buf)) as T;
   } catch {
     return undefined;

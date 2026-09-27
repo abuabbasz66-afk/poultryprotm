@@ -7,14 +7,14 @@ type BadgeNavigator = Navigator & {
 };
 
 export function AppBadge() {
-  const { pending, conflicts } = useSyncState();
+  const { pending, failed, conflicts } = useSyncState();
 
   useEffect(() => {
     const badge = navigator as BadgeNavigator;
-    const count = pending + conflicts;
+    const count = pending + failed + conflicts;
     if (count > 0) void badge.setAppBadge?.(count).catch(() => undefined);
     else void badge.clearAppBadge?.().catch(() => undefined);
-  }, [pending, conflicts]);
+  }, [pending, failed, conflicts]);
 
   return null;
 }

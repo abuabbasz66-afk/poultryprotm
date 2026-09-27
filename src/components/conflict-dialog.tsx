@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { listOutbox, removeOutbox, updateOutbox, type OutboxItem } from "@/lib/offline/outbox";
 import { refreshPendingCount } from "@/lib/offline/data";
@@ -18,7 +24,13 @@ function show(v: unknown) {
  * "Two versions of this record exist." Nothing is ever overwritten silently —
  * the farmer chooses Keep Local, Keep Cloud, or merges field by field.
  */
-export function ConflictDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+export function ConflictDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
   const [items, setItems] = useState<OutboxItem[]>([]);
   const [picks, setPicks] = useState<Record<string, "local" | "cloud">>({});
   const [busy, setBusy] = useState(false);
@@ -52,7 +64,13 @@ export function ConflictDialog({ open, onOpenChange }: { open: boolean; onOpenCh
   const keepLocal = async (item: OutboxItem) => {
     setBusy(true);
     // Re-base on the cloud version so the write applies cleanly next pass.
-    await updateOutbox(item.id, { userId: item.userId, status: "pending", cloud: null, lastError: null });
+    await updateOutbox(item.id, {
+      userId: item.userId,
+      status: "pending",
+      base: item.cloud,
+      cloud: null,
+      lastError: null,
+    });
     await finish(item.userId);
     setBusy(false);
   };
@@ -63,7 +81,14 @@ export function ConflictDialog({ open, onOpenChange }: { open: boolean; onOpenCh
     for (const key of Object.keys(item.payload)) {
       if ((picks[key] ?? "local") === "cloud") merged[key] = item.cloud?.[key];
     }
-    await updateOutbox(item.id, { userId: item.userId, status: "pending", payload: merged, cloud: null, lastError: null });
+    await updateOutbox(item.id, {
+      userId: item.userId,
+      status: "pending",
+      payload: merged,
+      base: item.cloud,
+      cloud: null,
+      lastError: null,
+    });
     await finish(item.userId);
     setPicks({});
     setBusy(false);
@@ -78,8 +103,8 @@ export function ConflictDialog({ open, onOpenChange }: { open: boolean; onOpenCh
             Two versions of this record exist
           </DialogTitle>
           <DialogDescription>
-            This record changed in the cloud while you were offline. Choose which version to keep — nothing is
-            overwritten until you decide.
+            This record changed in the cloud while you were offline. Choose which version to keep —
+            nothing is overwritten until you decide.
           </DialogDescription>
         </DialogHeader>
 
@@ -149,7 +174,9 @@ export function ConflictDialog({ open, onOpenChange }: { open: boolean; onOpenCh
             </div>
 
             {items.length > 1 && (
-              <p className="text-xs text-muted-foreground">{items.length - 1} more record(s) to review after this one.</p>
+              <p className="text-xs text-muted-foreground">
+                {items.length - 1} more record(s) to review after this one.
+              </p>
             )}
           </div>
         )}
