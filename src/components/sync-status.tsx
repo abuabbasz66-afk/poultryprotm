@@ -23,7 +23,13 @@ function formatLastSync(iso: string | null) {
  * Header pill showing connectivity + synchronisation state, pending record
  * count, last sync time and a manual "Sync Now" action.
  */
-export function SyncStatus({ compact = false }: { compact?: boolean }) {
+export function SyncStatus({
+  compact = false,
+  surface = false,
+}: {
+  compact?: boolean;
+  surface?: boolean;
+}) {
   const s = useSyncState();
   const [open, setOpen] = useState(false);
   const [conflictsOpen, setConflictsOpen] = useState(false);
@@ -85,7 +91,7 @@ export function SyncStatus({ compact = false }: { compact?: boolean }) {
         aria-label={`Connection status: ${label}`}
         className={cn(
           "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition",
-          tone,
+          surface ? "border-border bg-muted text-foreground hover:bg-accent" : tone,
           compact && "px-2",
         )}
       >
