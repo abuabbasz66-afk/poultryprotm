@@ -11,9 +11,18 @@ import { metaGet, metaSet, wipeUser } from "./db";
 import { listOutbox, removeOutbox, updateOutbox, type OutboxItem } from "./outbox";
 import { isOnline, setSyncState, getSyncState } from "./status";
 import { refreshPendingCount } from "./data";
-import { BUSINESS_KEYS, MAX_TEMP_ATTEMPTS, classifySyncError, detectConflict, differsFrom } from "./sync-rules";
+import {
+  BUSINESS_KEYS,
+  MAX_TEMP_ATTEMPTS,
+  classifySyncError,
+  detectConflict,
+  differsFrom,
+} from "./sync-rules";
 
-type Notify = (kind: "offline" | "restored" | "syncing" | "done" | "error" | "conflict", msg: string) => void;
+type Notify = (
+  kind: "offline" | "restored" | "syncing" | "done" | "error" | "conflict",
+  msg: string,
+) => void;
 
 let notify: Notify = () => {};
 export function setSyncNotifier(fn: Notify) {
@@ -55,7 +64,10 @@ type PushResult = "done" | "conflict" | "retry" | "failed";
  * different numbers for the day, surface a conflict instead of overwriting;
  * once the user picks "keep mine", `base` holds the cloud snapshot they saw.
  */
-async function pushNaturalKeyInsert(item: OutboxItem, cols: readonly string[]): Promise<PushResult> {
+async function pushNaturalKeyInsert(
+  item: OutboxItem,
+  cols: readonly string[],
+): Promise<PushResult> {
   const payload: Record<string, unknown> = { ...item.payload };
   delete payload.id;
   delete payload.created_at;
@@ -67,7 +79,9 @@ async function pushNaturalKeyInsert(item: OutboxItem, cols: readonly string[]): 
 
   if (cloud) {
     const reviewed = item.base != null;
-    const changed = reviewed ? detectConflict(item.base, cloud, payload) : differsFrom(cloud, payload);
+    const changed = reviewed
+      ? detectConflict(item.base, cloud, payload)
+      : differsFrom(cloud, payload);
     if (changed) {
       await updateOutbox(item.id, { userId: item.userId, status: "conflict", cloud });
       return "conflict";
@@ -80,7 +94,11 @@ async function pushNaturalKeyInsert(item: OutboxItem, cols: readonly string[]): 
     return "done";
   }
 
-  const { error } = await table(item.table).insert({ id: item.rowId, created_at: item.createdAt, ...payload });
+  const { error } = await table(item.table).insert({
+    id: item.rowId,
+    created_at: item.createdAt,
+    ...payload,
+  });
   // Someone created the same day between our read and insert: re-check next pass.
   if (error?.code === "23505") return pushNaturalKeyInsert(item, cols);
   if (error) throw error;
@@ -97,7 +115,10 @@ async function pushItem(item: OutboxItem): Promise<PushResult> {
       const cols = BUSINESS_KEYS[item.table];
       if (cols) return await pushNaturalKeyInsert(item, cols);
       const row = { id: item.rowId, created_at: item.createdAt, ...item.payload };
-      const { error } = await table(item.table).upsert(row, { onConflict: "id", ignoreDuplicates: true });
+      const { error } = await table(item.table).upsert(row, {
+        onConflict: "id",
+        ignoreDuplicates: true,
+      });
       if (error) throw error;
       return "done";
     }
@@ -110,7 +131,10 @@ async function pushItem(item: OutboxItem): Promise<PushResult> {
     }
 
     // update — check for a competing cloud change first
-    const { data: cloud, error: readErr } = await table(item.table).select("*").eq("id", item.rowId).maybeSingle();
+    const { data: cloud, error: readErr } = await table(item.table)
+      .select("*")
+      .eq("id", item.rowId)
+      .maybeSingle();
     if (readErr) throw readErr;
     if (!cloud) return "done"; // row disappeared upstream; nothing to apply
     if (detectConflict(item.base, cloud, item.payload)) {
@@ -127,7 +151,10 @@ async function pushItem(item: OutboxItem): Promise<PushResult> {
     await updateOutbox(item.id, {
       userId: item.userId,
       attempts,
-      lastError: giveUp && c.kind === "temporary" ? "Could not sync after many attempts. Tap Retry." : c.message,
+      lastError:
+        giveUp && c.kind === "temporary"
+          ? "Could not sync after many attempts. Tap Retry."
+          : c.message,
       status: giveUp ? "error" : "pending",
     });
     return giveUp ? "failed" : "retry";
@@ -139,7 +166,12 @@ export async function retryFailed(): Promise<number> {
   if (!currentUserId) return 0;
   const failed = (await listOutbox(currentUserId)).filter((i) => i.status === "error");
   for (const item of failed) {
-    await updateOutbox(item.id, { userId: item.userId, status: "pending", attempts: 0, lastError: null });
+    await updateOutbox(item.id, {
+      userId: item.userId,
+      status: "pending",
+      attempts: 0,
+      lastError: null,
+    });
   }
   await refreshPendingCount(currentUserId);
   backoff = 0;
@@ -206,17 +238,29 @@ export async function syncNow(opts: { silent?: boolean } = {}): Promise<void> {
   if (failed === 0) {
     backoff = 0;
     await metaSet(LAST_SYNC_KEY, now);
-    setSyncState({ phase: conflicted || rejected ? "online" : "synced", lastSyncAt: now, lastError: null });
+    setSyncState({
+      phase: conflicted || rejected ? "online" : "synced",
+      lastSyncAt: now,
+      lastError: null,
+    });
     if (uploaded && !opts.silent) {
       notify("done", `All farm records are synced (${uploaded}).`);
     }
-    if (conflicted) notify("conflict", `${conflicted} record${conflicted > 1 ? "s" : ""} need your review.`);
-    if (rejected) notify("error", `${rejected} record${rejected > 1 ? "s" : ""} could not be saved. Open sync status to review.`);
+    if (conflicted)
+      notify("conflict", `${conflicted} record${conflicted > 1 ? "s" : ""} need your review.`);
+    if (rejected)
+      notify(
+        "error",
+        `${rejected} record${rejected > 1 ? "s" : ""} could not be saved. Open sync status to review.`,
+      );
     if (rejected) setSyncState({ lastError: "Some records were rejected by the server." });
     onDrained?.();
   } else {
     backoff = Math.min(backoff ? backoff * 2 : 5_000, 120_000);
-    setSyncState({ phase: isOnline() ? "online" : "offline", lastError: "Some records could not sync. Tap to review." });
+    setSyncState({
+      phase: isOnline() ? "online" : "offline",
+      lastError: "Some records could not sync. Tap to review.",
+    });
     if (!opts.silent) notify("error", "Some records could not sync. Tap to review.");
     setTimeout(() => void syncNow({ silent: true }), backoff);
   }
@@ -253,7 +297,11 @@ export function startSyncEngine() {
   // Background Sync where supported (Chromium); harmless elsewhere.
   if ("serviceWorker" in navigator && "SyncManager" in window) {
     navigator.serviceWorker.ready
-      .then((reg) => (reg as unknown as { sync?: { register: (t: string) => Promise<void> } }).sync?.register("poultrypro-sync"))
+      .then((reg) =>
+        (reg as unknown as { sync?: { register: (t: string) => Promise<void> } }).sync?.register(
+          "poultrypro-sync",
+        ),
+      )
       .catch(() => {});
     navigator.serviceWorker.addEventListener?.("message", (e: MessageEvent) => {
       if ((e.data as { type?: string })?.type === "poultrypro-sync") void syncNow({ silent: true });

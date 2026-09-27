@@ -65,8 +65,10 @@ export function classifySyncError(err: unknown): ClassifiedError {
     return perm("You don't have permission to save this record for this farm.");
   }
   if (code === "23505") return perm("A record with the same details already exists.");
-  if (code === "23503") return perm("This record refers to something that no longer exists (e.g. a deleted room).");
-  if (code === "23502" || code === "23514") return perm("Some required information is missing or invalid.");
+  if (code === "23503")
+    return perm("This record refers to something that no longer exists (e.g. a deleted room).");
+  if (code === "23502" || code === "23514")
+    return perm("Some required information is missing or invalid.");
   if (code?.startsWith("22")) return perm("A value has the wrong format.");
   if (code === "42703" || code === "42P01" || code === "PGRST204" || code === "PGRST205") {
     return perm("This record doesn't match the current app version. Please update the app.");
@@ -111,9 +113,11 @@ export function coalesce<T extends CoalesceItem>(
     const key = businessKeyOf(next.table, { farm_id: next.farmId, ...next.payload });
     if (key) {
       const same = open.find(
-        (q) => q.op === "insert" && businessKeyOf(q.table, { farm_id: q.farmId, ...q.payload }) === key,
+        (q) =>
+          q.op === "insert" && businessKeyOf(q.table, { farm_id: q.farmId, ...q.payload }) === key,
       );
-      if (same) return { kind: "merge-into", target: same, payload: { ...same.payload, ...next.payload } };
+      if (same)
+        return { kind: "merge-into", target: same, payload: { ...same.payload, ...next.payload } };
     }
     return { kind: "append" };
   }
@@ -122,7 +126,11 @@ export function coalesce<T extends CoalesceItem>(
   const pendingInsert = open.find((q) => q.op === "insert" && q.rowId === next.rowId);
   if (!pendingInsert) return { kind: "append" };
   if (next.op === "update") {
-    return { kind: "merge-into", target: pendingInsert, payload: { ...pendingInsert.payload, ...next.payload } };
+    return {
+      kind: "merge-into",
+      target: pendingInsert,
+      payload: { ...pendingInsert.payload, ...next.payload },
+    };
   }
   return { kind: "drop-insert", target: pendingInsert };
 }
@@ -141,7 +149,10 @@ export function detectConflict(
 }
 
 /** For an insert that meets an existing natural-key row: does it differ? */
-export function differsFrom(cloud: Record<string, unknown>, payload: Record<string, unknown>): boolean {
+export function differsFrom(
+  cloud: Record<string, unknown>,
+  payload: Record<string, unknown>,
+): boolean {
   return Object.keys(payload).some(
     (k) => k in cloud && JSON.stringify(cloud[k] ?? null) !== JSON.stringify(payload[k] ?? null),
   );

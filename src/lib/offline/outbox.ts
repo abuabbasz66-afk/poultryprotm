@@ -115,7 +115,13 @@ export async function enqueue(input: {
       attempts: 0,
       lastError: null,
     });
-    return { ...action.target, payload: action.payload, status: "pending", attempts: 0, lastError: null };
+    return {
+      ...action.target,
+      payload: action.payload,
+      status: "pending",
+      attempts: 0,
+      lastError: null,
+    };
   }
   if (action.kind === "drop-insert") {
     await removeOutbox(action.target.id);
@@ -213,7 +219,8 @@ export function applyPending<T extends { id: string }>(
   // Only overlay writes for the farm being viewed — a multi-farm user must
   // never see Farm B's queued records inside Farm A's lists.
   const relevant = pending.filter(
-    (p) => p.table === table && p.status !== "conflict" && (!farmId || !p.farmId || p.farmId === farmId),
+    (p) =>
+      p.table === table && p.status !== "conflict" && (!farmId || !p.farmId || p.farmId === farmId),
   );
   if (!relevant.length) return rows;
   let out = rows.slice();
@@ -224,12 +231,16 @@ export function applyPending<T extends { id: string }>(
       // version in place of the cached one rather than as a second row.
       const key = businessKeyOf(table, { farm_id: item.farmId, ...item.payload });
       const idx = key
-        ? out.findIndex((r) => businessKeyOf(table, { farm_id: item.farmId, ...(r as object) }) === key)
+        ? out.findIndex(
+            (r) => businessKeyOf(table, { farm_id: item.farmId, ...(r as object) }) === key,
+          )
         : -1;
       if (idx >= 0) out[idx] = { ...out[idx], ...(item.payload as object) } as T;
       else out.unshift({ id: item.rowId!, ...(item.payload as object) } as T);
     } else if (item.op === "update") {
-      out = out.map((r) => (r.id === item.rowId ? ({ ...r, ...(item.payload as object) } as T) : r));
+      out = out.map((r) =>
+        r.id === item.rowId ? ({ ...r, ...(item.payload as object) } as T) : r,
+      );
     } else if (item.op === "delete") {
       out = out.filter((r) => r.id !== item.rowId);
     }

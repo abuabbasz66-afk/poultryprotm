@@ -14,7 +14,9 @@ function formatLastSync(iso: string | null) {
   const today = new Date();
   const sameDay = d.toDateString() === today.toDateString();
   const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-  return sameDay ? `Today ${time}` : `${d.toLocaleDateString(undefined, { day: "numeric", month: "short" })} ${time}`;
+  return sameDay
+    ? `Today ${time}`
+    : `${d.toLocaleDateString(undefined, { day: "numeric", month: "short" })} ${time}`;
 }
 
 /**
@@ -70,10 +72,10 @@ export function SyncStatus({ compact = false }: { compact?: boolean }) {
       : s.failed > 0
         ? "bg-red-500/15 text-red-100 border-red-400/40"
         : s.phase === "syncing"
-        ? "bg-amber-400/15 text-amber-100 border-amber-300/40"
-        : s.pending > 0
           ? "bg-amber-400/15 text-amber-100 border-amber-300/40"
-          : "bg-emerald-400/15 text-emerald-100 border-emerald-300/40";
+          : s.pending > 0
+            ? "bg-amber-400/15 text-amber-100 border-amber-300/40"
+            : "bg-emerald-400/15 text-emerald-100 border-emerald-300/40";
 
   return (
     <div className="relative">
@@ -101,7 +103,11 @@ export function SyncStatus({ compact = false }: { compact?: boolean }) {
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
             <div className="flex items-center gap-2 text-sm font-semibold">
-              {s.online ? <Wifi className="h-4 w-4 text-emerald-600" /> : <WifiOff className="h-4 w-4 text-red-500" />}
+              {s.online ? (
+                <Wifi className="h-4 w-4 text-emerald-600" />
+              ) : (
+                <WifiOff className="h-4 w-4 text-red-500" />
+              )}
               {s.online ? "Online" : "Working offline"}
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -123,7 +129,11 @@ export function SyncStatus({ compact = false }: { compact?: boolean }) {
               </div>
               <div className="flex items-center justify-between">
                 <dt className="text-muted-foreground">Failed</dt>
-                <dd className={cn("font-semibold tabular-nums", s.failed > 0 && "text-destructive")}>{s.failed}</dd>
+                <dd
+                  className={cn("font-semibold tabular-nums", s.failed > 0 && "text-destructive")}
+                >
+                  {s.failed}
+                </dd>
               </div>
               <div className="flex items-center justify-between">
                 <dt className="text-muted-foreground">Need review</dt>
@@ -144,13 +154,16 @@ export function SyncStatus({ compact = false }: { compact?: boolean }) {
                       <span>
                         <span className="font-medium capitalize">{i.table.replace(/_/g, " ")}</span>
                         {typeof i.payload.date === "string" ? ` · ${i.payload.date}` : ""}
-                        <span className="block text-muted-foreground">{i.lastError ?? "Unknown error"}</span>
+                        <span className="block text-muted-foreground">
+                          {i.lastError ?? "Unknown error"}
+                        </span>
                       </span>
                       <button
                         type="button"
                         className="shrink-0 text-muted-foreground underline"
                         onClick={() => {
-                          if (window.confirm("Discard this unsynced record? It will not be saved.")) void discardFailed(i.id);
+                          if (window.confirm("Discard this unsynced record? It will not be saved."))
+                            void discardFailed(i.id);
                         }}
                       >
                         Discard
