@@ -152,7 +152,12 @@ export const NAV_SECTIONS: NavSection[] = [
         hash: "rooms",
         permission: "rooms.read",
       },
-      { label: "Weather & Bird Advisory", icon: CloudSun, to: "/weather", permission: "dashboard.view" },
+      {
+        label: "Weather & Bird Advisory",
+        icon: CloudSun,
+        to: "/weather",
+        permission: "dashboard.view",
+      },
       { label: "Layer Brooding & Rearing", icon: Baby, to: "/rearing", permission: "rooms.read" },
       { label: "Broilers", icon: Drumstick, to: "/broilers", permission: "rooms.read" },
       {

@@ -74,7 +74,11 @@ export function MobileNavigation() {
     const { supabase } = await import("@/integrations/supabase/client");
     const { logSecurityEvent } = await import("@/lib/security-events");
     await logSecurityEvent("logout");
-    try { await flushCurrentLocation(); } catch { /* non-blocking */ }
+    try {
+      await flushCurrentLocation();
+    } catch {
+      /* non-blocking */
+    }
     await supabase.auth.signOut();
     setMoreOpen(false);
     navigate({ to: "/auth", replace: true });
@@ -82,7 +86,10 @@ export function MobileNavigation() {
 
   return (
     <>
-      <nav aria-label="Primary mobile navigation" className="mobile-safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur lg:hidden">
+      <nav
+        aria-label="Primary mobile navigation"
+        className="mobile-safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur lg:hidden"
+      >
         <div className="mx-auto grid max-w-lg grid-cols-5 px-1 pt-1">
           {primary.map((item) => {
             const Icon = item.icon;
@@ -94,7 +101,10 @@ export function MobileNavigation() {
                 search={item.search as never}
                 hash={item.hash}
                 aria-current={active ? "page" : undefined}
-                className={cn("flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-md px-1 text-[10px] font-medium text-muted-foreground", active && "text-primary")}
+                className={cn(
+                  "flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-md px-1 text-[10px] font-medium text-muted-foreground",
+                  active && "text-primary",
+                )}
               >
                 <Icon className="h-5 w-5" />
                 <span className="max-w-full truncate">{item.mobileLabel}</span>
@@ -119,20 +129,39 @@ export function MobileNavigation() {
       </nav>
 
       {moreOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="More PoultryPro modules">
-          <Button variant="ghost" className="absolute inset-0 h-auto w-full rounded-none bg-foreground/45 hover:bg-foreground/45" onClick={() => setMoreOpen(false)} aria-label="Close more modules" />
+        <div
+          className="fixed inset-0 z-50 lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="More PoultryPro modules"
+        >
+          <Button
+            variant="ghost"
+            className="absolute inset-0 h-auto w-full rounded-none bg-foreground/45 hover:bg-foreground/45"
+            onClick={() => setMoreOpen(false)}
+            aria-label="Close more modules"
+          />
           <section className="mobile-safe-bottom absolute inset-x-0 bottom-0 max-h-[86dvh] overflow-y-auto rounded-t-2xl bg-background shadow-2xl">
             <header className="sticky top-0 z-10 grid grid-cols-[minmax(0,1fr)_auto] items-center border-b border-border bg-background px-4 py-3">
               <div className="min-w-0">
                 <h2 className="truncate text-lg font-semibold">More</h2>
                 <p className="text-xs text-muted-foreground">All modules available to your role</p>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setMoreOpen(false)} aria-label="Close more modules"><X /></Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMoreOpen(false)}
+                aria-label="Close more modules"
+              >
+                <X />
+              </Button>
             </header>
             <div className="space-y-5 p-4 pb-6">
               {sections.map((section) => (
                 <div key={section.heading}>
-                  <h3 className="mb-2 font-sans text-xs font-semibold uppercase text-muted-foreground">{section.heading}</h3>
+                  <h3 className="mb-2 font-sans text-xs font-semibold uppercase text-muted-foreground">
+                    {section.heading}
+                  </h3>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {section.items.map((item) => (
                       <MoreLink key={navDestinationKey(item)} item={item} location={location} />
@@ -141,13 +170,23 @@ export function MobileNavigation() {
                 </div>
               ))}
               <div>
-                <h3 className="mb-2 font-sans text-xs font-semibold uppercase text-muted-foreground">Account</h3>
+                <h3 className="mb-2 font-sans text-xs font-semibold uppercase text-muted-foreground">
+                  Account
+                </h3>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  <Link to="/" className="flex min-h-14 items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground">
+                  <Link
+                    to="/"
+                    className="flex min-h-14 items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground"
+                  >
                     <Home className="h-4 w-4 shrink-0 text-primary" />
                     <span>Back to site</span>
                   </Link>
-                  <Button type="button" variant="outline" onClick={handleSignOut} className="h-auto min-h-14 justify-start px-3 py-2 text-sm">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleSignOut}
+                    className="h-auto min-h-14 justify-start px-3 py-2 text-sm"
+                  >
                     <LogOut className="h-4 w-4 shrink-0 text-primary" />
                     <span>Sign out</span>
                   </Button>
