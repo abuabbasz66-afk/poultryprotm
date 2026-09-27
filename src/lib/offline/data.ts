@@ -81,7 +81,9 @@ export async function offlineList<T extends { id: string }>(opts: {
   }
   if (table && userId) {
     const pending = await listOutbox(userId);
-    rows = applyPending(rows, pending, table);
+    // Farm-scoped cache keys look like "farm:<farmId>:<name>".
+    const farmId = /^farm:([^:]+):/.exec(cacheKey)?.[1];
+    rows = applyPending(rows, pending, table, farmId && farmId !== "none" ? farmId : null);
   }
   return rows;
 }
@@ -149,7 +151,8 @@ export async function runOrQueue(opts: {
 export async function refreshPendingCount(userId: string | null | undefined): Promise<OutboxItem[]> {
   const items = await listOutbox(userId);
   setSyncState({
-    pending: items.filter((i) => i.status !== "conflict").length,
+    pending: items.filter((i) => i.status === "pending").length,
+    failed: items.filter((i) => i.status === "error").length,
     conflicts: items.filter((i) => i.status === "conflict").length,
   });
   return items;

@@ -10,6 +10,8 @@ export type SyncState = {
   online: boolean;
   phase: SyncPhase;
   pending: number;
+  /** Records permanently rejected by the server, awaiting retry/review. */
+  failed: number;
   conflicts: number;
   lastSyncAt: string | null;
   lastError: string | null;
@@ -19,6 +21,7 @@ let state: SyncState = {
   online: true,
   phase: "online",
   pending: 0,
+  failed: 0,
   conflicts: 0,
   lastSyncAt: null,
   lastError: null,
@@ -36,6 +39,7 @@ export function setSyncState(patch: Partial<SyncState>) {
     next.online === state.online &&
     next.phase === state.phase &&
     next.pending === state.pending &&
+    next.failed === state.failed &&
     next.conflicts === state.conflicts &&
     next.lastSyncAt === state.lastSyncAt &&
     next.lastError === state.lastError
@@ -61,6 +65,7 @@ const SERVER_SNAPSHOT: SyncState = {
   online: true,
   phase: "online",
   pending: 0,
+  failed: 0,
   conflicts: 0,
   lastSyncAt: null,
   lastError: null,

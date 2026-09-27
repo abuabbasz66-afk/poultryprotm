@@ -208,8 +208,13 @@ export function applyPending<T extends { id: string }>(
   rows: T[],
   pending: OutboxItem[],
   table: string,
+  farmId?: string | null,
 ): T[] {
-  const relevant = pending.filter((p) => p.table === table && p.status !== "conflict");
+  // Only overlay writes for the farm being viewed — a multi-farm user must
+  // never see Farm B's queued records inside Farm A's lists.
+  const relevant = pending.filter(
+    (p) => p.table === table && p.status !== "conflict" && (!farmId || !p.farmId || p.farmId === farmId),
+  );
   if (!relevant.length) return rows;
   let out = rows.slice();
   for (const item of relevant) {
@@ -219,7 +224,7 @@ export function applyPending<T extends { id: string }>(
       // version in place of the cached one rather than as a second row.
       const key = businessKeyOf(table, { farm_id: item.farmId, ...item.payload });
       const idx = key
-        ? out.findIndex((r) => businessKeyOf(table, r as unknown as Record<string, unknown>) === key)
+        ? out.findIndex((r) => businessKeyOf(table, { farm_id: item.farmId, ...(r as object) }) === key)
         : -1;
       if (idx >= 0) out[idx] = { ...out[idx], ...(item.payload as object) } as T;
       else out.unshift({ id: item.rowId!, ...(item.payload as object) } as T);
