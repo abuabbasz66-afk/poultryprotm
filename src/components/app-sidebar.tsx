@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
-  ChevronDown, ChevronsLeft, ChevronsRight, LogOut, Menu, X, Home, Sparkles,
+  ChevronDown, ChevronsLeft, ChevronsRight, LogOut, Home, Sparkles,
 } from "lucide-react";
-import { NAV_SECTIONS, type NavEntry, type NavLeaf } from "@/lib/nav-config";
+import { isNavLeafActive, NAV_SECTIONS, type NavEntry, type NavLeaf } from "@/lib/nav-config";
 import { useFarm } from "@/lib/farm-data";
 import { usePermissions, roleStyle } from "@/lib/rbac";
 import { flushCurrentLocation } from "@/lib/last-location";
@@ -29,27 +29,6 @@ function useCurrent() {
   });
 }
 
-function isLeafActive(leaf: NavLeaf, cur: ReturnType<typeof useCurrent>) {
-  if (cur.pathname !== leaf.to) return false;
-  if (leaf.search) {
-    for (const [k, v] of Object.entries(leaf.search)) {
-      const actual = cur.search?.[k];
-      // Treat a missing param as the first (default) option for that key.
-      if (actual == null) {
-        if (!isDefaultValue(k, v)) return false;
-      } else if (String(actual) !== v) return false;
-    }
-  }
-  if (leaf.hash) return cur.hash === leaf.hash;
-  return !cur.hash;
-}
-
-function isDefaultValue(key: string, value: string) {
-  if (key === "area") return value === "records";
-  if (key === "tab") return value === "overview";
-  return false;
-}
-
 /** Smoothly scrolls to the hash target whenever the location hash changes. */
 function useHashScroll() {
   const { hash, pathname, search } = useCurrent();
@@ -71,7 +50,6 @@ function useHashScroll() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const cur = useCurrent();
   useHashScroll();
 
@@ -84,8 +62,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try { window.localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0"); } catch { /* ignore */ }
   }, [collapsed]);
-
-  useEffect(() => { setMobileOpen(false); }, [cur.pathname, JSON.stringify(cur.search), cur.hash]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -106,13 +82,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile top bar */}
       <div className="mobile-safe-top lg:hidden sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-white/10 bg-[color:var(--forest)] px-4 py-2.5 text-primary-foreground">
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <button
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open navigation menu"
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 transition hover:bg-white/10"
-          >
-            <Menu className="h-4 w-4" />
-          </button>
           <Link to="/dashboard" className="flex min-w-0 items-center gap-2">
             <img src={logoAsset.url} alt="" width={26} height={26} className="h-6.5 w-6.5 shrink-0 object-contain" />
             <span className="truncate font-display text-[15px] font-semibold">PoultryPro™</span>
@@ -124,23 +93,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
       </div>
-
-      {/* Mobile drawer */}
-      {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/50 animate-in fade-in duration-200" onClick={() => setMobileOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-[86%] max-w-[320px] flex-col bg-gradient-to-b from-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground shadow-[var(--shadow-lift)] animate-in slide-in-from-left duration-300">
-            <button
-              onClick={() => setMobileOpen(false)}
-              aria-label="Close navigation menu"
-              className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 transition hover:bg-white/10"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <SidebarBody collapsed={false} cur={cur} />
-          </div>
-        </div>
-      )}
 
       <div className={cn("mobile-app-content transition-[padding] duration-300", collapsed ? "lg:pl-[76px]" : "lg:pl-[264px]")}>
         {children}
@@ -271,10 +223,10 @@ function NavItem({
   cur: ReturnType<typeof useCurrent>;
 }) {
   const childActive = useMemo(
-    () => (item.children ?? []).some((c) => isLeafActive(c, cur)),
+    () => (item.children ?? []).some((c) => isNavLeafActive(c, cur)),
     [item, cur],
   );
-  const selfActive = isLeafActive(item, cur) || childActive;
+  const selfActive = isNavLeafActive(item, cur) || childActive;
   const [open, setOpen] = useState(childActive);
 
   useEffect(() => { if (childActive) setOpen(true); }, [childActive]);
@@ -319,7 +271,7 @@ function NavItem({
       {!collapsed && item.children && open && (
         <div className="ml-6 mt-0.5 space-y-0.5 border-l border-white/10 pl-2">
           {item.children.map((child) => {
-            const active = isLeafActive(child, cur);
+            const active = isNavLeafActive(child, cur);
             const CIcon = child.icon;
             return (
               <Link

@@ -50,3 +50,8 @@
 
 ## Data reliability (2026-09-27)
 - [x] Egg offline sync on farm_id+date, outbox coalescing, error states/retry, farm-scoped overlay, conflict re-base, unit tests
+
+## Mobile navigation consolidation (2026-09-27)
+- [x] Remove the duplicate mobile hamburger drawer while preserving the desktop sidebar
+- [x] Drive the bottom bar and complete More menu from the shared permission-aware navigation catalogue
+- [ ] Validate small-phone navigation, active states, browser back, and desktop sidebar
