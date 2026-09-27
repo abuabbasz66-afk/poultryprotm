@@ -56,7 +56,9 @@ type PushResult = "done" | "conflict" | "retry" | "failed";
  * once the user picks "keep mine", `base` holds the cloud snapshot they saw.
  */
 async function pushNaturalKeyInsert(item: OutboxItem, cols: readonly string[]): Promise<PushResult> {
-  const { id: _ignore, created_at: _c, ...payload } = item.payload as Record<string, unknown>;
+  const payload: Record<string, unknown> = { ...item.payload };
+  delete payload.id;
+  delete payload.created_at;
   if (item.farmId) payload.farm_id = item.farmId;
   let q = table(item.table).select("*");
   for (const c of cols) q = q.eq(c, payload[c]);
@@ -204,7 +206,7 @@ export async function syncNow(opts: { silent?: boolean } = {}): Promise<void> {
   if (failed === 0) {
     backoff = 0;
     await metaSet(LAST_SYNC_KEY, now);
-    setSyncState({ phase: conflicted ? "online" : "synced", lastSyncAt: now, lastError: null });
+    setSyncState({ phase: conflicted || rejected ? "online" : "synced", lastSyncAt: now, lastError: null });
     if (uploaded && !opts.silent) {
       notify("done", `All farm records are synced (${uploaded}).`);
     }

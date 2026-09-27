@@ -561,10 +561,12 @@ export function useAddEgg() {
       if (!farmId) throw new Error("No farm found for this user.");
       return runOrQueue({
         userId, farmId, table: "egg_production", op: "insert", payload: { farm_id: farmId, ...input },
-        perform: async (rowId) => {
+        perform: async () => {
           const { error } = await supabase
             .from("egg_production")
-            .upsert({ id: rowId, farm_id: farmId, ...input }, { onConflict: "farm_id,date" });
+            // No id here: on an existing farm/date the upsert must update that
+            // row in place, not rewrite its primary key.
+            .upsert({ farm_id: farmId, ...input }, { onConflict: "farm_id,date" });
           if (error) throw error;
         },
       });

@@ -52,7 +52,7 @@ export function ConflictDialog({ open, onOpenChange }: { open: boolean; onOpenCh
   const keepLocal = async (item: OutboxItem) => {
     setBusy(true);
     // Re-base on the cloud version so the write applies cleanly next pass.
-    await updateOutbox(item.id, { userId: item.userId, status: "pending", cloud: null, lastError: null });
+    await updateOutbox(item.id, { userId: item.userId, status: "pending", base: item.cloud, cloud: null, lastError: null });
     await finish(item.userId);
     setBusy(false);
   };
@@ -63,7 +63,7 @@ export function ConflictDialog({ open, onOpenChange }: { open: boolean; onOpenCh
     for (const key of Object.keys(item.payload)) {
       if ((picks[key] ?? "local") === "cloud") merged[key] = item.cloud?.[key];
     }
-    await updateOutbox(item.id, { userId: item.userId, status: "pending", payload: merged, cloud: null, lastError: null });
+    await updateOutbox(item.id, { userId: item.userId, status: "pending", payload: merged, base: item.cloud, cloud: null, lastError: null });
     await finish(item.userId);
     setPicks({});
     setBusy(false);
