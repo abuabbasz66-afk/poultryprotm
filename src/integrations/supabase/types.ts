@@ -1004,6 +1004,39 @@ export type Database = {
         }
         Relationships: []
       }
+      deleted_records: {
+        Row: {
+          batch_id: number
+          data: Json
+          deleted_at: string
+          deleted_by: string | null
+          farm_id: string
+          id: string
+          row_id: string | null
+          table_name: string
+        }
+        Insert: {
+          batch_id: number
+          data: Json
+          deleted_at?: string
+          deleted_by?: string | null
+          farm_id: string
+          id?: string
+          row_id?: string | null
+          table_name: string
+        }
+        Update: {
+          batch_id?: number
+          data?: Json
+          deleted_at?: string
+          deleted_by?: string | null
+          farm_id?: string
+          id?: string
+          row_id?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
       egg_production: {
         Row: {
           broken_extra: number
@@ -4111,6 +4144,27 @@ export type Database = {
       }
       presentation_demo_data: { Args: never; Returns: Json }
       price_key: { Args: { _category: string; _item: string }; Returns: string }
+      recycle_bin_list: {
+        Args: { _farm_id: string }
+        Returns: {
+          batch_id: number
+          data: Json
+          deleted_at: string
+          deleted_by: string | null
+          farm_id: string
+          id: string
+          row_id: string | null
+          table_name: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "deleted_records"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      recycle_bin_purge: { Args: { _id: string }; Returns: undefined }
+      recycle_bin_restore: { Args: { _id: string }; Returns: number }
       request_support_call: {
         Args: { _phone?: string; _reason?: string }
         Returns: Json
