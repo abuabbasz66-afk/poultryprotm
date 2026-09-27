@@ -216,6 +216,7 @@ export const NAV_SECTIONS: NavSection[] = [
             to: "/finance",
             search: { tab: "reports" },
             permission: "financials.read",
+            desktopLabel: "Reports",
           },
           { label: "Current Prices", icon: Tags, to: "/prices", permission: "prices.read" },
           {

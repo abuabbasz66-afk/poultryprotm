@@ -88,7 +88,9 @@ function DesktopNavigation() {
 
   const { primary, secondary } = useMemo(() => {
     const allowed = (item: NavLeaf) => !item.permission || can(item.permission);
-    const visiblePrimary = NAV_SECTIONS.flatMap((section) => section.items).filter(
+    const visiblePrimary = NAV_SECTIONS.flatMap((section) =>
+      section.items.flatMap((item) => [item, ...(item.children ?? [])]),
+    ).filter(
       (item): item is NavLeaf & { desktopLabel: string } => typeof item.desktopLabel === "string" && allowed(item),
     );
     const seen = new Set(visiblePrimary.map(navDestinationKey));
