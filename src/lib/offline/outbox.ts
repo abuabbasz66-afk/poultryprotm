@@ -8,6 +8,7 @@
 import {
   STORE_OUTBOX,
   idbDelete,
+  idbGet,
   idbGetAll,
   idbPut,
   seal,
@@ -15,8 +16,15 @@ import {
   hasIndexedDB,
   type Sealed,
 } from "./db";
+import { businessKeyOf, coalesce } from "./sync-rules";
 
 export type OutboxOp = "insert" | "update" | "delete";
+/**
+ * pending  — waiting to upload (retried automatically)
+ * conflict — cloud changed too; user must choose a version
+ * error    — permanently rejected; kept until the user retries or discards
+ * (A synced item is removed from the outbox, so "synced" is its absence.)
+ */
 export type OutboxStatus = "pending" | "conflict" | "error";
 
 /** Row shape as stored in IndexedDB — payload is encrypted. */
@@ -89,6 +97,30 @@ export async function enqueue(input: {
   base?: Record<string, unknown> | null;
   createdOffline?: boolean;
 }): Promise<OutboxItem> {
+  // Fold into an unsynced write for the same record/day instead of stacking
+  // a second one — keeps repeated taps and edit-before-sync duplicate-free.
+  const queued = await listOutbox(input.userId);
+  const action = coalesce(queued, {
+    table: input.table,
+    op: input.op,
+    rowId: input.rowId ?? null,
+    farmId: input.farmId ?? null,
+    payload: input.payload,
+  });
+  if (action.kind === "merge-into") {
+    await updateOutbox(action.target.id, {
+      userId: input.userId,
+      payload: action.payload,
+      status: "pending",
+      attempts: 0,
+      lastError: null,
+    });
+    return { ...action.target, payload: action.payload, status: "pending", attempts: 0, lastError: null };
+  }
+  if (action.kind === "drop-insert") {
+    await removeOutbox(action.target.id);
+    return action.target;
+  }
   const id = newLocalId();
   const createdAt = new Date().toISOString();
   const row: OutboxRow = {
@@ -139,12 +171,12 @@ export async function updateOutbox(
   id: string,
   patch: Partial<Pick<OutboxRow, "status" | "attempts" | "lastError">> & {
     payload?: Record<string, unknown>;
+    base?: Record<string, unknown> | null;
     cloud?: Record<string, unknown> | null;
     userId: string;
   },
 ): Promise<void> {
-  const rows = await idbGetAll<OutboxRow>(STORE_OUTBOX);
-  const row = rows.find((r) => r.id === id);
+  const row = await idbGet<OutboxRow>(STORE_OUTBOX, id);
   if (!row) return;
   const next: OutboxRow = {
     ...row,
@@ -152,6 +184,9 @@ export async function updateOutbox(
     ...(patch.attempts != null ? { attempts: patch.attempts } : {}),
     ...(patch.lastError !== undefined ? { lastError: patch.lastError } : {}),
     ...(patch.payload ? { payload: await seal(patch.userId, patch.payload) } : {}),
+    ...(patch.base !== undefined
+      ? { base: patch.base ? await seal(patch.userId, patch.base) : null }
+      : {}),
     ...(patch.cloud !== undefined
       ? { cloud: patch.cloud ? await seal(patch.userId, patch.cloud) : null }
       : {}),
@@ -179,9 +214,15 @@ export function applyPending<T extends { id: string }>(
   let out = rows.slice();
   for (const item of relevant) {
     if (item.op === "insert") {
-      if (!out.some((r) => r.id === item.rowId)) {
-        out.unshift({ id: item.rowId!, ...(item.payload as object) } as T);
-      }
+      if (out.some((r) => r.id === item.rowId)) continue;
+      // Natural-key tables (one egg record per farm/day): show the offline
+      // version in place of the cached one rather than as a second row.
+      const key = businessKeyOf(table, { farm_id: item.farmId, ...item.payload });
+      const idx = key
+        ? out.findIndex((r) => businessKeyOf(table, r as unknown as Record<string, unknown>) === key)
+        : -1;
+      if (idx >= 0) out[idx] = { ...out[idx], ...(item.payload as object) } as T;
+      else out.unshift({ id: item.rowId!, ...(item.payload as object) } as T);
     } else if (item.op === "update") {
       out = out.map((r) => (r.id === item.rowId ? ({ ...r, ...(item.payload as object) } as T) : r));
     } else if (item.op === "delete") {
