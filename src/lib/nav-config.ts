@@ -30,6 +30,7 @@ import {
   Baby,
   CloudSun,
   GraduationCap,
+  Trash2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -292,6 +293,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Help Centre", icon: GraduationCap, to: "/help" },
       { label: "Staff & Users", icon: Users, to: "/staff", permission: "staff.manage" },
       { label: "Import CSV", icon: Upload, to: "/import", permission: "production.write" },
+      { label: "Recycle Bin", icon: Trash2, to: "/recycle-bin", permission: "staff.manage" },
       { label: "Settings", icon: Settings, to: "/settings", permission: "settings.write" },
       {
         label: "Farm Profile",
