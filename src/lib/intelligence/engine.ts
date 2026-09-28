@@ -883,7 +883,7 @@ function buildSummary(
     parts.push("Mortality is higher than your recent average, so please check the affected room.");
   if (has("feed")) parts.push("Feed usage is different from your recent pattern.");
   else if (feedStatus === "normal") parts.push("Feed usage remains normal.");
-  if (has("inventory")) parts.push("Feed stock is running low.");
+  if (has("inventory")) parts.push("Feed stock needs checking.");
   const w = has("weather");
   if (w && weather?.heat)
     parts.push(
