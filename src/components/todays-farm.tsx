@@ -8,7 +8,11 @@ import { useToday } from "@/lib/use-today";
 import { FarmIntelligencePanel } from "@/components/intelligence/farm-intelligence-panel";
 
 /** Sums a value per local date key. */
-function byDay<T>(rows: T[], dateOf: (r: T) => string | null | undefined, valueOf: (r: T) => number) {
+function byDay<T>(
+  rows: T[],
+  dateOf: (r: T) => string | null | undefined,
+  valueOf: (r: T) => number,
+) {
   const map = new Map<string, number>();
   for (const r of rows) {
     const key = toDateKey(dateOf(r) ?? null);
@@ -30,32 +34,82 @@ export function TodaysFarm() {
   const bagKg = farm?.bag_weight_kg ?? 25;
   const birds = rooms.reduce((s, r) => s + (r.current ?? 0), 0);
 
-  const series = useMemo(() => ({
-    eggDays: byDay(eggs, (r) => r.date, (r) => totalEggsFromRow(r)),
-    feedDays: byDay(feed, (r) => r.date, (r) => r.bags * bagKg),
-    deathDays: byDay(mortality, (r) => r.date, (r) => r.loss),
-  }), [eggs, feed, mortality, bagKg]);
+  const series = useMemo(
+    () => ({
+      eggDays: byDay(
+        eggs,
+        (r) => r.date,
+        (r) => totalEggsFromRow(r),
+      ),
+      feedDays: byDay(
+        feed,
+        (r) => r.date,
+        (r) => r.bags * bagKg,
+      ),
+      deathDays: byDay(
+        mortality,
+        (r) => r.date,
+        (r) => r.loss,
+      ),
+    }),
+    [eggs, feed, mortality, bagKg],
+  );
 
   const eggsToday = series.eggDays.get(todayKey);
   const feedToday = series.feedDays.get(todayKey);
   const deathsToday = series.deathDays.get(todayKey);
 
   const tasks = useMemo(() => {
-    const list: { key: string; label: string; to: string; search?: Record<string, string>; hash?: string }[] = [];
+    const list: {
+      key: string;
+      label: string;
+      to: string;
+      search?: Record<string, string>;
+      hash?: string;
+    }[] = [];
     if (rooms.length === 0) {
-      list.push({ key: "rooms", label: "Add your first room", to: "/dashboard", search: { area: "records" }, hash: "rooms" });
+      list.push({
+        key: "rooms",
+        label: "Add your first room",
+        to: "/dashboard",
+        search: { area: "records" },
+        hash: "rooms",
+      });
     } else {
       if (eggsToday === undefined) {
-        list.push({ key: "eggs", label: "Record today's egg production", to: "/dashboard", search: { area: "records" }, hash: "production" });
+        list.push({
+          key: "eggs",
+          label: "Record today's egg production",
+          to: "/dashboard",
+          search: { area: "records" },
+          hash: "production",
+        });
       }
       if (feedToday === undefined) {
-        list.push({ key: "feed", label: "Record today's feed usage", to: "/feed", search: { tab: "overview" } });
+        list.push({
+          key: "feed",
+          label: "Record today's feed usage",
+          to: "/feed",
+          search: { tab: "overview" },
+        });
       }
       if (deathsToday === undefined) {
-        list.push({ key: "mortality", label: "Confirm today's mortality (record 0 if none)", to: "/dashboard", search: { area: "records" }, hash: "mortality" });
+        list.push({
+          key: "mortality",
+          label: "Confirm today's mortality (record 0 if none)",
+          to: "/dashboard",
+          search: { area: "records" },
+          hash: "mortality",
+        });
       }
       if (birds === 0) {
-        list.push({ key: "birds", label: "Update your bird population", to: "/dashboard", search: { area: "records" }, hash: "rooms" });
+        list.push({
+          key: "birds",
+          label: "Update your bird population",
+          to: "/dashboard",
+          search: { area: "records" },
+          hash: "rooms",
+        });
       }
     }
     return list;
