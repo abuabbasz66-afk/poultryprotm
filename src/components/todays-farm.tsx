@@ -1,21 +1,11 @@
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  Bird, Egg, Wheat, HeartPulse, Banknote, AlertTriangle, CheckCircle2,
-  ArrowUpRight, ArrowDownRight, Minus, ClipboardList,
-} from "lucide-react";
+import { ArrowUpRight, CheckCircle2, ClipboardList } from "lucide-react";
 import { useEggs, useFeed, useFarm, useMortality, useRooms } from "@/lib/farm-data";
-import { useRevenue } from "@/lib/finance-data";
 import { totalEggsFromRow } from "@/lib/egg-normalize";
-import { useFarmAlerts, SEVERITY_STYLES } from "@/lib/alerts";
-import { formatNaira } from "@/lib/subscription";
 import { toDateKey } from "@/lib/date-key";
 import { useToday } from "@/lib/use-today";
-import { cn } from "@/lib/utils";
-
-function round1(n: number) {
-  return Math.round(n * 10) / 10;
-}
+import { FarmIntelligencePanel } from "@/components/intelligence/farm-intelligence-panel";
 
 /** Sums a value per local date key. */
 function byDay<T>(rows: T[], dateOf: (r: T) => string | null | undefined, valueOf: (r: T) => number) {
@@ -28,17 +18,6 @@ function byDay<T>(rows: T[], dateOf: (r: T) => string | null | undefined, valueO
   return map;
 }
 
-type Metric = {
-  key: string;
-  label: string;
-  icon: typeof Egg;
-  value: string;
-  /** null = not enough history to compare */
-  delta: number | null;
-  recorded: boolean;
-  emptyHint: string;
-};
-
 export function TodaysFarm() {
   const today = useToday();
   const todayKey = toDateKey(today) ?? "";
@@ -47,41 +26,19 @@ export function TodaysFarm() {
   const { data: eggs = [] } = useEggs();
   const { data: feed = [] } = useFeed();
   const { data: mortality = [] } = useMortality();
-  const { data: revenue = [] } = useRevenue();
-  const { alerts } = useFarmAlerts();
 
   const bagKg = farm?.bag_weight_kg ?? 25;
   const birds = rooms.reduce((s, r) => s + (r.current ?? 0), 0);
 
-  const series = useMemo(() => {
-    const eggDays = byDay(eggs, (r) => r.date, (r) => totalEggsFromRow(r));
-    const feedDays = byDay(feed, (r) => r.date, (r) => r.bags * bagKg);
-    const deathDays = byDay(mortality, (r) => r.date, (r) => r.loss);
-    const moneyDays = byDay(revenue, (r) => r.entry_date, (r) => Number(r.amount ?? 0));
-    return { eggDays, feedDays, deathDays, moneyDays };
-  }, [eggs, feed, mortality, revenue, bagKg]);
-
-  /** Average of the previous 7 recorded days; null when fewer than 3 exist. */
-  const baseline = (map: Map<string, number>) => {
-    const prior = [...map.entries()]
-      .filter(([k]) => k < todayKey)
-      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
-      .slice(0, 7);
-    if (prior.length < 3) return null;
-    return prior.reduce((s, [, v]) => s + v, 0) / prior.length;
-  };
-
-  const deltaOf = (map: Map<string, number>) => {
-    const base = baseline(map);
-    const now = map.get(todayKey);
-    if (base === null || base === 0 || now === undefined) return null;
-    return ((now - base) / base) * 100;
-  };
+  const series = useMemo(() => ({
+    eggDays: byDay(eggs, (r) => r.date, (r) => totalEggsFromRow(r)),
+    feedDays: byDay(feed, (r) => r.date, (r) => r.bags * bagKg),
+    deathDays: byDay(mortality, (r) => r.date, (r) => r.loss),
+  }), [eggs, feed, mortality, bagKg]);
 
   const eggsToday = series.eggDays.get(todayKey);
   const feedToday = series.feedDays.get(todayKey);
   const deathsToday = series.deathDays.get(todayKey);
-  const moneyToday = series.moneyDays.get(todayKey);
 
   const tasks = useMemo(() => {
     const list: { key: string; label: string; to: string; search?: Record<string, string>; hash?: string }[] = [];
