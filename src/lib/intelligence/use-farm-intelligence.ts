@@ -48,7 +48,7 @@ export type AlertStateRow = {
 /** Reads the same weather query the Weather page uses (shared cache), falling back to its local copy. */
 function useFarmWeatherInput(enabled: boolean): WeatherInput | null {
   const farm = useFarm().data;
-  const rooms = useRooms().data ?? [];
+  const roomsData = useRooms().data;
   const fetchWeather = useServerFn(getFarmWeather);
   const q = useQuery({
     queryKey: [
@@ -90,7 +90,7 @@ function useFarmWeatherInput(enabled: boolean): WeatherInput | null {
       }
     }
     if (!weather) return null;
-    const active = rooms.filter((r) => (r.status ?? "active") === "active");
+    const active = (roomsData ?? []).filter((r) => (r.status ?? "active") === "active");
     const broilerRooms = active.filter((r) => r.bird_type === "Broiler");
     const layerRooms = active.filter((r) => r.bird_type !== "Broiler");
     const group = layerRooms.length >= broilerRooms.length ? layerRooms : broilerRooms;
@@ -119,7 +119,7 @@ function useFarmWeatherInput(enabled: boolean): WeatherInput | null {
       actions: g.actions.map((a) => a.text),
       heat: !g.actions.some((a) => a.kind === "cold"),
     };
-  }, [enabled, farm, rooms, q.data]);
+  }, [enabled, farm, roomsData, q.data]);
 }
 
 /** Runs the pure intelligence engine over the farm's cached (offline-capable) data. */
