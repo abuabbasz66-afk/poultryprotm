@@ -1,11 +1,16 @@
 import { RequirePermission } from "@/components/require-permission";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bell, CheckCheck, Loader2 } from "lucide-react";
+import { Bell, CheckCheck, Info, Loader2, ShieldCheck } from "lucide-react";
+import { useUnreadAlerts, SEVERITY_STYLES, CATEGORY_LABELS, alertTimeAgo } from "@/lib/alerts";
+import { useAlertStates, useFarmIntelligence } from "@/lib/intelligence/use-farm-intelligence";
+import type { IntelCategory, IntelSeverity } from "@/lib/intelligence/engine";
 import {
-  useUnreadAlerts, SEVERITY_STYLES, CATEGORY_LABELS, alertTimeAgo,
-  type AlertCategory,
-} from "@/lib/alerts";
+  IntelAlertCard,
+  INTEL_CATEGORY_LABELS,
+  SeverityBadge,
+} from "@/components/intelligence/intel-alert-card";
+import { RoomStatusList } from "@/components/intelligence/farm-intelligence-panel";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/alerts")({
@@ -16,146 +21,287 @@ export const Route = createFileRoute("/_authenticated/alerts")({
   ),
   head: () => ({
     meta: [
-      { title: "Alerts & Notifications — PoultryPro" },
-      { name: "description", content: "Every price change, health risk, operational gap and team action on your poultry farm, in one prioritised alert feed." },
-      { property: "og:title", content: "Alerts & Notifications — PoultryPro" },
-      { property: "og:description", content: "Prioritised farm alerts: price changes, disease risk, missed records and staff activity." },
+      { title: "Farm Alerts — PoultryPro" },
+      {
+        name: "description",
+        content:
+          "What needs attention on your poultry farm today: production, mortality, feed, health, weather and finance alerts with clear next steps.",
+      },
+      { property: "og:title", content: "Farm Alerts — PoultryPro" },
+      {
+        property: "og:description",
+        content:
+          "Prioritised farm alerts with what happened, why it matters and what to check next.",
+      },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
 });
 
-const FILTERS: { key: "all" | AlertCategory; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "price", label: "Price" },
-  { key: "health", label: "Health" },
-  { key: "operations", label: "Operations" },
-  { key: "activity", label: "Activity" },
+type Tab = "active" | "acknowledged" | "history" | "updates";
+const CATS: (IntelCategory | "all")[] = [
+  "all",
+  "production",
+  "mortality",
+  "feed",
+  "health",
+  "weather",
+  "finance",
+  "inventory",
+  "operations",
 ];
 
 function AlertsPage() {
-  const { alerts, unread, isRead, markRead, markAllRead, loading } = useUnreadAlerts();
-  const [filter, setFilter] = useState<"all" | AlertCategory>("all");
-  const [onlyUnread, setOnlyUnread] = useState(false);
+  const { data: intel, loading, farmId } = useFarmIntelligence();
+  const states = useAlertStates(intel, farmId, !loading);
+  const legacy = useUnreadAlerts();
+  const [tab, setTab] = useState<Tab>("active");
+  const [cat, setCat] = useState<IntelCategory | "all">("all");
 
-  const shown = useMemo(
-    () => alerts.filter((a) =>
-      (filter === "all" || a.category === filter) && (!onlyUnread || !isRead(a.id))),
-    [alerts, filter, onlyUnread, isRead],
+  const byCat = <T extends { category: string }>(rows: T[]) =>
+    cat === "all" ? rows : rows.filter((r) => r.category === cat);
+  const active = byCat(intel.alerts.filter((a) => states.statusOf(a.key) === "active"));
+  const acked = byCat(intel.alerts.filter((a) => states.statusOf(a.key) === "acknowledged"));
+  const history = byCat(states.rows);
+  const updates = useMemo(
+    () => legacy.alerts.filter((a) => !a.id.startsWith("intel:")),
+    [legacy.alerts],
   );
 
+  const tabs: { key: Tab; label: string; count?: number }[] = [
+    {
+      key: "active",
+      label: "Needs attention",
+      count: intel.alerts.filter((a) => states.statusOf(a.key) === "active").length,
+    },
+    {
+      key: "acknowledged",
+      label: "Seen",
+      count: intel.alerts.filter((a) => states.statusOf(a.key) === "acknowledged").length,
+    },
+    { key: "history", label: "History" },
+    {
+      key: "updates",
+      label: "Other updates",
+      count: legacy.unread.filter((a) => !a.id.startsWith("intel:")).length,
+    },
+  ];
+
   return (
-    <div className="container-x py-6 md:py-8">
-      <header className="flex flex-wrap items-start justify-between gap-3">
+    <div className="mx-auto max-w-6xl px-4 py-6 md:px-6">
+      <header className="flex items-center gap-3">
+        <span className="grid h-10 w-10 place-items-center rounded-xl bg-[color:var(--forest)]/10 text-[color:var(--forest)]">
+          <Bell className="h-5 w-5" />
+        </span>
         <div>
-          <h1 className="inline-flex items-center gap-2 font-display text-2xl font-semibold text-foreground">
-            <Bell className="h-5 w-5 text-[color:var(--forest)]" /> Alerts &amp; Notifications
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Price changes, health risks, missed records and team activity — newest first.
+          <h1 className="font-display text-2xl font-semibold">Farm Alerts</h1>
+          <p className="text-sm text-muted-foreground">
+            What deserves your attention on the farm, and what to check next.
           </p>
         </div>
-        {unread.length > 0 && (
-          <button
-            onClick={() => markAllRead(alerts)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted"
-          >
-            <CheckCheck className="h-3.5 w-3.5" /> Mark all read ({unread.length})
-          </button>
-        )}
       </header>
 
-      <div className="mt-5 flex flex-wrap items-center gap-2">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className={cn(
-              "rounded-full border px-3 py-1.5 text-xs font-medium transition",
-              filter === f.key
-                ? "border-[color:var(--forest)] bg-[color:var(--forest)] text-primary-foreground"
-                : "border-border text-muted-foreground hover:bg-muted",
-            )}
-          >
-            {f.label}
-          </button>
-        ))}
-        <button
-          onClick={() => setOnlyUnread((v) => !v)}
-          className={cn(
-            "ml-auto rounded-full border px-3 py-1.5 text-xs font-medium transition",
-            onlyUnread ? "border-[color:var(--gold)] bg-[color:var(--gold)]/15 text-foreground" : "border-border text-muted-foreground hover:bg-muted",
-          )}
-        >
-          {onlyUnread ? "Showing unread" : "Show unread only"}
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="mt-8 flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" /> Checking your farm records…
+      {intel.dataGaps.length > 0 && (
+        <div className="mt-4 space-y-1 rounded-xl border border-border bg-secondary/40 px-3 py-2 text-[12.5px] text-muted-foreground">
+          {intel.dataGaps.map((g) => (
+            <p key={g} className="flex gap-2">
+              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              {g}
+            </p>
+          ))}
         </div>
-      ) : shown.length === 0 ? (
-        <div className="mt-8 rounded-2xl border border-dashed border-border p-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            No alerts here. PoultryPro will notify you the moment something changes.
-          </p>
-        </div>
-      ) : (
-        <ul className="mt-5 space-y-2.5">
-          {shown.map((a) => {
-            const s = SEVERITY_STYLES[a.severity];
-            const read = isRead(a.id);
-            return (
-              <li key={a.id}>
-                <div className={cn("rounded-2xl border bg-card p-4 transition", read ? "border-border" : s.ring)}>
-                  <div className="flex items-start gap-3">
-                    <span className={cn("mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full", read ? "bg-border" : s.dot)} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-sm font-semibold text-foreground">{a.title}</h2>
-                        <span className={cn("rounded-full border px-2 py-px text-[10px] font-semibold uppercase tracking-wider", s.badge)}>
-                          {CATEGORY_LABELS[a.category]}
-                        </span>
-                        {a.premium && (
-                          <span className="rounded-full border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/15 px-2 py-px text-[10px] uppercase tracking-wider text-[color:var(--gold)]">
-                            AI
-                          </span>
-                        )}
-                        <span className="ml-auto text-[11px] text-muted-foreground">{alertTimeAgo(a.at)}</span>
-                      </div>
-                      <p className="mt-1.5 text-[13px] text-muted-foreground">{a.message}</p>
-                      <div className="mt-2.5 flex flex-wrap items-center gap-3">
-                        {a.to && (
-                          <Link
-                            to={a.to}
-                            search={a.search as never}
-                            hash={a.hash}
-                            onClick={() => markRead([a.id])}
-                            className="text-xs font-medium text-[color:var(--forest)] hover:underline"
-                          >
-                            Open details
-                          </Link>
-                        )}
-                        {!read && (
-                          <button
-                            onClick={() => markRead([a.id])}
-                            className="text-xs text-muted-foreground hover:underline"
-                          >
-                            Mark as read
-                          </button>
-                        )}
-                        <span className="text-[11px] text-muted-foreground">{read ? "Read" : "Unread"}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
       )}
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_280px]">
+        <div className="min-w-0">
+          <div className="flex gap-1 overflow-x-auto border-b border-border">
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={cn(
+                  "shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition",
+                  tab === t.key
+                    ? "border-[color:var(--forest)] text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t.label}
+                {t.count ? (
+                  <span className="ml-1.5 rounded-full bg-foreground/10 px-1.5 text-[10px]">
+                    {t.count}
+                  </span>
+                ) : null}
+              </button>
+            ))}
+          </div>
+
+          {tab !== "updates" && (
+            <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">
+              {CATS.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCat(c)}
+                  className={cn(
+                    "shrink-0 rounded-full border px-3 py-1 text-xs font-medium",
+                    cat === c
+                      ? "border-[color:var(--forest)] bg-[color:var(--forest)] text-primary-foreground"
+                      : "border-border text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  {c === "all" ? "All" : INTEL_CATEGORY_LABELS[c]}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {loading ? (
+            <p className="mt-8 flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Checking your farm records…
+            </p>
+          ) : tab === "active" || tab === "acknowledged" ? (
+            (tab === "active" ? active : acked).length === 0 ? (
+              <p className="mt-6 flex items-center gap-2 rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+                <ShieldCheck className="h-4 w-4 text-[color:var(--forest)]" />
+                {tab === "active"
+                  ? "Nothing needs your attention right now based on your latest records."
+                  : "No alerts marked as seen."}
+              </p>
+            ) : (
+              <div className="mt-3 space-y-3">
+                {(tab === "active" ? active : acked).map((a) => (
+                  <IntelAlertCard
+                    key={a.key}
+                    alert={a}
+                    status={states.statusOf(a.key)}
+                    onAcknowledge={() => void states.acknowledge(a)}
+                  />
+                ))}
+              </div>
+            )
+          ) : tab === "history" ? (
+            history.length === 0 ? (
+              <p className="mt-6 rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+                Alert history will build up here as PoultryPro watches your farm.
+              </p>
+            ) : (
+              <ul className="mt-3 divide-y divide-border rounded-2xl border border-border bg-card">
+                {history.map((r) => (
+                  <li
+                    key={r.id}
+                    className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-[13px]"
+                  >
+                    <SeverityBadge severity={r.severity as IntelSeverity} />
+                    <span className="min-w-0 flex-1 font-medium">{r.title}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {INTEL_CATEGORY_LABELS[r.category as IntelCategory] ?? r.category}
+                      {r.room ? ` · ${r.room}` : ""}
+                    </span>
+                    <span className="w-full text-[11.5px] text-muted-foreground sm:w-auto">
+                      {new Date(r.first_seen_at).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                      })}
+                      {" · "}
+                      {r.status === "resolved" && r.resolved_at
+                        ? `Resolved ${new Date(r.resolved_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`
+                        : r.status === "acknowledged"
+                          ? "Seen"
+                          : "Active"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )
+          ) : (
+            <>
+              {legacy.unread.length > 0 && (
+                <button
+                  onClick={() => legacy.markAllRead(updates)}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted"
+                >
+                  <CheckCheck className="h-3.5 w-3.5" /> Mark all read
+                </button>
+              )}
+              {updates.length === 0 ? (
+                <p className="mt-6 rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+                  No other updates.
+                </p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {updates.map((a) => {
+                    const read = legacy.isRead(a.id);
+                    return (
+                      <li
+                        key={a.id}
+                        className={cn(
+                          "rounded-2xl border bg-card p-3.5",
+                          read ? "border-border" : SEVERITY_STYLES[a.severity].ring,
+                        )}
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={cn(
+                              "h-2 w-2 rounded-full",
+                              read ? "bg-border" : SEVERITY_STYLES[a.severity].dot,
+                            )}
+                          />
+                          <span className="text-sm font-semibold">{a.title}</span>
+                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            {CATEGORY_LABELS[a.category]}
+                            {a.premium ? " · AI" : ""}
+                          </span>
+                          <span className="ml-auto text-[11px] text-muted-foreground">
+                            {alertTimeAgo(a.at)}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-[13px] text-muted-foreground">{a.message}</p>
+                        <div className="mt-2 flex gap-3">
+                          {a.to && (
+                            <Link
+                              to={a.to}
+                              search={a.search as never}
+                              hash={a.hash}
+                              onClick={() => legacy.markRead([a.id])}
+                              className="text-xs font-medium text-[color:var(--forest)] hover:underline"
+                            >
+                              Open details
+                            </Link>
+                          )}
+                          {!read && (
+                            <button
+                              onClick={() => legacy.markRead([a.id])}
+                              className="text-xs text-muted-foreground hover:underline"
+                            >
+                              Mark read
+                            </button>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </>
+          )}
+        </div>
+
+        <aside className="space-y-4">
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              Farm status
+            </h2>
+            <RoomStatusList rooms={intel.rooms} />
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              Today's summary
+            </h2>
+            <p className="mt-2 text-[13px] text-foreground">{intel.summary}</p>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }
