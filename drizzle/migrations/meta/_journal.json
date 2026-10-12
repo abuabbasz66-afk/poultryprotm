@@ -78,6 +78,13 @@
       "when": 1790515719871,
       "tag": "0010_farm_alert_states",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791833953095,
+      "tag": "0011_lock_signed_out_login_tools",
+      "breakpoints": true
     }
   ]
 }

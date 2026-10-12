@@ -648,6 +648,27 @@ export type Database = {
           },
         ]
       }
+      auth_rate_limits: {
+        Row: {
+          bucket: string
+          created_at: string
+          id: number
+          key_hash: string
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          id?: never
+          key_hash: string
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          id?: never
+          key_hash?: string
+        }
+        Relationships: []
+      }
       broiler_batches: {
         Row: {
           birds_placed: number
