@@ -195,13 +195,7 @@ function SubscriptionsPage() {
       return () => {
         cancelled = true;
       };
-    } else {
-      toast.error("Payment was not completed. You have not been charged for an unsuccessful attempt.");
-      trackEvent("PAYMENT_FAILED", { farmId: data?.farmId ?? null });
     }
-    refetch();
-    qc.invalidateQueries({ queryKey: ["farm-payments"] });
-    window.history.replaceState({}, "", "/subscriptions");
   }, [search.payment, data?.farmId, payments.refetch, refetch, qc]);
 
   async function startCheckout(plan: PlanTier) {
