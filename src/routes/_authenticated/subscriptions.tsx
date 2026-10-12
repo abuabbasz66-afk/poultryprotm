@@ -101,13 +101,31 @@ function SubscriptionsPage() {
 
   const pendingPollRef = useRef(false);
 
+  const handledPaymentRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (!search.payment) return;
-    if (search.payment === "success") {
-      toast.success("Payment verified — your plan is now active.");
-      trackEvent("PAYMENT_SUCCESS", { farmId: data?.farmId ?? null });
-    } else if (search.payment === "pending") {
-      toast.info("Payment received — we're confirming it with Paystack. Your plan will activate shortly.");
+    // Strip the payment marker from the address bar immediately so a refresh
+    // or back-navigation doesn't replay the messages and restart checking.
+    window.history.replaceState({}, "", "/subscriptions");
+    // Fire the message once per outcome — the effect re-runs when the farm id
+    // loads, and it must not repeat the toast.
+    if (handledPaymentRef.current !== search.payment) {
+      handledPaymentRef.current = search.payment;
+      if (search.payment === "success") {
+        toast.success("Payment verified — your plan is now active.");
+        trackEvent("PAYMENT_SUCCESS", { farmId: data?.farmId ?? null });
+      } else if (search.payment === "pending") {
+        toast.info("Payment received — we're confirming it with Paystack. Your plan will activate shortly.");
+      } else {
+        toast.error("Payment was not completed. You have not been charged for an unsuccessful attempt.");
+        trackEvent("PAYMENT_FAILED", { farmId: data?.farmId ?? null });
+      }
+    }
+    refetch();
+    qc.invalidateQueries({ queryKey: ["farm-payments"] });
+    if (search.payment !== "pending") return;
+    {
       // Keep checking for ~1 minute. After a few checks, ask the server to
       // re-verify the payment with Paystack (server-side verification only).
       // NOTE: the payments query is `enabled: !!farmId`, so wait until the
