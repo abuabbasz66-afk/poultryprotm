@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { buildDemoData } from "@/lib/demo-farm-data";
+import { buildDemoData, type DemoData } from "@/lib/demo-farm-data";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import heroAsset from "@/assets/hero-layer-birds.jpg.asset.json";
 
@@ -121,7 +121,7 @@ function PresentationMode() {
 }
 
 function LoadingState() {
-  return <div className="mx-auto grid min-h-[75vh] max-w-lg place-items-center px-6 text-center"><div><img src={logoUrl} alt="" className="mx-auto h-20 w-20 animate-pulse object-contain" /><h1 className="mt-6 text-3xl font-semibold">Preparing your farm intelligence…</h1><p className="mt-2 text-muted-foreground">Securely assembling the historical demonstration records.</p><div className="mx-auto mt-8 h-1.5 max-w-xs overflow-hidden rounded-full bg-secondary"><div className="h-full w-2/3 animate-pulse rounded-full bg-accent" /></div></div></div>;
+  return <div className="mx-auto grid min-h-[75vh] max-w-lg place-items-center px-6 text-center"><div><img src={logoUrl} alt="" className="mx-auto h-20 w-20 animate-pulse object-contain" /><h1 className="mt-6 text-3xl font-semibold">Preparing your farm intelligence…</h1><p className="mt-2 text-muted-foreground">Assembling the sample demonstration data.</p><div className="mx-auto mt-8 h-1.5 max-w-xs overflow-hidden rounded-full bg-secondary"><div className="h-full w-2/3 animate-pulse rounded-full bg-accent" /></div></div></div>;
 }
 
 function ErrorState({ retry }: { retry: () => void }) {
@@ -146,15 +146,15 @@ function Overview({ data, goTo }: { data: DemoData; goTo: (id: StageId) => void 
       <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/85 to-primary/25" />
       <div className="relative mx-auto flex min-h-[520px] max-w-7xl items-center px-4 py-16 sm:px-6">
         <div className="max-w-3xl text-primary-foreground">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/25 bg-primary/50 px-3 py-1.5 text-xs font-semibold"><ShieldCheck className="h-4 w-4 text-accent" /> Real historical records · Read-only</div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/25 bg-primary/50 px-3 py-1.5 text-xs font-semibold"><ShieldCheck className="h-4 w-4 text-accent" /> DEMO DATA · Synthetic sample · Read-only</div>
           <h1 className="mt-6 text-4xl font-semibold sm:text-6xl">PoultryPro Farm Command Centre</h1>
           <p className="mt-4 max-w-2xl text-lg text-primary-foreground/85 sm:text-xl">See how {data.farm_name} turns everyday farm records into clear operational decisions.</p>
           <div className="mt-8 flex flex-wrap gap-3"><Button size="lg" variant="secondary" onClick={() => goTo("production")}>Start Farm Walkthrough<ArrowRight className="h-4 w-4" /></Button><Button size="lg" variant="outline" className="border-primary-foreground/40 bg-primary/25 text-primary-foreground hover:bg-primary/40 hover:text-primary-foreground" onClick={() => goTo("intelligence")}>Explore Intelligence</Button></div>
         </div>
       </div>
     </div>
-    <PageShell eyebrow="Farm at a glance" title="One command centre. Every critical signal." description={`${fmt(records)} real records from ${dateLabel(data.period_start)} to ${dateLabel(data.period_end)}.`}>
-      <MetricGrid><Metric icon={<Bird />} label="Birds on farm" value={fmt(data.birds)} detail={`Across ${data.houses} houses`} /><Metric icon={<CalendarDays />} label="History covered" value={`${fmt(data.days_covered)} days`} detail="Historical operating period" /><Metric icon={<Wheat />} label="Feed recorded" value={`${fmt(data.total_feed_bags, 1)} bags`} detail={`${fmt(data.feed_records_count)} usage entries`} /><Metric icon={<HeartPulse />} label="Health activity" value={fmt(data.health_records_count)} detail="Recorded health events" /></MetricGrid>
+    <PageShell eyebrow="Farm at a glance" title="One command centre. Every critical signal." description={`${fmt(records)} sample records from ${dateLabel(data.period_start)} to ${dateLabel(data.period_end)}.`}>
+      <MetricGrid><Metric icon={<Bird />} label="Birds on farm" value={fmt(data.birds)} detail={`Across ${data.houses} houses`} /><Metric icon={<CalendarDays />} label="History covered" value={`${fmt(data.days_covered)} days`} detail="Sample operating period" /><Metric icon={<Wheat />} label="Feed recorded" value={`${fmt(data.total_feed_bags, 1)} bags`} detail={`${fmt(data.feed_records_count)} usage entries`} /><Metric icon={<HeartPulse />} label="Health activity" value={fmt(data.health_records_count)} detail="Recorded health events" /></MetricGrid>
       <Callout icon={<Lightbulb />} title="Why this matters">Farm owners can see production, feed, health and money together instead of piecing decisions together from notebooks.</Callout>
     </PageShell>
   </>;
@@ -256,7 +256,7 @@ function Metric({ icon, label, value, detail }: { icon: ReactNode; label: string
 function ControlRow({ period, setPeriod, children }: { period: Period; setPeriod: (period: Period) => void; children?: ReactNode }) {
   return <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border py-3"><div className="flex flex-wrap gap-1">{(["7", "30", "90", "all"] as Period[]).map((value) => <Button key={value} size="sm" variant={period === value ? "default" : "ghost"} onClick={() => setPeriod(value)}>{value === "all" ? "All time" : `${value} days`}</Button>)}</div>{children}</div>;
 }
-function periodName(period: Period) { return period === "all" ? "All historical records" : `Latest ${period} recorded days`; }
+function periodName(period: Period) { return period === "all" ? "All sample records" : `Latest ${period} recorded days`; }
 function ChartCard({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) { return <div className="border-y border-border py-5"><div className="mb-4 flex items-end justify-between gap-4"><div><h3 className="font-semibold">{title}</h3><p className="text-xs text-muted-foreground">{subtitle}</p></div></div>{children}</div>; }
 function AreaChart({ points, tone = "default" }: { points: { d: string; v: number }[]; tone?: "default" | "danger" }) {
   if (!points.length) return <div className="grid h-64 place-items-center bg-secondary/40 px-4 text-center text-sm text-muted-foreground">No records available for this view.</div>;
