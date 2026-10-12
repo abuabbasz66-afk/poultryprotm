@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { buildDemoData } from "@/lib/demo-farm-data";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import heroAsset from "@/assets/hero-layer-birds.jpg.asset.json";
 
@@ -16,9 +16,9 @@ export const Route = createFileRoute("/presentation")({
   head: () => ({
     meta: [
       { title: "Live Farm Command Centre — PoultryPro™" },
-      { name: "description", content: "Explore PoultryPro through a premium, read-only command-centre demonstration powered by real historical farm records." },
+      { name: "description", content: "Explore PoultryPro through a premium, read-only command-centre demonstration using clearly labelled synthetic demo data." },
       { property: "og:title", content: "PoultryPro™ Live Farm Command Centre" },
-      { property: "og:description", content: "A seven-stage interactive PoultryPro demonstration using real historical farm records." },
+      { property: "og:description", content: "A seven-stage interactive PoultryPro demonstration using clearly labelled synthetic demo data." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "noindex" },
@@ -28,66 +28,6 @@ export const Route = createFileRoute("/presentation")({
 });
 
 type Dated = { d: string };
-type RoomRow = { name: string; current: number; initial: number; mortality_pct: number | null };
-type ProductionPoint = Dated & { eggs: number; crates: number };
-type RoomProductionPoint = Dated & { room: string; crates: number };
-type FeedPoint = Dated & { bags: number; kg: number };
-type MortalityPoint = Dated & { loss: number };
-type FinancePoint = Dated & { revenue: number | null; feed_cost: number | null; other_expenses: number };
-type HealthRow = { date: string; name: string; scope: string; type: string };
-type ExpenseRow = { label: string; amount: number };
-
-type DemoData = {
-  farm_name: string;
-  farm_type: string;
-  location: string;
-  period_start: string | null;
-  period_end: string | null;
-  days_covered: number;
-  egg_price: number | null;
-  feed_price: number | null;
-  bag_weight_kg: number;
-  birds: number;
-  initial_birds: number;
-  houses: number;
-  total_eggs: number;
-  total_crates: number;
-  total_feed_bags: number;
-  total_feed_kg: number;
-  total_mortality: number;
-  health_records_count: number;
-  vaccination_records_count: number;
-  production_records_count: number;
-  feed_records_count: number;
-  mortality_records_count: number;
-  total_revenue: number | null;
-  total_feed_cost: number | null;
-  other_expenses: number;
-  gross_profit: number | null;
-  avg_daily_feed_bags: number | null;
-  mortality_pct: number | null;
-  stock_kg: number;
-  stock_days_remaining: number | null;
-  rooms: RoomRow[];
-  production_daily: ProductionPoint[];
-  room_production: RoomProductionPoint[];
-  feed_daily: FeedPoint[];
-  mortality_daily: MortalityPoint[];
-  recent_health: HealthRow[];
-  expense_breakdown: ExpenseRow[];
-  finance_daily: FinancePoint[];
-};
-
-const EMPTY: DemoData = {
-  farm_name: "ABZ Global Resources", farm_type: "Layer Farm", location: "Historical demonstration records",
-  period_start: null, period_end: null, days_covered: 0, egg_price: null, feed_price: null, bag_weight_kg: 25,
-  birds: 0, initial_birds: 0, houses: 0, total_eggs: 0, total_crates: 0, total_feed_bags: 0,
-  total_feed_kg: 0, total_mortality: 0, health_records_count: 0, vaccination_records_count: 0,
-  production_records_count: 0, feed_records_count: 0, mortality_records_count: 0, total_revenue: null,
-  total_feed_cost: null, other_expenses: 0, gross_profit: null, avg_daily_feed_bags: null, mortality_pct: null,
-  stock_kg: 0, stock_days_remaining: null, rooms: [], production_daily: [], room_production: [], feed_daily: [],
-  mortality_daily: [], recent_health: [], expense_breakdown: [], finance_daily: [],
-};
 
 const STAGES = [
   { id: "overview", label: "Overview", icon: Home },
@@ -109,39 +49,9 @@ const dateLabel = (value: string | null) => value ? new Date(`${value}T12:00:00`
 const logoUrl = (logoAsset as { url: string }).url;
 const heroUrl = (heroAsset as { url: string }).url;
 
-function normalize(raw: Partial<DemoData>): DemoData {
-  return {
-    ...EMPTY, ...raw, farm_name: "ABZ Global Resources",
-    period_start: raw.period_start ?? null, period_end: raw.period_end ?? null,
-    egg_price: optionalNumber(raw.egg_price), feed_price: optionalNumber(raw.feed_price),
-    total_revenue: optionalNumber(raw.total_revenue), total_feed_cost: optionalNumber(raw.total_feed_cost),
-    gross_profit: optionalNumber(raw.gross_profit), avg_daily_feed_bags: optionalNumber(raw.avg_daily_feed_bags),
-    mortality_pct: optionalNumber(raw.mortality_pct), stock_days_remaining: optionalNumber(raw.stock_days_remaining),
-    rooms: (raw.rooms ?? []).map((row) => ({ ...row, current: number(row.current), initial: number(row.initial), mortality_pct: optionalNumber(row.mortality_pct) })),
-    production_daily: (raw.production_daily ?? []).map((row) => ({ ...row, eggs: number(row.eggs), crates: number(row.crates) })),
-    room_production: (raw.room_production ?? []).map((row) => ({ ...row, crates: number(row.crates) })),
-    feed_daily: (raw.feed_daily ?? []).map((row) => ({ ...row, bags: number(row.bags), kg: number(row.kg) })),
-    mortality_daily: (raw.mortality_daily ?? []).map((row) => ({ ...row, loss: number(row.loss) })),
-    expense_breakdown: (raw.expense_breakdown ?? []).map((row) => ({ ...row, amount: number(row.amount) })),
-    finance_daily: (raw.finance_daily ?? []).map((row) => ({ ...row, revenue: optionalNumber(row.revenue), feed_cost: optionalNumber(row.feed_cost), other_expenses: number(row.other_expenses) })),
-  };
-}
-
 function useDemoData() {
-  const [data, setData] = useState<DemoData | null>(null);
-  const [error, setError] = useState(false);
-  const [nonce, setNonce] = useState(0);
-  useEffect(() => {
-    let active = true;
-    setData(null); setError(false);
-    supabase.rpc("demo_greenfield_data" as never).then(({ data: response, error: requestError }) => {
-      if (!active) return;
-      if (requestError || !response) setError(true);
-      else setData(normalize(response as Partial<DemoData>));
-    });
-    return () => { active = false; };
-  }, [nonce]);
-  return { data, error, retry: () => setNonce((value) => value + 1) };
+  const data = useMemo(() => buildDemoData(), []);
+  return { data, error: false, retry: () => undefined };
 }
 
 function filterPeriod<T extends Dated>(rows: T[], period: Period) {
@@ -176,7 +86,7 @@ function PresentationMode() {
           </Link>
           <div className="ml-auto flex items-center gap-2">
             <span className="hidden items-center gap-1.5 rounded-full border border-border bg-secondary px-3 py-1.5 text-xs font-medium sm:inline-flex"><Lock className="h-3.5 w-3.5" /> Read-only</span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"><span className="h-2 w-2 rounded-full bg-accent" /> Live Demo</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"><span className="h-2 w-2 rounded-full bg-accent" /> DEMO DATA</span>
           </div>
         </div>
         <div className="h-1 bg-secondary"><div className="h-full bg-accent transition-[width] duration-500" style={{ width: `${((stageIndex + 1) / STAGES.length) * 100}%` }} /></div>
@@ -301,7 +211,7 @@ function Finance({ data }: { data: DemoData }) {
   const profit = revenue === null || feedCost === null ? null : revenue - feedCost - expenses;
   return <PageShell eyebrow="Stage 5 · Finance" title="Know where the farm’s money is moving" description="Prices, usage and recorded expenses are combined only where the source data supports the calculation.">
     <ControlRow period={period} setPeriod={setPeriod} />
-    <MetricGrid><Metric icon={<TrendingUp />} label="Revenue" value={money(revenue)} detail={revenue === null ? undefined : periodName(period)} /><Metric icon={<Wheat />} label="Feed cost" value={money(feedCost)} detail={periodName(period)} /><Metric icon={<CircleDollarSign />} label="Other expenses" value={money(expenses)} detail="Recorded costs" /><Metric icon={profit !== null && profit < 0 ? <TrendingDown /> : <TrendingUp />} label="Profit" value={money(profit)} detail="Revenue − feed − other costs" /></MetricGrid>
+    <MetricGrid><Metric icon={<TrendingUp />} label="Revenue" value={money(revenue)} detail={revenue === null ? undefined : periodName(period)} /><Metric icon={<Wheat />} label="Feed cost" value={money(feedCost)} detail={periodName(period)} /><Metric icon={<CircleDollarSign />} label="Other expenses" value={money(expenses)} detail="Recorded costs" /><Metric icon={profit !== null && profit < 0 ? <TrendingDown /> : <TrendingUp />} label="Operating profit" value={money(profit)} detail="Revenue − feed − other costs" /></MetricGrid>
     {revenue === null && <Unavailable icon={<CircleDollarSign />} title="Revenue and profit are not available for this period" description="The fixed demo farm has feed and expense records, but no production entries to support an egg-revenue calculation." compact />}
     <ChartCard title="Cost movement" subtitle={periodName(period)}><AreaChart points={rows.map((row) => ({ d: row.d, v: (row.feed_cost ?? 0) + row.other_expenses }))} /></ChartCard>
     <div className="grid gap-3 sm:grid-cols-2">{data.expense_breakdown.map((item) => <div key={item.label} className="flex items-center justify-between border-b border-border py-3 text-sm"><span>{item.label || "Other"}</span><strong>{money(item.amount)}</strong></div>)}</div>
