@@ -135,7 +135,7 @@ export function useFeedIntelligence(leadTimeDays = 3): FeedIntelligence {
     const effectiveCost = inventoryUnitCost > 0
       ? inventoryUnitCost
       : (activeFormulaCost ?? marketBuyCost ?? 0);
-    const costPerCrate = kgPerCrate !== null && effectiveCost > 0 ? kgPerCrate * effectiveCost : null;
+    const costPerCrate = feedCostPerCrate(feed30, eggs30, effectiveCost);
 
     const buyVsProduceDeltaPct =
       activeFormulaCost && marketBuyCost && marketBuyCost > 0
