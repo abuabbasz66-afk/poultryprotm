@@ -22,7 +22,9 @@ async function sha256(value: string) {
 
 function clientIp() {
   const h = getRequest()?.headers;
-  return h?.get("cf-connecting-ip") || h?.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  return (
+    h?.get("cf-connecting-ip") || h?.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
+  );
 }
 
 type Admin = Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"];
@@ -70,9 +72,14 @@ export const signInWithPhone = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (!(await underLimit(supabaseAdmin, "phone_login", data.phone))) {
-      return { ok: false as const, error: "Too many sign-in attempts. Please wait 15 minutes and try again." };
+      return {
+        ok: false as const,
+        error: "Too many sign-in attempts. Please wait 15 minutes and try again.",
+      };
     }
-    const { data: email } = await supabaseAdmin.rpc("resolve_login_email", { _identifier: data.phone });
+    const { data: email } = await supabaseAdmin.rpc("resolve_login_email", {
+      _identifier: data.phone,
+    });
     if (typeof email !== "string" || !email) return { ok: false as const, error: GENERIC_ERROR };
 
     const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
@@ -81,13 +88,17 @@ export const signInWithPhone = createServerFn({ method: "POST" })
       global: {
         fetch: (input, init) => {
           const h = new Headers(init?.headers);
-          if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+          if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`)
+            h.delete("Authorization");
           h.set("apikey", key);
           return fetch(input, { ...init, headers: h });
         },
       },
     });
-    const { data: auth, error } = await authClient.auth.signInWithPassword({ email, password: data.password });
+    const { data: auth, error } = await authClient.auth.signInWithPassword({
+      email,
+      password: data.password,
+    });
     if (error || !auth.session) {
       await logFailed(supabaseAdmin, email, error?.message ?? "sign-in failed");
       return { ok: false as const, error: GENERIC_ERROR };
@@ -102,7 +113,10 @@ export const signInWithPhone = createServerFn({ method: "POST" })
 /** Throttled failed-login report for email sign-ins (signed-out callers). */
 export const reportFailedLogin = createServerFn({ method: "POST" })
   .inputValidator((input: { identifier: string }) => {
-    const identifier = String(input?.identifier ?? "").trim().toLowerCase().slice(0, 254);
+    const identifier = String(input?.identifier ?? "")
+      .trim()
+      .toLowerCase()
+      .slice(0, 254);
     if (!identifier) throw new Error("Missing identifier");
     return { identifier };
   })

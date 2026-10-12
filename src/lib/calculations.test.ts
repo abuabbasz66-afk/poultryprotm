@@ -7,12 +7,37 @@ import { computeDailyMortality } from "@/lib/mortality-percent";
 import { computePeriodMetrics, computeBirdPopulation, feedPricePerKg } from "@/lib/farm-analytics";
 import { totalsFor, unitEconomics } from "@/lib/finance-analytics";
 import { normaliseEggs, totalEggsFromRow } from "@/lib/egg-normalize";
-import { feedCostPerCrate, checkEggRecord, checkMortalityRecord, birdBalance } from "@/lib/record-validation";
+import {
+  feedCostPerCrate,
+  checkEggRecord,
+  checkMortalityRecord,
+  birdBalance,
+} from "@/lib/record-validation";
 import type { ExpenseRow, RevenueRow } from "@/lib/finance-data";
 
-const room = (name: string, current: number, initial = current): Room => ({ id: name, name, current, initial });
-const egg = (date: string, p: Partial<EggRow>): EggRow => ({ id: date, date, label: date, r2: 0, r3: 0, r4: 0, extra: 0, ...p });
-const mort = (date: string, room: string, loss: number): Mortality => ({ id: `${date}${room}${loss}`, date, room, loss, cause: "" });
+const room = (name: string, current: number, initial = current): Room => ({
+  id: name,
+  name,
+  current,
+  initial,
+});
+const egg = (date: string, p: Partial<EggRow>): EggRow => ({
+  id: date,
+  date,
+  label: date,
+  r2: 0,
+  r3: 0,
+  r4: 0,
+  extra: 0,
+  ...p,
+});
+const mort = (date: string, room: string, loss: number): Mortality => ({
+  id: `${date}${room}${loss}`,
+  date,
+  room,
+  loss,
+  cause: "",
+});
 const exp = (entry_date: string, amount: number, category = "operating") =>
   ({ entry_date, amount, category, subcategory: "x" }) as unknown as ExpenseRow;
 const rev = (entry_date: string, amount: number) =>
@@ -21,7 +46,9 @@ const rev = (entry_date: string, amount: number) =>
 describe("egg totals", () => {
   it("counts crates × 30 + loose − broken", () => {
     // (10+5+0)×30 = 450, +7 loose = 457, −12 broken = 445
-    expect(totalEggsFromRow(egg("2026-01-01", { r2: 10, r3: 5, extra: 7, broken_r2: 12 }))).toBe(445);
+    expect(totalEggsFromRow(egg("2026-01-01", { r2: 10, r3: 5, extra: 7, broken_r2: 12 }))).toBe(
+      445,
+    );
   });
   it("never goes negative when broken exceeds collected", () => {
     expect(totalEggsFromRow(egg("2026-01-01", { extra: 3, broken_extra: 10 }))).toBe(0);
@@ -74,7 +101,10 @@ describe("mortality percentage", () => {
   it("divides deaths by birds at the start of the day", () => {
     // Room 2 now 980 after 20 deaths on 2 Mar → 980 birds counted on 2 Mar (same-day loss not added back)
     // 20 / 980 = 2.0408%
-    const [d] = computeDailyMortality([mort("2026-03-02", "ROOM 2", 20)], [room("ROOM 2", 980, 1000)]);
+    const [d] = computeDailyMortality(
+      [mort("2026-03-02", "ROOM 2", 20)],
+      [room("ROOM 2", 980, 1000)],
+    );
     expect(d.total).toBe(20);
     expect(d.overallPct).toBeCloseTo((20 / 980) * 100, 6);
   });
@@ -82,9 +112,18 @@ describe("mortality percentage", () => {
     // 15 + 5 = 20 losses / 2000 initial = 1%
     const m = computePeriodMetrics({
       range: { start: "2026-03-01", end: "2026-03-31", label: "", preset: "custom" } as never,
-      eggs: [], feed: [], health: [],
-      mortality: [mort("2026-03-02", "ROOM 2", 15), mort("2026-03-03", "ROOM 2", -5), mort("2026-04-01", "ROOM 2", 99)],
-      eggPrice: 0, costPerKg: 0, bagWeightKg: 25, initialBirds: 2000,
+      eggs: [],
+      feed: [],
+      health: [],
+      mortality: [
+        mort("2026-03-02", "ROOM 2", 15),
+        mort("2026-03-03", "ROOM 2", -5),
+        mort("2026-04-01", "ROOM 2", 99),
+      ],
+      eggPrice: 0,
+      costPerKg: 0,
+      bagWeightKg: 25,
+      initialBirds: 2000,
     });
     expect(m.mortalityCount).toBe(20);
     expect(m.mortalityPct).toBeCloseTo(1, 6);
@@ -92,8 +131,14 @@ describe("mortality percentage", () => {
   it("no initial birds → N/A", () => {
     const m = computePeriodMetrics({
       range: { start: "2026-03-01", end: "2026-03-31", label: "", preset: "custom" } as never,
-      eggs: [], feed: [], health: [], mortality: [mort("2026-03-02", "R", 1)],
-      eggPrice: 0, costPerKg: 0, bagWeightKg: 25, initialBirds: 0,
+      eggs: [],
+      feed: [],
+      health: [],
+      mortality: [mort("2026-03-02", "R", 1)],
+      eggPrice: 0,
+      costPerKg: 0,
+      bagWeightKg: 25,
+      initialBirds: 0,
     });
     expect(m.mortalityPct).toBeNull();
   });
@@ -107,13 +152,21 @@ describe("revenue, feed cost and profit over a period", () => {
     // Feed margin: 600,000 − 225,000 = ₦375,000. Out-of-range 1 Apr row ignored.
     const m = computePeriodMetrics({
       range: { start: "2026-03-01", end: "2026-03-31", label: "", preset: "custom" } as never,
-      eggs: [egg("2026-03-01", { r2: 100 }), egg("2026-03-02", { r3: 50 }), egg("2026-04-01", { r2: 999 })],
+      eggs: [
+        egg("2026-03-01", { r2: 100 }),
+        egg("2026-03-02", { r3: 50 }),
+        egg("2026-04-01", { r2: 999 }),
+      ],
       feed: [
         { id: "a", date: "2026-03-01", bags: 10, room: "ROOM 2" },
         { id: "b", date: "2026-03-02", bags: 8, room: "ROOM 3" },
       ] as never,
-      mortality: [], health: [],
-      eggPrice: 4000, costPerKg: 500, bagWeightKg: 25, initialBirds: 0,
+      mortality: [],
+      health: [],
+      eggPrice: 4000,
+      costPerKg: 500,
+      bagWeightKg: 25,
+      initialBirds: 0,
     });
     expect(m.eggs).toBe(4500);
     expect(m.crates).toBe(150);
@@ -127,8 +180,13 @@ describe("revenue, feed cost and profit over a period", () => {
     const m = computePeriodMetrics({
       range: { start: "2026-03-01", end: "2026-03-31", label: "", preset: "custom" } as never,
       eggs: [egg("2026-03-01", { r2: 10 }), egg("2026-03-20", { r2: 10 })],
-      feed: [], mortality: [], health: [],
-      eggPrice: 0, costPerKg: 0, bagWeightKg: 25, initialBirds: 0,
+      feed: [],
+      mortality: [],
+      health: [],
+      eggPrice: 0,
+      costPerKg: 0,
+      bagWeightKg: 25,
+      initialBirds: 0,
       eggPriceOn: (d) => (d && d >= "2026-03-15" ? 3500 : 3000),
     });
     expect(m.revenue).toBe(65_000);
@@ -142,12 +200,22 @@ describe("revenue, feed cost and profit over a period", () => {
 });
 
 describe("recorded revenue and expenses (operating profit)", () => {
-  const expenses = [exp("2026-03-02", 40_000, "production"), exp("2026-03-03", 10_000), exp("2026-04-01", 5_000)];
+  const expenses = [
+    exp("2026-03-02", 40_000, "production"),
+    exp("2026-03-03", 10_000),
+    exp("2026-04-01", 5_000),
+  ];
   const revenue = [rev("2026-03-02", 100_000), rev("2026-02-28", 1_000)];
   it("profit = recorded revenue − recorded expenses for the period", () => {
     // March: revenue 100,000; expenses 40,000 + 10,000 = 50,000; profit 50,000; margin 50%
     const t = totalsFor(expenses, revenue, "2026-03-01", "2026-03-31");
-    expect(t).toMatchObject({ revenue: 100_000, expenses: 50_000, profit: 50_000, productionCost: 40_000, operatingCost: 10_000 });
+    expect(t).toMatchObject({
+      revenue: 100_000,
+      expenses: 50_000,
+      profit: 50_000,
+      productionCost: 40_000,
+      operatingCost: 10_000,
+    });
     expect(t.margin).toBeCloseTo(50, 6);
   });
   it("no revenue → 0% margin, negative profit", () => {
@@ -159,9 +227,15 @@ describe("recorded revenue and expenses (operating profit)", () => {
     const t = totalsFor(expenses, revenue, "2026-03-01", "2026-03-31");
     // 50,000 / 10,000 eggs = ₦5 per egg; / 500 birds = ₦100 per bird; 50,000 profit / 31 days
     expect(unitEconomics(t, { eggsProduced: 10_000, birds: 500, days: 31 })).toEqual({
-      costPerEgg: 5, costPerBird: 100, avgDailyProfit: 50_000 / 31,
+      costPerEgg: 5,
+      costPerBird: 100,
+      avgDailyProfit: 50_000 / 31,
     });
-    expect(unitEconomics(t, { eggsProduced: 0, birds: 0, days: 0 })).toEqual({ costPerEgg: 0, costPerBird: 0, avgDailyProfit: 0 });
+    expect(unitEconomics(t, { eggsProduced: 0, birds: 0, days: 0 })).toEqual({
+      costPerEgg: 0,
+      costPerBird: 0,
+      avgDailyProfit: 0,
+    });
   });
 });
 
@@ -180,8 +254,15 @@ describe("feed cost per crate", () => {
 
 describe("bird balance", () => {
   it("sums live birds and losses across rooms", () => {
-    const p = computeBirdPopulation([room("ROOM 2", 980, 1000), room("ROOM 3", 495, 500)], [mort("d", "ROOM 2", 20), mort("d", "ROOM 3", -5)]);
-    expect(p).toMatchObject({ totalLiveBirds: 1475, initialBirds: 1500, totalMortalityAllTime: 25 });
+    const p = computeBirdPopulation(
+      [room("ROOM 2", 980, 1000), room("ROOM 3", 495, 500)],
+      [mort("d", "ROOM 2", 20), mort("d", "ROOM 3", -5)],
+    );
+    expect(p).toMatchObject({
+      totalLiveBirds: 1475,
+      initialBirds: 1500,
+      totalMortalityAllTime: 25,
+    });
     // 1500 − 25 = 1475: records agree
     expect(birdBalance(p.initialBirds, p.totalMortalityAllTime)).toBe(p.totalLiveBirds);
   });
@@ -199,16 +280,28 @@ describe("record warnings", () => {
     expect(w[0].message).toMatch(/more than one day/);
   });
   it("accepts normal production quietly", () => {
-    expect(checkEggRecord([{ name: "ROOM 2", collectedEggs: 900, brokenEggs: 3, birds: 1000 }])).toEqual([]);
-    expect(checkEggRecord([{ name: "ROOM 2", collectedEggs: 1000, brokenEggs: 0, birds: 1000 }])).toEqual([]);
+    expect(
+      checkEggRecord([{ name: "ROOM 2", collectedEggs: 900, brokenEggs: 3, birds: 1000 }]),
+    ).toEqual([]);
+    expect(
+      checkEggRecord([{ name: "ROOM 2", collectedEggs: 1000, brokenEggs: 0, birds: 1000 }]),
+    ).toEqual([]);
   });
   it("warns about eggs from an empty room, ignores unknown populations", () => {
-    expect(checkEggRecord([{ name: "ROOM 4", collectedEggs: 30, brokenEggs: 0, birds: 0 }])[0].level).toBe("warning");
-    expect(checkEggRecord([{ name: "ROOM 4", collectedEggs: 30, brokenEggs: 0, birds: null }])).toEqual([]);
+    expect(
+      checkEggRecord([{ name: "ROOM 4", collectedEggs: 30, brokenEggs: 0, birds: 0 }])[0].level,
+    ).toBe("warning");
+    expect(
+      checkEggRecord([{ name: "ROOM 4", collectedEggs: 30, brokenEggs: 0, birds: null }]),
+    ).toEqual([]);
   });
   it("blocks negative or fractional numbers", () => {
-    expect(checkEggRecord([{ name: "R", collectedEggs: -1, brokenEggs: 0, birds: 10 }])[0].level).toBe("error");
-    expect(checkEggRecord([{ name: "R", collectedEggs: 1.5, brokenEggs: 0, birds: 10 }])[0].level).toBe("error");
+    expect(
+      checkEggRecord([{ name: "R", collectedEggs: -1, brokenEggs: 0, birds: 10 }])[0].level,
+    ).toBe("error");
+    expect(
+      checkEggRecord([{ name: "R", collectedEggs: 1.5, brokenEggs: 0, birds: 10 }])[0].level,
+    ).toBe("error");
   });
   it("mortality above the birds present warns of a negative balance", () => {
     const w = checkMortalityRecord({ room: "ROOM 2", loss: 60, birdsAtRisk: 50 });
@@ -216,8 +309,12 @@ describe("record warnings", () => {
     expect(w[0].message).toMatch(/negative bird balance/);
   });
   it("large single-entry mortality asks for a double-check", () => {
-    expect(checkMortalityRecord({ room: "ROOM 2", loss: 60, birdsAtRisk: 1000 })[0].message).toMatch(/6\.0%/);
+    expect(
+      checkMortalityRecord({ room: "ROOM 2", loss: 60, birdsAtRisk: 1000 })[0].message,
+    ).toMatch(/6\.0%/);
     expect(checkMortalityRecord({ room: "ROOM 2", loss: 50, birdsAtRisk: 1000 })).toEqual([]);
-    expect(checkMortalityRecord({ room: "ROOM 2", loss: 0, birdsAtRisk: 1000 })[0].level).toBe("error");
+    expect(checkMortalityRecord({ room: "ROOM 2", loss: 0, birdsAtRisk: 1000 })[0].level).toBe(
+      "error",
+    );
   });
 });

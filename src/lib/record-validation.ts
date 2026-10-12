@@ -6,10 +6,15 @@
 const CRATE = 30;
 
 /** Feed cost to produce one crate (30 usable eggs). Null when it can't be known. */
-export function feedCostPerCrate(feedKg: number, usableEggs: number, costPerKg: number): number | null {
-  if (!Number.isFinite(feedKg) || !Number.isFinite(usableEggs) || !Number.isFinite(costPerKg)) return null;
+export function feedCostPerCrate(
+  feedKg: number,
+  usableEggs: number,
+  costPerKg: number,
+): number | null {
+  if (!Number.isFinite(feedKg) || !Number.isFinite(usableEggs) || !Number.isFinite(costPerKg))
+    return null;
   if (feedKg < 0 || usableEggs <= 0 || costPerKg <= 0) return null;
-  return ((feedKg / usableEggs) * CRATE) * costPerKg;
+  return (feedKg / usableEggs) * CRATE * costPerKg;
 }
 
 export type RecordWarning = { level: "warning" | "error"; message: string };
@@ -60,22 +65,31 @@ export function checkEggRecord(rooms: EggRoomInput[]): RecordWarning[] {
 }
 
 /** Mortality checks against the birds present in the room on that date. */
-export function checkMortalityRecord(input: { room: string; loss: number; birdsAtRisk: number | null }): RecordWarning[] {
+export function checkMortalityRecord(input: {
+  room: string;
+  loss: number;
+  birdsAtRisk: number | null;
+}): RecordWarning[] {
   const { room, loss, birdsAtRisk } = input;
-  if (!Number.isFinite(loss) || loss <= 0) return [{ level: "error", message: "Enter at least 1 bird." }];
+  if (!Number.isFinite(loss) || loss <= 0)
+    return [{ level: "error", message: "Enter at least 1 bird." }];
   if (!Number.isInteger(loss)) return [{ level: "error", message: "Use a whole number of birds." }];
   if (birdsAtRisk === null) return [];
   if (loss > birdsAtRisk) {
-    return [{
-      level: "warning",
-      message: `${room} had ${birdsAtRisk} birds on that date, but ${loss} deaths were entered. This would leave a negative bird balance. Check the room and number.`,
-    }];
+    return [
+      {
+        level: "warning",
+        message: `${room} had ${birdsAtRisk} birds on that date, but ${loss} deaths were entered. This would leave a negative bird balance. Check the room and number.`,
+      },
+    ];
   }
   if (birdsAtRisk > 0 && loss / birdsAtRisk > 0.05) {
-    return [{
-      level: "warning",
-      message: `${loss} deaths is ${((loss / birdsAtRisk) * 100).toFixed(1)}% of ${room} in one entry. Please double-check the number. If it is correct, consider contacting your veterinarian.`,
-    }];
+    return [
+      {
+        level: "warning",
+        message: `${loss} deaths is ${((loss / birdsAtRisk) * 100).toFixed(1)}% of ${room} in one entry. Please double-check the number. If it is correct, consider contacting your veterinarian.`,
+      },
+    ];
   }
   return [];
 }
