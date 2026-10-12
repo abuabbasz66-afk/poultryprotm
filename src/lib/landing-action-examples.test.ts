@@ -16,9 +16,9 @@ describe("public Action Centre illustrations", () => {
   it("shows independently checked quantities with appropriate limitations", () => {
     expect(LANDING_ACTION_EXAMPLES[0].evidence).toContain("= 3 days");
     expect(300 / 100).toBe(3);
-    expect((800 - 720) / 800 * 100).toBe(10);
+    expect(((800 - 720) / 800) * 100).toBe(10);
     expect(LANDING_ACTION_EXAMPLES[1].evidence).toContain("10% decline");
-    expect(6 / 1000 * 100).toBeCloseTo(0.6);
+    expect((6 / 1000) * 100).toBeCloseTo(0.6);
     expect(LANDING_ACTION_EXAMPLES[2].evidence).toContain("0.6%");
     expect(LANDING_ACTION_EXAMPLES[2].quality).toContain("not a diagnosis");
     expect(LANDING_ACTION_EXAMPLES[3].evidence).toContain("unknown, not zero");
