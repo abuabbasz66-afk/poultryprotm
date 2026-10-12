@@ -14,6 +14,7 @@ import {
   Baby, Drumstick, GraduationCap, BookOpen,
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
+import { useLivePlatformStats } from "@/lib/platform-stats";
 import { AcademySection } from "@/components/academy/academy-section";
 import { InternationalRecognitionSection, RecognitionCard } from "@/components/recognition/international-recognition";
 import { TUTORIAL_CATEGORIES } from "@/lib/tutorials";
@@ -100,52 +101,6 @@ function useAuthed() {
 
 
 
-type LivePlatformStats = {
-  registered_farms: number;
-  registered_users: number;
-  total_birds: number;
-  production_records: number;
-  feed_records: number;
-  mortality_records: number;
-  health_records: number;
-  rooms: number;
-  eggs: number;
-  premium_farms: number;
-  revenue_tracked: number;
-  profit_analysed: number;
-};
-
-const STAT_KEYS: (keyof LivePlatformStats)[] = [
-  "registered_farms", "registered_users", "total_birds", "production_records",
-  "feed_records", "mortality_records", "health_records", "rooms", "eggs",
-  "premium_farms", "revenue_tracked", "profit_analysed",
-];
-
-async function fetchLivePlatformStats(): Promise<LivePlatformStats> {
-  const { data, error } = await supabase.rpc("landing_platform_stats");
-  if (error) throw error;
-  const row = (data ?? {}) as Record<string, number | string>;
-  const out = {} as LivePlatformStats;
-  for (const k of STAT_KEYS) out[k] = Number(row[k]) || 0;
-  return out;
-}
-
-function useLivePlatformStats() {
-  return useQuery({
-    queryKey: ["landing-platform-stats"],
-    queryFn: fetchLivePlatformStats,
-    // Always hit the database on mount so investors never see a stale/empty card.
-    staleTime: 0,
-    gcTime: 60_000,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchInterval: 60_000,
-    refetchIntervalInBackground: false,
-    retry: 5,
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 15_000),
-  });
-}
 
 function fmtStat(n: number | undefined | null): string {
   if (n === undefined || n === null || Number.isNaN(n)) return "No data available yet";
