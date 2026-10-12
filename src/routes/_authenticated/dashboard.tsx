@@ -804,7 +804,7 @@ const setBagWeightKg = (v: number | null) => {
           <KpiCard tone="sky" icon={TrendingUp} label="Production Rate" value={`${productionRate}%`} hint="Target: 80%" />
           <KpiCard tone="peach" icon={Skull} label="Monthly Mortality" value={String(monthlyMortality)} hint="This month" />
           <KpiCard tone="plain" icon={Wheat} label="Feed Today" value={`${round1(feedToday * bagKg)} kg`} hint={`${round1(feedToday)} bags · all rooms`} />
-          <KpiCard tone="mint" icon={DollarSign} label="Today's Profit" value={naira(todayProfit)} hint={`Revenue: ${naira(todayRevenue)}`} />
+          <KpiCard tone="mint" icon={DollarSign} label="Today's Feed Margin" value={naira(todayProfit)} hint={`Revenue: ${naira(todayRevenue)} · excludes other expenses`} />
         </div>
 
         {/* Monthly Egg Production */}
@@ -849,17 +849,17 @@ const setBagWeightKg = (v: number | null) => {
         {/* All-Time Profit Overview — cumulative view from farm inception */}
         <Card>
           <CardHeader
-            title="All-Time Profit Overview"
+            title="All-Time Feed Margin"
             subtitle={
               allTimeStats.startDate
-                ? `Revenue, feed cost and profit since farm inception · ${formatDayLabel(allTimeStats.startDate)} → Today`
-                : "Revenue, feed cost and profit since farm inception."
+                ? `Egg revenue minus feed cost since farm inception · ${formatDayLabel(allTimeStats.startDate)} → Today. Excludes other operating expenses — see Finance for operating profit.`
+                : "Egg revenue minus feed cost since farm inception. Excludes other operating expenses — see Finance for operating profit."
             }
             right={
               <div className="text-right">
                 <div className="font-display text-2xl font-semibold text-[color:var(--forest)]">
                   {naira(allTimeStats.totalProfit)}
-                  <span className="ml-1 text-xs font-sans font-medium text-muted-foreground">Lifetime Profit</span>
+                  <span className="ml-1 text-xs font-sans font-medium text-muted-foreground">Lifetime Feed Margin</span>
                 </div>
                 <div className="text-xs text-muted-foreground">Revenue: {naira(allTimeStats.totalRevenue)}</div>
                 <div className="text-xs text-muted-foreground">Feed Cost: {naira(allTimeStats.totalFeedCost)}</div>
@@ -870,9 +870,9 @@ const setBagWeightKg = (v: number | null) => {
           <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
             <MiniStat label="Total Revenue" value={naira(allTimeStats.totalRevenue)} tone="mint" />
             <MiniStat label="Total Feed Cost" value={naira(allTimeStats.totalFeedCost)} tone="peach" />
-            <MiniStat label="Total Profit" value={naira(allTimeStats.totalProfit)} tone="sky" />
-            <MiniStat label="ROI" value={allTimeStats.roi === null ? "—" : `${allTimeStats.roi.toFixed(1)}%`} tone="plain" />
-            <MiniStat label="Avg Daily Profit" value={naira(Math.round(allTimeStats.avgDaily))} tone="mint" />
+            <MiniStat label="Total Feed Margin" value={naira(allTimeStats.totalProfit)} tone="sky" />
+            <MiniStat label="Feed Margin / Feed Cost" value={allTimeStats.roi === null ? "—" : `${allTimeStats.roi.toFixed(1)}%`} tone="plain" />
+            <MiniStat label="Avg Daily Feed Margin" value={naira(Math.round(allTimeStats.avgDaily))} tone="mint" />
             <MiniStat label="Production Days" value={allTimeStats.days.toLocaleString()} tone="plain" />
             <MiniStat label="Lifetime Eggs" value={allTimeStats.lifetimeEggs.toLocaleString()} tone="sky" />
             <MiniStat label="Lifetime Crates" value={allTimeStats.lifetimeCrates.toLocaleString()} tone="peach" />
@@ -903,10 +903,10 @@ const setBagWeightKg = (v: number | null) => {
                           <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
                             <span className="text-muted-foreground">Revenue</span><span className="tabular-nums text-right">{naira(row.dailyRevenue)}</span>
                             <span className="text-muted-foreground">Feed Cost</span><span className="tabular-nums text-right">{naira(row.dailyFeedCost)}</span>
-                            <span className="text-muted-foreground">Profit</span><span className="tabular-nums text-right">{naira(row.dailyProfit)}</span>
+                            <span className="text-muted-foreground">Feed Margin</span><span className="tabular-nums text-right">{naira(row.dailyProfit)}</span>
                           </div>
                           <div className="mt-1 pt-1 border-t border-border/60 grid grid-cols-2 gap-x-4 gap-y-0.5">
-                            <span className="text-muted-foreground">Running Profit</span><span className="tabular-nums text-right font-medium">{naira(row.Profit)}</span>
+                            <span className="text-muted-foreground">Running Feed Margin</span><span className="tabular-nums text-right font-medium">{naira(row.Profit)}</span>
                             <span className="text-muted-foreground">Lifetime Revenue</span><span className="tabular-nums text-right">{naira(row.Revenue)}</span>
                             <span className="text-muted-foreground">Lifetime Feed Cost</span><span className="tabular-nums text-right">{naira(row["Feed Cost"])}</span>
                             <span className="text-muted-foreground">Lifetime Eggs</span><span className="tabular-nums text-right">{row.lifetimeEggs.toLocaleString()}</span>
@@ -919,7 +919,7 @@ const setBagWeightKg = (v: number | null) => {
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Line type="monotone" dataKey="Revenue" name="Revenue" stroke="oklch(0.32 0.06 155)" strokeWidth={2} dot={false} />
                   <Line type="monotone" dataKey="Feed Cost" name="Feed Cost" stroke="oklch(0.78 0.15 78)" strokeWidth={2} strokeDasharray="4 4" dot={false} />
-                  <Line type="monotone" dataKey="Profit" name="Profit" stroke="oklch(0.55 0.18 240)" strokeWidth={2.25} dot={false} />
+                  <Line type="monotone" dataKey="Profit" name="Feed Margin" stroke="oklch(0.55 0.18 240)" strokeWidth={2.25} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             )}

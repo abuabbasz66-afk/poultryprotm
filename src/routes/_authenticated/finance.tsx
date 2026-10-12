@@ -210,7 +210,7 @@ function FinancePage() {
                     <Legend />
                     <Line type="monotone" dataKey="revenue" name="Revenue" stroke="#1f7a4d" strokeWidth={2} dot={false} />
                     <Line type="monotone" dataKey="expenses" name="Expenses" stroke="#d9534f" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="profit" name="Profit" stroke="#c9a227" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="profit" name="Operating profit" stroke="#c9a227" strokeWidth={2} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

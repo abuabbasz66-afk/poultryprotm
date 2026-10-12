@@ -302,7 +302,7 @@ const liveFeatures: { icon: any; title: string; desc: string }[] = [
 ];
 
 const comingSoon: { icon: any; title: string; desc: string }[] = [
-  { icon: Brain, title: "AI Disease Prediction", desc: "Predict disease outbreaks before symptoms appear." },
+  { icon: Brain, title: "Health Risk Alerts", desc: "Early-warning insights when mortality or production records change unusually. Not a disease diagnosis — consult your vet." },
   { icon: Mic, title: "AI Voice Assistant", desc: "Ask PoultryPro questions using natural voice commands." },
   { icon: TrendingUp, title: "Market Price Intelligence", desc: "Predict future egg and feed prices." },
   { icon: Radio, title: "IoT Sensor Integration", desc: "Connect temperature, humidity, water and feed sensors." },
