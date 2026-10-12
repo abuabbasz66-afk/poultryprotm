@@ -367,8 +367,8 @@ function Index() {
         <div className="container-x pt-10 pb-12 md:pt-16 md:pb-16 grid lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-6 space-y-8 hero-fade-up">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs font-medium text-secondary-foreground">
-              <Sparkles className="h-3.5 w-3.5 text-[color:var(--gold)]" />
-              Capture. Understand. Predict.
+              <Sparkles className="h-3.5 w-3.5 shrink-0 text-[color:var(--gold)]" />
+              <span>Capture. Understand. Predict. Recommend. Act.</span>
             </span>
             <h1 className="font-display font-extrabold tracking-tight text-foreground text-4xl sm:text-5xl md:text-6xl leading-[1.05]">
               Know What Needs Attention on Your Poultry Farm.
