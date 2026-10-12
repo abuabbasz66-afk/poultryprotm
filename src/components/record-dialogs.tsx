@@ -9,7 +9,7 @@ import {
   useAddHealth, useUpdateHealth,
   useAddFeed, useUpdateFeed,
   useAddPrice, useUpdatePrice,
-  useFarm,
+  useFarm, useMortality,
   HEALTH_TYPES, normalizeHealthType,
   type Room, type EggRow, type Mortality, type Health, type HealthType, type Feed, type Price,
 } from "@/lib/farm-data";
