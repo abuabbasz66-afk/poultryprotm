@@ -18,3 +18,4 @@
 - Signed-out login helpers (phone→email lookup, failed-login logging) run only in src/lib/login.functions.ts, throttled via auth_rate_limits; why: browser-callable lookups allowed account enumeration and log flooding.
 - Record-entry sanity checks live in src/lib/record-validation.ts and warn (confirm to save) rather than block; why: legitimate edge cases (multi-day egg collections) must remain recordable.
 - Action Centre workflow (acknowledge/assign/start/resolve/dismiss/reopen) changes alert state only via the `alert_transition` DB function, which checks category write permission and writes `farm_alert_events`; a guard trigger lets browser sync only open or auto-resolve alerts. Why: workflow and its audit history must be enforced server-side.
+- Public landing Action Centre examples use a standalone synthetic catalogue and read-only preview, never the farm intelligence hooks; why: public marketing must not fetch or persist private farm records.
