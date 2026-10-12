@@ -11,19 +11,21 @@ import {
   ShieldCheck, Sparkles, ArrowRight, MapPin, Trophy, Cpu, Users, Leaf,
   Calculator, FileText, Brain, Mic, TrendingUp, CloudSun, Radio, Camera,
   Sliders, DollarSign, Syringe, BarChart3, Store, Handshake, Smartphone,
-  Baby, Drumstick, GraduationCap, BookOpen,
+  Baby, Drumstick, GraduationCap, BookOpen, ClipboardCheck,
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 import { useLivePlatformStats } from "@/lib/platform-stats";
 import { AcademySection } from "@/components/academy/academy-section";
 import { RecognitionCard } from "@/components/recognition/international-recognition";
 import { TUTORIAL_CATEGORIES } from "@/lib/tutorials";
+import { ActionCentrePreview } from "@/components/landing/action-centre-preview";
+import { Button } from "@/components/ui/button";
 
 
 
-const HOME_TITLE = "PoultryPro | Smart Poultry Farm Management Platform";
+const HOME_TITLE = "PoultryPro | Poultry Farm Insights & Recommended Actions";
 const HOME_DESC =
-  "PoultryPro is a digital poultry farm management platform helping farmers manage production, feed, health, mortality, finance, bird age, weather advisories and farm performance.";
+  "Turn poultry farm records into performance insights, timely alerts and practical recommendations for production, feed, flock health and finances with PoultryPro.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -33,6 +35,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: HOME_TITLE },
       { property: "og:description", content: HOME_DESC },
       { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: "https://poultrypro.life/" },
     ],
     links: [{ rel: "canonical", href: "https://poultrypro.life/" }],
@@ -141,10 +144,12 @@ const architecture = [
   {
     step: "03",
     title: "Predict",
-    tag: "Intelligent Insights",
-    desc: "Use intelligent alerts, farm trends and weather-based bird advisories to identify risks earlier and make proactive decisions.",
+    tag: "Cautious Estimates",
+    desc: "Use record-based estimates and sourced weather forecasts to plan ahead. Estimates show assumptions; they are not validated outbreak or machine-learning predictions.",
     icon: Sparkles,
   },
+  { step: "04", title: "Recommend", tag: "Practical Next Steps", desc: "Review rule-based findings, supporting records and suggested checks. Missing data is flagged, not treated as zero.", icon: ClipboardCheck },
+  { step: "05", title: "Act", tag: "Farmer in Control", desc: "In the Action Centre preview, authorised users can assign, track and resolve issues with notes and history. Public release is pending.", icon: ShieldCheck },
 ];
 
 const recognition = [
@@ -230,7 +235,7 @@ const tiers = [
       "Everything in Basic",
       "Production percentage calculations",
       "Revenue tracking & feed cost monitoring",
-      "Daily & monthly profit analysis",
+      "Feed margin & operating profit views",
       "Egg production trend analysis",
       "Historical performance comparisons",
       "Financial analytics — revenue & cost analysis",
@@ -239,7 +244,7 @@ const tiers = [
       "Business intelligence dashboards",
     ],
     price: "₦950",
-    priceNote: "per month · Unlimited birds",
+    priceNote: "per month · Up to 5,000 birds",
     cta: "Start Standard Plan",
     ctaHref: null as string | null,
     badge: "Popular · Available now",
@@ -247,28 +252,27 @@ const tiers = [
   },
   {
     name: "Premium",
-    tagline: "PoultryPro AI Intelligence",
+    tagline: "Farm Decision Support",
     stage: "Predict",
     stageNum: "03",
-    promise: "Upgrade to AI-powered decision support.",
-    subtitle: "Let PoultryPro continuously analyse your records, detect unusual patterns and alert you to risks earlier.",
+    promise: "Understand the evidence. Choose your next step.",
+    subtitle: "Rule-based monitoring and record-based estimates help identify changes worth checking. No disease diagnosis or guaranteed outcomes.",
     points: [
       "Everything in Basic & Standard",
-      "AI-powered egg production forecasting",
-      "Predictive production analysis",
+      "Record-based production estimates (not validated predictions)",
       "Production decline detection",
       "Mortality risk monitoring",
       "Feed efficiency monitoring",
       "Abnormal farm activity detection",
       "Intelligent farm monitoring & early risk alerts",
-      "AI-supported farm insights & recommendations",
+      "Rule-based farm insights & suggested checks",
       "PoultryPro Intelligence Dashboard",
     ],
     price: "₦1,950",
     priceNote: "per month",
     cta: "Start Premium Plan",
     ctaHref: null as string | null,
-    badge: "Available now — AI-powered",
+    badge: "Current record-based tools",
     highlight: false,
   },
 ];
@@ -285,10 +289,10 @@ const problems = [
 
 const liveFeatures: { icon: any; title: string; desc: string }[] = [
   { icon: LayoutDashboard, title: "Live Farm Dashboard", desc: "Real-time production, mortality, feed, health and financial monitoring." },
-  { icon: Wallet, title: "Profit & Financial Analytics", desc: "Automatic revenue, feed cost, daily, monthly and all-time profit analysis." },
+  { icon: Wallet, title: "Margin & Financial Analytics", desc: "Distinguish egg revenue minus feed cost (feed margin) from operating profit based on recorded operating income and expenses." },
   { icon: Wheat, title: "Feed Management", desc: "Record daily feed usage, manage feed inventory and calculate feed costs." },
   { icon: Calculator, title: "Feed Formulation & Cost Calculator", desc: "Create custom feed formulas, calculate ingredient costs, cost per kilogram and cost per bag." },
-  { icon: Sparkles, title: "AI Feed Intelligence", desc: "Monitor feed inventory, estimate remaining days of feed and generate low-feed alerts." },
+  { icon: Sparkles, title: "Rule-Based Feed Intelligence", desc: "Monitor feed inventory, estimate remaining days of feed and generate low-feed alerts." },
   { icon: LineChart, title: "Production Analytics", desc: "Interactive production trends, room performance, historical records and operational insights." },
   { icon: HeartPulse, title: "Mortality & Health Tracking", desc: "Monitor bird health, mortality trends and treatment history." },
   { icon: Baby, title: "Layer Brooding & Rearing", desc: "Track pullet development from day one through growth stages until maturity and transfer to layer rooms." },
@@ -297,19 +301,19 @@ const liveFeatures: { icon: any; title: string; desc: string }[] = [
   { icon: ShieldCheck, title: "Multi-Farm Management", desc: "Secure farm-specific dashboards with complete tenant isolation." },
   { icon: FileText, title: "Smart Reporting", desc: "Automatically generate operational and financial reports." },
   { icon: CloudSun, title: "Farm Weather & Bird Advisory", desc: "Live weather forecasts interpreted into poultry-specific risk alerts and management recommendations." },
-  { icon: BarChart3, title: "Production Forecasting", desc: "Predict egg production and feed consumption based on historical farm records." },
-  { icon: Smartphone, title: "Mobile App — Android & iOS", desc: "Installable offline-first mobile app with automatic synchronisation when connectivity returns." },
+  { icon: BarChart3, title: "Production Estimates", desc: "Record-based trend estimates with limitations. Not a validated machine-learning prediction or a guarantee of future production." },
+  { icon: Smartphone, title: "Installable Mobile Web App", desc: "Use the installable web app with supported offline records and synchronisation when connectivity returns. Native app-store releases are not included in this claim." },
 ];
 
 const comingSoon: { icon: any; title: string; desc: string }[] = [
-  { icon: Brain, title: "Health Risk Alerts", desc: "Early-warning insights when mortality or production records change unusually. Not a disease diagnosis — consult your vet." },
+  { icon: Brain, title: "Validated Predictive Models", desc: "Future research and validation of forecasting models. No validated machine-learning or outbreak-prediction capability is claimed today." },
   { icon: Mic, title: "AI Voice Assistant", desc: "Ask PoultryPro questions using natural voice commands." },
   { icon: TrendingUp, title: "Market Price Intelligence", desc: "Predict future egg and feed prices." },
   { icon: Radio, title: "IoT Sensor Integration", desc: "Connect temperature, humidity, water and feed sensors." },
   { icon: Camera, title: "Smart Camera Monitoring", desc: "AI vision for bird behaviour and health monitoring." },
   { icon: Sliders, title: "Automated Feed Optimisation", desc: "Recommend the most profitable feed formulations." },
   { icon: DollarSign, title: "Profit Forecasting", desc: "Predict farm profitability for future weeks and months." },
-  { icon: Syringe, title: "Smart Vaccination Assistant", desc: "Automatic vaccination schedules and reminders." },
+  { icon: Syringe, title: "Action Centre Task Reminders", desc: "Planned due-task and vaccination reminders alongside recommended actions. Existing vaccination records and schedules remain separate." },
   { icon: Store, title: "Poultry Marketplace", desc: "Buy and sell feed, chicks, eggs, equipment and other poultry products." },
   { icon: Handshake, title: "Cooperative & Investor Portal", desc: "Dedicated dashboards for cooperatives, investors and financial institutions." },
 ];
@@ -360,41 +364,31 @@ function Index() {
           <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-[color:var(--forest)]/10 blur-3xl" />
           <div className="absolute top-40 -right-24 h-80 w-80 rounded-full bg-[color:var(--gold)]/15 blur-3xl" />
         </div>
-        <div className="container-x pt-20 pb-24 md:pt-32 md:pb-40 grid lg:grid-cols-12 gap-14 items-center">
+        <div className="container-x pt-10 pb-12 md:pt-16 md:pb-16 grid lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-6 space-y-8 hero-fade-up">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs font-medium text-secondary-foreground">
               <Sparkles className="h-3.5 w-3.5 text-[color:var(--gold)]" />
-              Capture · Understand · Predict
+              Capture. Understand. Predict.
             </span>
-            <h1 className="font-display font-extrabold tracking-tight text-foreground text-[2.75rem] sm:text-5xl md:text-6xl lg:text-[4.25rem] leading-[1.05]">
-              Run your poultry farm with data, clarity and confidence.
+            <h1 className="font-display font-extrabold tracking-tight text-foreground text-4xl sm:text-5xl md:text-6xl leading-[1.05]">
+              Know What Needs Attention on Your Poultry Farm.
             </h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-[600px] leading-relaxed font-normal">
-              PoultryPro brings production, feed, health, mortality, bird age, finance and intelligent
-              farm insights into one powerful platform — helping poultry farmers make better decisions
-              and protect their profits.
+              PoultryPro turns your farm records into clear performance insights, timely alerts and practical recommendations, helping you make informed decisions about production, feed, flock health and farm finances.
             </p>
 
             <div className="flex flex-wrap gap-3 pt-2">
-              {authed ? (
-                <Link to="/dashboard" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] transition-all duration-200 shadow-[var(--shadow-lift)]">
-                  Explore the Platform <ArrowRight className="h-4 w-4" />
-                </Link>
-              ) : (
-                <Link to="/auth" search={{ mode: "signin" }} className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] transition-all duration-200 shadow-[var(--shadow-lift)]">
-                  Explore the Platform <ArrowRight className="h-4 w-4" />
-                </Link>
-              )}
-              <Link to="/presentation" className="inline-flex items-center gap-2 rounded-full bg-[color:var(--gold)] px-6 py-3 text-sm font-semibold text-[color:var(--ink)] hover:brightness-105 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] transition-all duration-200 shadow-[var(--shadow-lift)]">
-                🚀 Launch Live Demo
-              </Link>
-              <a href="#academy" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-secondary hover:-translate-y-0.5 transition-all duration-200">
-                <GraduationCap className="h-4 w-4" /> Explore Tutorials
-              </a>
-              <a href="#founder" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-secondary hover:-translate-y-0.5 transition-all duration-200">
-                Meet the Founder
-              </a>
-
+              <Button asChild size="lg" className="h-12 rounded-full px-6 shadow-lift">
+                <Link to="/auth" search={{ mode: "signup" }}>Create Free Account <ArrowRight aria-hidden="true" /></Link>
+              </Button>
+              <Button asChild variant="secondary" size="lg" className="h-12 rounded-full bg-gold px-6 text-ink hover:bg-gold/90">
+                <Link to="/presentation">Explore the Live Demo <ArrowRight aria-hidden="true" /></Link>
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">Set up your farm, add rooms and birds, then record eggs, feed and mortality. Every new farm starts with a 30-day Premium trial; Basic remains free afterward.</p>
+            <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+              <Link to="/academy" className="inline-flex items-center gap-2 font-medium text-primary underline-offset-4 hover:underline"><GraduationCap aria-hidden="true" className="h-4 w-4" /> Getting-started tutorials</Link>
+              <a href="#founder" className="font-medium text-primary underline-offset-4 hover:underline">Meet the Founder</a>
             </div>
 
             <div className="inline-flex items-center gap-3 rounded-2xl border border-[color:var(--gold)]/50 bg-[color:var(--gold)]/10 px-4 py-3">
@@ -409,7 +403,7 @@ function Index() {
 
           <div className="lg:col-span-6 relative hero-fade-up" style={{ animationDelay: "120ms" }}>
             <div className="relative rounded-[2rem] overflow-hidden shadow-[0_30px_80px_-20px_rgba(15,60,40,0.35)] ring-1 ring-border/60 hero-float">
-              <img src={heroAsset.url} alt="Modern poultry farm" width={1600} height={1200} className="w-full h-[420px] md:h-[560px] object-cover" />
+              <img src={heroAsset.url} alt="Modern poultry farm" width={1600} height={1200} fetchPriority="high" decoding="async" className="w-full h-[320px] md:h-[500px] object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--forest)]/40 via-transparent to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 flex gap-3">
                 <div className="flex-1 rounded-2xl bg-background/95 backdrop-blur px-4 py-3">
@@ -431,6 +425,8 @@ function Index() {
           </div>
         </div>
       </section>
+
+      <ActionCentrePreview />
 
       <section id="recognition" className="border-y border-border bg-card/60">
         <div className="container-x py-10 md:py-12">
@@ -507,17 +503,15 @@ function Index() {
           <div className="max-w-2xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">How PoultryPro Works</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              From records to decisions in three simple steps.
+              Capture → Understand → Predict → Recommend → Act
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
-              Capture what happens on your farm, understand what your data means, and get ahead of
-              problems before they cost you money.
+              A practical path from verified records to informed decisions. Calculations and alerts use transparent rules; farmers retain control of every operational change.
             </p>
           </div>
-          <div className="mt-14 grid md:grid-cols-3 gap-5">
+          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-5 gap-5">
             {architecture.map((a) => (
-              <div key={a.title} className="relative rounded-3xl border border-border bg-card p-7 overflow-hidden">
-                <div className="absolute top-0 right-0 h-24 w-24 rounded-bl-3xl bg-[color:var(--forest)]/5" />
+              <div key={a.title} className="relative min-w-0 border-t border-border py-6 overflow-hidden">
                 <div className="flex items-center justify-between">
                   <span className="font-display text-5xl font-semibold text-[color:var(--gold)]">{a.step}</span>
                   <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary">
@@ -525,11 +519,12 @@ function Index() {
                   </span>
                 </div>
                 <div className="mt-4 text-[11px] uppercase tracking-widest text-[color:var(--forest)] font-medium">{a.tag}</div>
-                <h3 className="mt-1 font-display text-2xl font-semibold">{a.title}</h3>
+                <h3 className="mt-1 font-display text-xl font-semibold">{a.title}</h3>
                 <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{a.desc}</p>
               </div>
             ))}
           </div>
+          <p className="mt-6 max-w-3xl text-sm text-muted-foreground">Today’s explanations come from verified calculations and deterministic rules. AI-generated explanations and validated machine-learning predictions are not part of the Action Centre release; any future AI must stay grounded in verified findings.</p>
         </div>
       </section>
 
@@ -564,7 +559,7 @@ function Index() {
           <div className="max-w-2xl">
             <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">The Solution</span>
             <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              One farm record. One clear truth.
+              Record what happened. Understand what matters.
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
               PoultryPro brings production, feed, health, mortality, bird age and financial data
@@ -728,6 +723,7 @@ function Index() {
                 </div>
                 <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{c.desc}</p>
                 <div className="mt-5 rounded-2xl bg-secondary/60 border border-border p-4">
+                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">DEMO DATA · Illustration</p>
                   {c.preview}
                 </div>
               </div>
@@ -906,7 +902,7 @@ function Index() {
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
               Start with essential record keeping, add business analytics as you grow, and unlock
-              AI-powered decision support when you are ready to scale.
+              record-based decision support when you are ready to scale.
             </p>
           </div>
 
@@ -1016,23 +1012,19 @@ function Index() {
 
           {/* Trust */}
           <div className="mt-12 rounded-3xl border border-border bg-card p-6 sm:p-8 text-center">
-            <h3 className="font-display text-2xl font-semibold">Trusted by Poultry Farmers</h3>
-            <p className="mt-3 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
-              PoultryPro helps poultry farmers digitise farm records, monitor production, analyse
-              profitability, and make better management decisions through one secure cloud platform.
-            </p>
+            <h3 className="font-display text-2xl font-semibold">Farmer Stories &amp; Case Studies</h3>
+            <p className="mt-3 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">Verified farmer experiences and documented case studies will appear here when available. No testimonials or outcome claims have been added.</p>
           </div>
 
           <p className="mt-6 text-xs sm:text-sm text-muted-foreground max-w-3xl">
-            All plans — Basic, Standard and Premium — are available today. Premium AI features are live
-            and active once you subscribe to the Premium plan.
+            Existing prices and subscription rules are unchanged. Premium’s current tools use recorded data, rules and estimates — not validated disease or outbreak prediction. The new Action Centre workflow is tested in preview and awaits release approval; it is not yet advertised as live. Planned task reminders and future AI explanations are not included as current features.
           </p>
 
           {/* Final CTA */}
           <div className="mt-12 rounded-3xl bg-[color:var(--forest)] text-primary-foreground p-8 sm:p-12 text-center">
             <h3 className="font-display text-2xl sm:text-4xl font-semibold">Ready to Run Your Farm Smarter?</h3>
             <p className="mt-3 text-sm sm:text-base text-primary-foreground/80 max-w-2xl mx-auto">
-              Join PoultryPro today and start recording your farm operations in minutes.
+              Create your farm, add your birds and begin capturing verified records. Learn the first steps in PoultryPro Academy.
             </p>
             <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
               <Link
@@ -1042,12 +1034,9 @@ function Index() {
               >
                 Create Free Account <ArrowRight className="h-4 w-4 flex-none" />
               </Link>
-              <a
-                href="#features"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 px-6 py-3 text-sm font-semibold hover:bg-white/10 transition"
-              >
-                View Features
-              </a>
+              <Button asChild variant="secondary" className="h-11 rounded-full px-6">
+                <Link to="/presentation">Explore the Live Demo <ArrowRight aria-hidden="true" /></Link>
+              </Button>
             </div>
           </div>
 
@@ -1077,7 +1066,7 @@ function Index() {
                 <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--gold)] animate-pulse" />
                 Available Today
               </span>
-              <span className="text-sm text-muted-foreground">Shipping in production now</span>
+              <span className="text-sm text-muted-foreground">Existing record-based tools · availability depends on plan</span>
             </div>
             <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {liveFeatures.map((f) => (
