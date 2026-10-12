@@ -7,6 +7,7 @@ import heroAsset from "@/assets/hero-layer-birds.jpg.asset.json";
 import { toast } from "sonner";
 import { homeRouteForRole } from "@/lib/rbac";
 import { logSecurityEvent } from "@/lib/security-events";
+import { signInWithPhone, reportFailedLogin } from "@/lib/login.functions";
 import { resolveResumeDestination } from "@/lib/last-location";
 import {
   ArrowLeft, Eye, EyeOff, Check, ShieldCheck, Lock, CloudUpload,
