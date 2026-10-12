@@ -2,7 +2,7 @@
 //
 // Percentage = (eggs laid ÷ active birds in that room on that date) × 100.
 // Eggs are ALWAYS real eggs, never crates: a room column stores crates, so
-// eggs = crates × 30, minus any broken eggs recorded for that room.
+// eggs = crates × 30 + that room's loose eggs, minus its broken eggs.
 //
 // The denominator is the room's population ON THE PRODUCTION DATE, not today's
 // count. It is reconstructed by adding back every mortality recorded AFTER that
@@ -19,7 +19,7 @@ export type RoomProduction = {
   roomId: string;
   roomName: string;
   key: EggColumn;
-  /** Real eggs produced by this room on the date (crates × 30 − broken). */
+  /** Real eggs produced by this room on the date (crates × 30 + loose − broken). */
   eggs: number;
   /** Active birds in the room on that date, or null when unknown. */
   birds: number | null;
@@ -39,6 +39,12 @@ export type DailyProduction = {
   worst: RoomProduction | null;
   /** Rooms ranked best → lowest (only those with a known percentage). */
   ranked: RoomProduction[];
+};
+
+// Loose eggs recorded for this room (extra_r2/r3/r4); counted with its crates.
+const looseFor = (e: EggRow, key: EggColumn): number => {
+  const v = (e as unknown as Record<string, number | undefined>)[`extra_${key}`];
+  return Math.max(0, Number(v) || 0);
 };
 
 const brokenFor = (e: EggRow, key: EggColumn): number => {
@@ -68,7 +74,7 @@ export function computeDailyProduction(
 ): DailyProduction {
   const slots = eggSlots(rooms);
   const roomRows: RoomProduction[] = slots.map(({ room, key }) => {
-    const eggs = Math.max(0, (Number(row[key]) || 0) * CRATE - brokenFor(row, key));
+    const eggs = Math.max(0, (Number(row[key]) || 0) * CRATE + looseFor(row, key) - brokenFor(row, key));
     const birds = roomBirdsOn(room, row.date, mortality);
     return {
       roomId: room.id,
