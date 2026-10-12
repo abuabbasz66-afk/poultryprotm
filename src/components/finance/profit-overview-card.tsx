@@ -133,11 +133,11 @@ export function ProfitOverviewCard({
   const periodSubtitle =
     selection.kind === "all"
       ? points.length
-        ? `Revenue, feed cost and profit · ${prettyDate(points[0]!.date)} → ${prettyDate(points[points.length - 1]!.date)}`
-        : "Revenue, feed cost and profit across every record"
+        ? `Revenue, feed cost and feed margin · ${prettyDate(points[0]!.date)} → ${prettyDate(points[points.length - 1]!.date)}`
+        : "Revenue, feed cost and feed margin across every record"
       : selection.kind === "month"
-        ? `Revenue, feed cost and profit · ${monthLabel(selection.ym)}`
-        : `Revenue, feed cost and profit · ${prettyDate(range.start)} → ${prettyDate(range.end)}`;
+        ? `Revenue, feed cost and feed margin · ${monthLabel(selection.ym)}`
+        : `Revenue, feed cost and feed margin · ${prettyDate(range.start)} → ${prettyDate(range.end)}`;
 
   const selectValue =
     selection.kind === "all" ? "all" : selection.kind === "month" ? selection.ym : "custom";
@@ -166,8 +166,9 @@ export function ProfitOverviewCard({
     <section className="rounded-3xl bg-card border border-border p-5 md:p-6 shadow-[var(--shadow-soft)]">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
-          <h2 className="font-display text-xl md:text-2xl font-semibold">{periodName} Profit Overview</h2>
+          <h2 className="font-display text-xl md:text-2xl font-semibold">{periodName} Feed Margin</h2>
           <p className="text-sm text-muted-foreground mt-0.5">{periodSubtitle}</p>
+          <p className="text-xs text-muted-foreground mt-1">Feed margin = egg sales revenue − feed cost. It excludes other operating expenses; see Finance for operating profit.</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <Select
               value={selectValue}
@@ -228,7 +229,7 @@ export function ProfitOverviewCard({
         </div>
 
         <div className="md:text-right">
-          <div className="text-xs text-muted-foreground">{periodName === "All-Time" ? "All-Time" : periodName} Profit</div>
+          <div className="text-xs text-muted-foreground">{periodName === "All-Time" ? "All-Time" : periodName} Feed Margin</div>
           {busy ? (
             <div className="space-y-2 mt-1 md:flex md:flex-col md:items-end">
               <Skeleton className="h-8 w-40" />
@@ -283,7 +284,7 @@ export function ProfitOverviewCard({
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Line type="monotone" dataKey="Revenue" stroke="oklch(0.32 0.06 155)" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="Feed Cost" stroke="oklch(0.78 0.15 78)" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="Profit" stroke="oklch(0.55 0.15 240)" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="Profit" name="Feed Margin" stroke="oklch(0.55 0.15 240)" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         )}
