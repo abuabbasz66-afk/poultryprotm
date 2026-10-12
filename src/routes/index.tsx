@@ -16,7 +16,7 @@ import {
 import { SiteFooter } from "@/components/site-footer";
 import { useLivePlatformStats } from "@/lib/platform-stats";
 import { AcademySection } from "@/components/academy/academy-section";
-import { InternationalRecognitionSection, RecognitionCard } from "@/components/recognition/international-recognition";
+import { RecognitionCard } from "@/components/recognition/international-recognition";
 import { TUTORIAL_CATEGORIES } from "@/lib/tutorials";
 
 
@@ -334,6 +334,7 @@ function Index() {
             <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Pricing</a>
             <a href="#founder" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Founder</a>
             <a href="#roadmap" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Roadmap</a>
+            <Link to="/achievements" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Achievements</Link>
 
           </nav>
           {authed ? (
