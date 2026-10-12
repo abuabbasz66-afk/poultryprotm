@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 import { AcademySection } from "@/components/academy/academy-section";
+import { InternationalRecognitionSection, RecognitionCard } from "@/components/recognition/international-recognition";
 import { TUTORIAL_CATEGORIES } from "@/lib/tutorials";
 
 
@@ -884,6 +885,8 @@ function Index() {
         </div>
       </section>
 
+      <InternationalRecognitionSection />
+
 
 
       <section id="founder" className="py-20 md:py-28 bg-[color:var(--forest)] text-primary-foreground">
@@ -933,6 +936,7 @@ function Index() {
                 </div>
               ))}
             </div>
+            <RecognitionCard />
           </div>
         </div>
       </section>
