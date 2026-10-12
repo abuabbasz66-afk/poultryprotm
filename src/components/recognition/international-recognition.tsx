@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Award, CalendarDays, MapPin, Share2, ZoomIn } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { RECOGNITIONS, shareLinks, type Recognition } from "@/lib/recognitions";
@@ -113,8 +114,9 @@ export function InternationalRecognitionSection() {
 export function RecognitionCard({ r = RECOGNITIONS[0] }: { r?: Recognition }) {
   if (!r) return null;
   return (
-    <a
-      href="#international-recognition"
+    <Link
+      to="/achievements"
+      hash="international-recognition"
       className="flex items-center gap-4 rounded-2xl border border-border/30 bg-background/10 p-3 pr-5 transition-colors hover:bg-background/15"
     >
       <img src={r.image.src} alt="" loading="lazy" width={64} height={80} className="h-20 w-16 flex-none rounded-xl object-cover" />
@@ -126,6 +128,6 @@ export function RecognitionCard({ r = RECOGNITIONS[0] }: { r?: Recognition }) {
           <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" />{r.date}</span>
         </div>
       </div>
-    </a>
+    </Link>
   );
 }

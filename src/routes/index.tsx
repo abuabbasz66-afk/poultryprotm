@@ -14,8 +14,9 @@ import {
   Baby, Drumstick, GraduationCap, BookOpen,
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
+import { useLivePlatformStats } from "@/lib/platform-stats";
 import { AcademySection } from "@/components/academy/academy-section";
-import { InternationalRecognitionSection, RecognitionCard } from "@/components/recognition/international-recognition";
+import { RecognitionCard } from "@/components/recognition/international-recognition";
 import { TUTORIAL_CATEGORIES } from "@/lib/tutorials";
 
 
@@ -100,52 +101,6 @@ function useAuthed() {
 
 
 
-type LivePlatformStats = {
-  registered_farms: number;
-  registered_users: number;
-  total_birds: number;
-  production_records: number;
-  feed_records: number;
-  mortality_records: number;
-  health_records: number;
-  rooms: number;
-  eggs: number;
-  premium_farms: number;
-  revenue_tracked: number;
-  profit_analysed: number;
-};
-
-const STAT_KEYS: (keyof LivePlatformStats)[] = [
-  "registered_farms", "registered_users", "total_birds", "production_records",
-  "feed_records", "mortality_records", "health_records", "rooms", "eggs",
-  "premium_farms", "revenue_tracked", "profit_analysed",
-];
-
-async function fetchLivePlatformStats(): Promise<LivePlatformStats> {
-  const { data, error } = await supabase.rpc("landing_platform_stats");
-  if (error) throw error;
-  const row = (data ?? {}) as Record<string, number | string>;
-  const out = {} as LivePlatformStats;
-  for (const k of STAT_KEYS) out[k] = Number(row[k]) || 0;
-  return out;
-}
-
-function useLivePlatformStats() {
-  return useQuery({
-    queryKey: ["landing-platform-stats"],
-    queryFn: fetchLivePlatformStats,
-    // Always hit the database on mount so investors never see a stale/empty card.
-    staleTime: 0,
-    gcTime: 60_000,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchInterval: 60_000,
-    refetchIntervalInBackground: false,
-    retry: 5,
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 15_000),
-  });
-}
 
 function fmtStat(n: number | undefined | null): string {
   if (n === undefined || n === null || Number.isNaN(n)) return "No data available yet";
@@ -193,15 +148,10 @@ const architecture = [
 ];
 
 const recognition = [
-  { icon: FileText, title: "Daily Trust", desc: "Featured in Agriculture" },
-  { icon: FileText, title: "Legit News", desc: "Featured in Technology & Agriculture" },
-  { icon: FileText, title: "Katsina Post", desc: "Article recognising the PoultryPro innovation" },
-  
-  { icon: Trophy, title: "3MTT", desc: "Fellow of the Week" },
-  { icon: Trophy, title: "Airtel 3MTT NextGen Knowledge Showcase", desc: "State Winner — Airtel Sponsored" },
-  { icon: Trophy, title: "NXTGEN National Innovation Challenge", desc: "Finalist — Abuja" },
   { icon: Trophy, title: "NXTGEN Innovation Challenge — International Grand Finale", desc: "Selected — London, United Kingdom" },
-  { icon: Handshake, title: "Poultry Association of Nigeria", desc: "PoultryPro presented to the Katsina Chapter" },
+  { icon: Trophy, title: "NXTGEN National Innovation Challenge", desc: "Finalist — Abuja" },
+  { icon: Trophy, title: "Airtel 3MTT NextGen Knowledge Showcase", desc: "State Winner — Airtel Sponsored" },
+  { icon: FileText, title: "In the media", desc: "Daily Trust, Legit News, Katsina Post and more" },
 ];
 
 const features: { icon: any; title: string; desc: string; soon?: boolean }[] = [
@@ -384,6 +334,7 @@ function Index() {
             <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Pricing</a>
             <a href="#founder" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Founder</a>
             <a href="#roadmap" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Roadmap</a>
+            <Link to="/achievements" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Achievements</Link>
 
           </nav>
           {authed ? (
@@ -483,13 +434,19 @@ function Index() {
 
       <section id="recognition" className="border-y border-border bg-card/60">
         <div className="container-x py-10 md:py-12">
-          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <h2 className="font-display text-2xl md:text-3xl font-semibold leading-tight">
-              Built in Nigeria. Recognised for Innovation.
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Recognition earned through real farm work and public showcases.
-            </p>
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 className="font-display text-2xl md:text-3xl font-semibold leading-tight">
+                Built in Nigeria. Recognised for Innovation.
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">A few highlights from the PoultryPro journey.</p>
+            </div>
+            <Link
+              to="/achievements"
+              className="inline-flex w-fit items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Explore Our Achievements <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {recognition.map((r) => (
@@ -885,7 +842,6 @@ function Index() {
         </div>
       </section>
 
-      <InternationalRecognitionSection />
 
 
 
