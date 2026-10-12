@@ -670,9 +670,77 @@ function financeAlerts(i: IntelInput): IntelAlert[] {
 }
 
 function operationsAlerts(i: IntelInput): IntelAlert[] {
-  if (!i.permissions.production || i.eggs.length === 0 || i.hour < 18) return [];
-  if (i.eggs.some((e) => toDateKey(e.date) === i.todayKey)) return [];
+  if (!i.permissions.production || i.eggs.length === 0) return [];
+  const recordAction = {
+    label: "Record Production",
+    to: "/dashboard",
+    search: { area: "records" },
+    hash: "production",
+  };
+  const out: IntelAlert[] = [];
+  const keys = i.eggs
+    .map((e) => toDateKey(e.date))
+    .filter((k): k is string => !!k && k <= i.todayKey)
+    .sort();
+  const last = keys[keys.length - 1];
+  const birds = i.rooms.reduce((s, r) => s + (r.current ?? 0), 0);
+  // Records stopped: the gap is reported, never filled with zeros.
+  if (last) {
+    const gap = Math.round(
+      (new Date(`${i.todayKey}T12:00:00`).getTime() - new Date(`${last}T12:00:00`).getTime()) / DAY,
+    );
+    if (gap >= 3 && gap <= 60) {
+      out.push({
+        key: "operations:production-stale",
+        category: "operations",
+        severity: gap >= 7 ? "warning" : "watch",
+        title: `No egg records for ${plural(gap, "day")}`,
+        happened: `The last egg collection recorded was on ${last}.`,
+        why: "Missing days are not treated as zero, but they hide trends and stop production alerts from working.",
+        checks: [
+          "Enter the missing days from your notebook if you have them",
+          "Make sure staff phones have synced",
+        ],
+        figures: [{ label: "Last record", value: last }],
+        refDate: i.todayKey,
+        deviationPct: 0,
+        durationDays: gap,
+        birdsAffected: birds,
+        action: recordAction,
+      });
+      return out;
+    }
+  }
+  // A recent day recorded as zero eggs while birds are present usually needs checking.
+  const recentFloor = shiftKey(i.todayKey, -7);
+  const zero = i.eggs
+    .filter((e) => {
+      const k = toDateKey(e.date);
+      return k && k >= recentFloor && k <= i.todayKey && totalEggsFromRow(e) === 0;
+    })
+    .map((e) => toDateKey(e.date)!)
+    .sort();
+  if (zero.length && birds > 0) {
+    const d = zero[zero.length - 1];
+    out.push({
+      key: `operations:zero-eggs:${d}`,
+      category: "operations",
+      severity: "watch",
+      title: "A day was recorded with zero eggs",
+      happened: `${d} shows 0 eggs while ${birds.toLocaleString()} birds are recorded on the farm.`,
+      why: "If this was a placeholder or mistake, it pulls averages down and can trigger false alerts.",
+      checks: ["Confirm the collection for that day", "Correct the entry if eggs were collected"],
+      figures: [{ label: "Date", value: d }],
+      refDate: d,
+      deviationPct: 0,
+      durationDays: 0,
+      birdsAffected: birds,
+      action: recordAction,
+    });
+  }
+  if (i.hour < 18 || last === i.todayKey) return out;
   return [
+    ...out,
     {
       key: "operations:production-missing",
       category: "operations",
@@ -686,12 +754,7 @@ function operationsAlerts(i: IntelInput): IntelAlert[] {
       deviationPct: 0,
       durationDays: 0,
       birdsAffected: 0,
-      action: {
-        label: "Record Production",
-        to: "/dashboard",
-        search: { area: "records" },
-        hash: "production",
-      },
+      action: recordAction,
     },
   ];
 }

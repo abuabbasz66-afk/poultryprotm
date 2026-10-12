@@ -1297,19 +1297,79 @@ export type Database = {
           },
         ]
       }
+      farm_alert_events: {
+        Row: {
+          action: string
+          actor: string | null
+          alert_key: string
+          assigned_to: string | null
+          created_at: string
+          farm_id: string
+          from_status: string | null
+          id: string
+          note: string | null
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          alert_key: string
+          assigned_to?: string | null
+          created_at?: string
+          farm_id: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          alert_key?: string
+          assigned_to?: string | null
+          created_at?: string
+          farm_id?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_alert_events_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farm_alert_states: {
         Row: {
           acknowledged_at: string | null
           acknowledged_by: string | null
           alert_key: string
+          assigned_at: string | null
+          assigned_to: string | null
+          baseline_snapshot: Json | null
           category: string
+          cooldown_until: string | null
           created_at: string
+          dismiss_reason: string | null
+          dismissed_at: string | null
+          dismissed_by: string | null
+          evidence: string | null
           farm_id: string
           first_seen_at: string
+          generated_at: string | null
           id: string
+          in_progress_at: string | null
           last_seen_at: string
           message: string | null
+          priority: string | null
+          resolution_note: string | null
           resolved_at: string | null
+          resolved_by: string | null
           room: string | null
           severity: string
           source: string
@@ -1321,14 +1381,27 @@ export type Database = {
           acknowledged_at?: string | null
           acknowledged_by?: string | null
           alert_key: string
+          assigned_at?: string | null
+          assigned_to?: string | null
+          baseline_snapshot?: Json | null
           category: string
+          cooldown_until?: string | null
           created_at?: string
+          dismiss_reason?: string | null
+          dismissed_at?: string | null
+          dismissed_by?: string | null
+          evidence?: string | null
           farm_id: string
           first_seen_at?: string
+          generated_at?: string | null
           id?: string
+          in_progress_at?: string | null
           last_seen_at?: string
           message?: string | null
+          priority?: string | null
+          resolution_note?: string | null
           resolved_at?: string | null
+          resolved_by?: string | null
           room?: string | null
           severity: string
           source?: string
@@ -1340,14 +1413,27 @@ export type Database = {
           acknowledged_at?: string | null
           acknowledged_by?: string | null
           alert_key?: string
+          assigned_at?: string | null
+          assigned_to?: string | null
+          baseline_snapshot?: Json | null
           category?: string
+          cooldown_until?: string | null
           created_at?: string
+          dismiss_reason?: string | null
+          dismissed_at?: string | null
+          dismissed_by?: string | null
+          evidence?: string | null
           farm_id?: string
           first_seen_at?: string
+          generated_at?: string | null
           id?: string
+          in_progress_at?: string | null
           last_seen_at?: string
           message?: string | null
+          priority?: string | null
+          resolution_note?: string | null
           resolved_at?: string | null
+          resolved_by?: string | null
           room?: string | null
           severity?: string
           source?: string
@@ -4072,6 +4158,18 @@ export type Database = {
       ai_recommendation_performance: {
         Args: { _farm_id: string }
         Returns: Json
+      }
+      alert_manage_permission: { Args: { _category: string }; Returns: string }
+      alert_transition: {
+        Args: {
+          _action: string
+          _alert?: Json
+          _assignee?: string
+          _farm: string
+          _key: string
+          _note?: string
+        }
+        Returns: string
       }
       can: { Args: { _farm: string; _perm: string }; Returns: boolean }
       can_edit_recent:
