@@ -68,3 +68,8 @@
 - [x] Replace the left sidebar with a two-row horizontal header driven by the shared navigation catalogue
 - [x] Preserve alerts, sync status, farm access, profile, permissions, premium labels, and mobile bottom navigation
 - [x] Validate route completeness, dropdown behavior, active states, laptop/tablet fit, mobile separation, and production build
+- [ ] After publishing: revoke signed-out access to the phone lookup (see migration 0012)
+- [ ] Owner decision: presentation demo shows real ABZ farm totals publicly — keep or switch to labelled sample data
+- [ ] Owner approval: plan feature matrix before backend plan enforcement
+- [ ] Owner: re-enter egg records 8–20 Sep 2026 from paper/WhatsApp notes
+- [ ] Owner approval: backup restore drill in a separate test environment

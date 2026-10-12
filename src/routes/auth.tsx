@@ -7,6 +7,7 @@ import heroAsset from "@/assets/hero-layer-birds.jpg.asset.json";
 import { toast } from "sonner";
 import { homeRouteForRole } from "@/lib/rbac";
 import { logSecurityEvent } from "@/lib/security-events";
+import { signInWithPhone, reportFailedLogin } from "@/lib/login.functions";
 import { resolveResumeDestination } from "@/lib/last-location";
 import {
   ArrowLeft, Eye, EyeOff, Check, ShieldCheck, Lock, CloudUpload,
@@ -173,20 +174,25 @@ function AuthPage() {
         navigate({ to: "/onboarding" });
       } else if (mode === "signin") {
         // Members may sign in with either their email address or the phone
-        // number their farm owner registered. The database resolves the
-        // identifier to the login email; anything unknown falls through to
-        // Supabase so the error message stays generic.
+        // number their farm owner registered. Phone sign-ins are resolved and
+        // throttled on the server so the linked email is never revealed.
         const identifier = email.trim();
-        let loginEmail = identifier;
+        const loginEmail = identifier;
         if (identifier && !identifier.includes("@")) {
-          const { data: resolved } = await supabase.rpc("resolve_login_email", { _identifier: identifier });
-          if (typeof resolved === "string" && resolved) loginEmail = resolved;
-        }
-        const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
-        if (error) {
-          // Failed attempts are attributed by identifier so owners see them too.
-          void logSecurityEvent("login_failed", { identifier: loginEmail, detail: error.message });
-          throw error;
+          const res = await signInWithPhone({ data: { phone: identifier, password } });
+          if (!res.ok) throw new Error(res.error);
+          const { error } = await supabase.auth.setSession({
+            access_token: res.access_token,
+            refresh_token: res.refresh_token,
+          });
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
+          if (error) {
+            // Failed attempts are attributed by identifier so owners see them too.
+            void reportFailedLogin({ data: { identifier: loginEmail } }).catch(() => {});
+            throw error;
+          }
         }
         try { await supabase.rpc("touch_member_login"); } catch { /* non-blocking */ }
         void logSecurityEvent("login", { identifier: loginEmail });

@@ -3,6 +3,7 @@
 // into ranked, human-readable operational insights. Pure derivations from
 // tenant-scoped hooks — no additional network calls, no cross-farm leakage.
 
+import { feedCostPerCrate } from "@/lib/record-validation";
 import { useMemo } from "react";
 import { useFarm, useFeed, useEggs, useRooms, usePrices } from "@/lib/farm-data";
 import { useFeedInventory, useFeedStockAnalytics } from "@/lib/feed-inventory-data";
@@ -135,7 +136,7 @@ export function useFeedIntelligence(leadTimeDays = 3): FeedIntelligence {
     const effectiveCost = inventoryUnitCost > 0
       ? inventoryUnitCost
       : (activeFormulaCost ?? marketBuyCost ?? 0);
-    const costPerCrate = kgPerCrate !== null && effectiveCost > 0 ? kgPerCrate * effectiveCost : null;
+    const costPerCrate = feedCostPerCrate(feed30, eggs30, effectiveCost);
 
     const buyVsProduceDeltaPct =
       activeFormulaCost && marketBuyCost && marketBuyCost > 0

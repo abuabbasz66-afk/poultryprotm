@@ -9,10 +9,12 @@ import {
   useAddHealth, useUpdateHealth,
   useAddFeed, useUpdateFeed,
   useAddPrice, useUpdatePrice,
-  useFarm,
+  useFarm, useMortality,
   HEALTH_TYPES, normalizeHealthType,
   type Room, type EggRow, type Mortality, type Health, type HealthType, type Feed, type Price,
 } from "@/lib/farm-data";
+import { roomBirdsOn } from "@/lib/production-percent";
+import { checkEggRecord, checkMortalityRecord, type RecordWarning } from "@/lib/record-validation";
 import { toDateKey } from "@/lib/date-key";
 import { FeedRecordingModal } from "@/components/daily-recording/FeedRecordingModal";
 import { eggSlots, productionRooms, ROOM_STATUSES, ROOM_STATUS_LABELS, roomStatus, type RoomStatus } from "@/lib/rooms";
@@ -107,6 +109,22 @@ function DateInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
     <div className="relative">
       <input type="date" {...props} className={inputBase + " pr-10 " + (props.className ?? "")} />
       <CalendarDays className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[color:var(--forest)]/60" />
+    </div>
+  );
+}
+
+function RecordWarnings({ warnings, confirmed }: { warnings: RecordWarning[]; confirmed: boolean }) {
+  if (!warnings.length) return null;
+  return (
+    <div role="alert" className="space-y-1.5 rounded-2xl border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 px-4 py-3 text-[12px] text-[color:var(--forest)]">
+      {warnings.map((w) => (
+        <p key={w.message} className={w.level === "error" ? "font-medium text-destructive" : undefined}>{w.message}</p>
+      ))}
+      {!warnings.some((w) => w.level === "error") && (
+        <p className="text-muted-foreground">
+          {confirmed ? "Tap Save anyway if the numbers are correct." : "Check the numbers. If they are correct, you can still save."}
+        </p>
+      )}
     </div>
   );
 }
@@ -474,9 +492,31 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
   const breakagePct = collected > 0 ? (broken / collected) * 100 : 0;
   const overBroken = perRoom.some((r) => r.broken > r.collected) || broken > collected;
 
+  const mortalityQ = useMortality();
+  const warnings = useMemo(() => {
+    const byName = new Map(rooms.map((r) => [r.name, r]));
+    return checkEggRecord(
+      perRoom.map((r) => {
+        const room = byName.get(r.name);
+        return {
+          name: r.name,
+          collectedEggs: r.collected,
+          brokenEggs: r.broken,
+          birds: room ? (roomBirdsOn(room, date, mortalityQ.data ?? []) ?? (Number(room.current) === 0 ? 0 : null)) : null,
+        };
+      }),
+    );
+  }, [perRoom, rooms, date, mortalityQ.data]);
+  const [confirmed, setConfirmed] = useState(false);
+  const warnKey = warnings.map((w) => w.message).join("|");
+  useEffect(() => setConfirmed(false), [warnKey]);
+  const blocking = warnings.some((w) => w.level === "error");
+  const needsConfirm = warnings.length > 0 && !blocking && !confirmed;
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pending || overBroken) return;
+    if (pending || overBroken || blocking) return;
+    if (needsConfirm) { setConfirmed(true); return; }
     // Store the combined per-room broken value in the legacy broken_r columns and
     // clear the broken_extra_r columns so analytics always see the total.
     const payload = {
@@ -597,7 +637,8 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
         )}
       </div>
 
-      <Actions onCancel={onClose} submitting={pending} submitLabel={isEdit ? "Save Changes" : "Save Production"} disabled={overBroken} />
+      <RecordWarnings warnings={warnings} confirmed={confirmed} />
+      <Actions onCancel={onClose} submitting={pending} submitLabel={confirmed && warnings.length ? "Save anyway" : isEdit ? "Save Changes" : "Save Production"} disabled={overBroken || blocking} />
     </form>
   );
 }
@@ -619,9 +660,29 @@ function MortalityForm({ item, onClose, rooms }: { item?: Mortality; onClose: ()
   const upd = useUpdateMortality();
   const pending = add.isPending || upd.isPending;
 
+  const mortalityQ = useMortality();
+  const warnings = useMemo(() => {
+    const r = rooms.find((x) => x.name.toUpperCase() === room.toUpperCase());
+    if (!r || loss === "") return [];
+    const current = Number(r.current);
+    // Birds present at the start of the date = current + losses recorded on/after it.
+    const later = (mortalityQ.data ?? [])
+      .filter((m) => m.room.toUpperCase() === r.name.toUpperCase() && m.date >= date && m.id !== item?.id)
+      .reduce((s, m) => s + Math.abs(Number(m.loss) || 0), 0);
+    const ownLoss = isEdit && item && item.date >= date ? Math.abs(Number(item.loss) || 0) : 0;
+    const birdsAtRisk = Number.isFinite(current) ? current + later + ownLoss : null;
+    return checkMortalityRecord({ room: r.name, loss: Number(loss), birdsAtRisk });
+  }, [rooms, room, loss, date, mortalityQ.data, isEdit, item]);
+  const [confirmed, setConfirmed] = useState(false);
+  const warnKey = warnings.map((w) => w.message).join("|");
+  useEffect(() => setConfirmed(false), [warnKey]);
+  const blocking = warnings.some((w) => w.level === "error");
+  const needsConfirm = warnings.length > 0 && !blocking && !confirmed;
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pending || !room || !loss) return;
+    if (pending || !room || !loss || blocking) return;
+    if (needsConfirm) { setConfirmed(true); return; }
     const dateStr = date; // ISO
     const payload = { room: room.toUpperCase(), cause: cause.trim() || "Unknown", date: dateStr, loss: Number(loss) };
     const done = {
@@ -662,7 +723,8 @@ function MortalityForm({ item, onClose, rooms }: { item?: Mortality; onClose: ()
       <Field label="Suspected cause" hint="Optional description, e.g. heat stress, injury, unknown.">
         <TextInput value={cause} onChange={(e) => setCause(e.target.value)} placeholder="Unknown" />
       </Field>
-      <Actions onCancel={onClose} submitting={pending} submitLabel={isEdit ? "Save Changes" : "Save Mortality"} disabled={!room || !loss} />
+      <RecordWarnings warnings={warnings} confirmed={confirmed} />
+      <Actions onCancel={onClose} submitting={pending} submitLabel={confirmed && warnings.length ? "Save anyway" : isEdit ? "Save Changes" : "Save Mortality"} disabled={!room || !loss || blocking} />
     </form>
   );
 }
