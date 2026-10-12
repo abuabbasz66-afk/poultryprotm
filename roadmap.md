@@ -2,10 +2,10 @@
 
 ## Intelligence-led landing page (2026-10-12)
 
-- [ ] Update hero and five-step decision workflow while preserving brand and navigation
-- [ ] Add private-data-free Action Centre illustration and honest capability availability
-- [ ] Preserve pricing, statistics, founder and achievements; add registration/tutorial guidance and verified-story space
-- [ ] Verify mobile/desktop, links, automated tests and preview build; keep unpublished
+- [x] Update hero and five-step decision workflow while preserving brand and navigation
+- [x] Add private-data-free Action Centre illustration and honest capability availability
+- [x] Preserve pricing, statistics, founder and achievements; add registration/tutorial guidance and verified-story space
+- [x] Verify mobile/desktop, links, automated tests and preview build; keep unpublished
 
 - [x] Harden manifest, service worker updates, safe areas, and install experience
 - [x] Add permission-aware mobile bottom navigation and grouped More menu
