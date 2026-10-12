@@ -73,3 +73,14 @@
 - [ ] Owner approval: plan feature matrix before backend plan enforcement
 - [ ] Owner: re-enter egg records 8–20 Sep 2026 from paper/WhatsApp notes
 - [ ] Owner approval: backup restore drill in a separate test environment
+
+## Pre-publish corrections (2026-10-12)
+
+- [x] Public demo uses synthetic labelled DEMO DATA (no database read)
+- [x] Rename revenue−feed "Profit" to "Feed Margin" with explanation; Finance shows "Operating profit"
+- [x] Replace "Disease Prediction" marketing wording
+- [x] Failed phone sign-in + rate limit verified
+- [ ] Successful staff phone sign-in — blocked: needs authorised test staff account
+- [ ] At publish: revoke public access to legacy phone lookup and old real-data demo function — blocked: needs deployment approval
+- [x] Plan permission matrix drafted — awaiting owner approval before enforcement
+- [ ] Import verified 8–20 Sep egg figures — blocked: needs original farm records
