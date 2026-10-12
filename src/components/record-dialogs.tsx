@@ -13,6 +13,8 @@ import {
   HEALTH_TYPES, normalizeHealthType,
   type Room, type EggRow, type Mortality, type Health, type HealthType, type Feed, type Price,
 } from "@/lib/farm-data";
+import { roomBirdsOn } from "@/lib/production-percent";
+import { checkEggRecord, checkMortalityRecord, type RecordWarning } from "@/lib/record-validation";
 import { toDateKey } from "@/lib/date-key";
 import { FeedRecordingModal } from "@/components/daily-recording/FeedRecordingModal";
 import { eggSlots, productionRooms, ROOM_STATUSES, ROOM_STATUS_LABELS, roomStatus, type RoomStatus } from "@/lib/rooms";
