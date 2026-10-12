@@ -59,7 +59,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     features: [
       "Everything in Standard",
       "AI Intelligence",
-      "Disease Prediction",
+      "Health Risk Alerts",
       "Production Forecasting",
       "Feed Optimization",
       "Performance Alerts",
