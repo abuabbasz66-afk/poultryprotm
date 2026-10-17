@@ -108,6 +108,13 @@ function AuthPage() {
     const role = raw.role ?? "owner";
     const permissions = Array.isArray(raw.permissions) && raw.permissions.length ? raw.permissions : ["*"];
     if (!userId) return homeRouteForRole(role);
+    const { data: farm, error: farmError } = await supabase
+      .from("farms")
+      .select("id")
+      .limit(1)
+      .maybeSingle();
+    if (farmError) throw farmError;
+    if (!farm) return "/onboarding";
     let farmIds: string[] | undefined;
     try {
       const { data: ids } = await supabase.rpc("my_farm_ids");

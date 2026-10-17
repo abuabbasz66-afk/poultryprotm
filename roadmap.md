@@ -94,6 +94,8 @@
 
 ## Google account sign-up (2026-10-17)
 
-- [ ] Add Google sign-in option to the existing account screen
-- [ ] Store Google name/avatar in a self-scoped profile record; preserve separate role permissions
-- [ ] Verify account screen and sign-in redirect flow; do not publish
+- [x] Add Google sign-in option to the existing account screen
+- [x] Store Google name/avatar in a self-scoped profile record; preserve separate role permissions
+- [x] Verify account screen on phone and desktop; ensure first-time Google users land in farm setup
+- [ ] Complete a real Google sign-in with an authorised account; provider round-trip not exercised in preview
+- [ ] Do not publish without approval
