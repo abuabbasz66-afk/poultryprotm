@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import heroAsset from "@/assets/hero-layer-birds.jpg.asset.json";
 import { toast } from "sonner";
@@ -227,6 +228,28 @@ function AuthPage() {
     }
   };
 
+  const continueWithGoogle = async () => {
+    setLoading(true);
+    setMsg(null);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: `${window.location.origin}/auth`,
+      });
+      if (result.error) throw result.error;
+      if (result.redirected) return;
+
+      await qc.cancelQueries();
+      qc.clear();
+      setResuming(true);
+      const destination = await resolveDestination().catch(() => redirectTo);
+      navigate({ to: destination });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Google sign-in couldn't be completed.";
+      setMsg(message);
+      setLoading(false);
+    }
+  };
+
   const heading =
     mode === "signin" ? "Welcome back"
     : mode === "signup" ? "Create your PoultryPro Account"
@@ -281,6 +304,30 @@ function AuthPage() {
                   className={`rounded-full px-3 py-2 font-medium transition ${mode === "signup" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
                   Create Account
                 </button>
+              </div>
+            )}
+
+            {mode !== "forgot" && (
+              <div className="mb-6">
+                <button
+                  type="button"
+                  onClick={continueWithGoogle}
+                  disabled={loading}
+                  className="flex min-h-11 w-full items-center justify-center gap-3 rounded-lg border border-border bg-white px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-secondary disabled:opacity-60"
+                >
+                  <svg aria-hidden="true" viewBox="0 0 48 48" className="h-5 w-5">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z" transform="translate(0 5)" />
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.76 7.18l7.73 6C44.42 38.06 46.98 31.93 46.98 24.55Z" />
+                    <path fill="#FBBC05" d="M10.53 28.59a14.4 14.4 0 0 1 0-9.18l-7.98-6.19a23.95 23.95 0 0 0 0 21.56l7.98-6.19Z" transform="translate(0 5)" />
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.14 15.91-5.8l-7.73-6c-2.14 1.44-4.88 2.3-8.18 2.3-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z" transform="translate(0 -5)" />
+                  </svg>
+                  {loading ? "Connecting…" : "Continue with Google"}
+                </button>
+                <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
+                  <span className="h-px flex-1 bg-border" />
+                  <span>or continue with email</span>
+                  <span className="h-px flex-1 bg-border" />
+                </div>
               </div>
             )}
 
