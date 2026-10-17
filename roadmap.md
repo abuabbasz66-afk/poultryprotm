@@ -91,3 +91,11 @@
 - [ ] At publish: revoke public access to legacy phone lookup and old real-data demo function — blocked: needs deployment approval
 - [x] Plan permission matrix drafted — awaiting owner approval before enforcement
 - [ ] Import verified 8–20 Sep egg figures — blocked: needs original farm records
+
+## Google account sign-up (2026-10-17)
+
+- [x] Add Google sign-in option to the existing account screen
+- [x] Store Google name/avatar in a self-scoped profile record; preserve separate role permissions
+- [x] Verify account screen on phone and desktop; ensure first-time Google users land in farm setup
+- [ ] Complete a real Google sign-in with an authorised account; provider round-trip not exercised in preview
+- [ ] Do not publish without approval
