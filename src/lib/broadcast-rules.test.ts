@@ -45,6 +45,10 @@ describe("consent and submission safety", () => {
     expect(validateSmsBody("PoultryPro update", "marketing")).not.toBeNull());
   it("permits identified service content", () =>
     expect(validateSmsBody("PoultryPro account maintenance update", "service")).toBeNull());
+  it("requires PoultryPro identification before sending", () =>
+    expect(validateSmsBody("Please review your account records.", "service")).toBe(
+      "Identify PoultryPro in the message.",
+    ));
   it("does not count accepted as delivered", () =>
     expect(providerDeliveryStatus("accepted")).toBe("accepted"));
   it("keeps unrecognised provider states unconfirmed", () =>
