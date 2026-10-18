@@ -279,3 +279,16 @@ export const refreshBroadcastDelivery = createServerFn({ method: "POST" })
     }
     return { checked: rows?.length ?? 0 };
   });
+
+export const retryBroadcastRejected = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => campaignSchema.extend({ confirmed: z.literal(true) }).parse(input))
+  .handler(async ({ data, context }) => {
+    await requireBroadcastAdmin(context);
+    const { smsSetup } = await import("./broadcast-provider.server");
+    if (!smsSetup().ready || !smsSetup().liveEnabled) throw new Error("SMS setup and owner activation required.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: count, error } = await supabaseAdmin.rpc("sms_retry_rejected", { p_actor: context.userId, p_campaign: data.id });
+    if (error) throw new Error(error.message);
+    return { count };
+  });
