@@ -7,11 +7,12 @@ export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
       { title: "Pricing — PoultryPro™" },
-      { name: "description", content: "PoultryPro plans for poultry farms: free Basic for up to 500 birds, Standard at ₦950/month and Premium at ₦1,950/month with AI insights." },
+      { name: "description", content: "PoultryPro plans for poultry farms: free Basic for up to 500 birds, Standard at ₦950/month and Premium at ₦1,950/month with record-based decision support." },
       { property: "og:title", content: "PoultryPro™ Pricing — Free, Standard and Premium Farm Plans" },
-      { property: "og:description", content: "Compare PoultryPro plans: free Basic, Standard at ₦950/month, and Premium at ₦1,950/month with AI farm intelligence." },
+      { property: "og:description", content: "Compare PoultryPro plans: free Basic, Standard at ₦950/month, and Premium at ₦1,950/month with rule-based farm intelligence." },
       { property: "og:url", content: "https://poultrypro.life/pricing" },
       { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
     links: [{ rel: "canonical", href: "https://poultrypro.life/pricing" }],
   }),
@@ -94,8 +95,9 @@ function PricingPage() {
           </div>
 
           <div className="mt-8 rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground text-center">
-            Every new PoultryPro account starts with a 30-day Premium trial — full access to every feature. No credit card required. After the trial you can stay on Basic (free) or upgrade to Standard or Premium.
+            Every new PoultryPro account starts with a 30-day Premium trial of current Premium features. No credit card required. After the trial you can stay on Basic (free) or upgrade to Standard or Premium.
           </div>
+          <p className="mt-4 max-w-3xl mx-auto text-center text-sm text-muted-foreground">Current decision-support tools use recorded data, transparent calculations and rule-based alerts. Production estimates depend on available history and assumptions; they are not validated machine-learning forecasts or guarantees. Health risk alerts are prompts to investigate, not veterinary diagnoses. The expanded Action Centre workflow is preview-only, with public release pending. Future AI explanations and disease-prediction research are not current plan features.</p>
         </section>
 
       </main>
