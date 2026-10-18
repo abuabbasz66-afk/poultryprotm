@@ -71,7 +71,7 @@ export function providerDeliveryStatus(value: unknown): DeliveryStatus | null {
   if (["rejected", "rejectd"].includes(status)) return "rejected";
   return null;
 }
-export function canRetryDelivery(status: DeliveryStatus): boolean {
+export function canRetryDelivery(status: DeliveryStatus, reference: string | null = null, attempts = 0): boolean {
   // An ambiguous timeout may already have charged/sent: never retry it blindly.
-  return status === "failed" || status === "rejected";
+  return status === "rejected" && !reference && attempts < 3;
 }

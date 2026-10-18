@@ -51,4 +51,7 @@ describe("consent and submission safety", () => {
     expect(providerDeliveryStatus("success")).toBeNull());
   it("never retries ambiguous submissions", () => expect(canRetryDelivery("unknown")).toBe(false));
   it("never retries delivered messages", () => expect(canRetryDelivery("delivered")).toBe(false));
+  it("does not retry failures after provider acceptance", () => expect(canRetryDelivery("failed", "accepted-ref")).toBe(false));
+  it("caps explicitly rejected retries at three attempts", () => expect(canRetryDelivery("rejected", null, 3)).toBe(false));
+  it("permits an explicit rejection without a provider reference", () => expect(canRetryDelivery("rejected", null, 1)).toBe(true));
 });
