@@ -1,5 +1,13 @@
 # PoultryPro PWA and mobile upgrade
 
+## Admin Broadcast Messaging Centre (2026-10-18)
+
+- [ ] Audit existing admin access, phone sources, consent and SMS provider capabilities
+- [ ] Add protected campaigns, recipient queue and audit history with safe duplicate prevention
+- [ ] Build overview, composer, confirmation, recipient selection and delivery history
+- [ ] Verify permissions, filtering, queue, provider failures and UI without real sends
+- [ ] Report provider setup and outstanding production requirements; keep unpublished
+
 ## Five-stage farm intelligence journey (2026-10-18)
 
 - [x] Audit capability claims and preserve truthful release/preview labels; align public Premium copy with record-based tools
