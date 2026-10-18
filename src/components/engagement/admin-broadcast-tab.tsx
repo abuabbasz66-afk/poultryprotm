@@ -120,6 +120,8 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
     [deliveryFilter, setDeliveryFilter] = useState<(typeof deliveryStates)[number]>("all");
   const requestKey = useRef<string | null>(null),
     running = useRef(false);
+  const requestTest = useRef<boolean | null>(null);
+  const [activeTab, setActiveTab] = useState("compose");
   useEffect(() => {
     requestKey.current = null;
     setPage(0);
@@ -168,6 +170,8 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
     }
     setBusy(true);
     try {
+      if (requestTest.current !== test) requestKey.current = null;
+      requestTest.current = test;
       const key = requestKey.current ?? crypto.randomUUID();
       requestKey.current = key;
       const result = await prepareFn({
@@ -184,7 +188,7 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
           test,
         },
       });
-      setDraft({ ...result, test, body, title });
+      setDraft({ ...result, test, body: body.trim(), title: title.trim() });
       setConfirmed(false);
       await invalidate();
     } catch (error) {
@@ -294,7 +298,7 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
         {counts?.accepted ?? 0} submissions awaiting delivery confirmation. Success rate uses final
         delivered, failed and rejected results only; no delivery is guaranteed.
       </p>
-      <Tabs defaultValue="compose">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex flex-wrap h-auto justify-start">
           <TabsTrigger value="compose">Compose Message</TabsTrigger>
           <TabsTrigger value="history">Broadcast History</TabsTrigger>
@@ -519,12 +523,16 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
               <p className="mt-3 text-xs text-muted-foreground break-words">
                 {c.admin_label} · {dateTime(c.created_at)} · {c.category}
               </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {Object.values((c.delivery_counts ?? {}) as Record<string, number>).reduce((sum, count) => sum + count, 0)} recipients · {Object.entries((c.delivery_counts ?? {}) as Record<string, number>).map(([status, count]) => `${status}: ${count}`).join(" · ")}
+              </p>
               <Button
                 variant="outline"
                 className="mt-3"
                 onClick={() => {
                   setCampaignId(c.id);
                   setReportPage(0);
+                  setActiveTab("reports");
                 }}
               >
                 View delivery results
