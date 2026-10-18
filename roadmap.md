@@ -98,4 +98,4 @@
 - [x] Store Google name/avatar in a self-scoped profile record; preserve separate role permissions
 - [x] Verify account screen on phone and desktop; ensure first-time Google users land in farm setup
 - [ ] Complete a real Google sign-in with an authorised account; provider round-trip not exercised in preview
-- [ ] Do not publish without approval
+- [x] Keep the change unpublished; no production release made
