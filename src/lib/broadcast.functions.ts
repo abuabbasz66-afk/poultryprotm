@@ -46,12 +46,14 @@ export const getBroadcastOverview = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     await requireBroadcastAdmin(context);
     const { readSmsBalance } = await import("./broadcast-provider.server");
+    const { readSmsActivation } = await import("./broadcast-activation.server");
     const [setup, counts] = await Promise.all([
       readSmsBalance(),
       context.supabase.rpc("sms_admin_overview"),
     ]);
     if (counts.error) throw new Error("Could not load messaging overview.");
-    return { setup, counts: counts.data };
+    const { fingerprint: _fingerprint, ...activation } = await readSmsActivation(context.userId);
+    return { setup: { ...setup, liveEnabled: activation.liveEnabled }, activation, counts: counts.data };
   });
 
 export const getBroadcastHistory = createServerFn({ method: "POST" })
@@ -145,6 +147,11 @@ export const prepareBroadcast = createServerFn({ method: "POST" })
     await requireBroadcastAdmin(context);
     const issue = validateSmsBody(data.body, data.category);
     if (issue) throw new Error(issue);
+    if (data.test) {
+      const { requireSmsOwner } = await import("./broadcast-activation.server");
+      requireSmsOwner(context.userId);
+      if (data.category !== "service") throw new Error("Verification tests must be essential service messages.");
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (!data.test && data.mode === "none") throw new Error("Select recipients first.");
     const { data: id, error } = await supabaseAdmin.rpc("sms_create_campaign_v2", {
@@ -188,14 +195,19 @@ export const confirmBroadcast = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await requireBroadcastAdmin(context);
-    const { smsSetup } = await import("./broadcast-provider.server");
-    const setup = smsSetup();
-    if (!setup.ready) throw new Error("Termii setup required. No SMS was sent.");
-    if (!setup.liveEnabled)
-      throw new Error(
-        "Live sending is disabled until the owner approves activation. No SMS was sent.",
-      );
+    const { readSmsActivation, assertSmsCampaignPermission, requireSmsOwner } = await import("./broadcast-activation.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: campaign } = await context.supabase.from("sms_campaigns").select("is_test").eq("id",data.id).single();
+    if (campaign?.is_test) {
+      requireSmsOwner(context.userId);
+      const activation = await readSmsActivation(context.userId);
+      if (!activation.testEnabled) throw new Error("Verify the funded provider account and sender approval first. No SMS was sent.");
+      const { error: reserveError } = await supabaseAdmin.rpc("sms_activation_transition", {
+        p_actor: context.userId, p_action: "reserve_test", p_fingerprint: activation.fingerprint, p_campaign: data.id,
+      });
+      if (reserveError) throw new Error(reserveError.message);
+    }
+    await assertSmsCampaignPermission(context.userId, data.id);
     const { error } = await supabaseAdmin.rpc("sms_queue_campaign", {
       p_actor: context.userId,
       p_campaign: data.id,
@@ -210,10 +222,9 @@ export const processBroadcastBatch = createServerFn({ method: "POST" })
   .inputValidator((input) => campaignSchema.parse(input))
   .handler(async ({ data, context }) => {
     await requireBroadcastAdmin(context);
-    const { smsSetup, sendProviderSms } = await import("./broadcast-provider.server");
-    const setup = smsSetup();
-    if (!setup.ready || !setup.liveEnabled)
-      throw new Error("SMS setup or sending approval required.");
+    const { sendProviderSms } = await import("./broadcast-provider.server");
+    const { assertSmsCampaignPermission } = await import("./broadcast-activation.server");
+    await assertSmsCampaignPermission(context.userId, data.id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: campaign, error: campaignError } = await context.supabase
       .from("sms_campaigns")
@@ -234,6 +245,7 @@ export const processBroadcastBatch = createServerFn({ method: "POST" })
     if (error) throw new Error("Could not claim SMS batch.");
     // Five single-recipient submissions: no unverified bulk API contract, no unbounded request.
     for (const recipient of batch ?? []) {
+      await assertSmsCampaignPermission(context.userId, data.id);
       const { data: allowed, error: eligibilityError } = await supabaseAdmin.rpc(
         "sms_recipient_allowed",
         { p_recipient: recipient.id },
@@ -309,9 +321,8 @@ export const retryBroadcastRejected = createServerFn({ method: "POST" })
   .inputValidator((input) => campaignSchema.extend({ confirmed: z.literal(true) }).parse(input))
   .handler(async ({ data, context }) => {
     await requireBroadcastAdmin(context);
-    const { smsSetup } = await import("./broadcast-provider.server");
-    if (!smsSetup().ready || !smsSetup().liveEnabled)
-      throw new Error("SMS setup and owner activation required.");
+    const { assertSmsCampaignPermission } = await import("./broadcast-activation.server");
+    await assertSmsCampaignPermission(context.userId, data.id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: count, error } = await supabaseAdmin.rpc("sms_retry_rejected", {
       p_actor: context.userId,
@@ -319,4 +330,32 @@ export const retryBroadcastRejected = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     return { count };
+  });
+
+export const updateSmsActivation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    action: z.enum(["verify", "receipt", "enable", "disable"]), confirmed: z.literal(true),
+    campaign: z.string().uuid().optional(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    await requireBroadcastAdmin(context);
+    const { requireSmsOwner, readSmsActivation } = await import("./broadcast-activation.server");
+    requireSmsOwner(context.userId);
+    const { verifySmsProvider } = await import("./broadcast-provider.server");
+    if (data.action === "verify" || data.action === "enable") {
+      const check = await verifySmsProvider();
+      if (!check.accountVerified) throw new Error(!check.ready ? "Termii credentials, API URL or sender ID are missing or invalid."
+        : !check.webhookReady ? "Configure the delivery-signing secret first."
+        : !check.senderActive ? "Termii has not confirmed this sender ID as active for Nigeria."
+        : "A funded wallet could not be verified. Check Termii balance and account access.");
+    }
+    const activation = await readSmsActivation(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.rpc("sms_activation_transition", {
+      p_actor: context.userId, p_action: data.action, p_fingerprint: activation.fingerprint,
+      p_campaign: data.campaign ?? (null as unknown as string),
+    });
+    if (error) throw new Error(error.message);
+    return { updated: true };
   });
