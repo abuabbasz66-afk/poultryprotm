@@ -9,7 +9,9 @@ const audienceSchema = z.object({
   role: z.enum(["all", "user", "super_admin"]).default("all"),
   verified: z.boolean().default(false),
   page: z.number().int().min(0).max(10000).default(0),
-  selected: z.array(z.string().uuid()).max(5000).nullable().default(null),
+  mode: z.enum(["none", "manual", "all_accounts", "all_eligible"]).default("none"),
+  included: z.array(z.string().uuid()).max(5000).default([]),
+  excluded: z.array(z.string().uuid()).max(5000).default([]),
 });
 const campaignSchema = z.object({ id: z.string().uuid() });
 async function requireBroadcastAdmin(context: {
@@ -25,13 +27,15 @@ export const getBroadcastAudience = createServerFn({ method: "POST" })
   .inputValidator((input) => audienceSchema.parse(input))
   .handler(async ({ data, context }) => {
     await requireBroadcastAdmin(context);
-    const { data: audience, error } = await context.supabase.rpc("sms_admin_audience", {
+    const { data: audience, error } = await context.supabase.rpc("sms_admin_audience_v2", {
       p_category: data.category,
       p_search: data.search,
       p_role: data.role,
       p_verified: data.verified,
       p_page: data.page,
-      p_selected: data.selected ?? undefined,
+      p_mode: data.mode,
+      p_included: data.included,
+      p_excluded: data.excluded,
     });
     if (error) throw new Error("Could not load eligible recipients.");
     return audience;
@@ -142,7 +146,8 @@ export const prepareBroadcast = createServerFn({ method: "POST" })
     const issue = validateSmsBody(data.body, data.category);
     if (issue) throw new Error(issue);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: id, error } = await supabaseAdmin.rpc("sms_create_campaign", {
+    if (!data.test && data.mode === "none") throw new Error("Select recipients first.");
+    const { data: id, error } = await supabaseAdmin.rpc("sms_create_campaign_v2", {
       p_actor: context.userId,
       p_request: data.requestKey,
       p_title: data.title,
@@ -151,8 +156,9 @@ export const prepareBroadcast = createServerFn({ method: "POST" })
       p_segments: smsMetrics(data.body).segments,
       p_role: data.role,
       p_verified: data.verified,
-      // Generated RPC types omit SQL parameter nullability; NULL means all, [] means none.
-      p_selected: data.test ? [context.userId] : (data.selected ?? (null as unknown as string[])),
+      p_mode: data.mode === "none" ? "manual" : data.mode,
+      p_included: data.included,
+      p_excluded: data.excluded,
       p_test: data.test,
     });
     if (error || !id) throw new Error(error?.message ?? "Could not prepare broadcast.");
@@ -161,7 +167,12 @@ export const prepareBroadcast = createServerFn({ method: "POST" })
       .select("id", { count: "exact", head: true })
       .eq("campaign_id", id);
     if (countError) throw new Error("Could not confirm recipients.");
-    return { id, count: count ?? 0 };
+    const { data: saved } = await context.supabase
+      .from("sms_campaigns")
+      .select("audience")
+      .eq("id", id)
+      .single();
+    return { id, count: count ?? 0, summary: (saved?.audience ?? null) as Record<string, unknown> | null };
   });
 
 export const confirmBroadcast = createServerFn({ method: "POST" })
