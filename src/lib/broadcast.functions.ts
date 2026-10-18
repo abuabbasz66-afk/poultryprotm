@@ -142,7 +142,8 @@ export const prepareBroadcast = createServerFn({ method: "POST" })
       p_segments: smsMetrics(data.body).segments,
       p_role: data.role,
       p_verified: data.verified,
-      p_selected: data.test ? [context.userId] : (data.selected ?? undefined),
+      // Generated RPC types omit SQL parameter nullability; NULL means all, [] means none.
+      p_selected: data.test ? [context.userId] : (data.selected ?? (null as unknown as string[])),
       p_test: data.test,
     });
     if (error || !id) throw new Error(error?.message ?? "Could not prepare broadcast.");
@@ -224,8 +225,8 @@ export const processBroadcastBatch = createServerFn({ method: "POST" })
       const { error: saveError } = await supabaseAdmin.rpc("sms_record_result", {
         p_recipient: recipient.id,
         p_status: result.status,
-        p_reference: result.reference ?? undefined,
-        p_reason: result.reason ?? undefined,
+        p_reference: result.reference ?? (null as unknown as string),
+        p_reason: result.reason ?? (null as unknown as string),
         p_actor: context.userId,
       });
       if (saveError)
@@ -269,6 +270,7 @@ export const refreshBroadcastDelivery = createServerFn({ method: "POST" })
           p_recipient: row.id,
           p_status: status,
           p_reference: row.provider_message_id,
+          p_reason: null as unknown as string,
           p_actor: context.userId,
           p_event_key: `poll:${row.provider_message_id}:${status}`,
         });

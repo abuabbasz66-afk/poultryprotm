@@ -46,8 +46,8 @@ export const Route = createFileRoute("/api/public/sms-delivery")({
           p_reference: event.message_id,
           p_reason: ["failed", "rejected"].includes(status)
             ? "Provider reported delivery failure; check Termii delivery report for route/DND restrictions"
-            : undefined,
-          p_actor: undefined,
+            : (null as unknown as string),
+          p_actor: null as unknown as string,
           p_event_key: `termii:${event.message_id}:${status}`,
         });
         if (saveError) return new Response("Retry later", { status: 503 });
