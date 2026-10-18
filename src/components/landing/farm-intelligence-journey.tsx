@@ -78,7 +78,7 @@ const stages = [
       "Supporting evidence: Compare the room’s current production with its historical records and confirm that the records are complete.",
       "Suggested checks: Review feed intake, water availability, bird age, environmental conditions and any recent management changes.",
     ],
-    note: "This is a prompt for investigation, not a diagnosis of the cause. Missing records are not treated as zero. Current guidance uses transparent calculations and rules, not AI-generated explanations; the expanded Action Centre is preview-only.",
+    note: "This is a prompt for investigation, not a diagnosis of the cause. Missing records are not treated as zero. Current Action Centre guidance uses transparent calculations and rules, not AI-generated explanations.",
     outcome:
       "Farmers receive clearer guidance on what to investigate, rather than having to interpret every record from scratch.",
     example:
@@ -89,20 +89,20 @@ const stages = [
     category: "Farmer in Control",
     icon: ShieldCheck,
     description:
-      "Once an issue has been reviewed, authorised users can manage the response through the Action Centre when the relevant functionality is available. The intended workflow includes assigning responsibility, recording notes, tracking progress and documenting how the issue was resolved.",
+      "Once an issue has been reviewed, authorised users can manage the response through the Action Centre. The workflow includes assigning responsibility, recording notes, tracking progress and documenting how the issue was resolved.",
     detailTitle: "How actions can be managed",
     details: [
       "Keep track of issues that need attention.",
-      "Assign responsibility where the functionality permits.",
+      "Assign responsibility to an active farm team member, subject to farm permissions.",
       "Record actions taken and supporting notes.",
       "Review issue status and history.",
       "Maintain accountability across farm operations.",
     ],
-    note: "Action Centre workflow: preview only — public release pending. Assigning, tracking and resolving issues with notes and history must not be assumed available on the public platform. Access also depends on farm permissions.",
+    note: "The Action Centre is available to authorised farm users. Actions depend on farm permissions and require a connection; farmers remain in control of operational decisions.",
     outcome:
       "Farm management decisions can become organised actions that are easier to track and review.",
     example:
-      "The farmer records the follow-up action using the relevant available functionality. Action Centre tracking remains preview-only.",
+      "An authorised farmer records the follow-up action in the Action Centre, with notes, progress and action history.",
   },
 ];
 
@@ -156,7 +156,7 @@ export function FarmIntelligenceJourney() {
               </h3>
               {stage.title === "Act" && (
                 <p className="mt-2 text-xs font-semibold text-primary">
-                  Preview only · Public release pending
+                  Available · Subject to farm permissions
                 </p>
               )}
               <p className="mt-3 text-sm text-muted-foreground leading-relaxed">

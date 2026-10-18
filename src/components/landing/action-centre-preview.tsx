@@ -30,7 +30,7 @@ export function ActionCentrePreview() {
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-              PoultryPro Action Centre · Preview
+              PoultryPro Action Centre
             </p>
             <h2
               id="action-centre-heading"
@@ -161,9 +161,9 @@ export function ActionCentrePreview() {
                 {item.quality}
               </p>
               <p className="mt-4 border-t border-border pt-3 text-xs text-muted-foreground">
-                In the Action Centre preview, authorised users can acknowledge, assign, start,
-                resolve or dismiss an issue, with notes and action history. Release to the public
-                app is pending.
+                In the Action Centre, authorised users can acknowledge, assign, start,
+                resolve or dismiss an issue, with notes and action history, subject to farm
+                permissions. The examples shown here are illustrative demo data.
               </p>
             </div>
           </div>

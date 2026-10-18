@@ -142,8 +142,8 @@ function PricingPage() {
             Current decision-support tools use recorded data, transparent calculations and
             rule-based alerts. Production estimates depend on available history and assumptions;
             they are not validated machine-learning forecasts or guarantees. Health risk alerts are
-            prompts to investigate, not veterinary diagnoses. The expanded Action Centre workflow is
-            preview-only, with public release pending. Future AI explanations and disease-prediction
+            prompts to investigate, not veterinary diagnoses. The Action Centre is available to
+            authorised farm users, subject to farm permissions. Future AI explanations and disease-prediction
             research are not current plan features.
           </p>
         </section>
