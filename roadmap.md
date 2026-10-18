@@ -9,7 +9,7 @@
 - [x] Build overview, composer, confirmation, recipient selection and delivery history
 - [x] Verify permissions, filtering, queue, mocked provider failures and UI without real sends
 - [x] Document setup and limitations in docs/admin-broadcast-messaging.md; keep unpublished
-- [ ] Activate and verify Termii test delivery — blocked by credentials, sender/DND approval and owner sending approval
+- [ ] Enable bulk broadcasts — blocked until provider setup, actual owner test receipt and separate live activation approval
 
 ## Five-stage farm intelligence journey (2026-10-18)
 
