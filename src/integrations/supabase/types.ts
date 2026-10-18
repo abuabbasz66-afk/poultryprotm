@@ -3277,6 +3277,155 @@ export type Database = {
           },
         ]
       }
+      sms_campaigns: {
+        Row: {
+          admin_label: string
+          admin_user_id: string
+          audience: Json
+          body: string
+          category: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          is_test: boolean
+          queued_at: string | null
+          request_key: string
+          segments: number
+          status: string
+          title: string
+        }
+        Insert: {
+          admin_label: string
+          admin_user_id: string
+          audience: Json
+          body: string
+          category: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_test?: boolean
+          queued_at?: string | null
+          request_key: string
+          segments: number
+          status?: string
+          title: string
+        }
+        Update: {
+          admin_label?: string
+          admin_user_id?: string
+          audience?: Json
+          body?: string
+          category?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_test?: boolean
+          queued_at?: string | null
+          request_key?: string
+          segments?: number
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      sms_events: {
+        Row: {
+          actor_id: string | null
+          campaign_id: string
+          created_at: string
+          detail: string | null
+          event: string
+          event_key: string | null
+          id: string
+          recipient_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          campaign_id: string
+          created_at?: string
+          detail?: string | null
+          event: string
+          event_key?: string | null
+          id?: string
+          recipient_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          campaign_id?: string
+          created_at?: string
+          detail?: string | null
+          event?: string
+          event_key?: string | null
+          id?: string
+          recipient_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_events_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "sms_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sms_events_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "sms_recipients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_recipients: {
+        Row: {
+          attempts: number
+          campaign_id: string
+          claimed_at: string | null
+          display_name: string
+          failure_reason: string | null
+          id: string
+          phone: string
+          provider_message_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          campaign_id: string
+          claimed_at?: string | null
+          display_name: string
+          failure_reason?: string | null
+          id?: string
+          phone: string
+          provider_message_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          campaign_id?: string
+          claimed_at?: string | null
+          display_name?: string
+          failure_reason?: string | null
+          id?: string
+          phone?: string
+          provider_message_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "sms_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_sessions: {
         Row: {
           actions_taken: Json | null
@@ -4381,6 +4530,83 @@ export type Database = {
         Returns: Json
       }
       resolve_login_email: { Args: { _identifier: string }; Returns: string }
+      sms_admin_audience: {
+        Args: {
+          p_category?: string
+          p_page?: number
+          p_role?: string
+          p_search?: string
+          p_selected?: string[]
+          p_verified?: boolean
+        }
+        Returns: Json
+      }
+      sms_audience_source: {
+        Args: { p_category: string }
+        Returns: {
+          display_name: string
+          eligible: boolean
+          exclusion: string
+          phone: string
+          role_key: string
+          user_id: string
+          verified: boolean
+        }[]
+      }
+      sms_claim_batch: {
+        Args: { p_actor: string; p_campaign: string }
+        Returns: {
+          attempts: number
+          campaign_id: string
+          claimed_at: string | null
+          display_name: string
+          failure_reason: string | null
+          id: string
+          phone: string
+          provider_message_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "sms_recipients"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      sms_create_campaign: {
+        Args: {
+          p_actor: string
+          p_body: string
+          p_category: string
+          p_request: string
+          p_role: string
+          p_segments: number
+          p_selected: string[]
+          p_test?: boolean
+          p_title: string
+          p_verified: boolean
+        }
+        Returns: string
+      }
+      sms_finish_campaign: { Args: { p_campaign: string }; Returns: undefined }
+      sms_normalize_phone: { Args: { p: string }; Returns: string }
+      sms_queue_campaign: {
+        Args: { p_actor: string; p_campaign: string; p_count: number }
+        Returns: undefined
+      }
+      sms_record_result: {
+        Args: {
+          p_actor: string
+          p_event_key?: string
+          p_reason: string
+          p_recipient: string
+          p_reference: string
+          p_status: string
+        }
+        Returns: undefined
+      }
       touch_member_login: { Args: never; Returns: undefined }
       track_product_event: {
         Args: {
