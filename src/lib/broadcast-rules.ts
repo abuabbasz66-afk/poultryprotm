@@ -10,7 +10,8 @@ export function normalizeNigerianPhone(value: string | null | undefined): string
   return /^234[789][01]\d{8}$/.test(digits) ? `+${digits}` : null;
 }
 
-const GSM_BASIC = "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà";
+const GSM_BASIC =
+  "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà";
 const GSM_EXTENDED = "\f^{}\\[~]|€";
 export function smsMetrics(body: string) {
   let units = 0;
@@ -23,22 +24,44 @@ export function smsMetrics(body: string) {
   if (unicode) units = body.length; // SMS UCS-2 uses UTF-16 code units, including emoji surrogates.
   const single = unicode ? 70 : 160;
   const multipart = unicode ? 67 : 153;
-  return { characters: [...body].length, units, encoding: unicode ? "Unicode" : "GSM-7", segments: units === 0 ? 0 : units <= single ? 1 : Math.ceil(units / multipart) };
+  return {
+    characters: [...body].length,
+    units,
+    encoding: unicode ? "Unicode" : "GSM-7",
+    segments: units === 0 ? 0 : units <= single ? 1 : Math.ceil(units / multipart),
+  };
 }
 
 export function validateSmsBody(body: string, category: BroadcastCategory): string | null {
   if (!body.trim()) return "Enter a message.";
-  if (body.length > 1200 || smsMetrics(body).segments > 8) return "Keep the message within 8 SMS segments and 1,200 characters.";
+  if (body.length > 1200 || smsMetrics(body).segments > 8)
+    return "Keep the message within 8 SMS segments and 1,200 characters.";
   if (!/poultrypro/i.test(body)) return "Identify PoultryPro in the message.";
-  if (category === "marketing" && !/https:\/\/(?:www\.)?poultrypro\.life\/settings(?:\b|\/|\?)/i.test(body)) return "Promotional messages must include https://poultrypro.life/settings for communication preferences.";
+  if (
+    category === "marketing" &&
+    !/https:\/\/(?:www\.)?poultrypro\.life\/settings(?:\b|\/|\?)/i.test(body)
+  )
+    return "Promotional messages must include https://poultrypro.life/settings for communication preferences.";
   return null;
 }
 
-export function consentEligible(category: BroadcastCategory, prefs: { sms: boolean; marketing: boolean }): boolean {
+export function consentEligible(
+  category: BroadcastCategory,
+  prefs: { sms: boolean; marketing: boolean },
+): boolean {
   return prefs.sms && (category === "service" || prefs.marketing);
 }
 
-export type DeliveryStatus = "pending" | "sending" | "accepted" | "sent" | "delivered" | "failed" | "rejected" | "unknown" | "excluded";
+export type DeliveryStatus =
+  | "pending"
+  | "sending"
+  | "accepted"
+  | "sent"
+  | "delivered"
+  | "failed"
+  | "rejected"
+  | "unknown"
+  | "excluded";
 export function providerDeliveryStatus(value: unknown): DeliveryStatus | null {
   const status = String(value ?? "").toLowerCase();
   if (["delivered", "delivrd"].includes(status)) return "delivered";
