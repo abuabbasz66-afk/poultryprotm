@@ -21,3 +21,5 @@
 - Public landing Action Centre examples use a standalone synthetic catalogue and read-only preview, never the farm intelligence hooks; why: public marketing must not fetch or persist private farm records.
 - The homepage's five-stage explanation lives in a dedicated presentational journey component with native expandable details and illustrative text only; why: keep lengthy public explanations accessible without coupling them to private farm data or calculations.
 - Google account identity fields are mirrored into a self-readable `public.profiles` table; roles and privileges remain governed by protected role and permission systems, never profile fields.
+- SMS broadcasts use protected server functions, existing role and consent sources, persistent recipient claims and at most five provider submissions per request; ambiguous submissions are never automatically resent because the provider does not document idempotency.
+- SMS delivery callbacks require verified provider signatures and deduplicate status events; browser queue continuation is resumable and must not be represented as an unattended worker.

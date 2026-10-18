@@ -37,6 +37,7 @@ import { getVideoProvider, useAcademyCategories, useAllAcademyTutorials, validat
 import { Button } from "@/components/ui/button";
 import { AdminGrowthTab } from "@/components/growth/admin-growth-tab";
 import { AdminEngagementTab } from "@/components/engagement/admin-engagement-tab";
+import { AdminBroadcastTab } from "@/components/engagement/admin-broadcast-tab";
 
 export const Route = createFileRoute("/super-admin")({
   ssr: false,
@@ -45,6 +46,10 @@ export const Route = createFileRoute("/super-admin")({
       { title: "Super Admin — PoultryPro Platform" },
       { name: "description", content: "Platform administration console for PoultryPro: farm accounts, subscriptions, live activity monitoring and revenue analytics." },
       { name: "robots", content: "noindex, nofollow" },
+      { property: "og:title", content: "Administration — PoultryPro" },
+      { property: "og:description", content: "Secure PoultryPro administration and consent-based broadcast messaging." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: SuperAdminPage,
@@ -53,7 +58,7 @@ export const Route = createFileRoute("/super-admin")({
 type Tab =
   | "overview" | "accounts" | "farms" | "subscriptions"
   | "activity" | "activity-log" | "live-feed" | "analytics"
-  | "whatsapp" | "intelligence" | "health" | "academy" | "growth" | "engagement" | "audit";
+  | "whatsapp" | "intelligence" | "health" | "academy" | "growth" | "engagement" | "broadcast" | "audit";
 
 const NAV: { id: Tab; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -70,6 +75,7 @@ const NAV: { id: Tab; label: string; icon: any }[] = [
   { id: "academy", label: "Academy", icon: GraduationCap },
   { id: "growth", label: "Growth", icon: TrendingUp },
   { id: "engagement", label: "Customer Engagement", icon: MessageCircle },
+  { id: "broadcast", label: "Broadcast Messages", icon: Send },
   { id: "audit", label: "Admin Audit Log", icon: FileText },
 ];
 
@@ -157,7 +163,8 @@ function SuperAdminPage() {
     );
   }
 
-  const active = NAV.find((n) => n.id === tab)!;
+  const active = NAV.find((n) => n.id === tab) ?? NAV[0];
+  if (!active) return null;
 
   return (
     <div className="min-h-screen bg-[#f6f2e6] text-[#12281c]">
@@ -269,6 +276,7 @@ function SuperAdminPage() {
           {tab === "academy" && <AcademyAdminTab userId={userId} />}
           {tab === "growth" && <AdminGrowthTab enabled={!!isAdmin} />}
           {tab === "engagement" && <AdminEngagementTab enabled={!!isAdmin} />}
+          {tab === "broadcast" && <AdminBroadcastTab userId={userId} />}
           {tab === "audit" && <AuditTab userId={userId} />}
         </main>
 
