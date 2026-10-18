@@ -20,9 +20,15 @@ export function smsSetup() {
   );
   return {
     ready,
+    configured: {
+      apiKey: Boolean(process.env["TERMII_API_KEY"]),
+      baseUrl: validBase,
+      senderId: /^[A-Za-z0-9 ]{3,11}$/.test(sender),
+      deliverySecret: Boolean(process.env["TERMII_WEBHOOK_SECRET"]),
+    },
     sender: ready ? sender : null,
     webhookReady: Boolean(process.env["TERMII_WEBHOOK_SECRET"]),
-    liveEnabled: process.env["SMS_LIVE_ENABLED"] === "true",
+    liveEnabled: false,
     balance: null as number | null,
     currency: null as string | null,
     unitPrice: null as number | null,
@@ -62,6 +68,53 @@ export async function readSmsBalance() {
     /* Balance is optional; do not pretend it is zero. */
   }
   return setup;
+}
+
+export async function smsConfigurationFingerprint() {
+  const raw = [
+    "TERMII_API_KEY",
+    "TERMII_BASE_URL",
+    "TERMII_SENDER_ID",
+    "TERMII_WEBHOOK_SECRET",
+    "SMS_OWNER_USER_ID",
+  ]
+    .map((name) => process.env[name] ?? "")
+    .join("\u0000");
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  return [...new Uint8Array(digest)].map((v) => v.toString(16).padStart(2, "0")).join("");
+}
+
+/** Non-sending account checks. Never return provider payloads or credential-bearing URLs. */
+export async function verifySmsProvider() {
+  const setup = await readSmsBalance();
+  let senderActive = false;
+  let senderCheckAvailable = false;
+  if (setup.ready) {
+    try {
+      const { ok, result } = await termiiRequest("/api/sender-id");
+      if (ok && Array.isArray(result?.content)) {
+        senderCheckAvailable = true;
+        senderActive = result.content.some((row: unknown) => {
+          if (!row || typeof row !== "object") return false;
+          const value = row as Record<string, unknown>;
+          return (
+            value.sender_id === setup.sender &&
+            String(value.status).toLowerCase() === "active" &&
+            String(value.country).toLowerCase() === "nigeria"
+          );
+        });
+      }
+    } catch {
+      /* Do not turn an unavailable account check into approval. */
+    }
+  }
+  const accountVerified =
+    setup.ready &&
+    setup.webhookReady &&
+    senderActive &&
+    setup.balance !== null &&
+    setup.balance > 0;
+  return { ...setup, senderActive, senderCheckAvailable, accountVerified };
 }
 
 export async function sendProviderSms(

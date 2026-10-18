@@ -6,7 +6,7 @@ The existing platform-admin sidebar now includes Broadcast Messages. Only the ex
 
 The centre provides registered/valid-phone totals, actual submission and delivery counts, optional wallet balance, composer, GSM-7/Unicode segment calculations, searchable 25-user pages, role and verified-number filters, consent exclusions, duplicate-number removal, saved drafts, explicit confirmation, history, paginated delivery reports and status audit events.
 
-Essential service broadcasts require existing SMS consent. Promotional broadcasts also require marketing consent and include a settings link. Consent and registered phone are rechecked before submission; daily/weekly existing promotional caps are enforced. This is deliberately conservative: lack of consent never becomes permission because a number exists.
+Essential service broadcasts exclude explicit SMS opt-outs; legacy accounts without a recorded choice are included with a warning only for lawful, provider-approved service communications. Promotional broadcasts require recorded SMS and marketing consent and include a settings link. Consent and registered phone are rechecked before submission; daily/weekly existing promotional caps are enforced. No consent choice is automatically changed.
 
 ## Changed files
 
@@ -37,7 +37,8 @@ Use secure server-side secrets, never chat or client code:
 - `TERMII_BASE_URL`: account-specific HTTPS API origin from Termii (restricted to a Termii hostname).
 - `TERMII_SENDER_ID`: approved 3–11 character sender ID identifying PoultryPro.
 - `TERMII_WEBHOOK_SECRET`: signing secret agreed with Termii.
-- `SMS_LIVE_ENABLED`: remains unset/false until explicit owner approval for activation.
+- `SMS_OWNER_USER_ID`: securely configured to the account explicitly designated by the owner; requires the existing protected super-admin role as well.
+- `SMS_LIVE_ENABLED`: deprecated and ignored by the updated implementation; never use it to bypass owner activation.
 
 Configure the Termii delivery callback as `https://poultrypro.life/api/public/sms-delivery` only after publishing approval. Confirm HMAC-SHA512 raw-payload signing and actual delivery payload with Termii before activation. Account wallet funding, current Nigeria rate card, sender approval and DND-route approval are required. Promotional messages use generic routes, never DND bypass; they pause outside 08:00–20:00 Lagos time. Service routing requires approved transactional use.
 
@@ -64,3 +65,18 @@ Webhook updates deduplicate references/status, reject unsigned/altered payloads 
 - Automatic preview compilation and focused lint passed; no manual production build was run (the project harness runs compilation).
 
 All website changes remain unpublished.
+
+## Owner activation follow-up (2026-10-18)
+
+Exact initial blocker: all four Termii settings were absent. The designated owner has now been configured securely, and the owner authorised one real test to their own registered number after verification. No test has been submitted and no bulk activation has been granted.
+
+- `0020_sms_owner_activation_controls.sql` reuses `platform_settings` and `admin_audit_log`; no duplicate roles, accounts or farm tables. A guard rejects browser writes, including through the generic settings function. The transition is callable only with privileged server credentials after the server verifies the designated owner and existing admin role.
+- `src/lib/broadcast-activation.server.ts` enforces owner/test/bulk permissions before confirmation, processing and each submission. Test campaigns must contain exactly one recipient: the owner's own eligible registered number, and service content only.
+- `src/lib/broadcast-activation-rules.ts` and its tests enforce separate test/live gates, current configuration matching, route approval, receipt confirmation and 24-hour verification expiry.
+- Owner controls verify wallet funding and an active Nigeria sender through documented read-only Termii endpoints, require an explicit transactional/DND approval acknowledgement, record test receipt separately, then allow explicit bulk activation or deactivation. API credentials never reach the browser.
+- A credential/owner change invalidates prior approvals. One test campaign is reserved per verification configuration; a different test requires separate review rather than automatic resend. Delivery statuses are not changed by receipt confirmation or activation.
+- Preview checks: owner controls visible, missing settings listed, verification/live activation blocked, Select All preserved, direct activation RPC and generic settings bypass attempts rejected. Focused lint and automatic compilation passed. Mocked provider and activation tests passed; no real provider round-trip is verified.
+
+Still required: secure Termii API key, account API URL, approved sender ID and confirmed delivery-signing secret; funded wallet and transactional/DND approval; confirm callback payload; submit the approved owner test, confirm actual receipt, and separately approve live activation. The published callback returned 401 to an unsigned probe, confirming it is reachable and rejects unsigned traffic, not that signed provider delivery works. No publication was performed. Estimated cost remains unavailable without a verified rate source. The browser-driven queue is not an unattended worker.
+
+Official current references: https://developers.termii.com/sender-id, https://developers.termii.com/balance, https://developers.termii.com/messaging-api, https://developers.termii.com/events-and-reports, https://developers.termii.com/history.

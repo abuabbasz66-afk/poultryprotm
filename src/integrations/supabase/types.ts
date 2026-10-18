@@ -4530,6 +4530,15 @@ export type Database = {
         Returns: Json
       }
       resolve_login_email: { Args: { _identifier: string }; Returns: string }
+      sms_activation_transition: {
+        Args: {
+          p_action: string
+          p_actor: string
+          p_campaign?: string
+          p_fingerprint: string
+        }
+        Returns: Json
+      }
       sms_admin_audience: {
         Args: {
           p_category?: string

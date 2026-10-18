@@ -2,13 +2,14 @@
 
 ## Admin Broadcast Messaging Centre (2026-10-18)
 
-- [ ] Complete provider verification, owner-only test/live approval controls and configuration status — provider credentials and approved test recipient required
+- [x] Add guarded owner-only test/live approval controls, provider verification and explicit configuration status
+- [ ] Verify real provider account and the approved owner test — blocked by Termii credentials, funding, sender/route approval and delivery setup
 - [x] Audit existing admin access, phone sources, consent and SMS provider capabilities
 - [x] Add protected campaigns, recipient queue and audit history with safe duplicate prevention
 - [x] Build overview, composer, confirmation, recipient selection and delivery history
 - [x] Verify permissions, filtering, queue, mocked provider failures and UI without real sends
 - [x] Document setup and limitations in docs/admin-broadcast-messaging.md; keep unpublished
-- [ ] Activate and verify Termii test delivery — blocked by credentials, sender/DND approval and owner sending approval
+- [ ] Enable bulk broadcasts — blocked until provider setup, actual owner test receipt and separate live activation approval
 
 ## Five-stage farm intelligence journey (2026-10-18)
 
