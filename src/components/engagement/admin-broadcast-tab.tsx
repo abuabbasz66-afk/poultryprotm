@@ -508,10 +508,10 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
             )}
             {(recipients?.consent_not_recorded ?? 0) > 0 && (
               <p role="alert" className="border-l-4 border-gold bg-secondary p-3 text-sm">
-                {recipients?.consent_not_recorded} recipients never recorded an SMS choice (accounts
-                created before SMS preferences existed). They are included only because this is an
-                essential service message. Use this for genuine account or service matters, not
-                promotions. Their consent settings are not changed.
+                {recipients?.consent_not_recorded} selected accounts never recorded an SMS choice
+                (accounts created before SMS preferences existed). They are included only because
+                this is an essential service message. Use this for genuine account or service
+                matters, not promotions. Their consent settings are not changed.
               </p>
             )}
             <div className="relative max-w-md">
@@ -942,6 +942,14 @@ function DraftSummary({
         <dd className="font-semibold">{draft.count}</dd>
         <dt className="text-muted-foreground">Excluded accounts</dt>
         <dd className="font-semibold">{num("excluded") ?? "—"}</dd>
+        {num("selected_accounts") != null && num("excluded") != null && (
+          <>
+            <dt className="text-muted-foreground">Shared numbers sent once</dt>
+            <dd className="font-semibold">
+              {Math.max(0, (num("selected_accounts") ?? 0) - (num("excluded") ?? 0) - draft.count)}
+            </dd>
+          </>
+        )}
         <dt className="text-muted-foreground">Estimated SMS units</dt>
         <dd className="font-semibold">
           {segments * draft.count} ({segments} per recipient)
@@ -958,8 +966,8 @@ function DraftSummary({
       )}
       {(num("consent_not_recorded") ?? 0) > 0 && (
         <p className="border-l-4 border-gold bg-secondary p-2 text-xs">
-          {num("consent_not_recorded")} recipients have no recorded SMS choice and are included only
-          for this essential service message.
+          {num("consent_not_recorded")} eligible accounts have no recorded SMS choice and are
+          included only for this essential service message.
         </p>
       )}
       <p className="text-xs text-muted-foreground">
