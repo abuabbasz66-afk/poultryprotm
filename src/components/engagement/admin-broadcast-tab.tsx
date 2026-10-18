@@ -41,6 +41,7 @@ import {
   confirmBroadcast,
   processBroadcastBatch,
   refreshBroadcastDelivery,
+  retryBroadcastRejected,
 } from "@/lib/broadcast.functions";
 import { smsMetrics, validateSmsBody, type BroadcastCategory } from "@/lib/broadcast-rules";
 
@@ -93,6 +94,8 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
     confirmFn = useServerFn(confirmBroadcast),
     processFn = useServerFn(processBroadcastBatch),
     refreshFn = useServerFn(refreshBroadcastDelivery);
+  const retryFn = useServerFn(retryBroadcastRejected);
+  const [retryConfirm, setRetryConfirm] = useState(false);
   const [category, setCategory] = useState<BroadcastCategory>("service"),
     [role, setRole] = useState<"all" | "user" | "super_admin">("all"),
     [verified, setVerified] = useState(false);
@@ -606,6 +609,9 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
                 submissions are never automatically resent. Completed means queue processing ended,
                 not guaranteed delivery.
               </p>
+              <Button variant="outline" disabled={busy || !setup?.liveEnabled || !["failed", "partially_failed", "completed"].includes(activeCampaign?.status ?? "")} onClick={() => setRetryConfirm(true)}>
+                Review rejected submissions for retry
+              </Button>
               <Select
                 value={deliveryFilter}
                 onValueChange={(v) => {
@@ -716,6 +722,17 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
               Confirm and send
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={retryConfirm} onOpenChange={setRetryConfirm}>
+        <DialogContent><DialogHeader><DialogTitle>Confirm safe retry</DialogTitle><DialogDescription>Only explicit provider rejections without a message reference can be retried, with a maximum of three attempts. Delivered, accepted, failed-after-acceptance and unknown submissions are excluded.</DialogDescription></DialogHeader>
+          <p className="text-sm">Campaign: {activeCampaign?.title} · Consent will be checked again before sending. Additional provider charges may apply.</p>
+          <DialogFooter><Button variant="outline" onClick={() => setRetryConfirm(false)}>Cancel</Button><Button disabled={busy || !campaignId || !setup?.liveEnabled} onClick={async () => {
+            if (!campaignId) return;
+            setBusy(true);
+            try { await retryFn({ data: { id: campaignId, confirmed: true } }); setRetryConfirm(false); setBusy(false); await runQueue(campaignId); }
+            catch (error) { toast.error(error instanceof Error ? error.message : "Retry unavailable"); setBusy(false); }
+          }}>Confirm retry</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
