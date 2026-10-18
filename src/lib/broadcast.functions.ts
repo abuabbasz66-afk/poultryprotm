@@ -172,7 +172,11 @@ export const prepareBroadcast = createServerFn({ method: "POST" })
       .select("audience")
       .eq("id", id)
       .single();
-    return { id, count: count ?? 0, summary: (saved?.audience ?? null) as Record<string, unknown> | null };
+    return {
+      id,
+      count: count ?? 0,
+      summary: (saved?.audience ?? null) as Record<string, unknown> | null,
+    };
   });
 
 export const confirmBroadcast = createServerFn({ method: "POST" })

@@ -151,7 +151,19 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
     queryFn: () => overviewFn(),
   });
   const audience = useQuery({
-    queryKey: ["broadcast", userId, "audience", category, role, verified, page, search, mode, included, excluded],
+    queryKey: [
+      "broadcast",
+      userId,
+      "audience",
+      category,
+      role,
+      verified,
+      page,
+      search,
+      mode,
+      included,
+      excluded,
+    ],
     placeholderData: (prev) => prev,
     queryFn: async () =>
       (await audienceFn({
@@ -366,9 +378,9 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
               </Select>
               <p className="text-xs text-muted-foreground">
                 Essential service messages go to valid numbers unless the user turned SMS off;
-                legacy accounts with no recorded SMS choice are included with a warning.
-                Promotional campaigns require recorded SMS and promotional consent and respect DND
-                restrictions. Service messages must not contain promotions.
+                legacy accounts with no recorded SMS choice are included with a warning. Promotional
+                campaigns require recorded SMS and promotional consent and respect DND restrictions.
+                Service messages must not contain promotions.
               </p>
               <label className="block text-sm">
                 Message body
@@ -413,7 +425,139 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
           </div>
           <section className="border-y border-border py-6 space-y-4">
             <h2 className="font-display text-2xl">Recipients</h2>
-@@RECIP@@            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-4">
+              <Select value={role} onValueChange={(v) => setRole(v as typeof role)}>
+                <SelectTrigger className="w-full sm:w-48" aria-label="User role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All account roles</SelectItem>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="super_admin">Super administrator</SelectItem>
+                </SelectContent>
+              </Select>
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox checked={verified} onCheckedChange={(v) => setVerified(v === true)} />
+                Verified phone only
+              </label>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="flex items-start gap-3 rounded-lg border border-border bg-card p-3 text-sm">
+                <Checkbox
+                  aria-label="Select All Accounts"
+                  checked={mode === "all_accounts"}
+                  onCheckedChange={(v) => chooseBulk("all_accounts", v === true)}
+                />
+                <span>
+                  <span className="block font-semibold">Select All Accounts</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Every registered account on every page ({recipients?.filtered_accounts ?? "—"}).
+                    Accounts that cannot receive this SMS are listed as excluded before sending.
+                  </span>
+                </span>
+              </label>
+              <label className="flex items-start gap-3 rounded-lg border border-border bg-card p-3 text-sm">
+                <Checkbox
+                  aria-label="Select All Eligible Phone Numbers"
+                  checked={mode === "all_eligible"}
+                  onCheckedChange={(v) => chooseBulk("all_eligible", v === true)}
+                />
+                <span>
+                  <span className="block font-semibold">Select All Eligible Phone Numbers</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Only accounts that can receive this type of message (
+                    {recipients?.filtered_eligible_accounts ?? "—"}).
+                  </span>
+                </span>
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Select-all covers all accounts matching the role and verified filters; search only
+              narrows the list you see. Untick anyone to leave them out.
+            </p>
+            <dl className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4" aria-live="polite">
+              {[
+                ["Accounts selected", recipients?.selected_accounts],
+                ["With valid phone", recipients?.selected_valid_phones],
+                ["Missing / invalid number", recipients?.selected_invalid_phones],
+                ["Will receive SMS", recipients?.eligible],
+              ].map(([label, value]) => (
+                <div key={String(label)} className="rounded-lg border border-border p-3">
+                  <dt className="text-xs text-muted-foreground">{label}</dt>
+                  <dd className="mt-1 text-lg font-semibold">{value ?? "—"}</dd>
+                </div>
+              ))}
+            </dl>
+            {(recipients?.excluded ?? 0) > 0 && (
+              <p className="text-sm">
+                <strong>{recipients?.excluded} selected accounts will not be messaged:</strong>{" "}
+                {Object.entries(recipients?.exclusion_reasons ?? {})
+                  .map(([reason, n]) => `${reason} (${n})`)
+                  .join(" · ")}
+                {recipients?.duplicate_phones
+                  ? ` · ${recipients.duplicate_phones} shared numbers sent once`
+                  : ""}
+              </p>
+            )}
+            {(recipients?.consent_not_recorded ?? 0) > 0 && (
+              <p role="alert" className="border-l-4 border-gold bg-secondary p-3 text-sm">
+                {recipients?.consent_not_recorded} recipients never recorded an SMS choice (accounts
+                created before SMS preferences existed). They are included only because this is an
+                essential service message. Use this for genuine account or service matters, not
+                promotions. Their consent settings are not changed.
+              </p>
+            )}
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                aria-label="Search registered users"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(0);
+                }}
+                placeholder="Search name or registered phone"
+                className="pl-9"
+                maxLength={100}
+              />
+            </div>
+            {audience.isError && (
+              <p role="alert" className="text-destructive text-sm">
+                Recipient list could not be loaded.
+              </p>
+            )}
+            <div className="divide-y divide-border">
+              {audience.data?.rows.map((row) => (
+                <label key={row.user_id} className="flex items-start gap-3 py-3 text-sm">
+                  <Checkbox
+                    disabled={mode === "all_eligible" && !row.eligible}
+                    checked={isChecked(row)}
+                    onCheckedChange={(v) => toggleRow(row.user_id, v === true)}
+                    aria-label={`Select ${row.display_name}`}
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold break-words">{row.display_name}</span>
+                    <span className="block text-muted-foreground break-words">
+                      {row.phone ?? "No valid registered number"} · {row.role_key} ·{" "}
+                      {row.verified ? "Phone verified" : "Not phone-verified"} ·{" "}
+                      {row.consent_status === "granted"
+                        ? "SMS consent recorded"
+                        : row.consent_status === "declined"
+                          ? "SMS turned off"
+                          : "SMS choice not recorded"}
+                    </span>
+                    {row.exclusion ? (
+                      <span className="block text-xs text-destructive">{row.exclusion}</span>
+                    ) : row.consent_warning ? (
+                      <span className="block text-xs text-muted-foreground">
+                        Service messages only — no recorded SMS choice
+                      </span>
+                    ) : null}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
               <Button
                 variant="outline"
                 size="icon"
@@ -439,7 +583,9 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
           </section>
           <div className="flex flex-wrap gap-3">
             <Button
-              disabled={busy || !title.trim() || Boolean(issue) || mode === "none" || !recipients?.eligible}
+              disabled={
+                busy || !title.trim() || Boolean(issue) || mode === "none" || !recipients?.eligible
+              }
               onClick={() => void prepare(false)}
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -697,7 +843,7 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
           <p className="text-sm whitespace-pre-wrap break-words border border-border rounded-md p-3">
             {draft?.body}
           </p>
-          <DraftSummary draft={draft} category={category} />
+          <DraftSummary draft={draft} />
           <p className="text-xs text-muted-foreground">
             Estimated cost unavailable. Termii will charge according to your account rates.
           </p>
@@ -764,6 +910,54 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function DraftSummary({
+  draft,
+}: {
+  draft: { count: number; body: string; summary: Record<string, unknown> | null } | null;
+}) {
+  if (!draft) return null;
+  const s = draft.summary ?? {};
+  const num = (k: string) => (typeof s[k] === "number" ? (s[k] as number) : null);
+  const reasons = (s.exclusion_reasons ?? {}) as Record<string, number>;
+  const segments = smsMetrics(draft.body).segments;
+  return (
+    <div className="space-y-2 text-sm">
+      <dl className="grid grid-cols-2 gap-2">
+        <dt className="text-muted-foreground">Accounts selected</dt>
+        <dd className="font-semibold">{num("selected_accounts") ?? "—"}</dd>
+        <dt className="text-muted-foreground">With valid phone numbers</dt>
+        <dd className="font-semibold">{num("valid_phones") ?? "—"}</dd>
+        <dt className="text-muted-foreground">Eligible recipients (will be queued)</dt>
+        <dd className="font-semibold">{draft.count}</dd>
+        <dt className="text-muted-foreground">Excluded accounts</dt>
+        <dd className="font-semibold">{num("excluded") ?? "—"}</dd>
+        <dt className="text-muted-foreground">Estimated SMS units</dt>
+        <dd className="font-semibold">
+          {segments * draft.count} ({segments} per recipient)
+        </dd>
+      </dl>
+      {Object.keys(reasons).length > 0 && (
+        <ul className="list-disc pl-5 text-xs text-muted-foreground">
+          {Object.entries(reasons).map(([reason, n]) => (
+            <li key={reason}>
+              {reason}: {n}
+            </li>
+          ))}
+        </ul>
+      )}
+      {(num("consent_not_recorded") ?? 0) > 0 && (
+        <p className="border-l-4 border-gold bg-secondary p-2 text-xs">
+          {num("consent_not_recorded")} recipients have no recorded SMS choice and are included only
+          for this essential service message.
+        </p>
+      )}
+      <p className="text-xs text-muted-foreground">
+        Being queued does not mean delivered. Delivery results appear per recipient in reports.
+      </p>
     </div>
   );
 }
