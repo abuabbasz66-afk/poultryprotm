@@ -63,11 +63,13 @@ export const getBroadcastHistory = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .range(data.page * 20, data.page * 20 + 19);
     if (error) throw new Error("Could not load broadcast history.");
-    return Promise.all(rows.map(async (campaign) => {
+    const campaigns = [];
+    for (const campaign of rows) {
       const { data: counts, error: countError } = await context.supabase.rpc("sms_admin_campaign_counts", { p_campaign: campaign.id });
       if (countError) throw new Error("Could not load campaign results.");
-      return { ...campaign, delivery_counts: counts };
-    }));
+      campaigns.push({ ...campaign, delivery_counts: counts });
+    }
+    return campaigns;
   });
 
 export const getBroadcastReport = createServerFn({ method: "POST" })
