@@ -1,5 +1,14 @@
 # PoultryPro PWA and mobile upgrade
 
+## Admin Broadcast Messaging Centre (2026-10-18)
+
+- [x] Audit existing admin access, phone sources, consent and SMS provider capabilities
+- [x] Add protected campaigns, recipient queue and audit history with safe duplicate prevention
+- [x] Build overview, composer, confirmation, recipient selection and delivery history
+- [x] Verify permissions, filtering, queue, mocked provider failures and UI without real sends
+- [x] Document setup and limitations in docs/admin-broadcast-messaging.md; keep unpublished
+- [ ] Activate and verify Termii test delivery — blocked by credentials, sender/DND approval and owner sending approval
+
 ## Five-stage farm intelligence journey (2026-10-18)
 
 - [x] Audit capability claims and preserve truthful release/preview labels; align public Premium copy with record-based tools
