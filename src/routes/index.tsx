@@ -964,7 +964,7 @@ function Index() {
           </div>
 
           <p className="mt-6 text-xs sm:text-sm text-muted-foreground max-w-3xl">
-            Existing prices and subscription rules are unchanged. Premium’s current tools use recorded data, rules and estimates — not validated disease or outbreak prediction. The new Action Centre workflow is tested in preview and awaits release approval; it is not yet advertised as live. Planned task reminders and future AI explanations are not included as current features.
+            Existing prices and subscription rules are unchanged. Premium’s current tools use recorded data, rules and estimates — not validated disease or outbreak prediction. The Action Centre is available to authorised farm users, subject to farm permissions. Planned task reminders and future AI explanations are not included as current features.
           </p>
 
           {/* Final CTA */}
