@@ -2,8 +2,8 @@ export type PricingPlan = {
   id: "basic" | "standard" | "premium";
   name: string;
   tagline: string;
-  price: number;            // NGN monthly (0 = Free)
-  priceLabel: string;       // display label e.g. "Free" or "₦950/month"
+  price: number; // NGN monthly (0 = Free)
+  priceLabel: string; // display label e.g. "Free" or "₦950/month"
   featured?: boolean;
   cta: string;
   features: string[];
