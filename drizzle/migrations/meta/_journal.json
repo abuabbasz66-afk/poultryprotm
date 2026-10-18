@@ -141,6 +141,13 @@
       "when": 1792332969993,
       "tag": "0019_sms_select_all_and_legacy_consent",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792334462428,
+      "tag": "0020_sms_owner_activation_controls",
+      "breakpoints": true
     }
   ]
 }
