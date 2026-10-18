@@ -47,10 +47,18 @@ import { smsMetrics, validateSmsBody, type BroadcastCategory } from "@/lib/broad
 
 type Audience = {
   total_registered: number;
-  valid_phones: number;
+  filtered_accounts: number;
+  filtered_valid_phones: number;
+  filtered_eligible_accounts: number;
+  selected_accounts: number;
+  selected_valid_phones: number;
+  selected_invalid_phones: number;
+  selected_eligible_accounts: number;
   eligible: number;
   excluded: number;
   duplicate_phones: number;
+  consent_not_recorded: number;
+  exclusion_reasons: Record<string, number>;
   total_matches: number;
   rows: {
     user_id: string;
@@ -58,6 +66,8 @@ type Audience = {
     phone: string | null;
     verified: boolean;
     role_key: string;
+    consent_status: "granted" | "declined" | "not_recorded";
+    consent_warning: boolean;
     eligible: boolean;
     exclusion: string | null;
   }[];
@@ -99,10 +109,12 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
   const [category, setCategory] = useState<BroadcastCategory>("service"),
     [role, setRole] = useState<"all" | "user" | "super_admin">("all"),
     [verified, setVerified] = useState(false);
-  const [group, setGroup] = useState("all"),
+  type Mode = "none" | "manual" | "all_accounts" | "all_eligible";
+  const [mode, setMode] = useState<Mode>("none"),
     [search, setSearch] = useState(""),
     [page, setPage] = useState(0),
-    [selected, setSelected] = useState<string[]>([]);
+    [included, setIncluded] = useState<string[]>([]),
+    [excluded, setExcluded] = useState<string[]>([]);
   const [title, setTitle] = useState(""),
     [body, setBody] = useState(""),
     [busy, setBusy] = useState(false),
@@ -113,6 +125,7 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
     test: boolean;
     body: string;
     title: string;
+    summary: Record<string, unknown> | null;
   } | null>(null);
   const [campaignId, setCampaignId] = useState<string | null>(null),
     [historyPage, setHistoryPage] = useState(0),
@@ -131,25 +144,30 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
   const [activeTab, setActiveTab] = useState("compose");
   useEffect(() => {
     requestKey.current = null;
-    setPage(0);
-  }, [title, body, category, role, verified, group, selected]);
+  }, [title, body, category, role, verified, mode, included, excluded]);
+  useEffect(() => setPage(0), [role, verified, category]);
   const overview = useQuery({
     queryKey: ["broadcast", userId, "overview"],
     queryFn: () => overviewFn(),
   });
   const audience = useQuery({
-    queryKey: ["broadcast", userId, "audience", category, role, verified, page, search],
+    queryKey: [
+      "broadcast",
+      userId,
+      "audience",
+      category,
+      role,
+      verified,
+      page,
+      search,
+      mode,
+      included,
+      excluded,
+    ],
+    placeholderData: (prev) => prev,
     queryFn: async () =>
       (await audienceFn({
-        data: { category, role, verified, page, search, selected: null },
-      })) as unknown as Audience,
-  });
-  const chosen = useQuery({
-    queryKey: ["broadcast", userId, "chosen", category, role, verified, selected],
-    enabled: group === "selected",
-    queryFn: async () =>
-      (await audienceFn({
-        data: { category, role, verified, page: 0, search: "", selected },
+        data: { category, role, verified, page, search, mode, included, excluded },
       })) as unknown as Audience,
   });
   const history = useQuery({
@@ -166,7 +184,28 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
   });
   const setup = overview.data?.setup;
   const counts = overview.data?.counts as unknown as Counts | undefined;
-  const recipients = group === "selected" ? chosen.data : audience.data;
+  const recipients = audience.data;
+  const isBulk = mode === "all_accounts" || mode === "all_eligible";
+  const isChecked = (row: Audience["rows"][number]) =>
+    mode === "manual"
+      ? included.includes(row.user_id)
+      : mode === "all_accounts"
+        ? !excluded.includes(row.user_id)
+        : mode === "all_eligible"
+          ? row.eligible && !excluded.includes(row.user_id)
+          : false;
+  const toggleRow = (id: string, on: boolean) => {
+    if (isBulk) setExcluded((c) => (on ? c.filter((x) => x !== id) : [...new Set([...c, id])]));
+    else {
+      setMode("manual");
+      setIncluded((c) => (on ? [...new Set([...c, id])] : c.filter((x) => x !== id)));
+    }
+  };
+  const chooseBulk = (next: "all_accounts" | "all_eligible", on: boolean) => {
+    setExcluded([]);
+    setIncluded([]);
+    setMode(on ? next : "none");
+  };
   const metrics = smsMetrics(body),
     issue = validateSmsBody(body, category);
   const invalidate = () => qc.invalidateQueries({ queryKey: ["broadcast", userId] });
@@ -186,7 +225,9 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
           category,
           role,
           verified,
-          selected: group === "selected" ? selected : null,
+          mode,
+          included,
+          excluded,
           page: 0,
           search: "",
           requestKey: key,
@@ -195,7 +236,14 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
           test,
         },
       });
-      setDraft({ ...result, test, body: body.trim(), title: title.trim() });
+      setDraft({
+        id: result.id,
+        count: result.count,
+        summary: JSON.parse(result.summary) as Record<string, unknown> | null,
+        test,
+        body: body.trim(),
+        title: title.trim(),
+      });
       setConfirmed(false);
       await invalidate();
     } catch (error) {
@@ -336,8 +384,10 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Both require SMS opt-in. Promotional campaigns also require marketing consent and
-                respect DND restrictions; service messages must not contain promotions.
+                Essential service messages go to valid numbers unless the user turned SMS off;
+                legacy accounts with no recorded SMS choice are included with a warning. Promotional
+                campaigns require recorded SMS and promotional consent and respect DND restrictions.
+                Service messages must not contain promotions.
               </p>
               <label className="block text-sm">
                 Message body
@@ -383,15 +433,6 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
           <section className="border-y border-border py-6 space-y-4">
             <h2 className="font-display text-2xl">Recipients</h2>
             <div className="flex flex-wrap items-center gap-4">
-              <Select value={group} onValueChange={setGroup}>
-                <SelectTrigger className="w-full sm:w-60" aria-label="Recipient group">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All eligible registered users</SelectItem>
-                  <SelectItem value="selected">Selected users</SelectItem>
-                </SelectContent>
-              </Select>
               <Select value={role} onValueChange={(v) => setRole(v as typeof role)}>
                 <SelectTrigger className="w-full sm:w-48" aria-label="User role">
                   <SelectValue />
@@ -407,16 +448,72 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
                 Verified phone only
               </label>
             </div>
-            <p className="text-sm">
-              <strong>{recipients?.eligible ?? "—"} recipients</strong> ·{" "}
-              {recipients?.excluded ?? "—"} excluded · {recipients?.duplicate_phones ?? 0}{" "}
-              shared-number duplicates removed
-            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="flex items-start gap-3 rounded-lg border border-border bg-card p-3 text-sm">
+                <Checkbox
+                  aria-label="Select All Accounts"
+                  checked={mode === "all_accounts"}
+                  onCheckedChange={(v) => chooseBulk("all_accounts", v === true)}
+                />
+                <span>
+                  <span className="block font-semibold">Select All Accounts</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Every registered account on every page ({recipients?.filtered_accounts ?? "—"}).
+                    Accounts that cannot receive this SMS are listed as excluded before sending.
+                  </span>
+                </span>
+              </label>
+              <label className="flex items-start gap-3 rounded-lg border border-border bg-card p-3 text-sm">
+                <Checkbox
+                  aria-label="Select All Eligible Phone Numbers"
+                  checked={mode === "all_eligible"}
+                  onCheckedChange={(v) => chooseBulk("all_eligible", v === true)}
+                />
+                <span>
+                  <span className="block font-semibold">Select All Eligible Phone Numbers</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Only accounts that can receive this type of message (
+                    {recipients?.filtered_eligible_accounts ?? "—"}).
+                  </span>
+                </span>
+              </label>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Valid format does not mean verified ownership. Exclusions include missing/invalid
-              numbers, consent and inactive accounts. Existing SMS and marketing preferences can be
-              changed in account settings.
+              Select-all covers all accounts matching the role and verified filters; search only
+              narrows the list you see. Untick anyone to leave them out.
             </p>
+            <dl className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4" aria-live="polite">
+              {[
+                ["Accounts selected", recipients?.selected_accounts],
+                ["With valid phone", recipients?.selected_valid_phones],
+                ["Missing / invalid number", recipients?.selected_invalid_phones],
+                ["Will receive SMS", recipients?.eligible],
+              ].map(([label, value]) => (
+                <div key={String(label)} className="rounded-lg border border-border p-3">
+                  <dt className="text-xs text-muted-foreground">{label}</dt>
+                  <dd className="mt-1 text-lg font-semibold">{value ?? "—"}</dd>
+                </div>
+              ))}
+            </dl>
+            {(recipients?.excluded ?? 0) > 0 && (
+              <p className="text-sm">
+                <strong>{recipients?.excluded} selected accounts will not be messaged:</strong>{" "}
+                {Object.entries(recipients?.exclusion_reasons ?? {})
+                  .map(([reason, n]) => `${reason} (${n})`)
+                  .join(" · ")}
+                {recipients?.duplicate_phones
+                  ? ` · ${recipients.duplicate_phones} shared numbers sent once`
+                  : ""}
+              </p>
+            )}
+            {(recipients?.consent_not_recorded ?? 0) > 0 && (
+              <p role="alert" className="border-l-4 border-gold bg-secondary p-3 text-sm">
+                {recipients?.consent_not_recorded} selected accounts never recorded an SMS choice
+                (accounts created before SMS preferences existed). They are included only because
+                this is an essential service message. Use this for genuine account or service
+                matters, not promotions. Their consent settings are not changed.
+              </p>
+            )}
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -440,26 +537,29 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
               {audience.data?.rows.map((row) => (
                 <label key={row.user_id} className="flex items-start gap-3 py-3 text-sm">
                   <Checkbox
-                    disabled={!row.eligible || group !== "selected"}
-                    checked={selected.includes(row.user_id)}
-                    onCheckedChange={(v) =>
-                      setSelected((current) =>
-                        v === true
-                          ? [...current, row.user_id]
-                          : current.filter((id) => id !== row.user_id),
-                      )
-                    }
+                    disabled={mode === "all_eligible" && !row.eligible}
+                    checked={isChecked(row)}
+                    onCheckedChange={(v) => toggleRow(row.user_id, v === true)}
                     aria-label={`Select ${row.display_name}`}
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block font-semibold break-words">{row.display_name}</span>
                     <span className="block text-muted-foreground break-words">
                       {row.phone ?? "No valid registered number"} · {row.role_key} ·{" "}
-                      {row.verified ? "Verified" : "Not phone-verified"}
+                      {row.verified ? "Phone verified" : "Not phone-verified"} ·{" "}
+                      {row.consent_status === "granted"
+                        ? "SMS consent recorded"
+                        : row.consent_status === "declined"
+                          ? "SMS turned off"
+                          : "SMS choice not recorded"}
                     </span>
-                    {row.exclusion && (
+                    {row.exclusion ? (
                       <span className="block text-xs text-destructive">{row.exclusion}</span>
-                    )}
+                    ) : row.consent_warning ? (
+                      <span className="block text-xs text-muted-foreground">
+                        Service messages only — no recorded SMS choice
+                      </span>
+                    ) : null}
                   </span>
                 </label>
               ))}
@@ -490,7 +590,9 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
           </section>
           <div className="flex flex-wrap gap-3">
             <Button
-              disabled={busy || !title.trim() || Boolean(issue) || !recipients?.eligible}
+              disabled={
+                busy || !title.trim() || Boolean(issue) || mode === "none" || !recipients?.eligible
+              }
               onClick={() => void prepare(false)}
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -560,7 +662,14 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
                     const count = Object.values(
                       (c.delivery_counts ?? {}) as Record<string, number>,
                     ).reduce((sum, n) => sum + n, 0);
-                    setDraft({ id: c.id, count, body: c.body, title: c.title, test: c.is_test });
+                    setDraft({
+                      id: c.id,
+                      count,
+                      body: c.body,
+                      title: c.title,
+                      test: c.is_test,
+                      summary: (c.audience ?? null) as Record<string, unknown> | null,
+                    });
                     setConfirmed(false);
                   }}
                 >
@@ -741,10 +850,7 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
           <p className="text-sm whitespace-pre-wrap break-words border border-border rounded-md p-3">
             {draft?.body}
           </p>
-          <p className="text-sm">
-            {draft?.count} recipients · {draft ? smsMetrics(draft.body).segments * draft.count : 0}{" "}
-            estimated SMS units
-          </p>
+          <DraftSummary draft={draft} />
           <p className="text-xs text-muted-foreground">
             Estimated cost unavailable. Termii will charge according to your account rates.
           </p>
@@ -811,6 +917,62 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function DraftSummary({
+  draft,
+}: {
+  draft: { count: number; body: string; summary: Record<string, unknown> | null } | null;
+}) {
+  if (!draft) return null;
+  const s = draft.summary ?? {};
+  const num = (k: string) => (typeof s[k] === "number" ? (s[k] as number) : null);
+  const reasons = (s.exclusion_reasons ?? {}) as Record<string, number>;
+  const segments = smsMetrics(draft.body).segments;
+  return (
+    <div className="space-y-2 text-sm">
+      <dl className="grid grid-cols-2 gap-2">
+        <dt className="text-muted-foreground">Accounts selected</dt>
+        <dd className="font-semibold">{num("selected_accounts") ?? "—"}</dd>
+        <dt className="text-muted-foreground">With valid phone numbers</dt>
+        <dd className="font-semibold">{num("valid_phones") ?? "—"}</dd>
+        <dt className="text-muted-foreground">Eligible recipients (will be queued)</dt>
+        <dd className="font-semibold">{draft.count}</dd>
+        <dt className="text-muted-foreground">Excluded accounts</dt>
+        <dd className="font-semibold">{num("excluded") ?? "—"}</dd>
+        {num("selected_accounts") != null && num("excluded") != null && (
+          <>
+            <dt className="text-muted-foreground">Shared numbers sent once</dt>
+            <dd className="font-semibold">
+              {Math.max(0, (num("selected_accounts") ?? 0) - (num("excluded") ?? 0) - draft.count)}
+            </dd>
+          </>
+        )}
+        <dt className="text-muted-foreground">Estimated SMS units</dt>
+        <dd className="font-semibold">
+          {segments * draft.count} ({segments} per recipient)
+        </dd>
+      </dl>
+      {Object.keys(reasons).length > 0 && (
+        <ul className="list-disc pl-5 text-xs text-muted-foreground">
+          {Object.entries(reasons).map(([reason, n]) => (
+            <li key={reason}>
+              {reason}: {n}
+            </li>
+          ))}
+        </ul>
+      )}
+      {(num("consent_not_recorded") ?? 0) > 0 && (
+        <p className="border-l-4 border-gold bg-secondary p-2 text-xs">
+          {num("consent_not_recorded")} eligible accounts have no recorded SMS choice and are
+          included only for this essential service message.
+        </p>
+      )}
+      <p className="text-xs text-muted-foreground">
+        Being queued does not mean delivered. Delivery results appear per recipient in reports.
+      </p>
     </div>
   );
 }

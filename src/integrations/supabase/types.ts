@@ -4541,8 +4541,35 @@ export type Database = {
         }
         Returns: Json
       }
+      sms_admin_audience_v2: {
+        Args: {
+          p_category: string
+          p_excluded: string[]
+          p_included: string[]
+          p_mode: string
+          p_page: number
+          p_role: string
+          p_search: string
+          p_verified: boolean
+        }
+        Returns: Json
+      }
       sms_admin_campaign_counts: { Args: { p_campaign: string }; Returns: Json }
       sms_admin_overview: { Args: never; Returns: Json }
+      sms_audience_detail: {
+        Args: { p_category: string }
+        Returns: {
+          consent_status: string
+          consent_warning: boolean
+          display_name: string
+          eligible: boolean
+          exclusion: string
+          phone: string
+          role_key: string
+          user_id: string
+          verified: boolean
+        }[]
+      }
       sms_audience_source: {
         Args: { p_category: string }
         Returns: {
@@ -4592,6 +4619,23 @@ export type Database = {
         }
         Returns: string
       }
+      sms_create_campaign_v2: {
+        Args: {
+          p_actor: string
+          p_body: string
+          p_category: string
+          p_excluded: string[]
+          p_included: string[]
+          p_mode: string
+          p_request: string
+          p_role: string
+          p_segments: number
+          p_test: boolean
+          p_title: string
+          p_verified: boolean
+        }
+        Returns: string
+      }
       sms_finish_campaign: { Args: { p_campaign: string }; Returns: undefined }
       sms_normalize_phone: { Args: { p: string }; Returns: string }
       sms_queue_campaign: {
@@ -4613,6 +4657,27 @@ export type Database = {
       sms_retry_rejected: {
         Args: { p_actor: string; p_campaign: string }
         Returns: number
+      }
+      sms_selected_audience: {
+        Args: {
+          p_category: string
+          p_excluded: string[]
+          p_included: string[]
+          p_mode: string
+          p_role: string
+          p_verified: boolean
+        }
+        Returns: {
+          consent_status: string
+          consent_warning: boolean
+          display_name: string
+          eligible: boolean
+          exclusion: string
+          phone: string
+          role_key: string
+          user_id: string
+          verified: boolean
+        }[]
       }
       touch_member_login: { Args: never; Returns: undefined }
       track_product_event: {
