@@ -1,0 +1,5 @@
+REVOKE ALL ON public.sms_campaigns,public.sms_recipients,public.sms_events FROM anon,authenticated;
+GRANT SELECT ON public.sms_campaigns,public.sms_recipients,public.sms_events TO authenticated;
+GRANT ALL ON public.sms_campaigns,public.sms_recipients,public.sms_events TO service_role;
+REVOKE ALL ON FUNCTION public.sms_audience_source(text),public.sms_create_campaign(uuid,uuid,text,text,text,integer,text,boolean,uuid[],boolean),public.sms_queue_campaign(uuid,uuid,integer),public.sms_claim_batch(uuid,uuid),public.sms_record_result(uuid,text,text,text,uuid,text),public.sms_finish_campaign(uuid),public.sms_recipient_allowed(uuid),public.sms_retry_rejected(uuid,uuid) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.sms_audience_source(text),public.sms_create_campaign(uuid,uuid,text,text,text,integer,text,boolean,uuid[],boolean),public.sms_queue_campaign(uuid,uuid,integer),public.sms_claim_batch(uuid,uuid),public.sms_record_result(uuid,text,text,text,uuid,text),public.sms_finish_campaign(uuid),public.sms_recipient_allowed(uuid),public.sms_retry_rejected(uuid,uuid) TO service_role;

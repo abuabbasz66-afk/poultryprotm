@@ -127,6 +127,13 @@
       "when": 1792331345861,
       "tag": "0017_sms_queue_eligibility_hardening",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792331463944,
+      "tag": "0018_sms_broadcast_least_privilege_grants",
+      "breakpoints": true
     }
   ]
 }
