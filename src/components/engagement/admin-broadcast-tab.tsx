@@ -208,6 +208,22 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
   };
   const metrics = smsMetrics(body),
     issue = validateSmsBody(body, category);
+  const recipientSummaryPending = audience.isFetching || audience.isPlaceholderData;
+  const sendBlockReason = busy
+    ? "Please wait for the current request to finish."
+    : !title.trim()
+      ? "Enter a campaign title."
+      : issue
+        ? issue
+        : mode === "none"
+          ? "Select accounts or eligible phone numbers."
+          : audience.isError
+            ? "Recipient details could not be loaded. Refresh and try again."
+            : recipientSummaryPending
+              ? "Checking the selected recipients…"
+              : !recipients?.eligible
+                ? "No selected accounts can receive this SMS. Review phone numbers, filters and communication preferences."
+                : null;
   const invalidate = () => qc.invalidateQueries({ queryKey: ["broadcast", userId] });
   async function prepare(test: boolean) {
     if (issue) {
@@ -392,6 +408,10 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
               <label className="block text-sm">
                 Message body
                 <Textarea
+                  id="broadcast-message-body"
+                  aria-label="Message body"
+                  aria-invalid={Boolean(body.trim() && issue)}
+                  aria-describedby={body.trim() && issue ? "broadcast-message-error" : undefined}
                   value={body}
                   maxLength={1200}
                   rows={7}
@@ -400,6 +420,11 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
                   placeholder="PoultryPro: …"
                 />
               </label>
+              {body.trim() && issue && (
+                <p id="broadcast-message-error" role="alert" className="text-sm text-destructive">
+                  {issue}
+                </p>
+              )}
               <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                 <span>{metrics.characters} characters</span>
                 <span>{metrics.encoding}</span>
@@ -590,9 +615,8 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
           </section>
           <div className="flex flex-wrap gap-3">
             <Button
-              disabled={
-                busy || !title.trim() || Boolean(issue) || mode === "none" || !recipients?.eligible
-              }
+              disabled={Boolean(sendBlockReason)}
+              aria-describedby={sendBlockReason ? "broadcast-send-reason" : undefined}
               onClick={() => void prepare(false)}
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -606,6 +630,22 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
               Send Test SMS
             </Button>
           </div>
+          {sendBlockReason && (
+            <p id="broadcast-send-reason" role="status" className="text-sm text-muted-foreground">
+              {sendBlockReason}
+            </p>
+          )}
+          {(!setup?.ready || !setup.liveEnabled) && (
+            <p className="text-sm text-destructive">
+              {overview.isError
+                ? "SMS setup could not be checked. Refresh and try again."
+                : !setup
+                  ? "Checking SMS setup…"
+                  : !setup.ready
+                    ? "Actual sending is unavailable until Termii credentials and an approved sender ID are configured. You can still review a draft."
+                    : "You can review a draft, but actual sending remains off until the owner approves activation."}
+            </p>
+          )}
           <p className="text-xs text-muted-foreground">
             Test SMS uses only your own eligible registered phone. The next step is explicit
             confirmation; preparing a draft sends nothing.
