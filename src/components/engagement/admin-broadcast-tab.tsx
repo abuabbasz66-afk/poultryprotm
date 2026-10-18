@@ -524,7 +524,14 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
                 {c.admin_label} · {dateTime(c.created_at)} · {c.category}
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
-                {Object.values((c.delivery_counts ?? {}) as Record<string, number>).reduce((sum, count) => sum + count, 0)} recipients · {Object.entries((c.delivery_counts ?? {}) as Record<string, number>).map(([status, count]) => `${status}: ${count}`).join(" · ")}
+                {Object.values((c.delivery_counts ?? {}) as Record<string, number>).reduce(
+                  (sum, count) => sum + count,
+                  0,
+                )}{" "}
+                recipients ·{" "}
+                {Object.entries((c.delivery_counts ?? {}) as Record<string, number>)
+                  .map(([status, count]) => `${status}: ${count}`)
+                  .join(" · ")}
               </p>
               <Button
                 variant="outline"

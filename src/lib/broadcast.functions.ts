@@ -65,7 +65,10 @@ export const getBroadcastHistory = createServerFn({ method: "POST" })
     if (error) throw new Error("Could not load broadcast history.");
     const campaigns = [];
     for (const campaign of rows) {
-      const { data: counts, error: countError } = await context.supabase.rpc("sms_admin_campaign_counts", { p_campaign: campaign.id });
+      const { data: counts, error: countError } = await context.supabase.rpc(
+        "sms_admin_campaign_counts",
+        { p_campaign: campaign.id },
+      );
       if (countError) throw new Error("Could not load campaign results.");
       campaigns.push({ ...campaign, delivery_counts: counts });
     }
