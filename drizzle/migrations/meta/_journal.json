@@ -120,6 +120,13 @@
       "when": 1792331112985,
       "tag": "0016_sms_broadcast_reporting_and_retry",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792331345861,
+      "tag": "0017_sms_queue_eligibility_hardening",
+      "breakpoints": true
     }
   ]
 }
