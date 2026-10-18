@@ -122,7 +122,12 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
     running = useRef(false);
   const requestTest = useRef<boolean | null>(null);
   const mounted = useRef(true);
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const [activeTab, setActiveTab] = useState("compose");
   useEffect(() => {
     requestKey.current = null;
@@ -546,10 +551,22 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
               >
                 View delivery results
               </Button>
-              {c.status === "draft" && <Button className="mt-3 ml-2" variant="outline" disabled={busy} onClick={() => {
-                const count = Object.values((c.delivery_counts ?? {}) as Record<string, number>).reduce((sum, n) => sum + n, 0);
-                setDraft({ id: c.id, count, body: c.body, title: c.title, test: c.is_test }); setConfirmed(false);
-              }}>Review draft</Button>}
+              {c.status === "draft" && (
+                <Button
+                  className="mt-3 ml-2"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => {
+                    const count = Object.values(
+                      (c.delivery_counts ?? {}) as Record<string, number>,
+                    ).reduce((sum, n) => sum + n, 0);
+                    setDraft({ id: c.id, count, body: c.body, title: c.title, test: c.is_test });
+                    setConfirmed(false);
+                  }}
+                >
+                  Review draft
+                </Button>
+              )}
             </article>
           ))}
           <div className="flex gap-3">
