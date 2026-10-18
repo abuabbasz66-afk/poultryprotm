@@ -4541,6 +4541,8 @@ export type Database = {
         }
         Returns: Json
       }
+      sms_admin_campaign_counts: { Args: { p_campaign: string }; Returns: Json }
+      sms_admin_overview: { Args: never; Returns: Json }
       sms_audience_source: {
         Args: { p_category: string }
         Returns: {
@@ -4596,6 +4598,7 @@ export type Database = {
         Args: { p_actor: string; p_campaign: string; p_count: number }
         Returns: undefined
       }
+      sms_recipient_allowed: { Args: { p_recipient: string }; Returns: boolean }
       sms_record_result: {
         Args: {
           p_actor: string
@@ -4606,6 +4609,10 @@ export type Database = {
           p_status: string
         }
         Returns: undefined
+      }
+      sms_retry_rejected: {
+        Args: { p_actor: string; p_campaign: string }
+        Returns: number
       }
       touch_member_login: { Args: never; Returns: undefined }
       track_product_event: {

@@ -113,6 +113,13 @@
       "when": 1792331045741,
       "tag": "0015_admin_sms_broadcast_centre",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792331112985,
+      "tag": "0016_sms_broadcast_reporting_and_retry",
+      "breakpoints": true
     }
   ]
 }
