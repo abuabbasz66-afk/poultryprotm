@@ -236,7 +236,14 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
           test,
         },
       });
-      setDraft({ ...result, test, body: body.trim(), title: title.trim() });
+      setDraft({
+        id: result.id,
+        count: result.count,
+        summary: JSON.parse(result.summary) as Record<string, unknown> | null,
+        test,
+        body: body.trim(),
+        title: title.trim(),
+      });
       setConfirmed(false);
       await invalidate();
     } catch (error) {

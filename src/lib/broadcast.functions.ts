@@ -175,7 +175,7 @@ export const prepareBroadcast = createServerFn({ method: "POST" })
     return {
       id,
       count: count ?? 0,
-      summary: (saved?.audience ?? null) as Record<string, unknown> | null,
+      summary: JSON.stringify(saved?.audience ?? null),
     };
   });
 
