@@ -1,5 +1,11 @@
 # PoultryPro PWA and mobile upgrade
 
+## Five-stage farm intelligence journey (2026-10-18)
+
+- [x] Audit capability claims and preserve truthful release/preview labels; align public Premium copy with record-based tools
+- [x] Expand the existing journey with explanations, illustrative scenario and correct CTAs
+- [x] Verify mobile/desktop, expandable details, links and all 76 tests; automatic build OK; kept unpublished
+
 ## Intelligence-led landing page (2026-10-12)
 
 - [x] Update hero and five-step decision workflow while preserving brand and navigation

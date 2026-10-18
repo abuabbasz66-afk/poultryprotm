@@ -19,6 +19,7 @@ import { AcademySection } from "@/components/academy/academy-section";
 import { RecognitionCard } from "@/components/recognition/international-recognition";
 import { TUTORIAL_CATEGORIES } from "@/lib/tutorials";
 import { ActionCentrePreview } from "@/components/landing/action-centre-preview";
+import { FarmIntelligenceJourney } from "@/components/landing/farm-intelligence-journey";
 import { Button } from "@/components/ui/button";
 
 
@@ -126,31 +127,6 @@ function StatSkeleton({ className = "" }: { className?: string }) {
 }
 
 
-const architecture = [
-  {
-    step: "01",
-    title: "Capture",
-    tag: "Farm Records",
-    desc: "Record eggs, feed, health, mortality, costs, bird information and other farm activities in one organised system.",
-    icon: LayoutDashboard,
-  },
-  {
-    step: "02",
-    title: "Understand",
-    tag: "Farm Analytics",
-    desc: "Turn your farm records into clear production, cost, revenue and profitability insights.",
-    icon: LineChart,
-  },
-  {
-    step: "03",
-    title: "Predict",
-    tag: "Cautious Estimates",
-    desc: "Use record-based estimates and sourced weather forecasts to plan ahead. Estimates show assumptions; they are not validated outbreak or machine-learning predictions.",
-    icon: Sparkles,
-  },
-  { step: "04", title: "Recommend", tag: "Practical Next Steps", desc: "Review rule-based findings, supporting records and suggested checks. Missing data is flagged, not treated as zero.", icon: ClipboardCheck },
-  { step: "05", title: "Act", tag: "Farmer in Control", desc: "In the Action Centre preview, authorised users can assign, track and resolve issues with notes and history. Public release is pending.", icon: ShieldCheck },
-];
 
 const recognition = [
   { icon: Trophy, title: "NXTGEN Innovation Challenge — International Grand Finale", desc: "Selected — London, United Kingdom" },
@@ -289,7 +265,7 @@ const problems = [
 
 const liveFeatures: { icon: any; title: string; desc: string }[] = [
   { icon: LayoutDashboard, title: "Live Farm Dashboard", desc: "Real-time production, mortality, feed, health and financial monitoring." },
-  { icon: Wallet, title: "Margin & Financial Analytics", desc: "Distinguish egg revenue minus feed cost (feed margin) from operating profit based on recorded operating income and expenses." },
+  { icon: Wallet, title: "Margin & Financial Analytics", desc: "Distinguish estimated egg-production value minus feed cost (feed margin) from operating profit based on recorded operating income and expenses." },
   { icon: Wheat, title: "Feed Management", desc: "Record daily feed usage, manage feed inventory and calculate feed costs." },
   { icon: Calculator, title: "Feed Formulation & Cost Calculator", desc: "Create custom feed formulas, calculate ingredient costs, cost per kilogram and cost per bag." },
   { icon: Sparkles, title: "Rule-Based Feed Intelligence", desc: "Monitor feed inventory, estimate remaining days of feed and generate low-feed alerts." },
@@ -498,36 +474,7 @@ function Index() {
         </div>
       </section>
 
-      <section id="architecture" className="py-24">
-        <div className="container-x">
-          <div className="max-w-2xl">
-            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">How PoultryPro Works</span>
-            <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Capture → Understand → Predict → Recommend → Act
-            </h2>
-            <p className="mt-5 text-muted-foreground text-lg">
-              A practical path from verified records to informed decisions. Calculations and alerts use transparent rules; farmers retain control of every operational change.
-            </p>
-          </div>
-          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-5 gap-5">
-            {architecture.map((a) => (
-              <div key={a.title} className="relative min-w-0 border-t border-border py-6 overflow-hidden">
-                <div className="flex items-center justify-between">
-                  <span className="font-display text-5xl font-semibold text-[color:var(--gold)]">{a.step}</span>
-                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary">
-                    <a.icon className="h-5 w-5" />
-                  </span>
-                </div>
-                <div className="mt-4 text-[11px] uppercase tracking-widest text-[color:var(--forest)] font-medium">{a.tag}</div>
-                <h3 className="mt-1 font-display text-xl font-semibold">{a.title}</h3>
-                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{a.desc}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-6 max-w-3xl text-sm text-muted-foreground">Today’s explanations come from verified calculations and deterministic rules. AI-generated explanations and validated machine-learning predictions are not part of the Action Centre release; any future AI must stay grounded in verified findings.</p>
-        </div>
-      </section>
-
+      <FarmIntelligenceJourney />
 
       <section className="py-24">
         <div className="container-x grid lg:grid-cols-12 gap-14 items-start">

@@ -2,8 +2,8 @@ export type PricingPlan = {
   id: "basic" | "standard" | "premium";
   name: string;
   tagline: string;
-  price: number;            // NGN monthly (0 = Free)
-  priceLabel: string;       // display label e.g. "Free" or "₦950/month"
+  price: number; // NGN monthly (0 = Free)
+  priceLabel: string; // display label e.g. "Free" or "₦950/month"
   featured?: boolean;
   cta: string;
   features: string[];
@@ -52,20 +52,19 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: "premium",
     name: "Premium Plan",
-    tagline: "Complete AI-powered platform",
+    tagline: "Record-based farm decision support",
     price: 1950,
     priceLabel: "₦1,950/month",
     cta: "Choose Premium",
     features: [
       "Everything in Standard",
-      "AI Intelligence",
-      "Health Risk Alerts",
-      "Production Forecasting",
-      "Feed Optimization",
+      "Rule-Based Farm Intelligence",
+      "Health Risk Alerts — not diagnosis",
+      "Record-Based Production Estimates",
+      "Feed Efficiency Monitoring",
       "Performance Alerts",
       "Multi-user Access",
       "24/7 Priority Support",
-      "Future AI Features Included",
     ],
   },
 ];
