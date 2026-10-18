@@ -107,7 +107,9 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
     refreshFn = useServerFn(refreshBroadcastDelivery);
   const retryFn = useServerFn(retryBroadcastRejected);
   const activationFn = useServerFn(updateSmsActivation);
-  const [approvalAction, setApprovalAction] = useState<"verify" | "receipt" | "enable" | "disable" | null>(null);
+  const [approvalAction, setApprovalAction] = useState<
+    "verify" | "receipt" | "enable" | "disable" | null
+  >(null);
   const [approvalConfirmed, setApprovalConfirmed] = useState(false);
   const [retryConfirm, setRetryConfirm] = useState(false);
   const [category, setCategory] = useState<BroadcastCategory>("service"),
@@ -188,19 +190,30 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
   });
   const setup = overview.data?.setup;
   const activation = overview.data?.activation;
-  const draftCanSend = draft?.test ? activation?.isOwner && activation.testEnabled : activation?.liveEnabled;
+  const draftCanSend = draft?.test
+    ? activation?.isOwner && activation.testEnabled
+    : activation?.liveEnabled;
   async function applyApproval() {
     if (!approvalAction || !approvalConfirmed) return;
     setBusy(true);
     try {
-      await activationFn({ data: { action: approvalAction, confirmed: true,
-        campaign: approvalAction === "receipt" ? activation?.testCampaign ?? undefined : undefined } });
+      await activationFn({
+        data: {
+          action: approvalAction,
+          confirmed: true,
+          campaign:
+            approvalAction === "receipt" ? (activation?.testCampaign ?? undefined) : undefined,
+        },
+      });
       setApprovalAction(null);
       setApprovalConfirmed(false);
       await invalidate();
       toast.success("SMS approval status updated. No SMS was sent by this action.");
-    } catch (error) { toast.error(error instanceof Error ? error.message : "Approval could not be updated"); }
-    finally { setBusy(false); }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Approval could not be updated");
+    } finally {
+      setBusy(false);
+    }
   }
   const counts = overview.data?.counts as unknown as Counts | undefined;
   const recipients = audience.data;
@@ -362,7 +375,10 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
           <p className="mt-2">Delivery webhook setup required; reports can be checked manually.</p>
         )}
       </div>
-      <section className="border-y border-border py-5 space-y-3" aria-label="SMS configuration and owner approval">
+      <section
+        className="border-y border-border py-5 space-y-3"
+        aria-label="SMS configuration and owner approval"
+      >
         <h2 className="text-xl font-display">SMS configuration and owner approval</h2>
         <dl className="grid gap-2 sm:grid-cols-2 text-sm">
           {[
@@ -371,22 +387,76 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
             ["Sender ID format", setup?.configured.senderId],
             ["Delivery-signing secret", setup?.configured.deliverySecret],
             ["Designated owner", activation?.ownerConfigured],
-          ].map(([label, ready]) => <div key={String(label)} className="flex justify-between gap-3">
-            <dt>{label}</dt><dd>{ready ? "Configured" : "Missing / invalid"}</dd>
-          </div>)}
+          ].map(([label, ready]) => (
+            <div key={String(label)} className="flex justify-between gap-3">
+              <dt>{label}</dt>
+              <dd>{ready ? "Configured" : "Missing / invalid"}</dd>
+            </div>
+          ))}
         </dl>
-        <p className="text-sm text-muted-foreground">Saved credentials do not establish provider approval or delivery. Verification checks the funded wallet and Nigeria sender status; the owner must confirm transactional/DND approval. Verification expires after 24 hours or a settings change.</p>
-        <p className="text-sm">Owner test: {activation?.testEnabled ? "Permitted for one owner service-test campaign" : "Blocked until provider verification"} · Test receipt: {activation?.receiptConfirmed ? "Owner confirmed receipt (separate from provider delivery status)" : "Not confirmed"} · Bulk broadcasts: {activation?.liveEnabled ? "Enabled" : "Disabled"}</p>
-        {activation?.verifiedAt && <p className="text-xs text-muted-foreground">Last provider verification: {dateTime(activation.verifiedAt)}</p>}
-        {activation?.isOwner ? <div className="flex flex-wrap gap-3">
-          {([
-            ["verify", "Verify provider and service approval", !setup?.ready || !setup.webhookReady],
-            ["receipt", "Confirm I received the test SMS", !activation.testCampaign || !activation.testEnabled],
-            ["enable", "Enable live broadcasts", !activation.testEnabled || !activation.receiptConfirmed],
-            ["disable", "Disable live broadcasts", !activation.liveEnabled],
-          ] as const).map(([action, label, blocked]) => <Button key={action} variant="outline" disabled={busy || blocked}
-            onClick={() => { setApprovalConfirmed(false); setApprovalAction(action); }}><ShieldCheck className="h-4 w-4" />{label}</Button>)}
-        </div> : <p className="text-sm text-muted-foreground">Only the designated platform owner can approve configuration, send the verification test or activate broadcasts.</p>}
+        <p className="text-sm text-muted-foreground">
+          Saved credentials do not establish provider approval or delivery. Verification checks the
+          funded wallet and Nigeria sender status; the owner must confirm transactional/DND
+          approval. Verification expires after 24 hours or a settings change.
+        </p>
+        <p className="text-sm">
+          Owner test:{" "}
+          {activation?.testEnabled
+            ? "Permitted for one owner service-test campaign"
+            : "Blocked until provider verification"}{" "}
+          · Test receipt:{" "}
+          {activation?.receiptConfirmed
+            ? "Owner confirmed receipt (separate from provider delivery status)"
+            : "Not confirmed"}{" "}
+          · Bulk broadcasts: {activation?.liveEnabled ? "Enabled" : "Disabled"}
+        </p>
+        {activation?.verifiedAt && (
+          <p className="text-xs text-muted-foreground">
+            Last provider verification: {dateTime(activation.verifiedAt)}
+          </p>
+        )}
+        {activation?.isOwner ? (
+          <div className="flex flex-wrap gap-3">
+            {(
+              [
+                [
+                  "verify",
+                  "Verify provider and service approval",
+                  !setup?.ready || !setup.webhookReady,
+                ],
+                [
+                  "receipt",
+                  "Confirm I received the test SMS",
+                  !activation.testCampaign || !activation.testEnabled,
+                ],
+                [
+                  "enable",
+                  "Enable live broadcasts",
+                  !activation.testEnabled || !activation.receiptConfirmed,
+                ],
+                ["disable", "Disable live broadcasts", !activation.liveEnabled],
+              ] as const
+            ).map(([action, label, blocked]) => (
+              <Button
+                key={action}
+                variant="outline"
+                disabled={busy || blocked}
+                onClick={() => {
+                  setApprovalConfirmed(false);
+                  setApprovalAction(action);
+                }}
+              >
+                <ShieldCheck className="h-4 w-4" />
+                {label}
+              </Button>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Only the designated platform owner can approve configuration, send the verification test
+            or activate broadcasts.
+          </p>
+        )}
       </section>
       <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
         {[
@@ -669,7 +739,13 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
             </Button>
             <Button
               variant="outline"
-              disabled={busy || !title.trim() || Boolean(issue) || category !== "service" || !activation?.isOwner}
+              disabled={
+                busy ||
+                !title.trim() ||
+                Boolean(issue) ||
+                category !== "service" ||
+                !activation?.isOwner
+              }
               onClick={() => void prepare(true)}
             >
               Send Test SMS
@@ -941,8 +1017,10 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
           </p>
           {!draftCanSend ? (
             <p role="alert" className="text-sm text-destructive">
-              {draft?.test ? "Test sending blocked: the owner must verify Termii configuration, funding, sender ID and service-route approval first."
-                : "Live broadcast blocked: verify Termii, confirm receipt of the owner test, then explicitly enable live broadcasts."} This remains a draft.
+              {draft?.test
+                ? "Test sending blocked: the owner must verify Termii configuration, funding, sender ID and service-route approval first."
+                : "Live broadcast blocked: verify Termii, confirm receipt of the owner test, then explicitly enable live broadcasts."}{" "}
+              This remains a draft.
             </p>
           ) : null}
           <label className="flex items-start gap-2 text-sm">
@@ -954,27 +1032,59 @@ export function AdminBroadcastTab({ userId }: { userId: string }) {
             <Button variant="outline" onClick={() => setDraft(null)} disabled={busy}>
               Cancel
             </Button>
-            <Button
-              disabled={!confirmed || busy || !draftCanSend}
-              onClick={() => void confirm()}
-            >
+            <Button disabled={!confirmed || busy || !draftCanSend} onClick={() => void confirm()}>
               <Send className="h-4 w-4" />
               Confirm and send
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={Boolean(approvalAction)} onOpenChange={(open) => { if (!open && !busy) setApprovalAction(null); }}>
+      <Dialog
+        open={Boolean(approvalAction)}
+        onOpenChange={(open) => {
+          if (!open && !busy) setApprovalAction(null);
+        }}
+      >
         <DialogContent>
-          <DialogHeader><DialogTitle>Confirm SMS {approvalAction === "verify" ? "verification" : approvalAction === "receipt" ? "test receipt" : approvalAction === "enable" ? "activation" : "deactivation"}</DialogTitle>
-            <DialogDescription>This updates owner approval only. It does not send a message or publish the website.</DialogDescription></DialogHeader>
-          <p className="text-sm">{approvalAction === "verify" ? "Confirm Termii has approved this sender and your essential transactional/DND use. A registered phone is not promotional consent. Account checks will verify funding and Nigeria sender status."
-            : approvalAction === "receipt" ? "Confirm you personally received the SMS from the authorised owner test. This records your receipt confirmation; it does not overwrite the provider's delivery status."
-            : approvalAction === "enable" ? "Enable separately confirmed broadcasts to eligible recipients. Existing consent, phone validity, deduplication and campaign confirmation checks still apply."
-            : "Stop further SMS submissions. Messages already submitted cannot be recalled."}</p>
-          <label className="flex items-start gap-2 text-sm"><Checkbox checked={approvalConfirmed} onCheckedChange={(v) => setApprovalConfirmed(v === true)} />I confirm this owner approval action.</label>
-          <DialogFooter><Button variant="outline" disabled={busy} onClick={() => setApprovalAction(null)}>Cancel</Button>
-            <Button disabled={busy || !approvalConfirmed} onClick={() => void applyApproval()}>Confirm approval</Button></DialogFooter>
+          <DialogHeader>
+            <DialogTitle>
+              Confirm SMS{" "}
+              {approvalAction === "verify"
+                ? "verification"
+                : approvalAction === "receipt"
+                  ? "test receipt"
+                  : approvalAction === "enable"
+                    ? "activation"
+                    : "deactivation"}
+            </DialogTitle>
+            <DialogDescription>
+              This updates owner approval only. It does not send a message or publish the website.
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm">
+            {approvalAction === "verify"
+              ? "Confirm Termii has approved this sender and your essential transactional/DND use. A registered phone is not promotional consent. Account checks will verify funding and Nigeria sender status."
+              : approvalAction === "receipt"
+                ? "Confirm you personally received the SMS from the authorised owner test. This records your receipt confirmation; it does not overwrite the provider's delivery status."
+                : approvalAction === "enable"
+                  ? "Enable separately confirmed broadcasts to eligible recipients. Existing consent, phone validity, deduplication and campaign confirmation checks still apply."
+                  : "Stop further SMS submissions. Messages already submitted cannot be recalled."}
+          </p>
+          <label className="flex items-start gap-2 text-sm">
+            <Checkbox
+              checked={approvalConfirmed}
+              onCheckedChange={(v) => setApprovalConfirmed(v === true)}
+            />
+            I confirm this owner approval action.
+          </label>
+          <DialogFooter>
+            <Button variant="outline" disabled={busy} onClick={() => setApprovalAction(null)}>
+              Cancel
+            </Button>
+            <Button disabled={busy || !approvalConfirmed} onClick={() => void applyApproval()}>
+              Confirm approval
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={retryConfirm} onOpenChange={setRetryConfirm}>

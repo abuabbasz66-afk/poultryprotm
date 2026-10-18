@@ -22,22 +22,46 @@ describe("SMS provider boundary with mocked requests only", () => {
   });
   it("verifies a funded wallet and active Nigeria sender without sending SMS", async () => {
     vi.stubEnv("TERMII_WEBHOOK_SECRET", "test-signing-secret");
-    const fetch = vi.fn().mockResolvedValueOnce(Response.json({ balance: 100, currency: "NGN" }))
-      .mockResolvedValueOnce(Response.json({ content: [{ sender_id: "PoultryPro", status: "active", country: "Nigeria" }] }));
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ balance: 100, currency: "NGN" }))
+      .mockResolvedValueOnce(
+        Response.json({
+          content: [{ sender_id: "PoultryPro", status: "active", country: "Nigeria" }],
+        }),
+      );
     vi.stubGlobal("fetch", fetch);
     expect((await verifySmsProvider()).accountVerified).toBe(true);
     expect(fetch.mock.calls.every((call) => call[1]?.method === "GET")).toBe(true);
   });
   it("does not accept a pending sender as approved", async () => {
     vi.stubEnv("TERMII_WEBHOOK_SECRET", "test-signing-secret");
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(Response.json({ balance: 100 }))
-      .mockResolvedValueOnce(Response.json({ content: [{ sender_id: "PoultryPro", status: "pending", country: "Nigeria" }] })));
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(Response.json({ balance: 100 }))
+        .mockResolvedValueOnce(
+          Response.json({
+            content: [{ sender_id: "PoultryPro", status: "pending", country: "Nigeria" }],
+          }),
+        ),
+    );
     expect((await verifySmsProvider()).accountVerified).toBe(false);
   });
   it("does not treat an empty wallet as funded", async () => {
     vi.stubEnv("TERMII_WEBHOOK_SECRET", "test-signing-secret");
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(Response.json({ balance: 0 }))
-      .mockResolvedValueOnce(Response.json({ content: [{ sender_id: "PoultryPro", status: "active", country: "Nigeria" }] })));
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(Response.json({ balance: 0 }))
+        .mockResolvedValueOnce(
+          Response.json({
+            content: [{ sender_id: "PoultryPro", status: "active", country: "Nigeria" }],
+          }),
+        ),
+    );
     expect((await verifySmsProvider()).accountVerified).toBe(false);
   });
   it("records acceptance, not delivery, when provider returns an ID", async () => {

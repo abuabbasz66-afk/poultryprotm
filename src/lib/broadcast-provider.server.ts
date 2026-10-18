@@ -71,8 +71,15 @@ export async function readSmsBalance() {
 }
 
 export async function smsConfigurationFingerprint() {
-  const raw = ["TERMII_API_KEY", "TERMII_BASE_URL", "TERMII_SENDER_ID", "TERMII_WEBHOOK_SECRET", "SMS_OWNER_USER_ID"]
-    .map((name) => process.env[name] ?? "").join("\u0000");
+  const raw = [
+    "TERMII_API_KEY",
+    "TERMII_BASE_URL",
+    "TERMII_SENDER_ID",
+    "TERMII_WEBHOOK_SECRET",
+    "SMS_OWNER_USER_ID",
+  ]
+    .map((name) => process.env[name] ?? "")
+    .join("\u0000");
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
   return [...new Uint8Array(digest)].map((v) => v.toString(16).padStart(2, "0")).join("");
 }
@@ -90,14 +97,23 @@ export async function verifySmsProvider() {
         senderActive = result.content.some((row: unknown) => {
           if (!row || typeof row !== "object") return false;
           const value = row as Record<string, unknown>;
-          return value.sender_id === setup.sender && String(value.status).toLowerCase() === "active"
-            && String(value.country).toLowerCase() === "nigeria";
+          return (
+            value.sender_id === setup.sender &&
+            String(value.status).toLowerCase() === "active" &&
+            String(value.country).toLowerCase() === "nigeria"
+          );
         });
       }
-    } catch { /* Do not turn an unavailable account check into approval. */ }
+    } catch {
+      /* Do not turn an unavailable account check into approval. */
+    }
   }
-  const accountVerified = setup.ready && setup.webhookReady && senderActive
-    && setup.balance !== null && setup.balance > 0;
+  const accountVerified =
+    setup.ready &&
+    setup.webhookReady &&
+    senderActive &&
+    setup.balance !== null &&
+    setup.balance > 0;
   return { ...setup, senderActive, senderCheckAvailable, accountVerified };
 }
 

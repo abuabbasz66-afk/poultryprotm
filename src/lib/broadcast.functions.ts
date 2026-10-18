@@ -53,7 +53,11 @@ export const getBroadcastOverview = createServerFn({ method: "POST" })
     ]);
     if (counts.error) throw new Error("Could not load messaging overview.");
     const { fingerprint: _fingerprint, ...activation } = await readSmsActivation(context.userId);
-    return { setup: { ...setup, liveEnabled: activation.liveEnabled }, activation, counts: counts.data };
+    return {
+      setup: { ...setup, liveEnabled: activation.liveEnabled },
+      activation,
+      counts: counts.data,
+    };
   });
 
 export const getBroadcastHistory = createServerFn({ method: "POST" })
@@ -150,7 +154,8 @@ export const prepareBroadcast = createServerFn({ method: "POST" })
     if (data.test) {
       const { requireSmsOwner } = await import("./broadcast-activation.server");
       requireSmsOwner(context.userId);
-      if (data.category !== "service") throw new Error("Verification tests must be essential service messages.");
+      if (data.category !== "service")
+        throw new Error("Verification tests must be essential service messages.");
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (!data.test && data.mode === "none") throw new Error("Select recipients first.");
@@ -195,15 +200,26 @@ export const confirmBroadcast = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await requireBroadcastAdmin(context);
-    const { readSmsActivation, assertSmsCampaignPermission, requireSmsOwner } = await import("./broadcast-activation.server");
+    const { readSmsActivation, assertSmsCampaignPermission, requireSmsOwner } =
+      await import("./broadcast-activation.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: campaign } = await context.supabase.from("sms_campaigns").select("is_test").eq("id",data.id).single();
+    const { data: campaign } = await context.supabase
+      .from("sms_campaigns")
+      .select("is_test")
+      .eq("id", data.id)
+      .single();
     if (campaign?.is_test) {
       requireSmsOwner(context.userId);
       const activation = await readSmsActivation(context.userId);
-      if (!activation.testEnabled) throw new Error("Verify the funded provider account and sender approval first. No SMS was sent.");
+      if (!activation.testEnabled)
+        throw new Error(
+          "Verify the funded provider account and sender approval first. No SMS was sent.",
+        );
       const { error: reserveError } = await supabaseAdmin.rpc("sms_activation_transition", {
-        p_actor: context.userId, p_action: "reserve_test", p_fingerprint: activation.fingerprint, p_campaign: data.id,
+        p_actor: context.userId,
+        p_action: "reserve_test",
+        p_fingerprint: activation.fingerprint,
+        p_campaign: data.id,
       });
       if (reserveError) throw new Error(reserveError.message);
     }
@@ -334,10 +350,15 @@ export const retryBroadcastRejected = createServerFn({ method: "POST" })
 
 export const updateSmsActivation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({
-    action: z.enum(["verify", "receipt", "enable", "disable"]), confirmed: z.literal(true),
-    campaign: z.string().uuid().optional(),
-  }).parse(input))
+  .inputValidator((input) =>
+    z
+      .object({
+        action: z.enum(["verify", "receipt", "enable", "disable"]),
+        confirmed: z.literal(true),
+        campaign: z.string().uuid().optional(),
+      })
+      .parse(input),
+  )
   .handler(async ({ data, context }) => {
     await requireBroadcastAdmin(context);
     const { requireSmsOwner, readSmsActivation } = await import("./broadcast-activation.server");
@@ -345,15 +366,23 @@ export const updateSmsActivation = createServerFn({ method: "POST" })
     const { verifySmsProvider } = await import("./broadcast-provider.server");
     if (data.action === "verify" || data.action === "enable") {
       const check = await verifySmsProvider();
-      if (!check.accountVerified) throw new Error(!check.ready ? "Termii credentials, API URL or sender ID are missing or invalid."
-        : !check.webhookReady ? "Configure the delivery-signing secret first."
-        : !check.senderActive ? "Termii has not confirmed this sender ID as active for Nigeria."
-        : "A funded wallet could not be verified. Check Termii balance and account access.");
+      if (!check.accountVerified)
+        throw new Error(
+          !check.ready
+            ? "Termii credentials, API URL or sender ID are missing or invalid."
+            : !check.webhookReady
+              ? "Configure the delivery-signing secret first."
+              : !check.senderActive
+                ? "Termii has not confirmed this sender ID as active for Nigeria."
+                : "A funded wallet could not be verified. Check Termii balance and account access.",
+        );
     }
     const activation = await readSmsActivation(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.rpc("sms_activation_transition", {
-      p_actor: context.userId, p_action: data.action, p_fingerprint: activation.fingerprint,
+      p_actor: context.userId,
+      p_action: data.action,
+      p_fingerprint: activation.fingerprint,
       p_campaign: data.campaign ?? (null as unknown as string),
     });
     if (error) throw new Error(error.message);
