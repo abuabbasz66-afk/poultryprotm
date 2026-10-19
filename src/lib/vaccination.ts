@@ -54,6 +54,9 @@ export type VaccinationProgramme = {
   is_baseline: boolean;
   is_active: boolean;
   notes: string | null;
+  approval_status: string;
+  approved_by: string | null;
+  approved_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -69,6 +72,7 @@ export type ProgrammeItem = {
   vaccine: string;
   route: string;
   note: string | null;
+  item_type: string;
 };
 
 export type FlockSchedule = {
@@ -86,9 +90,13 @@ export type FlockSchedule = {
   vaccine: string;
   route: string;
   note: string | null;
+  item_type: string;
   scheduled_date: string;
   anchor_source: string;
   status: string;
+  status_reason: string | null;
+  status_changed_by: string | null;
+  status_changed_at: string | null;
 };
 
 export type VaccinationRecord = {
@@ -130,6 +138,8 @@ export type ScheduleStatus =
   | "due_today"
   | "due_soon"
   | "upcoming"
+  | "skipped"
+  | "deferred"
   | "not_applicable";
 
 export const STATUS_LABELS: Record<ScheduleStatus, string> = {
@@ -137,7 +147,9 @@ export const STATUS_LABELS: Record<ScheduleStatus, string> = {
   overdue: "Overdue",
   due_today: "Due today",
   due_soon: "Due soon",
-  upcoming: "Upcoming",
+  upcoming: "Scheduled",
+  skipped: "Skipped",
+  deferred: "Deferred pending veterinary review",
   not_applicable: "Not applicable",
 };
 
@@ -147,6 +159,8 @@ export const STATUS_TONES: Record<ScheduleStatus, string> = {
   due_today: "bg-amber-500/20 text-amber-800 border-amber-500/40",
   due_soon: "bg-amber-500/10 text-amber-700 border-amber-500/30",
   upcoming: "bg-muted text-muted-foreground border-border",
+  skipped: "bg-muted text-muted-foreground border-border",
+  deferred: "bg-sky-500/15 text-sky-800 border-sky-500/30",
   not_applicable: "bg-muted text-muted-foreground border-border",
 };
 
@@ -156,7 +170,16 @@ export const STATUS_DOTS: Record<ScheduleStatus, string> = {
   due_today: "bg-amber-500",
   due_soon: "bg-amber-400",
   upcoming: "bg-muted-foreground/40",
+  skipped: "bg-muted-foreground/40",
+  deferred: "bg-sky-500",
   not_applicable: "bg-muted-foreground/30",
+};
+
+/** Treatments and procedures must never be presented as vaccines. */
+export const ITEM_TYPE_LABELS: Record<string, string> = {
+  vaccine: "Vaccine",
+  treatment: "Treatment — not a vaccine",
+  procedure: "Procedure — not a vaccine",
 };
 
 // ============= DATE MATHS =============
