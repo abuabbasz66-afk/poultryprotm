@@ -29,7 +29,7 @@ import {
   Skull, Syringe, Droplets, Pill, Stethoscope, Eye, Plus, Pencil, Trash2, MapPin,
   Sparkles, ArrowLeft, LayoutDashboard, LineChart as LineChartIcon,
   Brain, Activity, AlertTriangle, Gauge, Radar, Lightbulb, ArrowRight, LogOut, Upload,
-  ChevronDown, MoreVertical,
+  ChevronDown, MoreVertical, CalendarDays, Building2,
 } from "lucide-react";
 
 
@@ -619,9 +619,8 @@ const setBagWeightKg = (v: number | null) => {
   return (
     <div className="min-h-screen bg-background text-foreground pb-14 overflow-x-hidden">
       {/* Header */}
-      <header className="relative overflow-hidden bg-gradient-to-br from-[color:var(--forest)] via-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground">
-        <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.08),transparent_55%),radial-gradient(circle_at_80%_60%,rgba(212,175,55,0.12),transparent_60%)]" />
-        <div className="relative container-x hidden md:flex items-center justify-between py-4">
+      <header aria-label="Farm overview" className="bg-forest text-primary-foreground">
+        <div className="container-x hidden md:flex items-center justify-between pt-2 pb-1">
           <Link to="/" className="hidden md:inline-flex items-center gap-2 text-sm text-primary-foreground/80 hover:text-primary-foreground">
             <ArrowLeft className="h-4 w-4" /> Back to site
           </Link>
@@ -643,33 +642,32 @@ const setBagWeightKg = (v: number | null) => {
             </button>
           </div>
         </div>
-        <div className="relative container-x flex flex-col justify-center py-12 md:py-20 min-h-[320px] md:min-h-[420px]">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] md:text-[11px] uppercase tracking-[0.18em] md:tracking-[0.22em] text-[color:var(--gold)]">
-            <span className="inline-flex items-center gap-1.5"><Sparkles className="h-3 w-3 md:h-3.5 md:w-3.5" /> Capture</span>
-            <ArrowRight className="h-3 w-3 opacity-60" />
-            <span>Understand</span>
-            <ArrowRight className="h-3 w-3 opacity-60" />
-            <span>Predict</span>
-          </div>
-          <div className="mt-3 text-[11px] md:text-xs text-primary-foreground/70 max-w-2xl leading-snug">
-            Farm Records &amp; Analytics active · AI Intelligence rolling out on Premium
-          </div>
-          <h1 className="mt-5 md:mt-6 farm-name">{farm?.name ?? "Your Farm"}</h1>
-          {(farm?.state || farm?.country || farm?.location) && (
-            <div className="mt-4 flex items-center gap-1.5 text-[12px] md:text-sm text-primary-foreground/85">
-              <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
-              <span className="truncate">{[farm?.location, farm?.state, farm?.country].filter(Boolean).join(", ")}</span>
+        <div className="container-x grid min-w-0 gap-3 py-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-6 lg:pt-2 lg:pb-4">
+          <div className="min-w-0">
+            <h1 className="font-display text-2xl font-semibold leading-tight break-words md:text-3xl">{farm?.name ?? "Your Farm"}</h1>
+            <div className="mt-1 grid min-w-0 gap-1 text-xs leading-snug text-primary-foreground/80 sm:flex sm:flex-wrap sm:gap-x-4">
+              {(farm?.state || farm?.country || farm?.location) && (
+                <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-1.5">
+                  <MapPin className="mt-0.5 h-3 w-3 shrink-0 text-gold" />
+                  <span className="break-words">{[farm?.location, farm?.state, farm?.country].filter(Boolean).join(", ")}</span>
+                </div>
+              )}
+              <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-1.5 text-primary-foreground/65">
+                <CalendarDays className="mt-0.5 h-3 w-3 shrink-0" />
+                <span>{new Date().toLocaleDateString("en-GB", { timeZone: "Africa/Lagos", weekday: "short", day: "numeric", month: "short", year: "numeric" })}</span>
+              </div>
             </div>
-          )}
-          <div className="mt-2 text-[12px] md:text-sm text-primary-foreground/70">
-            {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
           </div>
-          <div className="mt-6 md:mt-7 inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 px-4 py-1.5 md:px-5 md:py-2 text-[12px] md:text-sm max-w-full self-start">
-            <Bird className="h-3.5 w-3.5 md:h-4 md:w-4 text-[color:var(--gold)] shrink-0" />
-            <span className="font-semibold whitespace-nowrap">{totalBirds.toLocaleString()} birds</span>
-            <span className="text-primary-foreground/50">·</span>
-            <span className="text-primary-foreground/85 whitespace-nowrap">{rooms.length} rooms</span>
-          </div>
+          <dl className="grid grid-cols-2 gap-5 justify-self-start text-sm lg:gap-6">
+            <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
+              <Bird className="h-4 w-4 shrink-0 text-gold" />
+              <div className="min-w-0"><dt className="text-xs text-primary-foreground/70">Birds</dt><dd className="text-lg font-semibold leading-tight">{totalBirds.toLocaleString()}</dd></div>
+            </div>
+            <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
+              <Building2 className="h-4 w-4 shrink-0 text-gold" />
+              <div className="min-w-0"><dt className="text-xs text-primary-foreground/70">Rooms</dt><dd className="text-lg font-semibold leading-tight">{rooms.length}</dd></div>
+            </div>
+          </dl>
         </div>
       </header>
 
