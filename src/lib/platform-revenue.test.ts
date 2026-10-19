@@ -3,7 +3,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
 import { parseRecordedRevenue, formatRecordedRevenue } from "./platform-revenue";
 
-describe("recorded revenue database aggregation", () => {
+describe("recorded egg sales database aggregation", () => {
   const db = new PGlite();
   beforeAll(async () => {
     await db.exec(`
@@ -16,26 +16,26 @@ describe("recorded revenue database aggregation", () => {
       CREATE TABLE feed_usage(farm_id text,bags numeric);
       CREATE TABLE mortality(id text); CREATE TABLE health_records(id text);
       CREATE TABLE farm_revenue(id text PRIMARY KEY,farm_id text,entry_date date,
-        category text,item text,quantity numeric DEFAULT 1,unit text DEFAULT 'unit',
-        unit_price numeric DEFAULT 0,amount numeric,customer text,payment_method text,notes text);
+        category text DEFAULT 'eggs',item text DEFAULT 'Table Eggs',quantity numeric DEFAULT 1,unit text DEFAULT 'crate',
+        unit_price numeric DEFAULT 45,amount numeric,customer text,payment_method text,notes text);
       INSERT INTO farms VALUES ('a','basic'), ('b','basic');
       ALTER TABLE farm_revenue ENABLE ROW LEVEL SECURITY;
       GRANT SELECT ON farm_revenue TO anon;
     `);
-    await db.exec(readFileSync("drizzle/migrations/0021_recorded_platform_revenue.sql", "utf8"));
+    await db.exec(readFileSync("drizzle/migrations/0022_public_recorded_egg_sales_only.sql", "utf8"));
   });
   afterAll(async () => { await db.close(); });
   beforeEach(async () => {
     await db.exec("DELETE FROM farm_revenue; DELETE FROM egg_production; DELETE FROM prices;");
   });
   async function total() {
-    const result = await db.query<{ stats: { recorded_farm_revenue: number | null } }>(
-      "SELECT public.landing_platform_stats() AS stats",
+    const result = await db.query<{ stats: { recorded_egg_sales: number | null } }>(
+      "SELECT public.landing_recorded_egg_sales() AS stats",
     );
-    return result.rows[0]?.stats.recorded_farm_revenue;
+    return result.rows[0]?.stats.recorded_egg_sales;
   }
-  it("adds recorded income across farms, including the existing controlled sample amount", async () => {
-    await db.exec("INSERT INTO farm_revenue(id,farm_id,entry_date,amount) VALUES ('1','a','2026-10-19',45),('2','b','2026-10-19',12500);");
+  it("adds genuine recorded egg sales across farms, including the controlled sample", async () => {
+    await db.exec("INSERT INTO farm_revenue(id,farm_id,entry_date,unit_price,amount) VALUES ('1','a','2026-10-19',45,45),('2','b','2026-10-19',12500,12500);");
     expect(await total()).toBe(12545);
   });
   it("does not add price-based egg production estimates to actual revenue", async () => {
@@ -54,7 +54,7 @@ describe("recorded revenue database aggregation", () => {
   it("refreshes after ledger updates and excludes removed entries", async () => {
     await db.exec("INSERT INTO farm_revenue(id,farm_id,entry_date,amount) VALUES ('1','a','2026-10-19',45);");
     expect(await total()).toBe(45);
-    await db.exec("UPDATE farm_revenue SET amount=90 WHERE id='1';");
+    await db.exec("UPDATE farm_revenue SET amount=90,unit_price=90 WHERE id='1';");
     expect(await total()).toBe(90);
     await db.exec("DELETE FROM farm_revenue WHERE id='1';");
     expect(await total()).toBeNull();
@@ -64,10 +64,27 @@ describe("recorded revenue database aggregation", () => {
     try {
       expect((await db.query("SELECT * FROM farm_revenue")).rows).toHaveLength(0);
       expect(await total()).toBe(45);
-      const result = await db.query<{ stats: Record<string, unknown> }>("SELECT public.landing_platform_stats() AS stats");
+      const result = await db.query<{ stats: Record<string, unknown> }>("SELECT public.landing_recorded_egg_sales() AS stats");
       expect(JSON.stringify(result.rows)).not.toContain("private-id");
-      expect(Object.keys(result.rows[0]?.stats ?? {})).toHaveLength(14);
+      expect(Object.keys(result.rows[0]?.stats ?? {})).toHaveLength(2);
     } finally { await db.exec("RESET ROLE;"); }
+  });
+  it("excludes packaging, other income and non-egg sales", async () => {
+    await db.exec(`INSERT INTO farm_revenue(id,farm_id,entry_date,category,item,amount) VALUES
+      ('1','a','2026-10-19','eggs','Table Eggs',45),
+      ('2','a','2026-10-19','eggs','Egg Trays',45),
+      ('3','a','2026-10-19','other','Other Income',45),
+      ('4','b','2026-10-19','birds','Broilers',45);`);
+    expect(await total()).toBe(45);
+  });
+  it("rejects inconsistent sale amounts and zero quantities", async () => {
+    await db.exec(`INSERT INTO farm_revenue(id,farm_id,entry_date,quantity,amount) VALUES
+      ('1','a','2026-10-19',1,45),('2','b','2026-10-19',1,100),('3','b','2026-10-19',0,45);`);
+    expect(await total()).toBe(45);
+  });
+  it("does not substitute production valuation when no sales are recorded", async () => {
+    await db.exec("INSERT INTO prices VALUES ('a',6000,'eggs',now()); INSERT INTO egg_production VALUES ('a',100,0,0,0);");
+    expect(await total()).toBeNull();
   });
 });
 

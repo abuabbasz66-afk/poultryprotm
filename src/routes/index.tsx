@@ -607,7 +607,7 @@ function Index() {
                 { k: fmtStat(live?.mortality_records), v: "Mortality records logged" },
                 { k: fmtStat(live?.health_records), v: "Health records logged" },
                 { k: fmtStat(live?.eggs), v: "Eggs recorded" },
-                { k: formatRecordedRevenue(live?.recorded_farm_revenue), v: "Total Farm Revenue Tracked", revenue: true },
+                { k: formatRecordedRevenue(live?.recorded_egg_sales), v: "Total Egg Sales Recorded", revenue: true },
               ].map((x) => (
                 <div key={x.v} className={`min-w-0 rounded-2xl border border-border bg-card p-5 ${x.revenue ? "col-span-2" : ""}`}>
                   <div className="font-display text-2xl sm:text-3xl font-semibold text-[color:var(--forest)] break-words">
@@ -616,18 +616,14 @@ function Index() {
                   <div className="text-xs text-muted-foreground mt-1">{x.v}</div>
                   {x.revenue && (
                     <div className="mt-3 space-y-2 text-xs text-muted-foreground leading-relaxed">
-                      <p>Combined revenue recorded by farmers across the PoultryPro platform.</p>
-                      <p>This represents revenue recorded by participating farms on PoultryPro. It is not PoultryPro's own revenue, earnings, or company turnover.</p>
-                      <p>Scope: recorded Finance income in Nigerian naira (NGN). Production-value estimates and separately recorded broiler sales are not added, avoiding potential double-counting.</p>
+                      <p>Combined value of egg sales recorded by participating farms on PoultryPro. This represents farmers' recorded sales, not PoultryPro's company revenue.</p>
+                      <p>Recorded sales in Nigerian naira, not independently verified cash received. Egg-production estimates and other farm income are excluded.</p>
                     </div>
                   )}
                 </div>
               ))}
             </div>
 
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Platform-wide farm revenue is the combined revenue that participating farmers have recorded in PoultryPro. These figures reflect user-entered farm records and should not be interpreted as independently audited financial results or PoultryPro's company revenue.
-            </p>
             <div className="flex items-center gap-2 pt-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--forest)] animate-pulse" />
               Live platform statistics • Automatically updated

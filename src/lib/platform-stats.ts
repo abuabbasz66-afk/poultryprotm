@@ -16,10 +16,10 @@ export type LivePlatformStats = {
   premium_farms: number;
   revenue_tracked: number;
   profit_analysed: number;
-  recorded_farm_revenue: number | null;
+  recorded_egg_sales: number | null;
 };
 
-const STAT_KEYS: (Exclude<keyof LivePlatformStats, "recorded_farm_revenue">)[] = [
+const STAT_KEYS: (Exclude<keyof LivePlatformStats, "recorded_egg_sales">)[] = [
   "registered_farms", "registered_users", "total_birds", "production_records",
   "feed_records", "mortality_records", "health_records", "rooms", "eggs",
   "premium_farms", "revenue_tracked", "profit_analysed",
@@ -31,7 +31,9 @@ export async function fetchLivePlatformStats(): Promise<LivePlatformStats> {
   const row = (data ?? {}) as Record<string, number | string>;
   const out = {} as LivePlatformStats;
   for (const k of STAT_KEYS) out[k] = Number(row[k]) || 0;
-  out.recorded_farm_revenue = parseRecordedRevenue(row.recorded_farm_revenue, row.recorded_farm_revenue_currency);
+  const { data: sales, error: salesError } = await supabase.rpc("landing_recorded_egg_sales");
+  const salesRow = (sales ?? {}) as Record<string, unknown>;
+  out.recorded_egg_sales = salesError ? null : parseRecordedRevenue(salesRow.recorded_egg_sales, salesRow.currency);
   return out;
 }
 
