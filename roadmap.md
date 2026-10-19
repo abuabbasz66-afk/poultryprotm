@@ -1,5 +1,10 @@
 # PoultryPro PWA and mobile upgrade
 
+## All-farm production-based value (2026-10-19)
+
+- [ ] Replace ABZ snapshot with a privacy-safe live aggregate over all farms' recorded egg production and available farm prices; do not count Finance sales again
+- [ ] Verify calculation, missing-price handling, privacy and desktop/mobile display; keep unpublished
+
 ## Owner-approved production value replacement (2026-10-19)
 
 - [x] Replace the sales card with the owner's rounded production-value snapshot; distinguish it from live counts, sales and cash received without changing farm records
