@@ -431,6 +431,64 @@ export function useRemoveFlockProgramme() {
   });
 }
 
+export type ScheduleStatusUpdate = {
+  scheduleId: string;
+  /** New stored status: scheduled (reopen), skipped, deferred. */
+  status: "scheduled" | "skipped" | "deferred";
+  /** Optional new scheduled date (reschedule). */
+  scheduledDate?: string;
+  /** Required recorded reason — kept for the audit trail. */
+  reason: string;
+};
+
+/** Edit, cancel (skip) or defer a scheduled activity with a recorded reason and audit fields. */
+export function useUpdateScheduleStatus() {
+  const qc = useQueryClient();
+  const { farmId, userId } = useCtx();
+  return useMutation({
+    networkMode: "always",
+    mutationFn: async (input: ScheduleStatusUpdate) => {
+      if (!farmId) throw new Error("No farm selected.");
+      if (!input.reason.trim()) throw new Error("A reason is required.");
+      const { error } = await supabase
+        .from("flock_vaccination_schedules")
+        .update({
+          status: input.status === "scheduled" ? "scheduled" : input.status,
+          scheduled_date: input.scheduledDate ?? undefined,
+          status_reason: input.reason.trim(),
+          status_changed_by: userId,
+          status_changed_at: new Date().toISOString(),
+        })
+        .eq("id", input.scheduleId)
+        .eq("farm_id", farmId);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateFarm(qc, farmId),
+  });
+}
+
+/** Record veterinarian/administrator approval of a reference programme template. */
+export function useApproveProgramme() {
+  const qc = useQueryClient();
+  const { farmId, userId } = useCtx();
+  return useMutation({
+    networkMode: "always",
+    mutationFn: async (programmeId: string) => {
+      if (!farmId) throw new Error("No farm selected.");
+      const { error } = await supabase
+        .from("vaccination_programmes")
+        .update({
+          approval_status: "approved",
+          approved_by: userId,
+          approved_at: new Date().toISOString(),
+        })
+        .eq("id", programmeId);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateFarm(qc, farmId),
+  });
+}
+
 export type RecordInput = {
   id?: string;
   batch_id: string | null;
