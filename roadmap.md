@@ -2,8 +2,8 @@
 
 ## Five-stage dashboard workflow (2026-10-19)
 
-- [ ] Replace three-stage cards with compact Capture → Understand → Predict → Recommend → Act navigation using existing access checks and destinations
-- [ ] Verify stage navigation, plan availability and desktop/tablet/mobile layout; preserve the compact header and keep unpublished
+- [x] Replace three-stage cards with compact Capture → Understand → Predict → Recommend → Act navigation using existing access checks and destinations
+- [x] Verify signed-in stage navigation and desktop/tablet/mobile layout; 58 calculation/intelligence tests passed and automatic compilation passed; preserved compact header and kept unpublished
 
 ## Compact dashboard farm header (2026-10-19)
 
