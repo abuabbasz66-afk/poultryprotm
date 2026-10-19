@@ -2,8 +2,8 @@
 
 ## Compact dashboard farm header (2026-10-19)
 
-- [ ] Reduce the existing farm banner to a compact desktop row and neatly wrapping mobile layout; preserve live data and controls
-- [ ] Verify header height, all farm details and overflow in the signed-in dashboard
+- [x] Reduce the existing farm banner to a compact desktop row and neatly wrapping mobile layout; preserve live data and controls
+- [x] Verify signed-in desktop header at 120px, tablet/mobile wrapping, all farm details and no horizontal overflow; automatic compilation passed
 
 ## Admin Broadcast Messaging Centre (2026-10-18)
 
