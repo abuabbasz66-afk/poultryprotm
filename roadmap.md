@@ -1,5 +1,10 @@
 # PoultryPro PWA and mobile upgrade
 
+## Compact dashboard farm header (2026-10-19)
+
+- [ ] Reduce the existing farm banner to a compact desktop row and neatly wrapping mobile layout; preserve live data and controls
+- [ ] Verify header height, all farm details and overflow in the signed-in dashboard
+
 ## Admin Broadcast Messaging Centre (2026-10-18)
 
 - [x] Add guarded owner-only test/live approval controls, provider verification and explicit configuration status
