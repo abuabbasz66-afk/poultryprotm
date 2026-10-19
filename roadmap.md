@@ -1,5 +1,10 @@
 # PoultryPro PWA and mobile upgrade
 
+## All-farm production-based value (2026-10-19)
+
+- [x] Replace ABZ snapshot with a privacy-safe live aggregate across eligible Nigerian farms' recorded egg production and historical farm prices; do not count Finance sales again
+- [x] Verify 18 tests, public live total ₦86,708,622, aggregate-only response, desktop/mobile display and automatic compilation; 11 invalid/unpriced/foreign-currency records excluded and future records omitted; kept unpublished
+
 ## Owner-approved production value replacement (2026-10-19)
 
 - [x] Replace the sales card with the owner's rounded production-value snapshot; distinguish it from live counts, sales and cash received without changing farm records

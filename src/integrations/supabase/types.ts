@@ -4472,6 +4472,7 @@ export type Database = {
       }
       is_active_farm_member: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
+      landing_all_farm_egg_value: { Args: never; Returns: Json }
       landing_platform_stats: { Args: never; Returns: Json }
       landing_recorded_egg_sales: { Args: never; Returns: Json }
       log_security_event: {
