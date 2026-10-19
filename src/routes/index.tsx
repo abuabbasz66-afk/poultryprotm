@@ -996,10 +996,55 @@ function Index() {
             ))}
           </div>
 
-          {/* Trust */}
-          <div className="mt-12 rounded-3xl border border-border bg-card p-6 sm:p-8 text-center">
-            <h3 className="font-display text-2xl font-semibold">Farmer Stories &amp; Case Studies</h3>
-            <p className="mt-3 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">Verified farmer experiences and documented case studies will appear here when available. No testimonials or outcome claims have been added.</p>
+          {/* Farmer Stories & Experiences */}
+          <div className="mt-16">
+            <div className="text-center max-w-3xl mx-auto">
+              <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">
+                In Their Own Words
+              </span>
+              <h3 className="mt-4 font-display text-3xl sm:text-4xl font-semibold leading-tight">
+                Farmer Stories & Experiences
+              </h3>
+              <p className="mt-4 text-sm sm:text-base text-muted-foreground">
+                Real experiences and perspectives from poultry farmers and industry stakeholders exploring how PoultryPro can improve farm management, record-keeping, and decision-making.
+              </p>
+            </div>
+
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {TESTIMONIALS.map((t) => (
+                <figure key={t.name} className="flex flex-col rounded-3xl border border-border bg-card p-6 sm:p-7">
+                  <Quote className="h-6 w-6 text-[color:var(--gold)]" aria-hidden="true" />
+                  <blockquote className="mt-4 flex-1 text-sm sm:text-[15px] leading-relaxed text-foreground">
+                    {t.quote}
+                  </blockquote>
+                  <figcaption className="mt-6 pt-5 border-t border-border">
+                    {t.basis ? (
+                      <span className="mb-3 inline-block rounded-full border border-border px-2.5 py-0.5 text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">
+                        {t.basis}
+                      </span>
+                    ) : null}
+                    <div className="font-display text-base font-semibold text-foreground">{t.name}</div>
+                    <div className="mt-1 text-sm text-muted-foreground">{t.role}</div>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+
+            <div className="mt-10 rounded-3xl border border-border bg-card p-6 sm:p-8 text-center">
+              <h4 className="font-display text-xl sm:text-2xl font-semibold">Ready to manage your farm smarter?</h4>
+              <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center">
+                <Link
+                  to="/auth"
+                  search={{ mode: "signup" }}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition"
+                >
+                  Create Free Account <ArrowRight className="h-4 w-4 flex-none" />
+                </Link>
+                <Button asChild variant="secondary" className="h-11 rounded-full px-6">
+                  <Link to="/presentation">Explore the Live Demo <ArrowRight aria-hidden="true" /></Link>
+                </Button>
+              </div>
+            </div>
           </div>
 
           <p className="mt-6 text-xs sm:text-sm text-muted-foreground max-w-3xl">
