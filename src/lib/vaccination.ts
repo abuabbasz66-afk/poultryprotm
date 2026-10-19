@@ -246,6 +246,8 @@ export function scheduleStatus(
 ): ScheduleStatus {
   if (record) return "completed";
   if (schedule.status === "not_applicable") return "not_applicable";
+  if (schedule.status === "skipped") return "skipped";
+  if (schedule.status === "deferred") return "deferred";
   const diff = daysBetween(today, schedule.scheduled_date.slice(0, 10));
   if (diff < 0) return "overdue";
   if (diff === 0) return "due_today";
@@ -270,7 +272,7 @@ export function scheduleVariance(
 // ============= READS =============
 
 const SCHEDULE_COLS =
-  "id, farm_id, batch_id, programme_id, programme_item_id, programme_name, programme_version, sequence, age_days, age_label, disease, vaccine, route, note, scheduled_date, anchor_source, status";
+  "id, farm_id, batch_id, programme_id, programme_item_id, programme_name, programme_version, sequence, age_days, age_label, disease, vaccine, route, note, item_type, scheduled_date, anchor_source, status, status_reason, status_changed_by, status_changed_at";
 
 const RECORD_COLS =
   "id, farm_id, batch_id, schedule_id, programme_id, room_id, bird_type, disease, vaccine, scheduled_date, vaccination_date, bird_age_days, birds_present, birds_vaccinated, batch_number, manufacturer, expiry_date, route, administration_method, dose, water_volume_litres, person_responsible, veterinarian, notes, at_hatchery, hatchery_name, recorded_by, recorded_by_name, created_at, updated_at";
@@ -285,7 +287,7 @@ export function useVaccinationProgrammes() {
       const { data, error } = await supabase
         .from("vaccination_programmes")
         .select(
-          "id, farm_id, name, bird_type, version, is_baseline, is_active, notes, created_at, updated_at",
+          "id, farm_id, name, bird_type, version, is_baseline, is_active, notes, approval_status, approved_by, approved_at, created_at, updated_at",
         )
         .or(`farm_id.is.null,farm_id.eq.${farmId}`)
         .eq("is_active", true)
@@ -306,7 +308,7 @@ export function useProgrammeItems() {
     queryFn: async (): Promise<ProgrammeItem[]> => {
       const { data, error } = await supabase
         .from("vaccination_programme_items")
-        .select("id, programme_id, farm_id, sequence, age_days, age_label, disease, vaccine, route, note")
+        .select("id, programme_id, farm_id, sequence, age_days, age_label, disease, vaccine, route, note, item_type")
         .or(`farm_id.is.null,farm_id.eq.${farmId}`)
         .order("sequence");
       if (error) throw error;
@@ -401,6 +403,7 @@ export function useAssignProgramme() {
         vaccine: item.vaccine,
         route: item.route,
         note: item.note,
+        item_type: item.item_type ?? "vaccine",
         scheduled_date: dueDateFor(input.anchor.date, item.age_days),
         anchor_source: input.anchor.source,
       }));
@@ -639,7 +642,7 @@ export function summarise(timelines: FlockTimeline[]): VaccinationStats {
   for (const t of timelines) {
     let hasOverdue = false;
     for (const e of t.entries) {
-      if (e.status === "not_applicable") continue;
+      if (e.status === "not_applicable" || e.status === "skipped" || e.status === "deferred") continue;
       total += 1;
       if (e.status === "completed") {
         completed += 1;
