@@ -54,6 +54,9 @@ export type VaccinationProgramme = {
   is_baseline: boolean;
   is_active: boolean;
   notes: string | null;
+  approval_status: string;
+  approved_by: string | null;
+  approved_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -69,6 +72,7 @@ export type ProgrammeItem = {
   vaccine: string;
   route: string;
   note: string | null;
+  item_type: string;
 };
 
 export type FlockSchedule = {
@@ -86,9 +90,13 @@ export type FlockSchedule = {
   vaccine: string;
   route: string;
   note: string | null;
+  item_type: string;
   scheduled_date: string;
   anchor_source: string;
   status: string;
+  status_reason: string | null;
+  status_changed_by: string | null;
+  status_changed_at: string | null;
 };
 
 export type VaccinationRecord = {
@@ -130,6 +138,8 @@ export type ScheduleStatus =
   | "due_today"
   | "due_soon"
   | "upcoming"
+  | "skipped"
+  | "deferred"
   | "not_applicable";
 
 export const STATUS_LABELS: Record<ScheduleStatus, string> = {
@@ -137,7 +147,9 @@ export const STATUS_LABELS: Record<ScheduleStatus, string> = {
   overdue: "Overdue",
   due_today: "Due today",
   due_soon: "Due soon",
-  upcoming: "Upcoming",
+  upcoming: "Scheduled",
+  skipped: "Skipped",
+  deferred: "Deferred pending veterinary review",
   not_applicable: "Not applicable",
 };
 
@@ -147,6 +159,8 @@ export const STATUS_TONES: Record<ScheduleStatus, string> = {
   due_today: "bg-amber-500/20 text-amber-800 border-amber-500/40",
   due_soon: "bg-amber-500/10 text-amber-700 border-amber-500/30",
   upcoming: "bg-muted text-muted-foreground border-border",
+  skipped: "bg-muted text-muted-foreground border-border",
+  deferred: "bg-sky-500/15 text-sky-800 border-sky-500/30",
   not_applicable: "bg-muted text-muted-foreground border-border",
 };
 
@@ -156,7 +170,16 @@ export const STATUS_DOTS: Record<ScheduleStatus, string> = {
   due_today: "bg-amber-500",
   due_soon: "bg-amber-400",
   upcoming: "bg-muted-foreground/40",
+  skipped: "bg-muted-foreground/40",
+  deferred: "bg-sky-500",
   not_applicable: "bg-muted-foreground/30",
+};
+
+/** Treatments and procedures must never be presented as vaccines. */
+export const ITEM_TYPE_LABELS: Record<string, string> = {
+  vaccine: "Vaccine",
+  treatment: "Treatment — not a vaccine",
+  procedure: "Procedure — not a vaccine",
 };
 
 // ============= DATE MATHS =============
@@ -223,6 +246,8 @@ export function scheduleStatus(
 ): ScheduleStatus {
   if (record) return "completed";
   if (schedule.status === "not_applicable") return "not_applicable";
+  if (schedule.status === "skipped") return "skipped";
+  if (schedule.status === "deferred") return "deferred";
   const diff = daysBetween(today, schedule.scheduled_date.slice(0, 10));
   if (diff < 0) return "overdue";
   if (diff === 0) return "due_today";
@@ -247,7 +272,7 @@ export function scheduleVariance(
 // ============= READS =============
 
 const SCHEDULE_COLS =
-  "id, farm_id, batch_id, programme_id, programme_item_id, programme_name, programme_version, sequence, age_days, age_label, disease, vaccine, route, note, scheduled_date, anchor_source, status";
+  "id, farm_id, batch_id, programme_id, programme_item_id, programme_name, programme_version, sequence, age_days, age_label, disease, vaccine, route, note, item_type, scheduled_date, anchor_source, status, status_reason, status_changed_by, status_changed_at";
 
 const RECORD_COLS =
   "id, farm_id, batch_id, schedule_id, programme_id, room_id, bird_type, disease, vaccine, scheduled_date, vaccination_date, bird_age_days, birds_present, birds_vaccinated, batch_number, manufacturer, expiry_date, route, administration_method, dose, water_volume_litres, person_responsible, veterinarian, notes, at_hatchery, hatchery_name, recorded_by, recorded_by_name, created_at, updated_at";
@@ -262,7 +287,7 @@ export function useVaccinationProgrammes() {
       const { data, error } = await supabase
         .from("vaccination_programmes")
         .select(
-          "id, farm_id, name, bird_type, version, is_baseline, is_active, notes, created_at, updated_at",
+          "id, farm_id, name, bird_type, version, is_baseline, is_active, notes, approval_status, approved_by, approved_at, created_at, updated_at",
         )
         .or(`farm_id.is.null,farm_id.eq.${farmId}`)
         .eq("is_active", true)
@@ -283,7 +308,7 @@ export function useProgrammeItems() {
     queryFn: async (): Promise<ProgrammeItem[]> => {
       const { data, error } = await supabase
         .from("vaccination_programme_items")
-        .select("id, programme_id, farm_id, sequence, age_days, age_label, disease, vaccine, route, note")
+        .select("id, programme_id, farm_id, sequence, age_days, age_label, disease, vaccine, route, note, item_type")
         .or(`farm_id.is.null,farm_id.eq.${farmId}`)
         .order("sequence");
       if (error) throw error;
@@ -378,6 +403,7 @@ export function useAssignProgramme() {
         vaccine: item.vaccine,
         route: item.route,
         note: item.note,
+        item_type: item.item_type ?? "vaccine",
         scheduled_date: dueDateFor(input.anchor.date, item.age_days),
         anchor_source: input.anchor.source,
       }));
@@ -399,6 +425,64 @@ export function useRemoveFlockProgramme() {
         .delete()
         .eq("batch_id", input.batchId)
         .eq("programme_id", input.programmeId);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateFarm(qc, farmId),
+  });
+}
+
+export type ScheduleStatusUpdate = {
+  scheduleId: string;
+  /** New stored status: scheduled (reopen), skipped, deferred. */
+  status: "scheduled" | "skipped" | "deferred";
+  /** Optional new scheduled date (reschedule). */
+  scheduledDate?: string;
+  /** Required recorded reason — kept for the audit trail. */
+  reason: string;
+};
+
+/** Edit, cancel (skip) or defer a scheduled activity with a recorded reason and audit fields. */
+export function useUpdateScheduleStatus() {
+  const qc = useQueryClient();
+  const { farmId, userId } = useCtx();
+  return useMutation({
+    networkMode: "always",
+    mutationFn: async (input: ScheduleStatusUpdate) => {
+      if (!farmId) throw new Error("No farm selected.");
+      if (!input.reason.trim()) throw new Error("A reason is required.");
+      const { error } = await supabase
+        .from("flock_vaccination_schedules")
+        .update({
+          status: input.status === "scheduled" ? "scheduled" : input.status,
+          scheduled_date: input.scheduledDate ?? undefined,
+          status_reason: input.reason.trim(),
+          status_changed_by: userId,
+          status_changed_at: new Date().toISOString(),
+        })
+        .eq("id", input.scheduleId)
+        .eq("farm_id", farmId);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateFarm(qc, farmId),
+  });
+}
+
+/** Record veterinarian/administrator approval of a reference programme template. */
+export function useApproveProgramme() {
+  const qc = useQueryClient();
+  const { farmId, userId } = useCtx();
+  return useMutation({
+    networkMode: "always",
+    mutationFn: async (programmeId: string) => {
+      if (!farmId) throw new Error("No farm selected.");
+      const { error } = await supabase
+        .from("vaccination_programmes")
+        .update({
+          approval_status: "approved",
+          approved_by: userId,
+          approved_at: new Date().toISOString(),
+        })
+        .eq("id", programmeId);
       if (error) throw error;
     },
     onSuccess: () => invalidateFarm(qc, farmId),
@@ -616,7 +700,7 @@ export function summarise(timelines: FlockTimeline[]): VaccinationStats {
   for (const t of timelines) {
     let hasOverdue = false;
     for (const e of t.entries) {
-      if (e.status === "not_applicable") continue;
+      if (e.status === "not_applicable" || e.status === "skipped" || e.status === "deferred") continue;
       total += 1;
       if (e.status === "completed") {
         completed += 1;

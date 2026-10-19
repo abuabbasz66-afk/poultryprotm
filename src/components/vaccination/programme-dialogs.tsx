@@ -29,6 +29,7 @@ import {
   formatDate,
   useAssignProgramme,
   useCreateCustomProgramme,
+  useUpdateScheduleStatus,
   type FlockSchedule,
   type ProgrammeItem,
   type VaccinationProgramme,
@@ -212,6 +213,93 @@ export function AssignProgrammeDialog({
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
             Assign programme
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Edit, reschedule, skip or defer one scheduled activity — a reason is always recorded. */
+export function ScheduleStatusDialog({
+  entry,
+  onOpenChange,
+}: {
+  entry: { id: string; vaccine: string; disease: string; ageLabel: string; scheduledDate: string; status: string; statusReason: string | null } | null;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const update = useUpdateScheduleStatus();
+  const [action, setAction] = useState<"reschedule" | "skipped" | "deferred" | "scheduled">("reschedule");
+  const [date, setDate] = useState("");
+  const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    if (!entry) return;
+    setAction("reschedule");
+    setDate(entry.scheduledDate.slice(0, 10));
+    setReason("");
+  }, [entry]);
+
+  if (!entry) return null;
+
+  const submit = async () => {
+    if (!reason.trim()) return toast.error("Record a reason for this change.");
+    try {
+      await update.mutateAsync({
+        scheduleId: entry.id,
+        status: action === "reschedule" ? "scheduled" : action,
+        scheduledDate: action === "reschedule" ? date : undefined,
+        reason,
+      });
+      toast.success("Schedule updated with your reason recorded.");
+      onOpenChange(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update the schedule.");
+    }
+  };
+
+  return (
+    <Dialog open={!!entry} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit scheduled activity</DialogTitle>
+          <DialogDescription>
+            {entry.vaccine} · {entry.disease} ({entry.ageLabel}), due {entry.scheduledDate.slice(0, 10)}.
+            Changes are kept with a recorded reason.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Action</Label>
+            <Select value={action} onValueChange={(v) => setAction(v as typeof action)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="reschedule">Reschedule to a new date</SelectItem>
+                <SelectItem value="skipped">Mark as skipped</SelectItem>
+                <SelectItem value="deferred">Defer pending veterinary review</SelectItem>
+                <SelectItem value="scheduled">Reopen as scheduled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {action === "reschedule" && (
+            <div className="space-y-1.5">
+              <Label className="text-xs">New date</Label>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </div>
+          )}
+          <div className="space-y-1.5">
+            <Label className="text-xs">Reason (required)</Label>
+            <Textarea rows={2} value={reason} onChange={(e) => setReason(e.target.value)} />
+          </div>
+          {entry.statusReason && (
+            <p className="text-xs text-muted-foreground">Previous reason: {entry.statusReason}</p>
+          )}
+        </div>
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={submit} disabled={update.isPending}>
+            {update.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save change
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,0 +1,10 @@
+ALTER TABLE public.vaccination_programme_items ADD COLUMN item_type TEXT NOT NULL DEFAULT 'vaccine';
+ALTER TABLE public.flock_vaccination_schedules ADD COLUMN item_type TEXT NOT NULL DEFAULT 'vaccine';
+ALTER TABLE public.flock_vaccination_schedules ADD COLUMN status_reason TEXT;
+ALTER TABLE public.flock_vaccination_schedules ADD COLUMN status_changed_by UUID;
+ALTER TABLE public.flock_vaccination_schedules ADD COLUMN status_changed_at TIMESTAMPTZ;
+ALTER TABLE public.vaccination_programmes ADD COLUMN approval_status TEXT NOT NULL DEFAULT 'approved';
+ALTER TABLE public.vaccination_programmes ADD COLUMN approved_by UUID;
+ALTER TABLE public.vaccination_programmes ADD COLUMN approved_at TIMESTAMPTZ;
+COMMENT ON COLUMN public.vaccination_programme_items.item_type IS 'vaccine | treatment | procedure — treatments and procedures must never be presented as vaccines';
+COMMENT ON COLUMN public.vaccination_programmes.approval_status IS 'reference = supplied template pending veterinary/administrator review; approved = reviewed and approved for operational use';
