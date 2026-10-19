@@ -24,6 +24,6 @@ describe("dueDateFor", () => {
   it("counts Day 1 as the placement/hatch day itself (Day 7 = anchor + 6)", () => {
     expect(dueDateFor("2026-03-01", 1)).toBe("2026-03-01");
     expect(dueDateFor("2026-03-01", 7)).toBe("2026-03-07");
-    expect(dueDateFor("2026-03-01", 140)).toBe("2026-07-19");
+    expect(dueDateFor("2026-03-01", 140)).toBe("2026-07-18");
   });
 });
