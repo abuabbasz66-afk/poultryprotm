@@ -1,5 +1,11 @@
 # PoultryPro PWA and mobile upgrade
 
+## Public recorded egg sales only (2026-10-19)
+
+- [ ] Verify genuine egg-sale transaction source and replace Finance total with an aggregate restricted to recorded egg sales
+- [ ] Update the single financial card and explanation; preserve non-financial statistics
+- [ ] Test exclusions, privacy, live refresh and desktop/mobile rendering; report missing sales coverage and keep unpublished
+
 ## Public farm revenue statistic (2026-10-19)
 
 - [x] Inspect actual revenue sources and NGN Finance denomination; aggregate ledger only, excluding unlinked broiler sales and estimated production values; ambiguous duplicates return unavailable
