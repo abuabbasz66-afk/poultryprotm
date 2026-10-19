@@ -11,7 +11,7 @@ import {
   ShieldCheck, Sparkles, ArrowRight, MapPin, Trophy, Cpu, Users, Leaf,
   Calculator, FileText, Brain, Mic, TrendingUp, CloudSun, Radio, Camera,
   Sliders, DollarSign, Syringe, BarChart3, Store, Handshake, Smartphone,
-  Baby, Drumstick, GraduationCap, BookOpen, ClipboardCheck,
+  Baby, Drumstick, GraduationCap, BookOpen, ClipboardCheck, Quote,
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 import { useLivePlatformStats } from "@/lib/platform-stats";
@@ -27,6 +27,45 @@ import { Button } from "@/components/ui/button";
 const HOME_TITLE = "PoultryPro | Poultry Farm Insights & Recommended Actions";
 const HOME_DESC =
   "Turn poultry farm records into performance insights, timely alerts and practical recommendations for production, feed, flock health and finances with PoultryPro.";
+
+// Testimonials reproduced exactly as supplied by each person quoted.
+// `basis` records only how the person engaged with PoultryPro, as stated in their own words.
+const TESTIMONIALS: { name: string; role: string; quote: string; basis?: string }[] = [
+  {
+    name: "Zubair IbrahimAbbas",
+    role: "General Manager, ABZ Global Resource",
+    basis: "Uses PoultryPro",
+    quote:
+      "PoultryPro has helped us replace manual record keeping with a centralized digital system. Daily production, feed usage, mortality, and flock performance are now easier to track, helping us make faster and better management decisions.",
+  },
+  {
+    name: "Umar Abdullahi",
+    role: "President, Poultry Association of Nigeria (PAN), Katsina Chapter",
+    basis: "Based on an evaluation",
+    quote:
+      "After evaluating PoultryPro, I am impressed by its practical approach to poultry farm management. The platform addresses many of the record-keeping and decision-making challenges faced by poultry farmers. I believe PoultryPro has the potential to improve productivity and profitability across farms in Katsina State, and I look forward to collaborating in promoting its adoption among poultry farmers.",
+  },
+  {
+    name: "Anas Rabi'u",
+    role: "General Manager, Greenfield Contracts & Agro Limited",
+    basis: "Uses PoultryPro",
+    quote:
+      "Since we started using PoultryPro for our daily farm operations, record keeping has become faster, more organized, and easier to manage. Production, feed usage, mortality, health records, and financial information are all available in one place, giving us a clear picture of our farm's performance every day. PoultryPro has improved our decision-making and has become an essential part of managing our poultry business.",
+  },
+  {
+    name: "Fatima Hassan",
+    role: "CEO, Tee's Poultry Farms",
+    basis: "Based on a demonstration",
+    quote:
+      "After seeing the PoultryPro demonstration, I believe it will simplify daily farm record keeping and help poultry farmers make better business decisions. I look forward to using it on my farm.",
+  },
+  {
+    name: "Abubakar Lawal Jari",
+    role: "COO, Jari Integrated Farms Ltd",
+    quote:
+      "The dashboard is easy to understand, and I like that production, feed, mortality, and financial records are available in one place. PoultryPro has strong potential for commercial poultry farms.",
+  },
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -957,10 +996,55 @@ function Index() {
             ))}
           </div>
 
-          {/* Trust */}
-          <div className="mt-12 rounded-3xl border border-border bg-card p-6 sm:p-8 text-center">
-            <h3 className="font-display text-2xl font-semibold">Farmer Stories &amp; Case Studies</h3>
-            <p className="mt-3 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">Verified farmer experiences and documented case studies will appear here when available. No testimonials or outcome claims have been added.</p>
+          {/* Farmer Stories & Experiences */}
+          <div className="mt-16">
+            <div className="text-center max-w-3xl mx-auto">
+              <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">
+                In Their Own Words
+              </span>
+              <h3 className="mt-4 font-display text-3xl sm:text-4xl font-semibold leading-tight">
+                Farmer Stories & Experiences
+              </h3>
+              <p className="mt-4 text-sm sm:text-base text-muted-foreground">
+                Real experiences and perspectives from poultry farmers and industry stakeholders exploring how PoultryPro can improve farm management, record-keeping, and decision-making.
+              </p>
+            </div>
+
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {TESTIMONIALS.map((t) => (
+                <figure key={t.name} className="flex flex-col rounded-3xl border border-border bg-card p-6 sm:p-7">
+                  <Quote className="h-6 w-6 text-[color:var(--gold)]" aria-hidden="true" />
+                  <blockquote className="mt-4 flex-1 text-sm sm:text-[15px] leading-relaxed text-foreground">
+                    {t.quote}
+                  </blockquote>
+                  <figcaption className="mt-6 pt-5 border-t border-border">
+                    {t.basis ? (
+                      <span className="mb-3 inline-block rounded-full border border-border px-2.5 py-0.5 text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">
+                        {t.basis}
+                      </span>
+                    ) : null}
+                    <div className="font-display text-base font-semibold text-foreground">{t.name}</div>
+                    <div className="mt-1 text-sm text-muted-foreground">{t.role}</div>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+
+            <div className="mt-10 rounded-3xl border border-border bg-card p-6 sm:p-8 text-center">
+              <h4 className="font-display text-xl sm:text-2xl font-semibold">Ready to manage your farm smarter?</h4>
+              <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center">
+                <Link
+                  to="/auth"
+                  search={{ mode: "signup" }}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition"
+                >
+                  Create Free Account <ArrowRight className="h-4 w-4 flex-none" />
+                </Link>
+                <Button asChild variant="secondary" className="h-11 rounded-full px-6">
+                  <Link to="/presentation">Explore the Live Demo <ArrowRight aria-hidden="true" /></Link>
+                </Button>
+              </div>
+            </div>
           </div>
 
           <p className="mt-6 text-xs sm:text-sm text-muted-foreground max-w-3xl">
