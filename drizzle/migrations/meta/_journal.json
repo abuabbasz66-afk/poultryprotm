@@ -169,6 +169,13 @@
       "when": 1792392414006,
       "tag": "0023_public_all_farm_egg_value",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792425710385,
+      "tag": "0024_layer_vaccination_programme_w20",
+      "breakpoints": true
     }
   ]
 }

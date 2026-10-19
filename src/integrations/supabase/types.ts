@@ -2352,6 +2352,7 @@ export type Database = {
           disease: string
           farm_id: string
           id: string
+          item_type: string
           note: string | null
           programme_id: string
           programme_item_id: string | null
@@ -2361,6 +2362,9 @@ export type Database = {
           scheduled_date: string
           sequence: number
           status: string
+          status_changed_at: string | null
+          status_changed_by: string | null
+          status_reason: string | null
           updated_at: string
           vaccine: string
         }
@@ -2373,6 +2377,7 @@ export type Database = {
           disease: string
           farm_id: string
           id?: string
+          item_type?: string
           note?: string | null
           programme_id: string
           programme_item_id?: string | null
@@ -2382,6 +2387,9 @@ export type Database = {
           scheduled_date: string
           sequence?: number
           status?: string
+          status_changed_at?: string | null
+          status_changed_by?: string | null
+          status_reason?: string | null
           updated_at?: string
           vaccine: string
         }
@@ -2394,6 +2402,7 @@ export type Database = {
           disease?: string
           farm_id?: string
           id?: string
+          item_type?: string
           note?: string | null
           programme_id?: string
           programme_item_id?: string | null
@@ -2403,6 +2412,9 @@ export type Database = {
           scheduled_date?: string
           sequence?: number
           status?: string
+          status_changed_at?: string | null
+          status_changed_by?: string | null
+          status_reason?: string | null
           updated_at?: string
           vaccine?: string
         }
@@ -3657,6 +3669,7 @@ export type Database = {
           disease: string
           farm_id: string | null
           id: string
+          item_type: string
           note: string | null
           programme_id: string
           route: string
@@ -3671,6 +3684,7 @@ export type Database = {
           disease: string
           farm_id?: string | null
           id?: string
+          item_type?: string
           note?: string | null
           programme_id: string
           route: string
@@ -3685,6 +3699,7 @@ export type Database = {
           disease?: string
           farm_id?: string | null
           id?: string
+          item_type?: string
           note?: string | null
           programme_id?: string
           route?: string
@@ -3711,6 +3726,9 @@ export type Database = {
       }
       vaccination_programmes: {
         Row: {
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
           bird_type: string
           created_at: string
           created_by: string | null
@@ -3724,6 +3742,9 @@ export type Database = {
           version: number
         }
         Insert: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           bird_type?: string
           created_at?: string
           created_by?: string | null
@@ -3737,6 +3758,9 @@ export type Database = {
           version?: number
         }
         Update: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           bird_type?: string
           created_at?: string
           created_by?: string | null
