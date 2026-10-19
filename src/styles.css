@@ -219,3 +219,11 @@
   .hero-float, .hero-fade-up { animation: none; }
 }
 
+/* Printable vaccination calendar & history: only the marked area prints. */
+@media print {
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; inset: 0 auto auto 0; width: 100%; }
+  .print-area .no-print { display: none !important; }
+}
+

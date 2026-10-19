@@ -13,6 +13,8 @@ import {
   Trash2,
   Sparkles,
   ClipboardList,
+  Printer,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePermissions } from "@/lib/rbac";
@@ -34,11 +36,13 @@ import { useLayerBatches } from "@/lib/layer-rearing";
 import {
   AssignProgrammeDialog,
   CustomProgrammeDialog,
+  ScheduleStatusDialog,
 } from "@/components/vaccination/programme-dialogs";
 import { RecordVaccinationDialog } from "@/components/vaccination/record-vaccination-dialog";
 import { VaccinationDetailDialog } from "@/components/vaccination/vaccination-detail-dialog";
 import {
   GUMBORO_NOTE,
+  ITEM_TYPE_LABELS,
   STATUS_DOTS,
   STATUS_LABELS,
   STATUS_TONES,
@@ -48,6 +52,7 @@ import {
   isGumboro,
   scheduleVariance,
   summarise,
+  useApproveProgramme,
   useDeleteVaccinationRecord,
   useFlockSchedules,
   useProgrammeItems,
@@ -103,6 +108,11 @@ function VaccinationPage() {
   const [editing, setEditing] = useState<VaccinationRecord | null>(null);
   const [presetSchedule, setPresetSchedule] = useState<string | null>(null);
   const [detail, setDetail] = useState<VaccinationRecord | null>(null);
+  const [scheduleEdit, setScheduleEdit] = useState<{
+    id: string; vaccine: string; disease: string; ageLabel: string;
+    scheduledDate: string; status: string; statusReason: string | null;
+  } | null>(null);
+  const approveProgramme = useApproveProgramme();
 
   const batches = batchesQ.data ?? [];
   const schedules = schedulesQ.data ?? [];
