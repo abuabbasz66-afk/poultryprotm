@@ -625,8 +625,10 @@ function Index() {
               ))}
             </div>
 
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Platform-wide farm revenue is the combined revenue that participating farmers have recorded in PoultryPro. These figures reflect user-entered farm records and should not be interpreted as independently audited financial results or PoultryPro's company revenue.
+            </p>
             <div className="flex items-center gap-2 pt-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              <span className="sr-only">Platform-wide farm revenue is the combined revenue that participating farmers have recorded in PoultryPro.</span>
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--forest)] animate-pulse" />
               Live platform statistics • Automatically updated
             </div>
