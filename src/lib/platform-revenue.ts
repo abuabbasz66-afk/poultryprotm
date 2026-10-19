@@ -1,4 +1,4 @@
-/** Finance entry amounts are denominated in NGN; reject unknown currencies. */
+/** Recorded egg-sale amounts are denominated in NGN; reject unknown currencies. */
 export function parseRecordedRevenue(value: unknown, currency: unknown): number | null {
   if (currency !== "NGN" || value === null || value === undefined || value === "") return null;
   if (typeof value !== "number" && typeof value !== "string") return null;
