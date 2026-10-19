@@ -11,7 +11,7 @@ import {
   ShieldCheck, Sparkles, ArrowRight, MapPin, Trophy, Cpu, Users, Leaf,
   Calculator, FileText, Brain, Mic, TrendingUp, CloudSun, Radio, Camera,
   Sliders, DollarSign, Syringe, BarChart3, Store, Handshake, Smartphone,
-  Baby, Drumstick, GraduationCap, BookOpen, ClipboardCheck,
+  Baby, Drumstick, GraduationCap, BookOpen, ClipboardCheck, Quote,
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 import { useLivePlatformStats } from "@/lib/platform-stats";
@@ -27,6 +27,45 @@ import { Button } from "@/components/ui/button";
 const HOME_TITLE = "PoultryPro | Poultry Farm Insights & Recommended Actions";
 const HOME_DESC =
   "Turn poultry farm records into performance insights, timely alerts and practical recommendations for production, feed, flock health and finances with PoultryPro.";
+
+// Testimonials reproduced exactly as supplied by each person quoted.
+// `basis` records only how the person engaged with PoultryPro, as stated in their own words.
+const TESTIMONIALS: { name: string; role: string; quote: string; basis?: string }[] = [
+  {
+    name: "Zubair IbrahimAbbas",
+    role: "General Manager, ABZ Global Resource",
+    basis: "Uses PoultryPro",
+    quote:
+      "PoultryPro has helped us replace manual record keeping with a centralized digital system. Daily production, feed usage, mortality, and flock performance are now easier to track, helping us make faster and better management decisions.",
+  },
+  {
+    name: "Umar Abdullahi",
+    role: "President, Poultry Association of Nigeria (PAN), Katsina Chapter",
+    basis: "Based on an evaluation",
+    quote:
+      "After evaluating PoultryPro, I am impressed by its practical approach to poultry farm management. The platform addresses many of the record-keeping and decision-making challenges faced by poultry farmers. I believe PoultryPro has the potential to improve productivity and profitability across farms in Katsina State, and I look forward to collaborating in promoting its adoption among poultry farmers.",
+  },
+  {
+    name: "Anas Rabi'u",
+    role: "General Manager, Greenfield Contracts & Agro Limited",
+    basis: "Uses PoultryPro",
+    quote:
+      "Since we started using PoultryPro for our daily farm operations, record keeping has become faster, more organized, and easier to manage. Production, feed usage, mortality, health records, and financial information are all available in one place, giving us a clear picture of our farm's performance every day. PoultryPro has improved our decision-making and has become an essential part of managing our poultry business.",
+  },
+  {
+    name: "Fatima Hassan",
+    role: "CEO, Tee's Poultry Farms",
+    basis: "Based on a demonstration",
+    quote:
+      "After seeing the PoultryPro demonstration, I believe it will simplify daily farm record keeping and help poultry farmers make better business decisions. I look forward to using it on my farm.",
+  },
+  {
+    name: "Abubakar Lawal Jari",
+    role: "COO, Jari Integrated Farms Ltd",
+    quote:
+      "The dashboard is easy to understand, and I like that production, feed, mortality, and financial records are available in one place. PoultryPro has strong potential for commercial poultry farms.",
+  },
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({
