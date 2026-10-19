@@ -176,6 +176,13 @@
       "when": 1792425710385,
       "tag": "0024_layer_vaccination_programme_w20",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1792425821538,
+      "tag": "0025_migration",
+      "breakpoints": true
     }
   ]
 }
