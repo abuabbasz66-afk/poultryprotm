@@ -1,5 +1,10 @@
 # PoultryPro PWA and mobile upgrade
 
+## Owner-approved production value replacement (2026-10-19)
+
+- [x] Replace the sales card with the owner's rounded production-value snapshot; distinguish it from live counts, sales and cash received without changing farm records
+- [ ] Verify snapshot tests and public homepage display; keep unpublished
+
 ## Public recorded egg sales only (2026-10-19)
 
 - [x] Verify Finance egg-sale items, stored selling prices and amounts; add aggregate restricted to genuine egg sales, excluding trays and production valuations

@@ -16,6 +16,7 @@ import {
 import { SiteFooter } from "@/components/site-footer";
 import { useLivePlatformStats } from "@/lib/platform-stats";
 import { formatRecordedRevenue } from "@/lib/platform-revenue";
+import { PUBLIC_PRODUCTION_VALUE } from "@/lib/public-production-value";
 import { AcademySection } from "@/components/academy/academy-section";
 import { RecognitionCard } from "@/components/recognition/international-recognition";
 import { TUTORIAL_CATEGORIES } from "@/lib/tutorials";
@@ -593,8 +594,8 @@ function Index() {
               Real numbers from the PoultryPro platform.
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Every metric below is pulled directly from the same database that powers the PoultryPro
-              dashboard — updated automatically as farmers capture new records.
+              Platform activity counts update automatically from recorded farm data.
+              The production value below is a separately labelled, owner-supplied snapshot.
             </p>
             <div className="grid grid-cols-2 gap-4 pt-2">
               {[
@@ -607,17 +608,17 @@ function Index() {
                 { k: fmtStat(live?.mortality_records), v: "Mortality records logged" },
                 { k: fmtStat(live?.health_records), v: "Health records logged" },
                 { k: fmtStat(live?.eggs), v: "Eggs recorded" },
-                { k: formatRecordedRevenue(live?.recorded_egg_sales), v: "Total Egg Sales Recorded", revenue: true },
+                { k: formatRecordedRevenue(PUBLIC_PRODUCTION_VALUE.amount), v: "Recorded Egg Production Value", revenue: true },
               ].map((x) => (
                 <div key={x.v} className={`min-w-0 rounded-2xl border border-border bg-card p-5 ${x.revenue ? "col-span-2" : ""}`}>
                   <div className="font-display text-2xl sm:text-3xl font-semibold text-[color:var(--forest)] break-words">
-                    {statsLoading || (!live && !x.revenue) ? <StatSkeleton className="w-20" /> : x.k}
+                    {!x.revenue && (statsLoading || !live) ? <StatSkeleton className="w-20" /> : x.k}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">{x.v}</div>
                   {x.revenue && (
                     <div className="mt-3 space-y-2 text-xs text-muted-foreground leading-relaxed">
-                      <p>Combined value of egg sales recorded by participating farms on PoultryPro. This represents farmers' recorded sales, not PoultryPro's company revenue.</p>
-                      <p>Recorded sales in Nigerian naira, not independently verified cash received. Egg-production estimates and other farm income are excluded.</p>
+                      <p>{PUBLIC_PRODUCTION_VALUE.farm} · Owner-supplied rounded snapshot · 19 October 2026.</p>
+                      <p>Calculated value of recorded egg production, not recorded egg sales, confirmed cash received or PoultryPro's company revenue. This snapshot does not update automatically.</p>
                     </div>
                   )}
                 </div>
@@ -626,7 +627,7 @@ function Index() {
 
             <div className="flex items-center gap-2 pt-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--forest)] animate-pulse" />
-              Live platform statistics • Automatically updated
+              Live activity counts • Production value is a dated snapshot
             </div>
           </div>
         </div>
