@@ -64,9 +64,9 @@ describe("recorded revenue database aggregation", () => {
     try {
       expect((await db.query("SELECT * FROM farm_revenue")).rows).toHaveLength(0);
       expect(await total()).toBe(45);
-      const result = await db.query("SELECT public.landing_platform_stats() AS stats");
+      const result = await db.query<{ stats: Record<string, unknown> }>("SELECT public.landing_platform_stats() AS stats");
       expect(JSON.stringify(result.rows)).not.toContain("private-id");
-      expect(Object.keys(result.rows[0]?.stats as object)).toHaveLength(14);
+      expect(Object.keys(result.rows[0]?.stats ?? {})).toHaveLength(14);
     } finally { await db.exec("RESET ROLE;"); }
   });
 });
