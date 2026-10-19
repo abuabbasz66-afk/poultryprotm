@@ -1,5 +1,11 @@
 # PoultryPro PWA and mobile upgrade
 
+## Public farm revenue statistic (2026-10-19)
+
+- [ ] Inspect actual revenue sources, currency and duplicate handling; add only a safe platform-wide aggregate
+- [ ] Add the statistic and transparency notes to the existing homepage grid
+- [ ] Verify calculation, public privacy and desktop/mobile display; keep unpublished
+
 ## Five-stage dashboard workflow (2026-10-19)
 
 - [x] Replace three-stage cards with compact Capture → Understand → Predict → Recommend → Act navigation using existing access checks and destinations
