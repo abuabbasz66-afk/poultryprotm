@@ -148,6 +148,13 @@
       "when": 1792334462428,
       "tag": "0020_sms_owner_activation_controls",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1792390807591,
+      "tag": "0021_recorded_platform_revenue",
+      "breakpoints": true
     }
   ]
 }
