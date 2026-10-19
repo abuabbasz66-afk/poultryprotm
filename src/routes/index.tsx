@@ -595,7 +595,7 @@ function Index() {
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed">
               Platform activity counts update automatically from recorded farm data.
-              The production value below is a separately labelled, owner-supplied snapshot.
+              The egg sales value below is a separately labelled, owner-reported snapshot.
             </p>
             <div className="grid grid-cols-2 gap-4 pt-2">
               {[
@@ -608,7 +608,7 @@ function Index() {
                 { k: fmtStat(live?.mortality_records), v: "Mortality records logged" },
                 { k: fmtStat(live?.health_records), v: "Health records logged" },
                 { k: fmtStat(live?.eggs), v: "Eggs recorded" },
-                { k: formatRecordedRevenue(PUBLIC_PRODUCTION_VALUE.amount), v: "Recorded Egg Production Value", revenue: true },
+                { k: formatRecordedRevenue(PUBLIC_PRODUCTION_VALUE.amount), v: "Owner-Reported Egg Sales Value", revenue: true },
               ].map((x) => (
                 <div key={x.v} className={`min-w-0 rounded-2xl border border-border bg-card p-5 ${x.revenue ? "col-span-2" : ""}`}>
                   <div className="font-display text-2xl sm:text-3xl font-semibold text-[color:var(--forest)] break-words">
@@ -618,7 +618,7 @@ function Index() {
                   {x.revenue && (
                     <div className="mt-3 space-y-2 text-xs text-muted-foreground leading-relaxed">
                       <p>{PUBLIC_PRODUCTION_VALUE.farm} · Owner-supplied rounded snapshot · 19 October 2026.</p>
-                      <p>Calculated value of recorded egg production, not recorded egg sales, confirmed cash received or PoultryPro's company revenue. This snapshot does not update automatically.</p>
+                      <p>Based on recorded egg-production value and the owner's confirmation that all crates are sold daily. Not independently verified cash received or PoultryPro's company revenue. This farm snapshot is not a live platform-wide sales total and does not update automatically.</p>
                     </div>
                   )}
                 </div>
@@ -627,7 +627,7 @@ function Index() {
 
             <div className="flex items-center gap-2 pt-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--forest)] animate-pulse" />
-              Live activity counts • Production value is a dated snapshot
+              Live activity counts • Sales value is an owner-reported snapshot
             </div>
           </div>
         </div>

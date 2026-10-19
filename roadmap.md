@@ -3,6 +3,7 @@
 ## Owner-approved production value replacement (2026-10-19)
 
 - [x] Replace the sales card with the owner's rounded production-value snapshot; distinguish it from live counts, sales and cash received without changing farm records
+- [x] Incorporate the owner's confirmation that recorded crates are sold daily; label the summary as owner-reported egg sales, not independently verified receipts
 - [ ] Verify snapshot tests and public homepage display; keep unpublished
 
 ## Public recorded egg sales only (2026-10-19)

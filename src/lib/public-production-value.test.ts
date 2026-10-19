@@ -11,4 +11,7 @@ describe("owner-approved public production snapshot", () => {
     expect(PUBLIC_PRODUCTION_VALUE.source).toBe("owner-supplied-snapshot");
     expect(PUBLIC_PRODUCTION_VALUE.asOf).toBe("2026-10-19");
   });
+  it("records the owner's confirmation that production crates are sold daily", () => {
+    expect(PUBLIC_PRODUCTION_VALUE.salesBasis).toBe("owner-confirmed-daily-crate-sales");
+  });
 });
