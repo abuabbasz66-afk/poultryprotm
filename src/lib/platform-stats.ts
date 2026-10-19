@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { parseRecordedRevenue } from "@/lib/platform-revenue";
 
 /** Aggregate-only public statistics from the landing_platform_stats RPC (no farm-level data). */
 export type LivePlatformStats = {
@@ -15,9 +16,10 @@ export type LivePlatformStats = {
   premium_farms: number;
   revenue_tracked: number;
   profit_analysed: number;
+  recorded_farm_revenue: number | null;
 };
 
-const STAT_KEYS: (keyof LivePlatformStats)[] = [
+const STAT_KEYS: (Exclude<keyof LivePlatformStats, "recorded_farm_revenue">)[] = [
   "registered_farms", "registered_users", "total_birds", "production_records",
   "feed_records", "mortality_records", "health_records", "rooms", "eggs",
   "premium_farms", "revenue_tracked", "profit_analysed",
@@ -29,6 +31,7 @@ export async function fetchLivePlatformStats(): Promise<LivePlatformStats> {
   const row = (data ?? {}) as Record<string, number | string>;
   const out = {} as LivePlatformStats;
   for (const k of STAT_KEYS) out[k] = Number(row[k]) || 0;
+  out.recorded_farm_revenue = parseRecordedRevenue(row.recorded_farm_revenue, row.recorded_farm_revenue_currency);
   return out;
 }
 

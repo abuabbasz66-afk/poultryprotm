@@ -1,5 +1,11 @@
 # PoultryPro PWA and mobile upgrade
 
+## Public farm revenue statistic (2026-10-19)
+
+- [x] Inspect actual revenue sources and NGN Finance denomination; aggregate ledger only, excluding unlinked broiler sales and estimated production values; ambiguous duplicates return unavailable
+- [x] Add the statistic and transparency notes to the existing homepage grid; preserve the existing 60-second refresh
+- [x] Verify 36 automated tests, controlled existing ledger sample (₦45), signed-out aggregate output, desktop/mobile display without overflow, and automatic compilation; website changes unpublished
+
 ## Five-stage dashboard workflow (2026-10-19)
 
 - [x] Replace three-stage cards with compact Capture → Understand → Predict → Recommend → Act navigation using existing access checks and destinations
