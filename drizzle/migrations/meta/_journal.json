@@ -155,6 +155,13 @@
       "when": 1792390807591,
       "tag": "0021_recorded_platform_revenue",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1792391684122,
+      "tag": "0022_public_recorded_egg_sales_only",
+      "breakpoints": true
     }
   ]
 }
