@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 import { useLivePlatformStats } from "@/lib/platform-stats";
+import { formatRecordedRevenue } from "@/lib/platform-revenue";
 import { AcademySection } from "@/components/academy/academy-section";
 import { RecognitionCard } from "@/components/recognition/international-recognition";
 import { TUTORIAL_CATEGORIES } from "@/lib/tutorials";
@@ -75,6 +76,8 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: HOME_TITLE },
       { property: "og:description", content: HOME_DESC },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: heroAsset.url },
+      { name: "twitter:image", content: heroAsset.url },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: "https://poultrypro.life/" },
     ],
@@ -604,18 +607,26 @@ function Index() {
                 { k: fmtStat(live?.mortality_records), v: "Mortality records logged" },
                 { k: fmtStat(live?.health_records), v: "Health records logged" },
                 { k: fmtStat(live?.eggs), v: "Eggs recorded" },
-
+                { k: formatRecordedRevenue(live?.recorded_farm_revenue), v: "Total Farm Revenue Tracked", revenue: true },
               ].map((x) => (
-                <div key={x.v} className="rounded-2xl border border-border bg-card p-5">
+                <div key={x.v} className={`min-w-0 rounded-2xl border border-border bg-card p-5 ${x.revenue ? "col-span-2" : ""}`}>
                   <div className="font-display text-2xl sm:text-3xl font-semibold text-[color:var(--forest)] break-words">
-                    {statsLoading || !live ? <StatSkeleton className="w-20" /> : x.k}
+                    {statsLoading || (!live && !x.revenue) ? <StatSkeleton className="w-20" /> : x.k}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">{x.v}</div>
+                  {x.revenue && (
+                    <div className="mt-3 space-y-2 text-xs text-muted-foreground leading-relaxed">
+                      <p>Combined revenue recorded by farmers across the PoultryPro platform.</p>
+                      <p>This represents revenue recorded by participating farms on PoultryPro. It is not PoultryPro's own revenue, earnings, or company turnover.</p>
+                      <p>Scope: recorded Finance income in Nigerian naira (NGN). Production-value estimates and separately recorded broiler sales are not added, avoiding potential double-counting.</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
 
             <div className="flex items-center gap-2 pt-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              <span className="sr-only">Platform-wide farm revenue is the combined revenue that participating farmers have recorded in PoultryPro.</span>
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--forest)] animate-pulse" />
               Live platform statistics • Automatically updated
             </div>
