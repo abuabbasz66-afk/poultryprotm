@@ -172,7 +172,8 @@ function VaccinationPage() {
     }
   };
 
-  const openStatuses = ["upcoming", "due_soon", "due_today", "overdue", "completed"] as const;
+  const openStatuses = ["upcoming", "due_soon", "due_today", "overdue", "completed", "skipped", "deferred"] as const;
+  const referenceProgrammes = (programmesQ.data ?? []).filter((p) => p.approval_status === "reference");
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
@@ -187,6 +188,9 @@ function VaccinationPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={() => window.print()}>
+            <Printer className="mr-2 h-4 w-4" /> Print calendar
+          </Button>
           <ExportRecordsButton section="vaccination" />
           {writable && (
             <>
@@ -268,11 +272,51 @@ function VaccinationPage() {
 
       <p className="mt-3 flex gap-2 rounded-xl border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
-        {VACCINATION_DISCLAIMER}
+        {VACCINATION_DISCLAIMER} Confirm this programme with a qualified poultry veterinarian before
+        use. Vaccine selection, timing, route, dosage, and suitability depend on the vaccine label,
+        flock history, maternal immunity, local disease risks, and veterinary guidance.
       </p>
 
+      {referenceProgrammes.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {referenceProgrammes.map((p) => (
+            <div
+              key={p.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3"
+            >
+              <p className="flex gap-2 text-xs text-amber-800">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  <strong>{p.name}</strong> is a reference template pending veterinary or
+                  administrator review — it is not an approved veterinary prescription.
+                  Abbreviations such as FTV, ND, IB, EDS and “2nd fowl vaccine” are preserved as
+                  supplied and must be clarified before approval.
+                </span>
+              </p>
+              {writable && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={approveProgramme.isPending}
+                  onClick={async () => {
+                    try {
+                      await approveProgramme.mutateAsync(p.id);
+                      toast.success(`${p.name} approved. Your name and the date were recorded.`);
+                    } catch {
+                      toast.error("Could not approve the programme.");
+                    }
+                  }}
+                >
+                  Approve for use
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Timelines */}
-      <section className="mt-8 space-y-4">
+      <section className="print-area mt-8 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-lg font-semibold">Flock vaccination timeline</h2>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -330,6 +374,11 @@ function VaccinationPage() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">
                           {e.schedule.vaccine} · {e.schedule.disease}
+                          {e.schedule.item_type && e.schedule.item_type !== "vaccine" && (
+                            <span className="ml-2 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                              {ITEM_TYPE_LABELS[e.schedule.item_type] ?? e.schedule.item_type}
+                            </span>
+                          )}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {e.schedule.route} · due {formatDate(e.schedule.scheduled_date)}
@@ -337,6 +386,14 @@ function VaccinationPage() {
                           {e.variance ? ` · ${e.variance.label}` : ""}
                           {e.record?.at_hatchery ? " · at hatchery" : ""}
                         </p>
+                        {e.schedule.note && (
+                          <p className="mt-1 text-[11px] text-muted-foreground">{e.schedule.note}</p>
+                        )}
+                        {e.schedule.status_reason && !e.record && (
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            Change reason: {e.schedule.status_reason}
+                          </p>
+                        )}
                         {isGumboro(e.schedule.disease) && (
                           <p className="mt-1 text-[11px] text-amber-700">{GUMBORO_NOTE}</p>
                         )}
@@ -350,9 +407,29 @@ function VaccinationPage() {
                         {STATUS_LABELS[e.status]}
                       </span>
                       {writable && !e.record && (
-                        <Button size="sm" variant="outline" onClick={() => openRecord(e.schedule.id)}>
-                          Record
-                        </Button>
+                        <div className="no-print flex gap-1">
+                          <Button size="sm" variant="outline" onClick={() => openRecord(e.schedule.id)}>
+                            Record
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            aria-label="Edit scheduled activity"
+                            onClick={() =>
+                              setScheduleEdit({
+                                id: e.schedule.id,
+                                vaccine: e.schedule.vaccine,
+                                disease: e.schedule.disease,
+                                ageLabel: e.schedule.age_label,
+                                scheduledDate: e.schedule.scheduled_date,
+                                status: e.schedule.status,
+                                statusReason: e.schedule.status_reason,
+                              })
+                            }
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </div>
                       )}
                     </li>
                   ))}
@@ -471,6 +548,7 @@ function VaccinationPage() {
         editing={editing}
         presetScheduleId={presetSchedule}
       />
+      <ScheduleStatusDialog entry={scheduleEdit} onOpenChange={(v) => !v && setScheduleEdit(null)} />
       <VaccinationDetailDialog
         record={detail}
         batches={batches}
