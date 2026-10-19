@@ -1,5 +1,10 @@
 # PoultryPro PWA and mobile upgrade
 
+## Five-stage dashboard workflow (2026-10-19)
+
+- [x] Replace three-stage cards with compact Capture → Understand → Predict → Recommend → Act navigation using existing access checks and destinations
+- [x] Verify signed-in stage navigation and desktop/tablet/mobile layout; 58 calculation/intelligence tests passed and automatic compilation passed; preserved compact header and kept unpublished
+
 ## Compact dashboard farm header (2026-10-19)
 
 - [x] Reduce the existing farm banner to a compact desktop row and neatly wrapping mobile layout; preserve live data and controls

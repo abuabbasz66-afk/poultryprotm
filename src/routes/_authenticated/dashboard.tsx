@@ -16,6 +16,7 @@ import { RoomComparisonCard } from "@/components/room-comparison-card";
 import { ProfitOverviewCard } from "@/components/finance/profit-overview-card";
 
 import { AlertsBanner } from "@/components/alerts-banner";
+import { Button } from "@/components/ui/button";
 
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -29,7 +30,7 @@ import {
   Skull, Syringe, Droplets, Pill, Stethoscope, Eye, Plus, Pencil, Trash2, MapPin,
   Sparkles, ArrowLeft, LayoutDashboard, LineChart as LineChartIcon,
   Brain, Activity, AlertTriangle, Gauge, Radar, Lightbulb, ArrowRight, LogOut, Upload,
-  ChevronDown, MoreVertical, CalendarDays, Building2,
+  ChevronDown, MoreVertical, CalendarDays, Building2, ClipboardCheck,
 } from "lucide-react";
 
 
@@ -107,6 +108,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       { name: "description", content: "Live poultry farm operations: production, feed, health, mortality and profitability." },
       { property: "og:title", content: "Farm Dashboard — PoultryPro" },
       { property: "og:description", content: "Real-time visibility into every bird, egg, and naira." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: DashboardRouter,
@@ -675,56 +678,48 @@ const setBagWeightKg = (v: number | null) => {
         <AlertsBanner />
         <TrialBanner />
 
-        {/* Product-area navigation: Capture → Understand → Predict.
-            Analytics and AI are owner-grade surfaces; operational roles only
-            ever see Capture. */}
-        {(canAnalyticsArea || canAIArea) && (() => {
-          const plan = subscription?.effectivePlan ?? "basic";
-          const canAnalytics = plan === "standard" || plan === "premium";
-          const canAI = plan === "premium";
-          const stateFor = (stage: "records" | "analytics" | "ai"): AreaState => {
-            if (stage === "records") return plan === "basic" ? "current" : "included";
-            if (stage === "analytics") {
-              if (plan === "basic") return "upgrade-standard";
-              if (plan === "standard") return "current";
-              return "included";
-            }
-            // ai
-            if (plan === "premium") return "current";
-            return "upgrade-premium";
-          };
-          const handleClick = (stage: "records" | "analytics" | "ai") => {
-            if (stage === "analytics" && !canAnalytics) { setUpgradeTier("standard"); return; }
-            if (stage === "ai" && !canAI) { setUpgradeTier("premium"); return; }
-            setArea(stage);
-          };
-          return (
-            <>
-              <nav aria-label="Dashboard areas" className="rounded-2xl md:rounded-3xl bg-card border border-border p-1.5 md:p-2 shadow-[var(--shadow-soft)]">
-                <div className="grid grid-cols-3 gap-1.5 md:gap-2 items-stretch">
-                  <AreaTab
-                    active={area === "records"} onClick={() => handleClick("records")}
-                    num="01" stage="CAPTURE" title="Farm Records" shortLabel="Capture"
-                    state={stateFor("records")} icon={LayoutDashboard}
-                  />
-                  <AreaTab
-                    active={area === "analytics"} onClick={() => handleClick("analytics")}
-                    num="02" stage="UNDERSTAND" title="Farm Analytics" shortLabel="Analytics"
-                    state={stateFor("analytics")} icon={LineChartIcon}
-                  />
-                  <AreaTab
-                    active={area === "ai"} onClick={() => handleClick("ai")}
-                    num="03" stage="PREDICT" title="AI Intelligence" shortLabel="AI"
-                    state={stateFor("ai")} icon={Brain} premium
-                  />
-                </div>
-              </nav>
-              <p className="mt-2 px-1 text-[11px] md:text-xs text-muted-foreground">
-                Start with your records. Understand your performance. Predict what comes next.
-              </p>
-            </>
-          );
-        })()}
+        {/* Five stages reuse existing areas and the shared Action Centre. */}
+        <div>
+          <nav aria-label="Farm intelligence workflow">
+            <ol className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5 lg:gap-4">
+              <li className="relative min-w-0">
+                <AreaTab active={area === "records"} onClick={() => setArea("records")}
+                  num="01" stage="CAPTURE" title="Farm Records" icon={LayoutDashboard}
+                  description="Record daily farm activities, production, feed, flock health, mortality, and finances."
+                  status="Included" />
+              </li>
+              <li className="relative min-w-0">
+                <AreaTab active={area === "analytics" && planAllowsAnalytics && canAnalyticsArea}
+                  onClick={() => setArea("analytics")} disabled={!canAnalyticsArea || !planReady || !planAllowsAnalytics}
+                  num="02" stage="UNDERSTAND" title="Farm Analytics" icon={LineChartIcon}
+                  description="Understand farm performance through records, trends, and calculated insights."
+                  status={!canAnalyticsArea ? "Permission required" : !planReady ? "Checking plan" : planAllowsAnalytics ? "Included" : "Standard or Premium required"} />
+              </li>
+              <li className="relative min-w-0">
+                <AreaTab active={area === "ai" && planAllowsAI && canAIArea}
+                  onClick={() => setArea("ai")} disabled={!canAIArea || !planReady || !planAllowsAI}
+                  num="03" stage="PREDICT" title="Predictive Insights" icon={Radar}
+                  description="Explore estimates and potential future outcomes using the capabilities available on your plan."
+                  status={!canAIArea ? "Permission required" : !planReady ? "Checking plan" : planAllowsAI ? "Premium · record-based estimates" : "Premium required"} />
+              </li>
+              <li className="relative min-w-0">
+                <AreaTab active={false} onClick={() => navigate({ to: "/alerts" })} disabled={!can("dashboard.view")}
+                  num="04" stage="RECOMMEND" title="Recommendations" icon={Lightbulb}
+                  description="Receive practical, evidence-based next steps based on available farm records and supported findings."
+                  status={can("dashboard.view") ? "Included · supported findings" : "Permission required"} />
+              </li>
+              <li className="relative min-w-0">
+                <AreaTab active={false} onClick={() => navigate({ to: "/alerts" })} disabled={!can("dashboard.view")}
+                  num="05" stage="ACT" title="Action Centre" icon={ClipboardCheck}
+                  description="Review recommendations, decide what to do, and track actions where supported."
+                  status={can("dashboard.view") ? "Included · actions follow permissions" : "Permission required"} last />
+              </li>
+            </ol>
+          </nav>
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+            Capture your farm records. Understand your performance. Predict what may come next. Get practical recommendations. Take informed action.
+          </p>
+        </div>
 
         {/* Direct-URL protection: a restricted area never renders its content. */}
         {((area === "analytics" && !canAnalyticsArea) || (area === "ai" && !canAIArea)) && (
@@ -1631,8 +1626,8 @@ const setBagWeightKg = (v: number | null) => {
         {area === "ai" && canAIArea && planAllowsAI && (
           <div className="space-y-6">
             <SectionIntro
-              stage="PREDICT" plan="Premium" title="PoultryPro AI Intelligence" premium helpSlug="an-insights"
-              body="Progressively applying artificial intelligence to detect abnormal farm patterns, forecast production and support earlier evidence-based decisions."
+              stage="PREDICT" plan="Premium" title="Predictive Insights" premium helpSlug="an-insights"
+              body="Explore record-based estimates and rule-based findings to support informed decisions. Estimates are not validated machine-learning predictions."
             />
             <div id="ai-insights" className="scroll-mt-24" />
             {/* AI-Supported Farm Insights — final summary layer combining PoultryPro modules */}
@@ -1918,78 +1913,32 @@ function RowActions({ onEdit, onDelete, extra }: { onEdit: () => void; onDelete:
 
 
 
-type AreaState = "current" | "included" | "upgrade-standard" | "upgrade-premium";
-
-const AREA_STATE_LABEL: Record<AreaState, string> = {
-  "current": "Your current plan",
-  "included": "Included",
-  "upgrade-standard": "Upgrade to Standard",
-  "upgrade-premium": "Unlock with Premium",
-};
-
-function AreaTab({ active, onClick, num, stage, title, shortLabel, state, icon: Icon, premium }: {
-  active: boolean; onClick: () => void; num: string; stage: string; title: string; shortLabel?: string;
-  state: AreaState;
-  icon: React.ComponentType<{ className?: string }>; premium?: boolean;
+function AreaTab({ active, onClick, num, stage, title, description, status, icon: Icon, disabled = false, last = false }: {
+  active: boolean; onClick: () => void; num: string; stage: string; title: string;
+  description: string; status: string; disabled?: boolean; last?: boolean;
+  icon: React.ComponentType<{ className?: string }>;
 }) {
-  const label = shortLabel ?? title;
-  const locked = state === "upgrade-standard" || state === "upgrade-premium";
-  const isCurrent = state === "current";
   return (
-    <button
-      onClick={onClick}
-      aria-label={`${title} — ${AREA_STATE_LABEL[state]}`}
-      className={
-        "group relative text-left rounded-xl md:rounded-2xl border px-2 py-2.5 md:p-4 transition-all duration-200 min-w-0 h-full flex flex-col justify-between hover:-translate-y-0.5 " +
-        (active
-          ? (premium
-              ? "bg-gradient-to-br from-[color:var(--forest)] to-[color:var(--ink)] text-primary-foreground border-[color:var(--gold)]/50 shadow-[var(--shadow-lift)]"
-              : "bg-[color:var(--forest)] text-primary-foreground border-[color:var(--forest)] shadow-[var(--shadow-lift)]")
-          : isCurrent
-            ? "bg-[color:var(--forest)]/5 text-[color:var(--forest)] border-[color:var(--forest)]/40 hover:border-[color:var(--forest)]/60 hover:shadow-[var(--shadow-soft)]"
-            : locked
-              ? "bg-card text-[color:var(--forest)] border-dashed border-[color:var(--gold)]/50 hover:border-[color:var(--gold)] hover:shadow-[var(--shadow-soft)]"
-              : "bg-card text-[color:var(--forest)] border-border hover:border-[color:var(--forest)]/40 hover:shadow-[var(--shadow-soft)]")
-      }
-    >
-      <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
-        <span className={"grid h-7 w-7 md:h-8 md:w-8 shrink-0 place-items-center rounded-lg " + (active ? "bg-white/10 text-[color:var(--gold)]" : locked ? "bg-[color:var(--gold)]/15 text-[color:var(--gold)]" : "bg-[color:var(--forest)]/8 text-[color:var(--forest)]")}>
-          <Icon className="h-3.5 w-3.5 md:h-4 md:w-4" />
+    <>
+      <Button variant="outline" onClick={onClick} disabled={disabled} aria-current={active ? "page" : undefined}
+        aria-label={`${stage}: ${title} — ${status}`}
+        className={"relative h-full w-full min-w-0 flex-col items-start justify-start gap-2 whitespace-normal rounded-lg p-3 text-left disabled:opacity-100 " +
+          (active ? "border-forest bg-forest text-primary-foreground hover:bg-forest hover:text-primary-foreground" : "border-border bg-card text-foreground")}
+      >
+        <span className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+          <span className={"min-w-0 text-[10px] font-semibold leading-tight " + (active ? "text-gold" : "text-muted-foreground")}>{num} · {stage}</span>
+          <Icon className={"h-4 w-4 shrink-0 " + (active ? "text-gold" : "text-forest")} />
         </span>
-        <div className="min-w-0 flex-1">
-          <div className={"hidden md:block text-[10px] uppercase tracking-[0.18em] " + (active ? "text-[color:var(--gold)]" : "text-muted-foreground")}>
-            {num} · {stage}
-          </div>
-          <div className="text-[13px] md:text-base font-semibold leading-tight">
-            <span className="md:hidden">{label}</span>
-            <span className="hidden md:inline">{title}</span>
-          </div>
-        </div>
-        {locked && (
-          <span className="md:hidden shrink-0 text-[color:var(--gold)]">
-            <Lock className="h-3.5 w-3.5" />
-          </span>
-        )}
-      </div>
-      <div className={
-        "mt-2 hidden md:inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium " +
-        (active
-          ? "bg-white/10 text-primary-foreground"
-          : isCurrent
-            ? "bg-[color:var(--forest)] text-primary-foreground"
-            : locked
-              ? "bg-[color:var(--gold)]/15 text-[color:var(--ink)]"
-              : "bg-secondary text-secondary-foreground")
-      }>
-        {locked && <Lock className="h-2.5 w-2.5" />}
-        {AREA_STATE_LABEL[state]}
-      </div>
-    </button>
+        <span className="text-sm font-semibold leading-snug break-words">{title}</span>
+        <span className={"text-xs font-normal leading-relaxed " + (active ? "text-primary-foreground/80" : "text-muted-foreground")}>{description}</span>
+        <span className={"mt-auto pt-1 text-[10px] font-medium leading-snug " + (active ? "text-gold" : disabled ? "text-muted-foreground" : "text-forest")}>
+          {disabled && <Lock className="mr-1 inline h-3 w-3" />}{status}
+        </span>
+      </Button>
+      {!last && <ArrowRight aria-hidden="true" className="pointer-events-none absolute -right-3 top-5 z-10 hidden h-2 w-2 text-muted-foreground lg:block" />}
+    </>
   );
 }
-
-
-
 
 function SectionIntro({ stage, plan, title, body, premium, helpSlug }: {
   stage: string; plan: string; title: string; body: string; premium?: boolean; helpSlug?: string;
