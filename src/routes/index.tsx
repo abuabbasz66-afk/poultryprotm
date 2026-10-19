@@ -607,7 +607,7 @@ function Index() {
                 { k: fmtStat(live?.mortality_records), v: "Mortality records logged" },
                 { k: fmtStat(live?.health_records), v: "Health records logged" },
                 { k: fmtStat(live?.eggs), v: "Eggs recorded" },
-                { k: formatRecordedRevenue(live?.egg_value), v: "Total Recorded Egg Value", revenue: true },
+                { k: formatRecordedRevenue(live?.egg_value), v: "Total Revenue Tracked", revenue: true },
               ].map((x) => (
                 <div key={x.v} className={`min-w-0 rounded-2xl border border-border bg-card p-5 ${x.revenue ? "col-span-2" : ""}`}>
                   <div className="font-display text-2xl sm:text-3xl font-semibold text-[color:var(--forest)] break-words">
@@ -616,8 +616,7 @@ function Index() {
                   <div className="text-xs text-muted-foreground mt-1">{x.v}</div>
                   {x.revenue && (
                     <div className="mt-3 space-y-2 text-xs text-muted-foreground leading-relaxed">
-                      <p>Combined value of recorded usable egg production at each farm's recorded crate prices. The platform owner reports that production crates are sold daily; this calculation is not independent verification of each farm's sales or cash received, and is not PoultryPro's company revenue.</p>
-                      <p>Nigerian-naira records only. Farms outside Nigeria, invalid records and records without an egg price are excluded; future-dated production is not included. Historical prices are used where available, otherwise the earliest recorded price.</p>
+                      <p>Total value of egg production recorded by participating farms on PoultryPro, calculated using their recorded egg prices. This represents farm activity tracked on the platform, not PoultryPro’s company revenue or independently verified sales or cash received.</p>
                       {live?.excluded_value_records != null && live.excluded_value_records > 0 && (
                         <p>{live.excluded_value_records.toLocaleString("en-NG")} records excluded because price, validity or currency could not be confirmed. This is a partial total of eligible records.</p>
                       )}
