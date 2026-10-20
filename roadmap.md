@@ -1,5 +1,10 @@
 # PoultryPro PWA and mobile upgrade
 
+## Actual dashboard tablet hero (2026-10-20)
+
+- [ ] Composite the actual Farm Analytics interface with labelled synthetic data onto the supplied farm-scene reference; preserve all page controls and logic
+- [ ] Optimize responsive image sources and verify desktop/mobile framing, accessibility and loading; keep unpublished
+
 ## Hero farm-intelligence image (2026-10-20)
 
 - [x] Replace only the hero photograph with a realistic commercial layer farm and farmer using an illustrative tablet; preserve layout and existing product previews (old image was hens, not a product screenshot)
