@@ -1,5 +1,10 @@
 # PoultryPro PWA and mobile upgrade
 
+## Vaccination approval feedback (2026-10-20)
+
+- [x] Confirm existing global-template RLS restrictions; show approval only to authorised users and require a saved approval row before success
+- [x] Verify 11 vaccination tests, signed-in zero-row rejection and non-admin display; automatic build OK; no real template approved and nothing published
+
 ## AI-first landing repositioning (2026-10-20)
 
 - [x] New hero ("AI-Powered Intelligence for Smarter Poultry Farming."), AI intelligence section with product journey + 6 benefit cards, Responsible AI trust section, 10-item AI FAQ, per-stage journey headlines/CTAs, founder framing under Greenfield Contracts & Agro Limited, SEO metadata updated
