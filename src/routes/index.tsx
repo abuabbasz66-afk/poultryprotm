@@ -25,9 +25,9 @@ import { Button } from "@/components/ui/button";
 
 
 
-const HOME_TITLE = "PoultryPro | Poultry Farm Insights & Recommended Actions";
+const HOME_TITLE = "PoultryPro™ | AI-Powered Poultry Farm Management & Intelligence";
 const HOME_DESC =
-  "Turn poultry farm records into performance insights, timely alerts and practical recommendations for production, feed, flock health and finances with PoultryPro.";
+  "AI-powered intelligence for smarter poultry farming. PoultryPro turns farm records into analytics, supported insights and practical next steps for production, feed, flock health and farm finances.";
 
 // Testimonials reproduced exactly as supplied by each person quoted.
 // `basis` records only how the person engaged with PoultryPro, as stated in their own words.
@@ -356,6 +356,7 @@ function Index() {
             <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Pricing</a>
             <a href="#founder" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Founder</a>
             <a href="#roadmap" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Roadmap</a>
+            <a href="#faq" className="text-muted-foreground hover:text-foreground transition-colors duration-200">FAQ</a>
             <Link to="/achievements" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Achievements</Link>
 
           </nav>
@@ -389,18 +390,24 @@ function Index() {
               <span>Capture. Understand. Predict. Recommend. Act.</span>
             </span>
             <h1 className="font-display font-extrabold tracking-tight text-foreground text-4xl sm:text-5xl md:text-6xl leading-[1.05]">
-              Know What Needs Attention on Your Poultry Farm.
+              AI-Powered Intelligence for Smarter Poultry Farming.
             </h1>
+            <p className="text-base md:text-lg font-medium text-foreground max-w-[600px] leading-relaxed">
+              Turn farm records into actionable insights, explore production trends, and make more informed decisions with PoultryPro.
+            </p>
             <p className="text-base md:text-lg text-muted-foreground max-w-[600px] leading-relaxed font-normal">
-              PoultryPro turns your farm records into clear performance insights, timely alerts and practical recommendations, helping you make informed decisions about production, feed, flock health and farm finances.
+              PoultryPro brings poultry production, feed consumption, flock health, mortality, financial records, and farm analytics into one connected platform. Its data-driven tools help farmers understand performance, identify operational concerns, explore supported estimates, and take practical next steps.
             </p>
 
             <div className="flex flex-wrap gap-3 pt-2">
               <Button asChild size="lg" className="h-12 rounded-full px-6 shadow-lift">
-                <Link to="/auth" search={{ mode: "signup" }}>Create Free Account <ArrowRight aria-hidden="true" /></Link>
+                <Link to="/auth" search={{ mode: "signup" }}>Get Started <ArrowRight aria-hidden="true" /></Link>
               </Button>
               <Button asChild variant="secondary" size="lg" className="h-12 rounded-full bg-gold px-6 text-ink hover:bg-gold/90">
-                <Link to="/presentation">Explore the Live Demo <ArrowRight aria-hidden="true" /></Link>
+                <a href="#intelligence">Explore AI Features <ArrowRight aria-hidden="true" /></a>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="h-12 rounded-full px-6">
+                <Link to="/presentation">View Live Demo <ArrowRight aria-hidden="true" /></Link>
               </Button>
             </div>
             <p className="text-sm text-muted-foreground">Set up your farm, add rooms and birds, then record eggs, feed and mortality. Every new farm starts with a 30-day Premium trial; Basic remains free afterward.</p>
@@ -518,6 +525,60 @@ function Index() {
 
       <FarmIntelligenceJourney />
 
+      <section id="intelligence" className="py-24 bg-secondary/40 border-y border-border scroll-mt-24">
+        <div className="container-x">
+          <div className="max-w-3xl">
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Farm Intelligence</span>
+            <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
+              More Than Farm Records. Intelligence for Better Decisions.
+            </h2>
+            <p className="mt-5 text-muted-foreground text-lg leading-relaxed">
+              Farm data is captured. Recorded information is analysed. Relevant trends and supported
+              findings are surfaced. Potential outcomes can be explored where supported. Farmers review
+              practical next steps and decide what action to take.
+            </p>
+          </div>
+          <ol className="mt-10 grid gap-4 md:grid-cols-5">
+            {[
+              { n: "1", t: "Farm data is captured", d: "Daily production, feed, health, mortality and financial records." },
+              { n: "2", t: "Records are analysed", d: "Transparent calculations turn records into performance indicators." },
+              { n: "3", t: "Findings are surfaced", d: "Rule-based checks highlight changes worth investigating." },
+              { n: "4", t: "Outcomes can be explored", d: "Record-based estimates show possible trends, with stated assumptions." },
+              { n: "5", t: "Farmers decide", d: "Authorised users review, assign and track actions in the Action Centre." },
+            ].map((s) => (
+              <li key={s.n} className="rounded-2xl border border-border bg-card p-5">
+                <span className="font-display text-2xl font-semibold text-[color:var(--gold)]">{s.n}</span>
+                <h3 className="mt-2 text-sm font-semibold leading-snug">{s.t}</h3>
+                <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">{s.d}</p>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[
+              { icon: LineChart, title: "Production Intelligence", desc: "Understand production levels, compare periods, and identify changes in recorded output." },
+              { icon: Wheat, title: "Feed & Cost Intelligence", desc: "Review feed consumption, feed costs, and supported financial calculations to understand operational efficiency." },
+              { icon: HeartPulse, title: "Flock Health & Mortality Monitoring", desc: "Organize health and mortality records and surface relevant operational concerns from available data." },
+              { icon: LayoutDashboard, title: "Room-Level Performance", desc: "Compare recorded performance across poultry rooms and identify areas that may require investigation." },
+              { icon: TrendingUp, title: "Predictive Insights", desc: "Explore supported estimates and possible trends based on recorded data and available analytical capabilities." },
+              { icon: ClipboardCheck, title: "Practical Recommendations", desc: "Turn supported findings into useful checks and next steps while keeping farmers in control." },
+            ].map((b) => (
+              <div key={b.title} className="group min-w-0 rounded-2xl bg-card border border-border p-6 hover:shadow-[var(--shadow-lift)] hover:-translate-y-0.5 transition-all">
+                <span className="inline-grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition">
+                  <b.icon className="h-5 w-5" />
+                </span>
+                <h3 className="mt-5 font-display text-xl font-semibold">{b.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{b.desc}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-8 max-w-3xl text-sm text-muted-foreground">
+            Current intelligence tools use recorded data, transparent calculations and rule-based alerts.
+            Validated machine-learning predictions and disease-outbreak prediction are roadmap items, not
+            live features — see the roadmap below.
+          </p>
+        </div>
+      </section>
+
       <section className="py-24">
         <div className="container-x grid lg:grid-cols-12 gap-14 items-start">
           <div className="lg:col-span-5">
@@ -595,6 +656,7 @@ function Index() {
             <p className="text-muted-foreground text-lg leading-relaxed">
               Platform statistics update automatically from recorded farm data.
               Egg value combines eligible records across participating farms, not just one farm.
+              Better data provides the foundation for better analytics and more useful AI-supported insights.
             </p>
             <div className="grid grid-cols-2 gap-4 pt-2">
               {[
@@ -870,6 +932,11 @@ function Index() {
             <p className="text-primary-foreground/80 leading-relaxed max-w-2xl">
               PoultryPro was born from years of hands-on experience in poultry production and farm management, combined with a background in computer science and digital transformation. It was built to solve real problems faced by poultry farmers every day.
             </p>
+            <p className="text-primary-foreground/80 leading-relaxed max-w-2xl">
+              PoultryPro is developed under Greenfield Contracts &amp; Agro Limited, applying AI and
+              data-driven tools to real agricultural challenges. Its international recognition supports
+              this broader mission of building useful agricultural technology.
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
               {[
                 { icon: Cpu, t: "MICT & B.Sc. Computer Science" },
@@ -899,7 +966,9 @@ function Index() {
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
               Start with essential record keeping, add business analytics as you grow, and unlock
-              record-based decision support when you are ready to scale.
+              record-based decision support when you are ready to scale. Basic supports digital
+              record-keeping; Standard adds farm analytics; Premium adds record-based predictive
+              insights and rule-based intelligence tools.
             </p>
           </div>
 
@@ -1086,6 +1155,39 @@ function Index() {
       </section>
 
 
+      <section id="trust" className="py-20 md:py-24 border-t border-border">
+        <div className="container-x">
+          <div className="max-w-3xl">
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">AI &amp; Data Trust</span>
+            <h2 className="mt-4 font-display text-3xl md:text-5xl font-semibold leading-tight">
+              Responsible AI. Practical Farming. Human Decisions.
+            </h2>
+          </div>
+          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              "AI-supported insights depend on the availability and quality of your farm records.",
+              "Estimates are not guarantees of future results.",
+              "Rule-based findings and validated machine-learning predictions are different capabilities — we label which is which.",
+              "PoultryPro does not replace qualified veterinary diagnosis or professional farm-management judgment.",
+              "Farmers remain responsible for reviewing findings and deciding what action to take.",
+              "Farm information is handled according to our privacy policy and applicable data-protection requirements.",
+            ].map((t) => (
+              <li key={t} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-5">
+                <ShieldCheck className="mt-0.5 h-5 w-5 flex-none text-[color:var(--forest)]" aria-hidden="true" />
+                <span className="text-sm text-muted-foreground leading-relaxed">{t}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-6 text-sm text-muted-foreground">
+            Read our{" "}
+            <Link to="/privacy" className="font-medium text-primary underline-offset-4 hover:underline">
+              privacy policy
+            </Link>{" "}
+            for details on how farm data is handled.
+          </p>
+        </div>
+      </section>
+
       <section id="roadmap" className="py-24 bg-[color:var(--cream)]/40">
         <div className="container-x">
           <div className="max-w-3xl">
@@ -1199,6 +1301,68 @@ function Index() {
 
 
       
+
+      <section id="faq" className="py-20 md:py-24 scroll-mt-24">
+        <div className="container-x">
+          <div className="max-w-3xl">
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Frequently Asked Questions</span>
+            <h2 className="mt-4 font-display text-3xl md:text-5xl font-semibold leading-tight">
+              Questions about PoultryPro and AI
+            </h2>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            {[
+              {
+                q: "What is PoultryPro?",
+                a: "PoultryPro is an AI-powered poultry farm management and intelligence platform. It organizes your farm data, analyzes performance, presents supported insights, and helps you make better-informed decisions.",
+              },
+              {
+                q: "How does PoultryPro use AI?",
+                a: "Today, PoultryPro uses transparent calculations and rule-based intelligence to surface findings from your records — for example, production drops, feed changes and mortality concerns. AI explanations and validated machine-learning predictions are roadmap items and are clearly labelled as such.",
+              },
+              {
+                q: "What is the difference between farm analytics and predictive insights?",
+                a: "Farm analytics describe what your records show — production, feed, costs and trends. Predictive insights look ahead: record-based estimates of possible future outcomes, always shown with their assumptions and limitations.",
+              },
+              {
+                q: "Can PoultryPro predict future egg production?",
+                a: "PoultryPro offers record-based production estimates built from your own history. These are estimates, not guarantees, and they are not validated machine-learning forecasts.",
+              },
+              {
+                q: "Does PoultryPro predict poultry diseases?",
+                a: "No. PoultryPro provides health risk alerts — prompts to investigate based on your records. It does not diagnose disease or predict outbreaks, and it does not replace a qualified veterinarian.",
+              },
+              {
+                q: "Which AI features are currently available?",
+                a: "Live today: farm analytics, rule-based alerts, record-based production estimates, feed intelligence, weather advisories and the Action Centre. In development: validated predictive models, AI explanations and a voice assistant.",
+              },
+              {
+                q: "Which features require a paid subscription?",
+                a: "Basic (free) covers digital record-keeping. Standard adds farm analytics and financial dashboards. Premium adds record-based predictive insights and rule-based intelligence tools. Prices and limits are unchanged on the pricing section above.",
+              },
+              {
+                q: "How does the platform use my farm records?",
+                a: "Your records stay private to your farm and are used to calculate your own analytics, alerts and estimates. Public statistics are aggregate-only and never expose individual farm data. See our privacy policy for details.",
+              },
+              {
+                q: "Can I use PoultryPro without advanced AI features?",
+                a: "Yes. Many farms use PoultryPro purely for organized record-keeping and analytics. Intelligence tools are there when you want them — you stay in control.",
+              },
+              {
+                q: "How can farmers, partners and investors contact the team?",
+                a: "Email greenfieldcontractsagroltd@gmail.com or use the Request a Demo button below. We welcome conversations with farmers, cooperatives, partners and investors.",
+              },
+            ].map((f) => (
+              <details key={f.q} className="group rounded-2xl border border-border bg-card p-5">
+                <summary className="cursor-pointer font-semibold text-sm sm:text-base leading-snug focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+                  {f.q}
+                </summary>
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <section id="contact" className="pb-24">
 

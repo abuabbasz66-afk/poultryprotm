@@ -1,5 +1,11 @@
 # PoultryPro PWA and mobile upgrade
 
+## AI-first landing repositioning (2026-10-20)
+
+- [x] New hero ("AI-Powered Intelligence for Smarter Poultry Farming."), AI intelligence section with product journey + 6 benefit cards, Responsible AI trust section, 10-item AI FAQ, per-stage journey headlines/CTAs, founder framing under Greenfield Contracts & Agro Limited, SEO metadata updated
+- [x] Verified: claim grep clean, 18 stats tests pass, build OK, desktop/mobile screenshots, all CTAs resolve to real destinations; pricing, stats aggregation, testimonials unchanged; kept unpublished
+
+
 ## All-farm production-based value (2026-10-19)
 
 - [x] Replace ABZ snapshot with a privacy-safe live aggregate across eligible Nigerian farms' recorded egg production and historical farm prices; do not count Finance sales again

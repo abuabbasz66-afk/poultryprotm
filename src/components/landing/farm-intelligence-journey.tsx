@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 const stages = [
   {
     title: "Capture",
+    headline: "Every Farm Record Starts a Better Decision.",
+    cta: { label: "Explore Farm Records", to: "/presentation" },
     category: "Farm Records",
     icon: LayoutDashboard,
     description:
@@ -30,6 +32,8 @@ const stages = [
   },
   {
     title: "Understand",
+    headline: "Understand What Is Happening on Your Farm.",
+    cta: { label: "Explore Farm Analytics", to: "/presentation" },
     category: "Farm Analytics",
     icon: LineChart,
     description:
@@ -49,6 +53,8 @@ const stages = [
   },
   {
     title: "Predict",
+    headline: "Look Ahead with Data-Driven Insights.",
+    cta: { label: "Explore Predictive Insights", to: "/presentation" },
     category: "Estimates and Forecasts",
     icon: Sparkles,
     description:
@@ -68,6 +74,8 @@ const stages = [
   },
   {
     title: "Recommend",
+    headline: "Turn Farm Insights into Practical Next Steps.",
+    cta: { label: "Explore Recommendations", to: "/presentation" },
     category: "Practical Next Steps",
     icon: ClipboardCheck,
     description:
@@ -86,6 +94,8 @@ const stages = [
   },
   {
     title: "Act",
+    headline: "From Insight to Action. The Farmer Stays in Control.",
+    cta: { label: "Explore the Action Centre", to: "/presentation" },
     category: "Farmer in Control",
     icon: ShieldCheck,
     description:
@@ -159,6 +169,9 @@ export function FarmIntelligenceJourney() {
                   Available · Subject to farm permissions
                 </p>
               )}
+              <p className="mt-2 text-sm font-semibold text-foreground leading-snug">
+                {stage.headline}
+              </p>
               <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
                 {stage.description}
               </p>
@@ -180,6 +193,12 @@ export function FarmIntelligenceJourney() {
                 <span className="font-semibold text-primary">The result: </span>
                 {stage.outcome}
               </p>
+              <Link
+                to={stage.cta.to}
+                className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+              >
+                {stage.cta.label} <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
+              </Link>
             </article>
           ))}
         </div>
