@@ -2,8 +2,8 @@
 
 ## Hero farm-intelligence image (2026-10-20)
 
-- [ ] Replace only the hero photograph with a realistic commercial layer farm and farmer using an illustrative tablet; preserve layout and existing product previews
-- [ ] Optimize responsive image delivery and verify desktop/mobile framing, accessibility and unchanged buttons; keep unpublished
+- [x] Replace only the hero photograph with a realistic commercial layer farm and farmer using an illustrative tablet; preserve layout and existing product previews (old image was hens, not a product screenshot)
+- [x] Optimize WebP delivery (77 KB / 147 KB), responsive sources and priority loading; verify desktop/mobile framing, accessibility, unchanged buttons, no overflow/runtime errors and automatic build OK; kept unpublished
 
 ## Vaccination approval feedback (2026-10-20)
 
