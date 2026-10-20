@@ -155,3 +155,9 @@
 - [x] Verify account screen on phone and desktop; ensure first-time Google users land in farm setup
 - [ ] Complete a real Google sign-in with an authorised account; provider round-trip not exercised in preview
 - [x] Keep the change unpublished; no production release made
+
+## Recognition wording corrections (2026-10-20)
+
+- [x] Grand Finale now reads "Finalist and awarded" (homepage card, hero badge area, achievements cards and journey)
+- [x] 3MTT NextGen Knowledge Showcase now reads "Katsina State Winner" everywhere it appears
+- [x] Verified on homepage and achievements page; build clean; still unpublished
