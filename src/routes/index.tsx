@@ -2,8 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import heroImage from "@/assets/hero-farm-intelligence.webp";
-import heroMobileImage from "@/assets/hero-farm-intelligence-mobile.webp";
+import heroImage from "@/assets/hero-farm-analytics.webp";
+import heroMobileImage from "@/assets/hero-farm-analytics-mobile.webp";
 import founderAsset from "@/assets/founder-abubakar.jpg.asset.json";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import eggsImg from "@/assets/eggs.jpg";
@@ -430,7 +430,8 @@ function Index() {
 
           <div className="lg:col-span-6 relative hero-fade-up" style={{ animationDelay: "120ms" }}>
             <div className="relative rounded-[2rem] overflow-hidden shadow-[0_30px_80px_-20px_rgba(15,60,40,0.35)] ring-1 ring-border/60 hero-float">
-              <img src={heroImage} srcSet={`${heroMobileImage} 720w, ${heroImage} 1200w`} sizes="(min-width: 1024px) 50vw, 100vw" alt="Illustrative photograph of a layer-farm manager holding a tablet with production, feed and flock-health icons and the Capture, Understand, Predict, Recommend, Act workflow; no farm figures or prediction results shown." width={1200} height={1008} fetchPriority="high" decoding="async" className="w-full h-[320px] md:h-[500px] object-cover" />
+              <img src={heroImage} srcSet={`${heroMobileImage} 720w, ${heroImage} 1200w`} sizes="(min-width: 1024px) 50vw, 100vw" alt="Farmer in a commercial layer poultry house holding a tablet displaying the actual PoultryPro Farm Analytics interface: egg production, total birds, production rate, mortality, feed and an egg-production chart. Screenshot figures are labelled synthetic demo data, not live farm results." width={1200} height={800} fetchPriority="high" decoding="async" className="w-full h-[320px] md:h-[500px] object-cover" />
+              <span className="absolute top-4 left-4 rounded-md bg-background/95 px-3 py-1.5 text-xs font-semibold text-primary">Actual interface · DEMO DATA</span>
               <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--forest)]/40 via-transparent to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 flex gap-3">
                 <div className="flex-1 rounded-2xl bg-background/95 backdrop-blur px-4 py-3">
