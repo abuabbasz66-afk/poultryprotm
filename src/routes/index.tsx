@@ -25,9 +25,9 @@ import { Button } from "@/components/ui/button";
 
 
 
-const HOME_TITLE = "PoultryPro | Poultry Farm Insights & Recommended Actions";
+const HOME_TITLE = "PoultryPro™ | AI-Powered Poultry Farm Management & Intelligence";
 const HOME_DESC =
-  "Turn poultry farm records into performance insights, timely alerts and practical recommendations for production, feed, flock health and finances with PoultryPro.";
+  "AI-powered intelligence for smarter poultry farming. PoultryPro turns farm records into analytics, supported insights and practical next steps for production, feed, flock health and farm finances.";
 
 // Testimonials reproduced exactly as supplied by each person quoted.
 // `basis` records only how the person engaged with PoultryPro, as stated in their own words.
@@ -356,6 +356,7 @@ function Index() {
             <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Pricing</a>
             <a href="#founder" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Founder</a>
             <a href="#roadmap" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Roadmap</a>
+            <a href="#faq" className="text-muted-foreground hover:text-foreground transition-colors duration-200">FAQ</a>
             <Link to="/achievements" className="text-muted-foreground hover:text-foreground transition-colors duration-200">Achievements</Link>
 
           </nav>
@@ -389,18 +390,24 @@ function Index() {
               <span>Capture. Understand. Predict. Recommend. Act.</span>
             </span>
             <h1 className="font-display font-extrabold tracking-tight text-foreground text-4xl sm:text-5xl md:text-6xl leading-[1.05]">
-              Know What Needs Attention on Your Poultry Farm.
+              AI-Powered Intelligence for Smarter Poultry Farming.
             </h1>
+            <p className="text-base md:text-lg font-medium text-foreground max-w-[600px] leading-relaxed">
+              Turn farm records into actionable insights, explore production trends, and make more informed decisions with PoultryPro.
+            </p>
             <p className="text-base md:text-lg text-muted-foreground max-w-[600px] leading-relaxed font-normal">
-              PoultryPro turns your farm records into clear performance insights, timely alerts and practical recommendations, helping you make informed decisions about production, feed, flock health and farm finances.
+              PoultryPro brings poultry production, feed consumption, flock health, mortality, financial records, and farm analytics into one connected platform. Its data-driven tools help farmers understand performance, identify operational concerns, explore supported estimates, and take practical next steps.
             </p>
 
             <div className="flex flex-wrap gap-3 pt-2">
               <Button asChild size="lg" className="h-12 rounded-full px-6 shadow-lift">
-                <Link to="/auth" search={{ mode: "signup" }}>Create Free Account <ArrowRight aria-hidden="true" /></Link>
+                <Link to="/auth" search={{ mode: "signup" }}>Get Started <ArrowRight aria-hidden="true" /></Link>
               </Button>
               <Button asChild variant="secondary" size="lg" className="h-12 rounded-full bg-gold px-6 text-ink hover:bg-gold/90">
-                <Link to="/presentation">Explore the Live Demo <ArrowRight aria-hidden="true" /></Link>
+                <a href="#intelligence">Explore AI Features <ArrowRight aria-hidden="true" /></a>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="h-12 rounded-full px-6">
+                <Link to="/presentation">View Live Demo <ArrowRight aria-hidden="true" /></Link>
               </Button>
             </div>
             <p className="text-sm text-muted-foreground">Set up your farm, add rooms and birds, then record eggs, feed and mortality. Every new farm starts with a 30-day Premium trial; Basic remains free afterward.</p>
