@@ -169,6 +169,9 @@ export function FarmIntelligenceJourney() {
                   Available · Subject to farm permissions
                 </p>
               )}
+              <p className="mt-2 text-sm font-semibold text-foreground leading-snug">
+                {stage.headline}
+              </p>
               <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
                 {stage.description}
               </p>
@@ -190,6 +193,12 @@ export function FarmIntelligenceJourney() {
                 <span className="font-semibold text-primary">The result: </span>
                 {stage.outcome}
               </p>
+              <Link
+                to={stage.cta.to}
+                className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+              >
+                {stage.cta.label} <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
+              </Link>
             </article>
           ))}
         </div>
