@@ -467,6 +467,39 @@ export function useUpdateScheduleStatus() {
   });
 }
 
+/** Mirror the existing RLS scope for displaying approval controls; RLS still enforces writes. */
+export function canApproveProgramme(
+  programmeFarmId: string | null,
+  selectedFarmId: string | null | undefined,
+  healthWritable: boolean,
+  isSuperAdmin: boolean,
+) {
+  return programmeFarmId === null
+    ? isSuperAdmin
+    : healthWritable && programmeFarmId === selectedFarmId;
+}
+
+/** An update with no returned row is not a saved approval (including RLS-filtered updates). */
+export async function saveProgrammeApproval(programmeId: string, userId: string | null) {
+  if (!userId) throw new Error("Sign in before approving a programme.");
+  const { data, error } = await supabase
+    .from("vaccination_programmes")
+    .update({
+      approval_status: "approved",
+      approved_by: userId,
+      approved_at: new Date().toISOString(),
+    })
+    .eq("id", programmeId)
+    .select("id, approval_status, approved_by, approved_at")
+    .single();
+  if (error) throw new Error("Approval was not saved. Check your approval permissions and try again.");
+  if (!data || data.id !== programmeId || data.approval_status !== "approved" ||
+      data.approved_by !== userId || !data.approved_at) {
+    throw new Error("Approval was not saved. The programme remains pending review.");
+  }
+  return data;
+}
+
 /** Record veterinarian/administrator approval of a reference programme template. */
 export function useApproveProgramme() {
   const qc = useQueryClient();
@@ -475,15 +508,7 @@ export function useApproveProgramme() {
     networkMode: "always",
     mutationFn: async (programmeId: string) => {
       if (!farmId) throw new Error("No farm selected.");
-      const { error } = await supabase
-        .from("vaccination_programmes")
-        .update({
-          approval_status: "approved",
-          approved_by: userId,
-          approved_at: new Date().toISOString(),
-        })
-        .eq("id", programmeId);
-      if (error) throw error;
+      return saveProgrammeApproval(programmeId, userId);
     },
     onSuccess: () => invalidateFarm(qc, farmId),
   });
