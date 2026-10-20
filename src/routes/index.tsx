@@ -171,9 +171,9 @@ function StatSkeleton({ className = "" }: { className?: string }) {
 
 
 const recognition = [
-  { icon: Trophy, title: "NXTGEN Innovation Challenge — International Grand Finale", desc: "Selected — London, United Kingdom" },
+  { icon: Trophy, title: "NXTGEN Innovation Challenge — International Grand Finale", desc: "Finalist and awarded — London, United Kingdom" },
   { icon: Trophy, title: "NXTGEN National Innovation Challenge", desc: "Finalist — Abuja" },
-  { icon: Trophy, title: "Airtel 3MTT NextGen Knowledge Showcase", desc: "State Winner — Airtel Sponsored" },
+  { icon: Trophy, title: "Airtel 3MTT NextGen Knowledge Showcase", desc: "Katsina State Winner — Airtel Sponsored" },
   { icon: FileText, title: "In the media", desc: "Daily Trust, Legit News, Katsina Post and more" },
 ];
 
@@ -419,8 +419,8 @@ function Index() {
             <div className="inline-flex items-center gap-3 rounded-2xl border border-[color:var(--gold)]/50 bg-[color:var(--gold)]/10 px-4 py-3">
               <Trophy className="h-5 w-5 flex-none text-[color:var(--gold)]" />
               <div>
-                <div className="text-sm font-semibold text-[color:var(--forest)]">State Winner — Airtel Sponsored 3MTT NextGen Knowledge Showcase</div>
-                <div className="text-xs text-muted-foreground">State recognition for farm innovation</div>
+                <div className="text-sm font-semibold text-[color:var(--forest)]">Katsina State Winner — Airtel Sponsored 3MTT NextGen Knowledge Showcase</div>
+                <div className="text-xs text-muted-foreground">Katsina State recognition for farm innovation</div>
               </div>
             </div>
 

@@ -32,9 +32,9 @@ export const Route = createFileRoute("/achievements")({
 
 // Verified facts only. Add `date` / `url` fields only when officially confirmed.
 const AWARDS = [
-  { icon: Trophy, name: "Airtel-Sponsored 3MTT NextGen Knowledge Showcase", recognition: "State Winner", desc: "Recognised as state winner for presenting PoultryPro as a practical digital solution for poultry-farm management." },
+  { icon: Trophy, name: "Airtel-Sponsored 3MTT NextGen Knowledge Showcase", recognition: "Katsina State Winner", desc: "Recognised as Katsina State winner for presenting PoultryPro as a practical digital solution for poultry-farm management." },
   { icon: Medal, name: "NXTGEN National Innovation Challenge", recognition: "Finalist, Abuja", desc: "Selected among the national finalists in Abuja for PoultryPro's farm-management innovation." },
-  { icon: Award, name: "NXTGEN Innovation Challenge — International Grand Finale", recognition: "Selected to represent PoultryPro in London, United Kingdom", desc: "Invited to the Grand Finale at ExCeL London, where the founder received Grand Finale recognition." },
+  { icon: Award, name: "NXTGEN Innovation Challenge — International Grand Finale", recognition: "Finalist and awarded — London, United Kingdom", desc: "Reached the Grand Finale at ExCeL London as a finalist, where the founder received Grand Finale recognition." },
   { icon: Star, name: "3MTT Fellow of the Week", recognition: "Fellow of the Week", desc: "Highlighted by the 3MTT programme for the work behind PoultryPro." },
 ];
 
@@ -51,9 +51,9 @@ const MEDIA: Media[] = [
 const JOURNEY: { title: string; date?: string }[] = [
   { title: "PoultryPro developed from practical poultry-farm management experience." },
   { title: "The platform launched and began serving real users." },
-  { title: "Recognition through the Airtel-sponsored 3MTT NextGen Knowledge Showcase." },
+  { title: "Katsina State recognition through the Airtel-sponsored 3MTT NextGen Knowledge Showcase." },
   { title: "Selection as an NXTGEN National Innovation Challenge finalist in Abuja." },
-  { title: "Selection for the NXTGEN International Grand Finale in London.", date: "9 October 2026" },
+  { title: "Finalist and awarded at the NXTGEN International Grand Finale in London.", date: "9 October 2026" },
   { title: "Continued development of the platform for poultry farmers." },
 ];
 
