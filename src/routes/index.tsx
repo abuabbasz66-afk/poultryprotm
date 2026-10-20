@@ -525,6 +525,60 @@ function Index() {
 
       <FarmIntelligenceJourney />
 
+      <section id="intelligence" className="py-24 bg-secondary/40 border-y border-border scroll-mt-24">
+        <div className="container-x">
+          <div className="max-w-3xl">
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Farm Intelligence</span>
+            <h2 className="mt-4 font-display text-4xl md:text-5xl font-semibold leading-tight">
+              More Than Farm Records. Intelligence for Better Decisions.
+            </h2>
+            <p className="mt-5 text-muted-foreground text-lg leading-relaxed">
+              Farm data is captured. Recorded information is analysed. Relevant trends and supported
+              findings are surfaced. Potential outcomes can be explored where supported. Farmers review
+              practical next steps and decide what action to take.
+            </p>
+          </div>
+          <ol className="mt-10 grid gap-4 md:grid-cols-5">
+            {[
+              { n: "1", t: "Farm data is captured", d: "Daily production, feed, health, mortality and financial records." },
+              { n: "2", t: "Records are analysed", d: "Transparent calculations turn records into performance indicators." },
+              { n: "3", t: "Findings are surfaced", d: "Rule-based checks highlight changes worth investigating." },
+              { n: "4", t: "Outcomes can be explored", d: "Record-based estimates show possible trends, with stated assumptions." },
+              { n: "5", t: "Farmers decide", d: "Authorised users review, assign and track actions in the Action Centre." },
+            ].map((s) => (
+              <li key={s.n} className="rounded-2xl border border-border bg-card p-5">
+                <span className="font-display text-2xl font-semibold text-[color:var(--gold)]">{s.n}</span>
+                <h3 className="mt-2 text-sm font-semibold leading-snug">{s.t}</h3>
+                <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">{s.d}</p>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[
+              { icon: LineChart, title: "Production Intelligence", desc: "Understand production levels, compare periods, and identify changes in recorded output." },
+              { icon: Wheat, title: "Feed & Cost Intelligence", desc: "Review feed consumption, feed costs, and supported financial calculations to understand operational efficiency." },
+              { icon: HeartPulse, title: "Flock Health & Mortality Monitoring", desc: "Organize health and mortality records and surface relevant operational concerns from available data." },
+              { icon: LayoutDashboard, title: "Room-Level Performance", desc: "Compare recorded performance across poultry rooms and identify areas that may require investigation." },
+              { icon: TrendingUp, title: "Predictive Insights", desc: "Explore supported estimates and possible trends based on recorded data and available analytical capabilities." },
+              { icon: ClipboardCheck, title: "Practical Recommendations", desc: "Turn supported findings into useful checks and next steps while keeping farmers in control." },
+            ].map((b) => (
+              <div key={b.title} className="group min-w-0 rounded-2xl bg-card border border-border p-6 hover:shadow-[var(--shadow-lift)] hover:-translate-y-0.5 transition-all">
+                <span className="inline-grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition">
+                  <b.icon className="h-5 w-5" />
+                </span>
+                <h3 className="mt-5 font-display text-xl font-semibold">{b.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{b.desc}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-8 max-w-3xl text-sm text-muted-foreground">
+            Current intelligence tools use recorded data, transparent calculations and rule-based alerts.
+            Validated machine-learning predictions and disease-outbreak prediction are roadmap items, not
+            live features — see the roadmap below.
+          </p>
+        </div>
+      </section>
+
       <section className="py-24">
         <div className="container-x grid lg:grid-cols-12 gap-14 items-start">
           <div className="lg:col-span-5">
@@ -602,6 +656,7 @@ function Index() {
             <p className="text-muted-foreground text-lg leading-relaxed">
               Platform statistics update automatically from recorded farm data.
               Egg value combines eligible records across participating farms, not just one farm.
+              Better data provides the foundation for better analytics and more useful AI-supported insights.
             </p>
             <div className="grid grid-cols-2 gap-4 pt-2">
               {[
@@ -877,6 +932,11 @@ function Index() {
             <p className="text-primary-foreground/80 leading-relaxed max-w-2xl">
               PoultryPro was born from years of hands-on experience in poultry production and farm management, combined with a background in computer science and digital transformation. It was built to solve real problems faced by poultry farmers every day.
             </p>
+            <p className="text-primary-foreground/80 leading-relaxed max-w-2xl">
+              PoultryPro is developed under Greenfield Contracts &amp; Agro Limited, applying AI and
+              data-driven tools to real agricultural challenges. Its international recognition supports
+              this broader mission of building useful agricultural technology.
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
               {[
                 { icon: Cpu, t: "MICT & B.Sc. Computer Science" },
@@ -906,7 +966,9 @@ function Index() {
             </h2>
             <p className="mt-5 text-muted-foreground text-lg">
               Start with essential record keeping, add business analytics as you grow, and unlock
-              record-based decision support when you are ready to scale.
+              record-based decision support when you are ready to scale. Basic supports digital
+              record-keeping; Standard adds farm analytics; Premium adds record-based predictive
+              insights and rule-based intelligence tools.
             </p>
           </div>
 
