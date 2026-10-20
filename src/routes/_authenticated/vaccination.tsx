@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePermissions } from "@/lib/rbac";
+import { useIsSuperAdmin } from "@/lib/admin-api";
 import { PermissionDenied } from "@/components/permission-denied";
 import { ExportRecordsButton } from "@/components/export/export-button";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ import {
   STATUS_TONES,
   VACCINATION_DISCLAIMER,
   buildTimelines,
+  canApproveProgramme,
   formatDate,
   isGumboro,
   scheduleVariance,
@@ -87,6 +89,7 @@ const ALL = "all";
 
 function VaccinationPage() {
   const { can, loading } = usePermissions();
+  const superAdmin = useIsSuperAdmin();
   const farm = useFarm();
   const rooms = useRooms();
   const batchesQ = useLayerBatches();
@@ -293,7 +296,7 @@ function VaccinationPage() {
                   supplied and must be clarified before approval.
                 </span>
               </p>
-              {writable && (
+              {canApproveProgramme(p.farm_id, farm.data?.id, writable, superAdmin.data === true) ? (
                 <Button
                   size="sm"
                   variant="outline"
@@ -301,15 +304,17 @@ function VaccinationPage() {
                   onClick={async () => {
                     try {
                       await approveProgramme.mutateAsync(p.id);
-                      toast.success(`${p.name} approved. Your name and the date were recorded.`);
-                    } catch {
-                      toast.error("Could not approve the programme.");
+                      toast.success(`${p.name} approved. Your account and the approval date were recorded.`);
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "Approval was not saved.");
                     }
                   }}
                 >
                   Approve for use
                 </Button>
-              )}
+              ) : p.farm_id === null ? (
+                <p className="text-xs text-muted-foreground">Only a platform super administrator can approve this shared reference template.</p>
+              ) : null}
             </div>
           ))}
         </div>
