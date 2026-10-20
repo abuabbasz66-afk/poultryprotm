@@ -1155,6 +1155,39 @@ function Index() {
       </section>
 
 
+      <section id="trust" className="py-20 md:py-24 border-t border-border">
+        <div className="container-x">
+          <div className="max-w-3xl">
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">AI &amp; Data Trust</span>
+            <h2 className="mt-4 font-display text-3xl md:text-5xl font-semibold leading-tight">
+              Responsible AI. Practical Farming. Human Decisions.
+            </h2>
+          </div>
+          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              "AI-supported insights depend on the availability and quality of your farm records.",
+              "Estimates are not guarantees of future results.",
+              "Rule-based findings and validated machine-learning predictions are different capabilities — we label which is which.",
+              "PoultryPro does not replace qualified veterinary diagnosis or professional farm-management judgment.",
+              "Farmers remain responsible for reviewing findings and deciding what action to take.",
+              "Farm information is handled according to our privacy policy and applicable data-protection requirements.",
+            ].map((t) => (
+              <li key={t} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-5">
+                <ShieldCheck className="mt-0.5 h-5 w-5 flex-none text-[color:var(--forest)]" aria-hidden="true" />
+                <span className="text-sm text-muted-foreground leading-relaxed">{t}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-6 text-sm text-muted-foreground">
+            Read our{" "}
+            <Link to="/privacy" className="font-medium text-primary underline-offset-4 hover:underline">
+              privacy policy
+            </Link>{" "}
+            for details on how farm data is handled.
+          </p>
+        </div>
+      </section>
+
       <section id="roadmap" className="py-24 bg-[color:var(--cream)]/40">
         <div className="container-x">
           <div className="max-w-3xl">
@@ -1268,6 +1301,68 @@ function Index() {
 
 
       
+
+      <section id="faq" className="py-20 md:py-24 scroll-mt-24">
+        <div className="container-x">
+          <div className="max-w-3xl">
+            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Frequently Asked Questions</span>
+            <h2 className="mt-4 font-display text-3xl md:text-5xl font-semibold leading-tight">
+              Questions about PoultryPro and AI
+            </h2>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            {[
+              {
+                q: "What is PoultryPro?",
+                a: "PoultryPro is an AI-powered poultry farm management and intelligence platform. It organizes your farm data, analyzes performance, presents supported insights, and helps you make better-informed decisions.",
+              },
+              {
+                q: "How does PoultryPro use AI?",
+                a: "Today, PoultryPro uses transparent calculations and rule-based intelligence to surface findings from your records — for example, production drops, feed changes and mortality concerns. AI explanations and validated machine-learning predictions are roadmap items and are clearly labelled as such.",
+              },
+              {
+                q: "What is the difference between farm analytics and predictive insights?",
+                a: "Farm analytics describe what your records show — production, feed, costs and trends. Predictive insights look ahead: record-based estimates of possible future outcomes, always shown with their assumptions and limitations.",
+              },
+              {
+                q: "Can PoultryPro predict future egg production?",
+                a: "PoultryPro offers record-based production estimates built from your own history. These are estimates, not guarantees, and they are not validated machine-learning forecasts.",
+              },
+              {
+                q: "Does PoultryPro predict poultry diseases?",
+                a: "No. PoultryPro provides health risk alerts — prompts to investigate based on your records. It does not diagnose disease or predict outbreaks, and it does not replace a qualified veterinarian.",
+              },
+              {
+                q: "Which AI features are currently available?",
+                a: "Live today: farm analytics, rule-based alerts, record-based production estimates, feed intelligence, weather advisories and the Action Centre. In development: validated predictive models, AI explanations and a voice assistant.",
+              },
+              {
+                q: "Which features require a paid subscription?",
+                a: "Basic (free) covers digital record-keeping. Standard adds farm analytics and financial dashboards. Premium adds record-based predictive insights and rule-based intelligence tools. Prices and limits are unchanged on the pricing section above.",
+              },
+              {
+                q: "How does the platform use my farm records?",
+                a: "Your records stay private to your farm and are used to calculate your own analytics, alerts and estimates. Public statistics are aggregate-only and never expose individual farm data. See our privacy policy for details.",
+              },
+              {
+                q: "Can I use PoultryPro without advanced AI features?",
+                a: "Yes. Many farms use PoultryPro purely for organized record-keeping and analytics. Intelligence tools are there when you want them — you stay in control.",
+              },
+              {
+                q: "How can farmers, partners and investors contact the team?",
+                a: "Email greenfieldcontractsagroltd@gmail.com or use the Request a Demo button below. We welcome conversations with farmers, cooperatives, partners and investors.",
+              },
+            ].map((f) => (
+              <details key={f.q} className="group rounded-2xl border border-border bg-card p-5">
+                <summary className="cursor-pointer font-semibold text-sm sm:text-base leading-snug focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+                  {f.q}
+                </summary>
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <section id="contact" className="pb-24">
 
