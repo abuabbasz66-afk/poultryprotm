@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import heroAsset from "@/assets/hero-layer-birds.jpg.asset.json";
+import heroImage from "@/assets/hero-farm-intelligence.webp";
+import heroMobileImage from "@/assets/hero-farm-intelligence-mobile.webp";
 import founderAsset from "@/assets/founder-abubakar.jpg.asset.json";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import eggsImg from "@/assets/eggs.jpg";
@@ -76,12 +77,13 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: HOME_TITLE },
       { property: "og:description", content: HOME_DESC },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: heroAsset.url },
-      { name: "twitter:image", content: heroAsset.url },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: "https://poultrypro.life/" },
     ],
-    links: [{ rel: "canonical", href: "https://poultrypro.life/" }],
+    links: [
+      { rel: "canonical", href: "https://poultrypro.life/" },
+      { rel: "preload", as: "image", href: heroImage, imageSrcSet: `${heroMobileImage} 720w, ${heroImage} 1200w`, imageSizes: "(min-width: 1024px) 50vw, 100vw", fetchPriority: "high" },
+    ],
     scripts: [
       {
         type: "application/ld+json",
@@ -428,7 +430,7 @@ function Index() {
 
           <div className="lg:col-span-6 relative hero-fade-up" style={{ animationDelay: "120ms" }}>
             <div className="relative rounded-[2rem] overflow-hidden shadow-[0_30px_80px_-20px_rgba(15,60,40,0.35)] ring-1 ring-border/60 hero-float">
-              <img src={heroAsset.url} alt="Modern poultry farm" width={1600} height={1200} fetchPriority="high" decoding="async" className="w-full h-[320px] md:h-[500px] object-cover" />
+              <img src={heroImage} srcSet={`${heroMobileImage} 720w, ${heroImage} 1200w`} sizes="(min-width: 1024px) 50vw, 100vw" alt="Illustrative photograph of a layer-farm manager holding a tablet with production, feed and flock-health icons and the Capture, Understand, Predict, Recommend, Act workflow; no farm figures or prediction results shown." width={1200} height={1008} fetchPriority="high" decoding="async" className="w-full h-[320px] md:h-[500px] object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--forest)]/40 via-transparent to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 flex gap-3">
                 <div className="flex-1 rounded-2xl bg-background/95 backdrop-blur px-4 py-3">
