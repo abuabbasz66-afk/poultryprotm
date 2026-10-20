@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 const stages = [
   {
     title: "Capture",
+    headline: "Every Farm Record Starts a Better Decision.",
+    cta: { label: "Explore Farm Records", to: "/presentation" },
     category: "Farm Records",
     icon: LayoutDashboard,
     description:
@@ -30,6 +32,8 @@ const stages = [
   },
   {
     title: "Understand",
+    headline: "Understand What Is Happening on Your Farm.",
+    cta: { label: "Explore Farm Analytics", to: "/presentation" },
     category: "Farm Analytics",
     icon: LineChart,
     description:
@@ -49,6 +53,8 @@ const stages = [
   },
   {
     title: "Predict",
+    headline: "Look Ahead with Data-Driven Insights.",
+    cta: { label: "Explore Predictive Insights", to: "/presentation" },
     category: "Estimates and Forecasts",
     icon: Sparkles,
     description:
@@ -68,6 +74,8 @@ const stages = [
   },
   {
     title: "Recommend",
+    headline: "Turn Farm Insights into Practical Next Steps.",
+    cta: { label: "Explore Recommendations", to: "/presentation" },
     category: "Practical Next Steps",
     icon: ClipboardCheck,
     description:
@@ -86,6 +94,8 @@ const stages = [
   },
   {
     title: "Act",
+    headline: "From Insight to Action. The Farmer Stays in Control.",
+    cta: { label: "Explore the Action Centre", to: "/presentation" },
     category: "Farmer in Control",
     icon: ShieldCheck,
     description:
