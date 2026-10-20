@@ -1,5 +1,10 @@
 # PoultryPro PWA and mobile upgrade
 
+## Hero farm-intelligence image (2026-10-20)
+
+- [ ] Replace only the hero photograph with a realistic commercial layer farm and farmer using an illustrative tablet; preserve layout and existing product previews
+- [ ] Optimize responsive image delivery and verify desktop/mobile framing, accessibility and unchanged buttons; keep unpublished
+
 ## Vaccination approval feedback (2026-10-20)
 
 - [x] Confirm existing global-template RLS restrictions; show approval only to authorised users and require a saved approval row before success
