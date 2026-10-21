@@ -2,8 +2,8 @@
 
 ## Actual dashboard tablet hero (2026-10-20)
 
-- [ ] Composite the actual Farm Analytics interface with labelled synthetic data onto the supplied farm-scene reference; preserve all page controls and logic
-- [ ] Optimize responsive image sources and verify desktop/mobile framing, accessibility and loading; keep unpublished
+- [x] Composite the actual Farm Analytics interface with labelled synthetic data onto the supplied farm-scene reference; preserve all page controls and logic
+- [x] Optimize responsive WebP sources (132 KB desktop / 79 KB mobile); verified loaded images, visible tablet chart, descriptive alt text, demo label, unchanged CTA destinations, no overflow/runtime errors and automatic build OK; kept unpublished
 
 ## Hero farm-intelligence image (2026-10-20)
 

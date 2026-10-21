@@ -430,7 +430,7 @@ function Index() {
 
           <div className="lg:col-span-6 relative hero-fade-up" style={{ animationDelay: "120ms" }}>
             <div className="relative rounded-[2rem] overflow-hidden shadow-[0_30px_80px_-20px_rgba(15,60,40,0.35)] ring-1 ring-border/60 hero-float">
-              <img src={heroImage} srcSet={`${heroMobileImage} 720w, ${heroImage} 1200w`} sizes="(min-width: 1024px) 50vw, 100vw" alt="Farmer in a commercial layer poultry house holding a tablet displaying the actual PoultryPro Farm Analytics interface: egg production, total birds, production rate, mortality, feed and an egg-production chart. Screenshot figures are labelled synthetic demo data, not live farm results." width={1200} height={800} fetchPriority="high" decoding="async" className="w-full h-[320px] md:h-[500px] object-cover" />
+              <img src={heroImage} srcSet={`${heroMobileImage} 720w, ${heroImage} 1200w`} sizes="(min-width: 1024px) 50vw, 100vw" alt="Farmer in a commercial layer poultry house holding a tablet displaying the actual PoultryPro Farm Analytics interface: egg production, total birds, production rate, mortality, feed and an egg-production chart. Screenshot figures are labelled synthetic demo data, not live farm results." width={1200} height={800} fetchPriority="high" decoding="async" className="w-full h-[320px] md:h-[500px] object-contain object-top bg-background" />
               <span className="absolute top-4 left-4 rounded-md bg-background/95 px-3 py-1.5 text-xs font-semibold text-primary">Actual interface · DEMO DATA</span>
               <div className="absolute inset-0 bg-gradient-to-t from-[color:var(--forest)]/40 via-transparent to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 flex gap-3">
