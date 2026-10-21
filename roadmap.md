@@ -3,7 +3,7 @@
 ## Google Search Console setup (2026-10-21)
 
 - [x] Link the owner's Google Search Console account and prepare its root verification meta tag; existing same-origin sitemap is valid
-- [ ] Publish verification tag with explicit approval, verify ownership, add the returned property and submit the existing sitemap — awaiting publishing approval
+- [x] Published with explicit approval; exact tag confirmed in live HTML, Google ownership verified, returned siteOwner property confirmed and existing sitemap submission accepted (204)
 
 ## Actual dashboard tablet hero (2026-10-20)
 
