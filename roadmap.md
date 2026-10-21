@@ -1,5 +1,10 @@
 # PoultryPro PWA and mobile upgrade
 
+## Google Search Console setup (2026-10-21)
+
+- [x] Link the owner's Google Search Console account and prepare its root verification meta tag; existing same-origin sitemap is valid
+- [ ] Publish verification tag with explicit approval, verify ownership, add the returned property and submit the existing sitemap — awaiting publishing approval
+
 ## Actual dashboard tablet hero (2026-10-20)
 
 - [x] Composite the actual Farm Analytics interface with labelled synthetic data onto the supplied farm-scene reference; preserve all page controls and logic
