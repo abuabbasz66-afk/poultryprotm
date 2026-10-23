@@ -3,7 +3,8 @@
 ## Public sitemap expansion (2026-10-23)
 
 - [x] Add Academy catalogue, eligible tutorial URLs, demo and achievements; exclude private and auth destinations, paginate public reads and fail rather than emit partial XML
-- [ ] Verify tests and preview sitemap; request explicit publishing approval before live sitemap submission
+- [x] Verified four tests and preview XML: 40 URLs including 33 public tutorials, required public pages present, private/auth destinations excluded and automatic build OK
+- [ ] Publish expanded sitemap and submit it to Google Search Console — awaiting explicit owner approval
 
 ## Google Search Console setup (2026-10-21)
 
