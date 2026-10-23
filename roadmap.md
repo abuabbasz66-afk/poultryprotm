@@ -1,5 +1,10 @@
 # PoultryPro PWA and mobile upgrade
 
+## Public sitemap expansion (2026-10-23)
+
+- [x] Add Academy catalogue, eligible tutorial URLs, demo and achievements; exclude private and auth destinations, paginate public reads and fail rather than emit partial XML
+- [ ] Verify tests and preview sitemap; request explicit publishing approval before live sitemap submission
+
 ## Google Search Console setup (2026-10-21)
 
 - [x] Link the owner's Google Search Console account and prepare its root verification meta tag; existing same-origin sitemap is valid
