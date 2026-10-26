@@ -3,7 +3,7 @@
 ## MK Integrated Farms Room 4 (2026-10-26)
 
 - [x] Inspect actual farms and room records: no exact MK name; Emkay Integrated Farms has Rooms 1–3 plus three active Room 4 rows with different bird counts
-- [ ] Confirm intended farm and authoritative Room 4 before changing any data — awaiting owner clarification
+- [x] Owner confirmed Room 4 has 2,940 birds, identifying Emkay Integrated Farms and its authoritative existing room
 - [ ] Restore exactly four usable rooms without losing historical records; verify production, feed, mortality, health and vaccination save/read/edit flows
 
 ## Public sitemap expansion (2026-10-23)
