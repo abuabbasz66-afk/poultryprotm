@@ -1,5 +1,11 @@
 # PoultryPro PWA and mobile upgrade
 
+## MK Integrated Farms Room 4 (2026-10-26)
+
+- [x] Inspect actual farms and room records: no exact MK name; Emkay Integrated Farms has Rooms 1–3 plus three active Room 4 rows with different bird counts
+- [ ] Confirm intended farm and authoritative Room 4 before changing any data — awaiting owner clarification
+- [ ] Restore exactly four usable rooms without losing historical records; verify production, feed, mortality, health and vaccination save/read/edit flows
+
 ## Public sitemap expansion (2026-10-23)
 
 - [x] Add Academy catalogue, eligible tutorial URLs, demo and achievements; exclude private and auth destinations, paginate public reads and fail rather than emit partial XML
