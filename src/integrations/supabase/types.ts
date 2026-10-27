@@ -3185,6 +3185,7 @@ export type Database = {
           initial: number
           name: string
           status: string
+          superseded_by: string | null
         }
         Insert: {
           age_anchor_date?: string | null
@@ -3208,6 +3209,7 @@ export type Database = {
           initial?: number
           name: string
           status?: string
+          superseded_by?: string | null
         }
         Update: {
           age_anchor_date?: string | null
@@ -3231,6 +3233,7 @@ export type Database = {
           initial?: number
           name?: string
           status?: string
+          superseded_by?: string | null
         }
         Relationships: [
           {

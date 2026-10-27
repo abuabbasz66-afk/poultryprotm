@@ -197,6 +197,13 @@
       "when": 1793119720909,
       "tag": "0027_explicit_four_room_egg_slots",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1793119742769,
+      "tag": "0028_preserve_superseded_room_identity",
+      "breakpoints": true
     }
   ]
 }
