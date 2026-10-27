@@ -5,6 +5,8 @@ import { isOnline } from "@/lib/offline/status";
 
 export type Room = {
   id: string; name: string; current: number; initial: number;
+  egg_column?: string | null;
+  superseded_by?: string | null;
   /** Lifecycle status — see src/lib/rooms.ts. Legacy rows default to "active". */
   status?: string | null;
   bird_type?: string | null;
@@ -25,6 +27,7 @@ export type Room = {
 };
 export type EggRow = {
   id: string; date: string; label: string; r2: number; r3: number; r4: number; extra: number;
+  r1?: number; broken_r1?: number; extra_r1?: number; broken_extra_r1?: number;
   /** Broken eggs recorded per production room (counts, not crates). */
   broken_r2?: number; broken_r3?: number; broken_r4?: number; broken_extra?: number;
   /** Loose (extra) eggs recorded per production room. `extra` stays the farm total. */
@@ -277,8 +280,9 @@ export function useRooms() {
         fetcher: async () => {
           const { data, error } = await supabase
             .from("rooms")
-            .select("id, name, current, initial, status, bird_type, breed, age_weeks, batch_number, date_stocked, age_status, age_anchor_date, age_recorded_at, culled_on, culled_birds_sold, culled_unit_price, culled_revenue, culled_notes")
+            .select("id, name, current, initial, status, egg_column, superseded_by, bird_type, breed, age_weeks, batch_number, date_stocked, age_status, age_anchor_date, age_recorded_at, culled_on, culled_birds_sold, culled_unit_price, culled_revenue, culled_notes")
             .eq("farm_id", farmId!)
+            .is("superseded_by", null)
             .order("name");
           if (error) throw error;
           return (data ?? []) as Room[];
@@ -302,7 +306,7 @@ export function useEggs() {
         fetcher: async () => {
           const { data, error } = await supabase
             .from("egg_production")
-            .select("id, date, label, r2, r3, r4, extra, broken_r2, broken_r3, broken_r4, broken_extra, extra_r2, extra_r3, extra_r4, broken_extra_r2, broken_extra_r3, broken_extra_r4")
+            .select("id, date, label, r1, r2, r3, r4, extra, broken_r1, extra_r1, broken_extra_r1, broken_r2, broken_r3, broken_r4, broken_extra, extra_r2, extra_r3, extra_r4, broken_extra_r2, broken_extra_r3, broken_extra_r4")
             .eq("farm_id", farmId!)
             .order("date", { ascending: false });
           if (error) throw error;

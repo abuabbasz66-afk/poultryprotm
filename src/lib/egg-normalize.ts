@@ -8,6 +8,7 @@
 
 export type EggRowLike = {
   r2: number; r3: number; r4: number; extra: number;
+  r1?: number; broken_r1?: number;
   // Broken eggs are excluded from every usable/sellable figure.
   broken_r2?: number; broken_r3?: number; broken_r4?: number; broken_extra?: number;
 };
@@ -15,6 +16,7 @@ export type EggRowLike = {
 /** Broken eggs recorded on a row (all rooms + loose). */
 export function brokenFromRow(r: EggRowLike): number {
   return (
+    (Number(r.broken_r1) || 0) +
     (Number(r.broken_r2) || 0) + (Number(r.broken_r3) || 0) +
     (Number(r.broken_r4) || 0) + (Number(r.broken_extra) || 0)
   );
@@ -22,7 +24,7 @@ export function brokenFromRow(r: EggRowLike): number {
 
 /** Eggs collected before breakage. */
 export function collectedFromRow(r: EggRowLike): number {
-  return (r.r2 + r.r3 + r.r4) * 30 + r.extra;
+  return ((Number(r.r1) || 0) + r.r2 + r.r3 + r.r4) * 30 + r.extra;
 }
 
 

@@ -17,8 +17,8 @@ import { toDateKey } from "@/lib/date-key";
 
 export const CRATE = 30;
 
-const BROKEN_KEY: Record<EggColumn, "broken_r2" | "broken_r3" | "broken_r4"> = {
-  r2: "broken_r2", r3: "broken_r3", r4: "broken_r4",
+const BROKEN_KEY: Record<EggColumn, "broken_r1" | "broken_r2" | "broken_r3" | "broken_r4"> = {
+  r1: "broken_r1", r2: "broken_r2", r3: "broken_r3", r4: "broken_r4",
 };
 
 export function brokenOf(row: EggRow, key: EggColumn): number {
@@ -28,6 +28,7 @@ export function brokenOf(row: EggRow, key: EggColumn): number {
 /** Total broken eggs on a record (all rooms + loose eggs). */
 export function totalBroken(row: EggRow): number {
   return (
+    (Number(row.broken_r1) || 0) +
     (Number(row.broken_r2) || 0) +
     (Number(row.broken_r3) || 0) +
     (Number(row.broken_r4) || 0) +
@@ -37,7 +38,7 @@ export function totalBroken(row: EggRow): number {
 
 /** Total eggs collected on a record, before breakage. */
 export function totalCollected(row: EggRow): number {
-  return (row.r2 + row.r3 + row.r4) * CRATE + row.extra;
+  return ((Number(row.r1) || 0) + row.r2 + row.r3 + row.r4) * CRATE + row.extra;
 }
 
 export type EggBreakdown = {
@@ -119,7 +120,7 @@ export function breakageByRoom(rows: EggRow[], rooms: Room[]): RoomBreakage[] {
   const slots = eggSlots(rooms);
   return slots
     .map(({ room, key }) => {
-      const collected = rows.reduce((s, r) => s + r[key] * CRATE, 0);
+      const collected = rows.reduce((s, r) => s + (r[key] ?? 0) * CRATE, 0);
       const broken = rows.reduce((s, r) => s + brokenOf(r, key), 0);
       return {
         roomName: room.name,

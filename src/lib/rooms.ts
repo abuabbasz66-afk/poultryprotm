@@ -43,8 +43,16 @@ export function productionRooms(rooms: Room[]): Room[] {
   return rooms.filter((r) => roomStatus(r) === "active");
 }
 
-export type EggColumn = "r2" | "r3" | "r4";
+export type EggColumn = "r1" | "r2" | "r3" | "r4";
 const EGG_COLUMNS: EggColumn[] = ["r2", "r3", "r4"];
+
+/** Explicit configuration takes precedence without changing legacy name rules. */
+export function roomEggColumn(room: Pick<Room, "name" | "egg_column">): EggColumn | null {
+  if (room.egg_column && ["r1", ...EGG_COLUMNS].includes(room.egg_column)) return room.egg_column as EggColumn;
+  const number = room.name.match(/(\d+)\s*$/)?.[1];
+  const key = `r${number}` as EggColumn;
+  return EGG_COLUMNS.includes(key) ? key : null;
+}
 
 /**
  * Egg production is stored in the fixed columns r2 / r3 / r4, which literally
@@ -58,6 +66,13 @@ const EGG_COLUMNS: EggColumn[] = ["r2", "r3", "r4"];
  */
 export function eggSlots(rooms: Room[]): { room: Room; key: EggColumn }[] {
   const eligible = productionRooms(rooms);
+
+  // A complete, unique explicit map is required; partial maps never remap history.
+  const configured = eligible.map(room => ({ room, key: room.egg_column as EggColumn | undefined }));
+  if (configured.length && configured.every(s => s.key && ["r1", ...EGG_COLUMNS].includes(s.key)) &&
+      new Set(configured.map(s => s.key)).size === configured.length) {
+    return configured.flatMap(s => s.key ? [{ room: s.room, key: s.key }] : []);
+  }
 
   const taken = new Set<EggColumn>();
   const named: { room: Room; key: EggColumn }[] = [];
