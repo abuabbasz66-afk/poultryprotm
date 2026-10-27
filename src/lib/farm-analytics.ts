@@ -7,6 +7,7 @@ import type { EggRow, Room, Mortality, Feed, Health, Price, PriceHistoryRow } fr
 import { buildFarmTimelines } from "@/lib/price-timeline";
 import { normaliseEggRow, totalEggsFromRow } from "@/lib/egg-normalize";
 import { toDateKey } from "@/lib/date-key";
+import { eggSlots } from "@/lib/rooms";
 
 // ---------------------------------------------------------------------------
 // Date-range primitives
@@ -434,9 +435,9 @@ export function computeHighestRoom(eggs: EggRow[], rooms: Room[]): HighestRoom {
   if (!latest || rooms.length === 0) {
     return { hasData: false, roomName: null, crates: 0, eggs: 0, sharePct: null, totalCratesToday: 0 };
   }
-  const perRoom = rooms.map(r => ({
-    name: r.name,
-    crates: roomCratesFromRow(r.name, latest),
+  const perRoom = eggSlots(rooms).map(({ room, key }) => ({
+    name: room.name,
+    crates: Number(latest[key] ?? 0),
   })).sort((a, b) => b.crates - a.crates);
 
   const totalCratesToday = perRoom.reduce((s, r) => s + r.crates, 0);

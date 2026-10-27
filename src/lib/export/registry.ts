@@ -82,6 +82,7 @@ export const EXPORT_DESCRIPTORS: ExportDescriptor[] = [
     columns: [
       { header: "Date", value: (r) => toDateKey(s(r.date)) ?? s(r.date), type: "date" },
       { header: "Label", value: (r) => s(r.label) },
+      { header: "Additional configured slot (crates)", value: (r) => n(r.r1), type: "number" },
       { header: "Room 2 (crates)", value: (r) => n(r.r2), type: "number" },
       { header: "Room 3 (crates)", value: (r) => n(r.r3), type: "number" },
       { header: "Room 4 (crates)", value: (r) => n(r.r4), type: "number" },

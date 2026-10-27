@@ -17,7 +17,7 @@ import { roomBirdsOn } from "@/lib/production-percent";
 import { checkEggRecord, checkMortalityRecord, type RecordWarning } from "@/lib/record-validation";
 import { toDateKey } from "@/lib/date-key";
 import { FeedRecordingModal } from "@/components/daily-recording/FeedRecordingModal";
-import { eggSlots, productionRooms, ROOM_STATUSES, ROOM_STATUS_LABELS, roomStatus, type RoomStatus } from "@/lib/rooms";
+import { eggSlots, productionRooms, ROOM_STATUSES, ROOM_STATUS_LABELS, roomStatus, type RoomStatus, type EggColumn } from "@/lib/rooms";
 import { useSaveRevenue } from "@/lib/finance-data";
 import { logSecurityEvent } from "@/lib/security-events";
 
@@ -417,6 +417,9 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
   const isEdit = !!item;
   const [date, setDate] = useState(item?.date ?? todayIso());
   // r2/r3/r4 remain the schema columns. Distribute existing values on edit.
+  const [r1, setR1] = useState<number | "">(item?.r1 ?? 0);
+  const [b1, setB1] = useState<number | "">((item?.broken_r1 ?? 0) + (item?.broken_extra_r1 ?? 0));
+  const [e1, setE1] = useState<number | "">(item?.extra_r1 ?? 0);
   const [r2, setR2] = useState<number | "">(item?.r2 ?? 0);
   const [r3, setR3] = useState<number | "">(item?.r3 ?? 0);
   const [r4, setR4] = useState<number | "">(item?.r4 ?? 0);
@@ -437,25 +440,28 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
   // Legacy farm-level loose eggs that were never attributed to a room.
   // Preserved as-is on edit; never reassigned to a room.
   const legacyExtra = isEdit
-    ? Math.max(0, (item?.extra ?? 0) - (n(item?.extra_r2 ?? 0) + n(item?.extra_r3 ?? 0) + n(item?.extra_r4 ?? 0)))
+    ? Math.max(0, (item?.extra ?? 0) - (n(item?.extra_r1 ?? 0) + n(item?.extra_r2 ?? 0) + n(item?.extra_r3 ?? 0) + n(item?.extra_r4 ?? 0)))
     : 0;
   const legacyBrokenExtra = isEdit
-    ? Math.max(0, (item?.broken_extra ?? 0) - (n(item?.broken_extra_r2 ?? 0) + n(item?.broken_extra_r3 ?? 0) + n(item?.broken_extra_r4 ?? 0)))
+    ? Math.max(0, (item?.broken_extra ?? 0) - (n(item?.broken_extra_r1 ?? 0) + n(item?.broken_extra_r2 ?? 0) + n(item?.broken_extra_r3 ?? 0) + n(item?.broken_extra_r4 ?? 0)))
     : 0;
 
   // Egg production columns r2/r3/r4 belong to ROOM 2/3/4. Map by room number,
   // never by list position, and skip rooms that are no longer in production.
   const slots = useMemo(() => {
-    const crate: Record<"r2" | "r3" | "r4", [number | "", (v: number | "") => void]> = {
+    const crate: Record<EggColumn, [number | "", (v: number | "") => void]> = {
+      r1: [r1, setR1],
       r2: [r2, setR2], r3: [r3, setR3], r4: [r4, setR4],
     };
-    const broke: Record<"r2" | "r3" | "r4", [number | "", (v: number | "") => void]> = {
+    const broke: Record<EggColumn, [number | "", (v: number | "") => void]> = {
+      r1: [b1, setB1],
       r2: [b2, setB2], r3: [b3, setB3], r4: [b4, setB4],
     };
-    const loose: Record<"r2" | "r3" | "r4", [number | "", (v: number | "") => void]> = {
+    const loose: Record<EggColumn, [number | "", (v: number | "") => void]> = {
+      r1: [e1, setE1],
       r2: [e2, setE2], r3: [e3, setE3], r4: [e4, setE4],
     };
-    const build = (name: string, k: "r2" | "r3" | "r4") => ({
+    const build = (name: string, k: EggColumn) => ({
       name, key: k,
       getter: crate[k][0], setter: crate[k][1],
       broken: broke[k][0], setBroken: broke[k][1],
@@ -464,7 +470,7 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
     const mapped = eggSlots(rooms).map((s) => build(s.room.name, s.key));
     if (mapped.length) return mapped;
     return (["r2", "r3", "r4"] as const).map((k, i) => build(["ROOM 2", "ROOM 3", "ROOM 4"][i], k));
-  }, [rooms, r2, r3, r4, b2, b3, b4, e2, e3, e4]);
+  }, [rooms, r1, r2, r3, r4, b1, b2, b3, b4, e1, e2, e3, e4]);
 
   const perRoom = slots.map((s) => {
     const crates = n(s.getter);
@@ -523,8 +529,9 @@ function EggForm({ item, onClose, rooms }: { item?: EggRow; onClose: () => void;
       date,
       label: isoToLabel(date),
       r2: n(r2), r3: n(r3), r4: n(r4),
+      r1: n(r1), broken_r1: n(b1), extra_r1: n(e1), broken_extra_r1: 0,
       // `extra` / `broken_extra` remain the farm-level totals used by analytics.
-      extra: n(e2) + n(e3) + n(e4) + legacyExtra,
+      extra: n(e1) + n(e2) + n(e3) + n(e4) + legacyExtra,
       broken_r2: n(b2), broken_r3: n(b3), broken_r4: n(b4),
       broken_extra: legacyBrokenExtra,
       extra_r2: n(e2), extra_r3: n(e3), extra_r4: n(e4),

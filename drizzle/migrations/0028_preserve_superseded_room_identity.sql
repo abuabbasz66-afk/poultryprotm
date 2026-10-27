@@ -1,0 +1,2 @@
+ALTER TABLE public.rooms ADD COLUMN superseded_by uuid DEFAULT NULL;
+COMMENT ON COLUMN public.rooms.superseded_by IS 'Canonical room identity replacing an accidental duplicate. Original room and any historical references remain stored; normal operational room lists omit superseded rows.';
