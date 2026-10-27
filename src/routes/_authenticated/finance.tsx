@@ -17,6 +17,7 @@ import { ExpenseDialog, RevenueDialog } from "@/components/finance/finance-dialo
 import { ExportRecordsButton } from "@/components/export/export-button";
 import { usePermissions } from "@/lib/rbac";
 import { useEggs, useRooms } from "@/lib/farm-data";
+import { collectedFromRow } from "@/lib/egg-normalize";
 import {
   useExpenses, useRevenue, useDeleteFinanceRow,
   type ExpenseRow, type RevenueRow,
@@ -88,7 +89,7 @@ function FinancePage() {
 
   const eggsInRange = useMemo(() => (eggs.data ?? [])
     .filter((r) => inRange(r.date, from, to))
-    .reduce((s, r) => s + (r.r2 + r.r3 + r.r4) * 30 + r.extra, 0), [eggs.data, from, to]);
+    .reduce((s, r) => s + collectedFromRow(r), 0), [eggs.data, from, to]);
   const birds = useMemo(() => (rooms.data ?? []).reduce((s, r) => s + r.current, 0), [rooms.data]);
   const days = Math.max(1, Math.round((new Date(to).getTime() - new Date(from).getTime()) / 86_400_000) + 1);
   const econ = unitEconomics(totals, { eggsProduced: eggsInRange, birds, days });

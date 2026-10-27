@@ -1,4 +1,6 @@
 import type { EggRow, Room, Mortality, Feed, Health } from "@/lib/farm-data";
+import { totalEggsFromRow } from "@/lib/egg-normalize";
+import { roomEggColumn } from "@/lib/rooms";
 
 // ---------------------------------------------------------------------------
 // Production Decline Detection
@@ -48,12 +50,16 @@ function mean(xs: number[]): number {
 function round1(n: number): number { return Math.round(n * 10) / 10; }
 
 function farmEggs(e: EggRow): number {
-  const broken =
-    (e.broken_r2 ?? 0) + (e.broken_r3 ?? 0) + (e.broken_r4 ?? 0) + (e.broken_extra ?? 0);
-  return Math.max(0, (e.r2 + e.r3 + e.r4) * CRATE + e.extra - broken);
+  return totalEggsFromRow(e);
 }
 /** Usable eggs recorded for a specific room name like "ROOM 2". Returns null if room name has no matching field. */
-function roomEggs(name: string, e: EggRow): number | null {
+function roomEggs(name: string, e: EggRow, room?: Room): number | null {
+  if (room?.egg_column) {
+    const key = roomEggColumn(room);
+    if (!key) return null;
+    const values = e as unknown as Record<string, number | undefined>;
+    return Math.max(0, (values[key] ?? 0) * CRATE + (values[`extra_${key}`] ?? 0) - (values[`broken_${key}`] ?? 0));
+  }
   const m = name.match(/(\d+)/);
   if (!m) return null;
   const n = m[1];
@@ -260,8 +266,8 @@ export function detectProductionDecline(input: {
   const roomDrops = new Map<string, number>();
   for (const r of rooms) {
     if (r.current <= 0) continue;
-    if (roomEggs(r.name, eggs[0]) == null) continue;
-    const s = buildSeries(eggs, r.current, (e) => roomEggs(r.name, e) ?? 0);
+    if (roomEggs(r.name, eggs[0], r) == null) continue;
+    const s = buildSeries(eggs, r.current, (e) => roomEggs(r.name, e, r) ?? 0);
     if (s.every((p) => p.eggs === 0)) continue;
     const a = analyse(s);
     roomDrops.set(r.id, a?.changePct ?? 0);
@@ -269,8 +275,8 @@ export function detectProductionDecline(input: {
 
   for (const room of rooms) {
     if (room.current <= 0) continue;
-    if (roomEggs(room.name, eggs[0]) == null) continue;
-    const series = buildSeries(eggs, room.current, (e) => roomEggs(room.name, e) ?? 0);
+    if (roomEggs(room.name, eggs[0], room) == null) continue;
+    const series = buildSeries(eggs, room.current, (e) => roomEggs(room.name, e, room) ?? 0);
     if (series.every((p) => p.eggs === 0)) continue;
     const roomAnalysis = analyse(series);
     if (!roomAnalysis) continue;

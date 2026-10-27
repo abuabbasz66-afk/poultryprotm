@@ -16,6 +16,8 @@
 
 import type { EggRow, Feed, Health, Mortality, Room } from "@/lib/farm-data";
 import { toLocalDate } from "@/lib/date-key";
+import { collectedFromRow } from "@/lib/egg-normalize";
+import { roomEggColumn, type EggColumn } from "@/lib/rooms";
 
 // ---------- shared formatting helpers ----------
 
@@ -68,7 +70,7 @@ export function computeForecast(eggs: EggRow[], totalBirds: number): ForecastRes
   const totals = ordered.map(e => ({
     date: e.date,
     label: e.label.replace(/^[A-Za-z]{3}, /, ""),
-    value: (e.r2 + e.r3 + e.r4) * 30 + e.extra,
+    value: collectedFromRow(e),
   }));
 
   const recent = totals.slice(-Math.min(7, totals.length));
@@ -389,17 +391,17 @@ export type FeedEffAnalysis = {
 
 function computeRoomEggShare(rooms: Room[], eggs: EggRow[]): Map<string, number> {
   const share = new Map<string, number>();
-  const totals: Record<string, number> = { r2: 0, r3: 0, r4: 0 };
+  const totals: Record<string, number> = { r1: 0, r2: 0, r3: 0, r4: 0 };
   let all = 0;
   eggs.forEach(e => {
+    totals.r1 += (e.r1 ?? 0) * 30;
     totals.r2 += e.r2 * 30;
     totals.r3 += e.r3 * 30;
     totals.r4 += e.r4 * 30;
-    all += (e.r2 + e.r3 + e.r4) * 30 + e.extra;
+    all += collectedFromRow(e);
   });
   rooms.forEach(r => {
-    const trimmed = r.name.replace(/\s+/g, "").toLowerCase();
-    const rk = trimmed.endsWith("2") ? "r2" : trimmed.endsWith("3") ? "r3" : trimmed.endsWith("4") ? "r4" : null;
+    const rk = roomEggColumn(r);
     const roomTotal = rk ? totals[rk] : 0;
     share.set(r.id, all > 0 ? roomTotal / all : 0);
   });
@@ -446,7 +448,7 @@ export function computeFeedEfficiency(
     .sort((a, b) => a[0].localeCompare(b[0]))
     .forEach(([iso, bags]) => {
       const e = eggsByIso.get(iso)!;
-      const eggTotal = (e.r2 + e.r3 + e.r4) * 30 + e.extra;
+      const eggTotal = collectedFromRow(e);
       const day: MatchedDay = {
         date: iso,
         label: new Date(iso + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
@@ -509,7 +511,7 @@ export function computeFeedEfficiency(
     const share = roomShareEggs.get(room.id) ?? 0;
     const [latestIso, latestBagsRoom] = roomMatched[roomMatched.length - 1];
     const eLatest = eggsByIso.get(latestIso)!;
-    const latestEggsRoom = ((eLatest.r2 + eLatest.r3 + eLatest.r4) * 30 + eLatest.extra) * share;
+    const latestEggsRoom = collectedFromRow(eLatest) * share;
     const kg = typeof bagWeightKg === "number" && bagWeightKg > 0 ? latestBagsRoom * bagWeightKg : null;
     const feedPerBirdG = kg !== null && room.current > 0 ? (kg * 1000) / room.current : null;
     const feedPerEggG = kg !== null && latestEggsRoom > 0 ? (kg * 1000) / latestEggsRoom : null;
@@ -520,7 +522,7 @@ export function computeFeedEfficiency(
       const bpeOf = (iso: string, bags: number) => {
         const e = eggsByIso.get(iso);
         if (!e) return 0;
-        const eg = ((e.r2 + e.r3 + e.r4) * 30 + e.extra) * share;
+        const eg = collectedFromRow(e) * share;
         return eg > 0 ? bags / eg : 0;
       };
       const latestBpE = bpeOf(latestIso, latestBagsRoom);
@@ -669,10 +671,9 @@ export function computeAbnormalActivity(
     return t >= periodStart.getTime() && t <= anchor.getTime() + 24 * 60 * 60 * 1000;
   });
 
-  const roomKeyMap: Record<string, "r2" | "r3" | "r4" | null> = {};
+  const roomKeyMap: Record<string, EggColumn | null> = {};
   rooms.forEach(r => {
-    const trimmed = r.name.replace(/\s+/g, "").toLowerCase();
-    roomKeyMap[r.id] = trimmed.endsWith("2") ? "r2" : trimmed.endsWith("3") ? "r3" : trimmed.endsWith("4") ? "r4" : null;
+    roomKeyMap[r.id] = roomEggColumn(r);
   });
 
   const signalKeysAnalysed = new Set<SignalKey>();
@@ -687,7 +688,7 @@ export function computeAbnormalActivity(
     };
 
     if (rk) {
-      const series = eggInPeriod.map(e => e[rk] * 30);
+      const series = eggInPeriod.map(e => (e[rk] ?? 0) * 30);
       if (series.length >= 8) {
         const half = Math.floor(series.length / 2);
         const prior = series.slice(0, half);

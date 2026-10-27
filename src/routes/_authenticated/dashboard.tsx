@@ -334,7 +334,7 @@ const setBagWeightKg = (v: number | null) => {
         name: e.label.replace(/^[A-Za-z]{3}, /, ""),
         "Extra Eggs": e.extra,
       };
-      for (const s of roomSeries) row[s.name] = e[s.key];
+      for (const s of roomSeries) row[s.name] = e[s.key] ?? 0;
       return row;
     }),
     [eggs, roomSeries],
@@ -985,7 +985,7 @@ const setBagWeightKg = (v: number | null) => {
                           </span>
                         </td>
                         {eggRoomSlots.map(s => (
-                          <td key={s.room.id} className="py-2.5 pr-4 tabular-nums">{e[s.key]}</td>
+                          <td key={s.room.id} className="py-2.5 pr-4 tabular-nums">{e[s.key] ?? 0}</td>
                         ))}
                         <td className="py-2.5 pr-4">
                           <span className="inline-flex items-center rounded-full bg-[color:var(--forest)] text-primary-foreground px-2.5 py-0.5 text-xs font-medium">

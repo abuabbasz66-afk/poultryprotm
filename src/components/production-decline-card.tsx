@@ -2,9 +2,10 @@ import { useMemo, useState } from "react";
 import { AlertTriangle, Brain, CalendarDays, CheckCircle2, ChevronDown, ChevronUp, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import type { EggRow, Room, Mortality, Feed, Health } from "@/lib/farm-data";
 import { detectProductionDecline, riskStyle, type DeclineEvent } from "@/lib/production-decline";
+import { collectedFromRow } from "@/lib/egg-normalize";
 
 const CRATE = 30;
-function farmEggs(e: EggRow) { return (e.r2 + e.r3 + e.r4) * CRATE + e.extra; }
+function farmEggs(e: EggRow) { return collectedFromRow(e); }
 function computeNormalSummary(eggs: EggRow[], rooms: Room[]) {
   const sorted = [...eggs].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
   const birds = rooms.reduce((s, r) => s + r.current, 0);
