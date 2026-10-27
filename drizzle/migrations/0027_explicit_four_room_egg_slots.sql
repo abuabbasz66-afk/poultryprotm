@@ -1,0 +1,4 @@
+ALTER TABLE public.rooms ADD COLUMN egg_column text DEFAULT NULL;
+COMMENT ON COLUMN public.rooms.egg_column IS 'Explicit egg-production storage slot; null preserves legacy mapping. Assigned only when configuring a farm without remapping historical production.';
+ALTER TABLE public.egg_production ADD COLUMN r1 integer NOT NULL DEFAULT 0, ADD COLUMN broken_r1 integer NOT NULL DEFAULT 0, ADD COLUMN extra_r1 integer NOT NULL DEFAULT 0, ADD COLUMN broken_extra_r1 integer NOT NULL DEFAULT 0;
+COMMENT ON COLUMN public.egg_production.r1 IS 'Additional production slot for explicitly configured rooms; existing r2/r3/r4 records remain unchanged.';

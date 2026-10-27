@@ -1061,63 +1061,75 @@ export type Database = {
       egg_production: {
         Row: {
           broken_extra: number
+          broken_extra_r1: number
           broken_extra_r2: number
           broken_extra_r3: number
           broken_extra_r4: number
+          broken_r1: number
           broken_r2: number
           broken_r3: number
           broken_r4: number
           created_at: string
           date: string
           extra: number
+          extra_r1: number
           extra_r2: number
           extra_r3: number
           extra_r4: number
           farm_id: string
           id: string
           label: string
+          r1: number
           r2: number
           r3: number
           r4: number
         }
         Insert: {
           broken_extra?: number
+          broken_extra_r1?: number
           broken_extra_r2?: number
           broken_extra_r3?: number
           broken_extra_r4?: number
+          broken_r1?: number
           broken_r2?: number
           broken_r3?: number
           broken_r4?: number
           created_at?: string
           date: string
           extra?: number
+          extra_r1?: number
           extra_r2?: number
           extra_r3?: number
           extra_r4?: number
           farm_id: string
           id?: string
           label: string
+          r1?: number
           r2?: number
           r3?: number
           r4?: number
         }
         Update: {
           broken_extra?: number
+          broken_extra_r1?: number
           broken_extra_r2?: number
           broken_extra_r3?: number
           broken_extra_r4?: number
+          broken_r1?: number
           broken_r2?: number
           broken_r3?: number
           broken_r4?: number
           created_at?: string
           date?: string
           extra?: number
+          extra_r1?: number
           extra_r2?: number
           extra_r3?: number
           extra_r4?: number
           farm_id?: string
           id?: string
           label?: string
+          r1?: number
           r2?: number
           r3?: number
           r4?: number
@@ -3167,6 +3179,7 @@ export type Database = {
           culled_unit_price: number | null
           current: number
           date_stocked: string | null
+          egg_column: string | null
           farm_id: string
           id: string
           initial: number
@@ -3189,6 +3202,7 @@ export type Database = {
           culled_unit_price?: number | null
           current?: number
           date_stocked?: string | null
+          egg_column?: string | null
           farm_id: string
           id?: string
           initial?: number
@@ -3211,6 +3225,7 @@ export type Database = {
           culled_unit_price?: number | null
           current?: number
           date_stocked?: string | null
+          egg_column?: string | null
           farm_id?: string
           id?: string
           initial?: number
