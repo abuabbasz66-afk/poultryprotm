@@ -639,6 +639,7 @@ export function useAddMortality() {
           .select("id, current")
           .eq("farm_id", farmId)
           .eq("name", roomName)
+          .is("superseded_by", null)
           .maybeSingle();
         if (rm) {
           await supabase
