@@ -1,4 +1,6 @@
 import type { EggRow, Room, Mortality, Feed, Health } from "@/lib/farm-data";
+import { collectedFromRow } from "@/lib/egg-normalize";
+import { roomEggColumn } from "@/lib/rooms";
 
 export type MortSeverity = "Monitoring" | "Watch" | "Warning" | "Critical";
 export type MortConfidence = "Low" | "Moderate" | "High";
@@ -200,10 +202,12 @@ function analyseForRoom(args: {
 
   // Production decline in scope
   const roomKey = roomName?.match(/(\d+)/)?.[1] ?? null;
+  const scopedRoom = rooms.find(r => r.name === roomName);
+  const configuredKey = scopedRoom?.egg_column ? roomEggColumn(scopedRoom) : null;
   const eggRecent = eggs.filter((e) => inRecent(e.date));
   const eggBase = eggs.filter((e) => inBase(e.date));
   const eggVal = (e: EggRow) =>
-    roomKey === "2" ? e.r2 : roomKey === "3" ? e.r3 : roomKey === "4" ? e.r4 : e.r2 + e.r3 + e.r4 + e.extra / 30;
+    configuredKey ? (e[configuredKey] ?? 0) : roomKey === "2" ? e.r2 : roomKey === "3" ? e.r3 : roomKey === "4" ? e.r4 : collectedFromRow(e) / 30;
   if (eggRecent.length > 0 && eggBase.length > 0) {
     const r = eggRecent.reduce((s, e) => s + eggVal(e), 0) / eggRecent.length;
     const b = eggBase.reduce((s, e) => s + eggVal(e), 0) / eggBase.length;
