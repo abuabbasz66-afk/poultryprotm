@@ -197,3 +197,5 @@
 - [x] Grand Finale now reads "Finalist and awarded" (homepage card, hero badge area, achievements cards and journey)
 - [x] 3MTT NextGen Knowledge Showcase now reads "Katsina State Winner" everywhere it appears
 - [x] Verified on homepage and achievements page; build clean; still unpublished
+
+- [x] Dashboard Active Flock Operations overview (layer + broiler brooding/rearing, deep links)
