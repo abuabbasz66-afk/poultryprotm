@@ -1,6 +1,6 @@
 import { friendlyError } from "@/lib/error-message";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bird, Plus, Loader2, Scale, Wheat, Skull, TrendingUp, Trash2, Pencil,
   ShoppingCart, ClipboardList, Target, Sparkles, ArrowLeft,
@@ -30,6 +30,8 @@ import {
 
 
 export const Route = createFileRoute("/_authenticated/broilers")({
+  validateSearch: (s: Record<string, unknown>): { batch?: string } =>
+    typeof s.batch === "string" && s.batch ? { batch: s.batch } : {},
   head: () => ({
     meta: [
       { title: "Broiler Management — PoultryPro" },
@@ -54,7 +56,9 @@ function BroilersPage() {
   const salesQ = useBroilerSales();
   const pricing = useEffectivePrice();
 
-  const [selected, setSelected] = useState<string | null>(null);
+  const { batch: linkedBatch } = Route.useSearch();
+  const [selected, setSelected] = useState<string | null>(linkedBatch ?? null);
+  useEffect(() => { if (linkedBatch) setSelected(linkedBatch); }, [linkedBatch]);
   const [showBatch, setShowBatch] = useState(false);
   const [dailyFor, setDailyFor] = useState<BatchMetrics | null>(null);
   const [saleFor, setSaleFor] = useState<BatchMetrics | null>(null);

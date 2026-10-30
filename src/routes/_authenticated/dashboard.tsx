@@ -14,7 +14,7 @@ import { HelpHint } from "@/components/academy/help-hint";
 import { ExportRecordsButton } from "@/components/export/export-button";
 import { RoomComparisonCard } from "@/components/room-comparison-card";
 import { ProfitOverviewCard } from "@/components/finance/profit-overview-card";
-
+import { ActiveFlockOperations } from "@/components/active-flock-operations";
 import { AlertsBanner } from "@/components/alerts-banner";
 import { Button } from "@/components/ui/button";
 
@@ -720,6 +720,8 @@ const setBagWeightKg = (v: number | null) => {
             Capture your farm records. Understand your performance. Predict what may come next. Get practical recommendations. Take informed action.
           </p>
         </div>
+
+        <ActiveFlockOperations />
 
         {/* Direct-URL protection: a restricted area never renders its content. */}
         {((area === "analytics" && !canAnalyticsArea) || (area === "ai" && !canAIArea)) && (
