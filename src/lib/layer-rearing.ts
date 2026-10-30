@@ -518,8 +518,13 @@ export function useUpdateLayerBatch() {
       input: { id: string } & Partial<Omit<LayerBatch, "id" | "farm_id" | "created_at">>,
     ) => {
       const { id, ...patch } = input;
-      const { error } = await supabase.from("layer_batches").update(patch).eq("id", id);
+      const { data, error } = await supabase
+        .from("layer_batches")
+        .update(patch)
+        .eq("id", id)
+        .select("id");
       if (error) throw error;
+      assertUpdated(data);
     },
     onSuccess: () => invalidateFarm(qc, farmId),
   });
@@ -797,6 +802,134 @@ export function useTransferToProduction() {
         .eq("id", input.batch.id);
       if (bErr) throw bErr;
       return roomId;
+    },
+    onSuccess: () => invalidateFarm(qc, farmId),
+  });
+}
+
+/** Ensure an update actually changed a row (RLS can silently match zero rows). */
+function assertUpdated(data: unknown[] | null) {
+  if (!data || data.length === 0)
+    throw new Error("This record could not be updated. You may not have permission to edit it.");
+}
+
+export function useUpdateLayerDaily() {
+  const qc = useQueryClient();
+  const { farmId } = useCtx();
+  return useMutation({
+    networkMode: "always",
+    mutationFn: async (input: {
+      id: string;
+      batch_id: string;
+      previous_deaths: number;
+      current_birds: number;
+      entry_date: string;
+      deaths: number;
+      death_reason?: string | null;
+      feed_kg: number;
+      feed_type?: string | null;
+      feed_cost?: number;
+      water_litres: number;
+      avg_weight_g?: number | null;
+      birds_count?: number | null;
+      temperature_c?: number | null;
+      observation?: string | null;
+      notes?: string | null;
+    }) => {
+      const { data, error } = await supabase
+        .from("layer_batch_daily")
+        .update({
+          entry_date: input.entry_date,
+          deaths: input.deaths,
+          death_reason: input.death_reason?.trim() || null,
+          feed_kg: input.feed_kg,
+          feed_type: input.feed_type?.trim() || null,
+          feed_cost: input.feed_cost ?? 0,
+          water_litres: input.water_litres,
+          avg_weight_g: input.avg_weight_g ?? null,
+          birds_count: input.birds_count ?? null,
+          temperature_c: input.temperature_c ?? null,
+          observation: input.observation?.trim() || null,
+          notes: input.notes?.trim() || null,
+        })
+        .eq("id", input.id)
+        .select("id");
+      if (error) throw error;
+      assertUpdated(data);
+      const delta = input.deaths - input.previous_deaths;
+      if (delta !== 0) {
+        const { error: upErr } = await supabase
+          .from("layer_batches")
+          .update({ current_birds: Math.max(0, input.current_birds - delta) })
+          .eq("id", input.batch_id);
+        if (upErr) throw upErr;
+      }
+    },
+    onSuccess: () => invalidateFarm(qc, farmId),
+  });
+}
+
+export function useUpdateLayerWeight() {
+  const qc = useQueryClient();
+  const { farmId } = useCtx();
+  return useMutation({
+    networkMode: "always",
+    mutationFn: async (input: {
+      id: string;
+      week: number;
+      entry_date: string;
+      birds_weighed: number;
+      avg_weight_g: number;
+      target_weight_g?: number | null;
+      notes?: string | null;
+    }) => {
+      const { id, ...rest } = input;
+      const { data, error } = await supabase
+        .from("layer_batch_weights")
+        .update({
+          ...rest,
+          target_weight_g: rest.target_weight_g ?? null,
+          notes: rest.notes?.trim() || null,
+        })
+        .eq("id", id)
+        .select("id");
+      if (error) throw error;
+      assertUpdated(data);
+    },
+    onSuccess: () => invalidateFarm(qc, farmId),
+  });
+}
+
+export function useUpdateLayerHealth() {
+  const qc = useQueryClient();
+  const { farmId } = useCtx();
+  return useMutation({
+    networkMode: "always",
+    mutationFn: async (input: {
+      id: string;
+      kind: string;
+      name: string;
+      entry_date: string;
+      dosage?: string | null;
+      administered_by?: string | null;
+      status?: string;
+      notes?: string | null;
+    }) => {
+      const { data, error } = await supabase
+        .from("layer_batch_health")
+        .update({
+          kind: input.kind,
+          name: input.name.trim(),
+          entry_date: input.entry_date,
+          dosage: input.dosage?.trim() || null,
+          administered_by: input.administered_by?.trim() || null,
+          status: input.status ?? "done",
+          notes: input.notes?.trim() || null,
+        })
+        .eq("id", input.id)
+        .select("id");
+      if (error) throw error;
+      assertUpdated(data);
     },
     onSuccess: () => invalidateFarm(qc, farmId),
   });
