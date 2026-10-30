@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Egg,
   Plus,
@@ -71,6 +71,8 @@ import {
 } from "@/lib/layer-rearing";
 
 export const Route = createFileRoute("/_authenticated/rearing")({
+  validateSearch: (s: Record<string, unknown>): { batch?: string } =>
+    typeof s.batch === "string" && s.batch ? { batch: s.batch } : {},
   head: () => ({
     meta: [
       { title: "Layer Brooding & Rearing — PoultryPro" },
@@ -116,7 +118,10 @@ function RearingPage() {
   const healthQ = useLayerHealth();
   const settingsQ = useRearingSettings();
 
-  const [selected, setSelected] = useState<string | null>(null);
+  // Deep link from the dashboard; batches are farm-scoped, so another farm's id simply shows the list.
+  const { batch: linkedBatch } = Route.useSearch();
+  const [selected, setSelected] = useState<string | null>(linkedBatch ?? null);
+  useEffect(() => { if (linkedBatch) setSelected(linkedBatch); }, [linkedBatch]);
   const [showNew, setShowNew] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
