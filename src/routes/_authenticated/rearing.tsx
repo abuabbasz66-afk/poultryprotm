@@ -16,6 +16,7 @@ import {
   Settings2,
   Bell,
   ArrowRightLeft,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePermissions } from "@/lib/rbac";
@@ -47,6 +48,13 @@ import {
   useDeleteLayerWeight,
   useRecordLayerHealth,
   useDeleteLayerHealth,
+  useUpdateLayerBatch,
+  useUpdateLayerDaily,
+  useUpdateLayerWeight,
+  useUpdateLayerHealth,
+  type LayerDaily,
+  type LayerWeight,
+  type LayerHealth,
   useSaveRearingSettings,
   useTransferToProduction,
   computeBatchMetrics,
@@ -354,6 +362,10 @@ function BatchDashboard({
   const [showWeight, setShowWeight] = useState(false);
   const [showHealth, setShowHealth] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
+  const [showEditBatch, setShowEditBatch] = useState(false);
+  const [editDaily, setEditDaily] = useState<LayerDaily | null>(null);
+  const [editWeight, setEditWeight] = useState<LayerWeight | null>(null);
+  const [editHealth, setEditHealth] = useState<LayerHealth | null>(null);
   const del = useDeleteLayerBatch();
 
   return (
@@ -375,6 +387,9 @@ function BatchDashboard({
             </Button>
             <Button size="sm" variant="outline" onClick={() => setShowHealth(true)}>
               Health / vaccination
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setShowEditBatch(true)}>
+              <Pencil className="h-3.5 w-3.5" /> Edit batch
             </Button>
             <Button
               size="sm"
@@ -523,12 +538,14 @@ function BatchDashboard({
       </div>
 
       {tab === "overview" && <OverviewTab m={m} />}
-      {tab === "daily" && <DailyTab m={m} writable={writable} />}
-      {tab === "weights" && <WeightsTab m={m} settings={settings} />}
+      {tab === "daily" && <DailyTab m={m} writable={writable} onEdit={setEditDaily} />}
+      {tab === "weights" && (
+        <WeightsTab m={m} settings={settings} writable={writable} onEdit={setEditWeight} />
+      )}
       {tab === "feed" && <FeedTab m={m} />}
       {tab === "water" && <WaterTab m={m} />}
       {tab === "mortality" && <MortalityTab m={m} />}
-      {tab === "health" && <HealthTab m={m} writable={writable} />}
+      {tab === "health" && <HealthTab m={m} writable={writable} onEdit={setEditHealth} />}
       {tab === "timeline" && <ScheduleTab m={m} settings={settings} />}
 
       {showDaily && <DailyDialog m={m} onClose={() => setShowDaily(false)} />}
@@ -537,6 +554,19 @@ function BatchDashboard({
       )}
       {showHealth && <HealthDialog m={m} onClose={() => setShowHealth(false)} />}
       {showTransfer && <TransferDialog m={m} onClose={() => setShowTransfer(false)} />}
+      {showEditBatch && <EditBatchDialog m={m} onClose={() => setShowEditBatch(false)} />}
+      {editDaily && <DailyDialog m={m} existing={editDaily} onClose={() => setEditDaily(null)} />}
+      {editWeight && (
+        <WeightDialog
+          m={m}
+          settings={settings}
+          existing={editWeight}
+          onClose={() => setEditWeight(null)}
+        />
+      )}
+      {editHealth && (
+        <HealthDialog m={m} existing={editHealth} onClose={() => setEditHealth(null)} />
+      )}
     </div>
   );
 }
@@ -627,7 +657,15 @@ function OverviewTab({ m }: { m: BatchMetrics }) {
   );
 }
 
-function DailyTab({ m, writable }: { m: BatchMetrics; writable: boolean }) {
+function DailyTab({
+  m,
+  writable,
+  onEdit,
+}: {
+  m: BatchMetrics;
+  writable: boolean;
+  onEdit: (d: LayerDaily) => void;
+}) {
   const del = useDeleteLayerDaily();
   return (
     <Section title="Daily records">
@@ -659,12 +697,21 @@ function DailyTab({ m, writable }: { m: BatchMetrics; writable: boolean }) {
                 </Td>
                 <Td>
                   {writable && (
-                    <button
-                      onClick={() => del.mutate(d.id)}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    <>
+                      <button
+                        onClick={() => onEdit(d)}
+                        aria-label="Edit record"
+                        className="mr-2 text-muted-foreground hover:text-foreground"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => confirm("Delete this daily record?") && del.mutate(d.id)}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </>
                   )}
                 </Td>
               </tr>
@@ -683,7 +730,17 @@ function DailyTab({ m, writable }: { m: BatchMetrics; writable: boolean }) {
   );
 }
 
-function WeightsTab({ m, settings }: { m: BatchMetrics; settings: RearingSettings }) {
+function WeightsTab({
+  m,
+  settings,
+  writable,
+  onEdit,
+}: {
+  m: BatchMetrics;
+  settings: RearingSettings;
+  writable: boolean;
+  onEdit: (w: LayerWeight) => void;
+}) {
   const del = useDeleteLayerWeight();
   const rows = m.weights.map((w) => {
     const target = w.target_weight_g ?? targetWeight(settings, m.batch.breed, w.week);
@@ -725,12 +782,23 @@ function WeightsTab({ m, settings }: { m: BatchMetrics; settings: RearingSetting
                 <Td>{r.diff !== null ? `${r.diff > 0 ? "+" : ""}${num(r.diff)} g` : "—"}</Td>
                 <Td>{r.status}</Td>
                 <Td>
-                  <button
-                    onClick={() => del.mutate(r.id)}
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  {writable && (
+                    <>
+                      <button
+                        onClick={() => onEdit(r)}
+                        aria-label="Edit record"
+                        className="mr-2 text-muted-foreground hover:text-foreground"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => confirm("Delete this weight record?") && del.mutate(r.id)}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </>
+                  )}
                 </Td>
               </tr>
             ))}
@@ -925,7 +993,15 @@ function MortalityTab({ m }: { m: BatchMetrics }) {
   );
 }
 
-function HealthTab({ m, writable }: { m: BatchMetrics; writable: boolean }) {
+function HealthTab({
+  m,
+  writable,
+  onEdit,
+}: {
+  m: BatchMetrics;
+  writable: boolean;
+  onEdit: (h: LayerHealth) => void;
+}) {
   const del = useDeleteLayerHealth();
   return (
     <Section title="Health, medication & vaccination">
@@ -955,12 +1031,21 @@ function HealthTab({ m, writable }: { m: BatchMetrics; writable: boolean }) {
                 <Td className="max-w-[200px] truncate">{h.notes || "—"}</Td>
                 <Td>
                   {writable && (
-                    <button
-                      onClick={() => del.mutate(h.id)}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    <>
+                      <button
+                        onClick={() => onEdit(h)}
+                        aria-label="Edit record"
+                        className="mr-2 text-muted-foreground hover:text-foreground"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => confirm("Delete this health record?") && del.mutate(h.id)}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </>
                   )}
                 </Td>
               </tr>
@@ -1165,24 +1250,67 @@ function NewBatchDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-function DailyDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) {
+function DailyDialog({
+  m,
+  existing,
+  onClose,
+}: {
+  m: BatchMetrics;
+  existing?: LayerDaily;
+  onClose: () => void;
+}) {
   const rec = useRecordLayerDaily();
+  const upd = useUpdateLayerDaily();
+  const x = existing;
   const [f, setF] = useState({
-    date: todayKey(),
-    deaths: "0",
-    reason: "",
-    feed: "0",
-    feedType: "",
-    cost: "0",
-    water: "0",
-    weight: "",
-    birds: String(m.batch.current_birds),
-    temp: "",
-    observation: "",
-    notes: "",
+    date: x?.entry_date ?? todayKey(),
+    deaths: String(x?.deaths ?? 0),
+    reason: x?.death_reason ?? "",
+    feed: String(x?.feed_kg ?? 0),
+    feedType: x?.feed_type ?? "",
+    cost: String(x?.feed_cost ?? 0),
+    water: String(x?.water_litres ?? 0),
+    weight: x?.avg_weight_g != null ? String(x.avg_weight_g) : "",
+    birds: x ? (x.birds_count != null ? String(x.birds_count) : "") : String(m.batch.current_birds),
+    temp: x?.temperature_c != null ? String(x.temperature_c) : "",
+    observation: x?.observation ?? "",
+    notes: x?.notes ?? "",
   });
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
+    const values = {
+      entry_date: f.date,
+      deaths: Number(f.deaths) || 0,
+      death_reason: f.reason,
+      feed_kg: Number(f.feed) || 0,
+      feed_type: f.feedType,
+      feed_cost: Number(f.cost) || 0,
+      water_litres: Number(f.water) || 0,
+      avg_weight_g: f.weight ? Number(f.weight) : null,
+      birds_count: f.birds ? Number(f.birds) : null,
+      temperature_c: f.temp ? Number(f.temp) : null,
+      observation: f.observation,
+      notes: f.notes,
+    };
+    if (x) {
+      upd.mutate(
+        {
+          ...values,
+          id: x.id,
+          batch_id: m.batch.id,
+          previous_deaths: x.deaths,
+          current_birds: m.batch.current_birds,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Daily record updated");
+            onClose();
+          },
+          onError: (e2) => toast.error((e2 as Error).message),
+        },
+      );
+      return;
+    }
     rec.mutate(
       {
         batch_id: m.batch.id,
@@ -1211,11 +1339,11 @@ function DailyDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) {
   };
   return (
     <Shell
-      title={`Daily record — ${m.batch.name}`}
+      title={`${x ? "Edit daily record" : "Daily record"} — ${m.batch.name}`}
       desc={`${m.ageLabel} · ${m.stage.label}`}
       onClose={onClose}
       onSubmit={submit}
-      pending={rec.isPending}
+      pending={rec.isPending || upd.isPending}
     >
       <Field label="Date">
         <input
@@ -1327,27 +1455,52 @@ function DailyDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) {
 function WeightDialog({
   m,
   settings,
+  existing,
   onClose,
 }: {
   m: BatchMetrics;
   settings: RearingSettings;
+  existing?: LayerWeight;
   onClose: () => void;
 }) {
   const rec = useRecordLayerWeight();
-  const week = Math.max(1, m.weeks);
-  const preTarget = targetWeight(settings, m.batch.breed, week);
+  const upd = useUpdateLayerWeight();
+  const x = existing;
+  const week = x?.week ?? Math.max(1, m.weeks);
+  const preTarget = x ? x.target_weight_g : targetWeight(settings, m.batch.breed, week);
   const [f, setF] = useState({
     week: String(week),
-    date: todayKey(),
-    birds: "",
-    avg: "",
-    target: preTarget !== null ? String(preTarget) : "",
-    notes: "",
+    date: x?.entry_date ?? todayKey(),
+    birds: x ? String(x.birds_weighed) : "",
+    avg: x ? String(x.avg_weight_g) : "",
+    target: preTarget != null ? String(preTarget) : "",
+    notes: x?.notes ?? "",
   });
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!f.avg) {
       toast.error("Average body weight is required");
+      return;
+    }
+    if (x) {
+      upd.mutate(
+        {
+          id: x.id,
+          week: Number(f.week) || week,
+          entry_date: f.date,
+          birds_weighed: Number(f.birds) || 0,
+          avg_weight_g: Number(f.avg),
+          target_weight_g: f.target ? Number(f.target) : null,
+          notes: f.notes,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Weight record updated");
+            onClose();
+          },
+          onError: (e2) => toast.error((e2 as Error).message),
+        },
+      );
       return;
     }
     rec.mutate(
@@ -1371,11 +1524,11 @@ function WeightDialog({
   };
   return (
     <Shell
-      title="Weekly weight check"
+      title={x ? "Edit weight record" : "Weekly weight check"}
       desc="Targets come from your configured breed table — none are assumed."
       onClose={onClose}
       onSubmit={submit}
-      pending={rec.isPending}
+      pending={rec.isPending || upd.isPending}
     >
       <div className="grid grid-cols-2 gap-3">
         <Field label="Week">
@@ -1433,21 +1586,53 @@ function WeightDialog({
   );
 }
 
-function HealthDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) {
+function HealthDialog({
+  m,
+  existing,
+  onClose,
+}: {
+  m: BatchMetrics;
+  existing?: LayerHealth;
+  onClose: () => void;
+}) {
   const rec = useRecordLayerHealth();
+  const upd = useUpdateLayerHealth();
+  const x = existing;
   const [f, setF] = useState({
-    kind: "vaccination",
-    name: "",
-    date: todayKey(),
-    dosage: "",
-    by: "",
-    status: "done",
-    notes: "",
+    kind: x?.kind ?? "vaccination",
+    name: x?.name ?? "",
+    date: x?.entry_date ?? todayKey(),
+    dosage: x?.dosage ?? "",
+    by: x?.administered_by ?? "",
+    status: x?.status ?? "done",
+    notes: x?.notes ?? "",
   });
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!f.name.trim()) {
       toast.error("Name is required");
+      return;
+    }
+    if (x) {
+      upd.mutate(
+        {
+          id: x.id,
+          kind: f.kind,
+          name: f.name,
+          entry_date: f.date,
+          dosage: f.dosage,
+          administered_by: f.by,
+          status: f.status,
+          notes: f.notes,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Health record updated");
+            onClose();
+          },
+          onError: (e2) => toast.error((e2 as Error).message),
+        },
+      );
       return;
     }
     rec.mutate(
@@ -1463,7 +1648,11 @@ function HealthDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) 
       },
       {
         onSuccess: (result) => {
-          toast.success(result.queued ? "Saved on this device. It will sync when connected." : "Health record saved");
+          toast.success(
+            result.queued
+              ? "Saved on this device. It will sync when connected."
+              : "Health record saved",
+          );
           onClose();
         },
         onError: (e2) => toast.error((e2 as Error).message),
@@ -1472,11 +1661,11 @@ function HealthDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) 
   };
   return (
     <Shell
-      title="Health / vaccination record"
+      title={x ? "Edit health / vaccination record" : "Health / vaccination record"}
       desc="Schedules are set by your farm or veterinarian."
       onClose={onClose}
       onSubmit={submit}
-      pending={rec.isPending}
+      pending={rec.isPending || upd.isPending}
     >
       <div className="grid grid-cols-2 gap-3">
         <Field label="Type">
@@ -1534,6 +1723,126 @@ function HealthDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) 
         </Field>
       </div>
       <Field label="Notes">
+        <textarea
+          className={input}
+          rows={2}
+          value={f.notes}
+          onChange={(e) => setF({ ...f, notes: e.target.value })}
+        />
+      </Field>
+    </Shell>
+  );
+}
+
+function EditBatchDialog({ m, onClose }: { m: BatchMetrics; onClose: () => void }) {
+  const upd = useUpdateLayerBatch();
+  const b = m.batch;
+  const [f, setF] = useState({
+    name: b.name,
+    breed: b.breed ?? "",
+    birds: String(b.birds_placed),
+    date: b.placement_date,
+    startAge: String(b.start_age_days ?? 0),
+    room: b.room ?? "",
+    source: b.source ?? "",
+    notes: b.notes ?? "",
+  });
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const birds = Number(f.birds);
+    if (!f.name.trim() || !birds) {
+      toast.error("Batch name and number of chicks are required");
+      return;
+    }
+    // Keep the live head-count in step with a corrected starting number.
+    const current = Math.max(0, b.current_birds + (birds - b.birds_placed));
+    upd.mutate(
+      {
+        id: b.id,
+        name: f.name.trim(),
+        breed: f.breed.trim() || null,
+        birds_placed: birds,
+        current_birds: current,
+        placement_date: f.date,
+        start_age_days: Number(f.startAge) || 0,
+        room: f.room.trim() || null,
+        source: f.source.trim() || null,
+        notes: f.notes.trim() || null,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Batch details updated");
+          onClose();
+        },
+        onError: (e2) => toast.error((e2 as Error).message),
+      },
+    );
+  };
+  return (
+    <Shell
+      title="Edit brooding batch"
+      desc="Changing the number of chicks adjusts current birds by the same difference."
+      onClose={onClose}
+      onSubmit={submit}
+      pending={upd.isPending}
+    >
+      <Field label="Batch Name / ID">
+        <input
+          className={input}
+          value={f.name}
+          onChange={(e) => setF({ ...f, name: e.target.value })}
+        />
+      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Breed">
+          <input
+            className={input}
+            value={f.breed}
+            onChange={(e) => setF({ ...f, breed: e.target.value })}
+          />
+        </Field>
+        <Field label="Number of day-old chicks">
+          <input
+            type="number"
+            min={1}
+            className={input}
+            value={f.birds}
+            onChange={(e) => setF({ ...f, birds: e.target.value })}
+          />
+        </Field>
+        <Field label="Placement / hatch date">
+          <input
+            type="date"
+            className={input}
+            value={f.date}
+            onChange={(e) => setF({ ...f, date: e.target.value })}
+          />
+        </Field>
+        <Field label="Starting age (days)">
+          <input
+            type="number"
+            min={0}
+            className={input}
+            value={f.startAge}
+            onChange={(e) => setF({ ...f, startAge: e.target.value })}
+          />
+        </Field>
+      </div>
+      <Field label="Housing / room">
+        <input
+          className={input}
+          value={f.room}
+          onChange={(e) => setF({ ...f, room: e.target.value })}
+        />
+      </Field>
+      <Field label="Source / hatchery (optional)">
+        <input
+          className={input}
+          value={f.source}
+          onChange={(e) => setF({ ...f, source: e.target.value })}
+        />
+      </Field>
+      <Field label="Notes (optional)">
         <textarea
           className={input}
           rows={2}
