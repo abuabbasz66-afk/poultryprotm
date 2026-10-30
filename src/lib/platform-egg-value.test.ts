@@ -15,6 +15,8 @@ describe("all-farm public egg valuation", () => {
       GRANT SELECT ON egg_production TO anon;
       INSERT INTO farms VALUES ('a','Nigeria'),('b','Nigeria'),('c','Zambia');`);
     await db.exec(readFileSync("drizzle/migrations/0023_public_all_farm_egg_value.sql", "utf8"));
+    await db.exec(`ALTER TABLE egg_production ADD COLUMN r1 integer DEFAULT 0, ADD COLUMN broken_r1 integer DEFAULT 0;`);
+    await db.exec(readFileSync("drizzle/migrations/0029_four_room_aggregate_compatibility.sql", "utf8"));
   });
   afterAll(async () => { await db.close(); });
   beforeEach(async () => {
@@ -38,7 +40,7 @@ describe("all-farm public egg valuation", () => {
     expect((await stats())?.egg_value).toBe(12000);
   });
   it("subtracts broken eggs and values loose eggs at one thirtieth of a crate", async () => {
-    await db.exec(`INSERT INTO egg_production VALUES ('a','2020-02-01',1,0,0,15,5,0,0,0);`);
+    await db.exec(`INSERT INTO egg_production(farm_id,date,r2,r3,r4,extra,broken_r2,broken_r3,broken_r4,broken_extra) VALUES ('a','2020-02-01',1,0,0,15,5,0,0,0);`);
     expect((await stats())?.egg_value).toBe(8000);
   });
   it("excludes foreign currency, missing prices, invalid quantities and future production", async () => {
@@ -50,6 +52,10 @@ describe("all-farm public egg valuation", () => {
   });
   it("does not substitute a hardcoded value when no records qualify", async () => {
     expect((await stats())?.egg_value).toBeNull();
+  });
+  it("includes the additional configured slot without double counting loose eggs or breakage", async () => {
+    await db.exec(`INSERT INTO egg_production(farm_id,date,r1,r2,r3,r4,extra,broken_r1) VALUES ('a','2020-02-01',2,1,0,0,5,2);`);
+    expect((await stats())?.egg_value).toBe(18600);
   });
   it("returns only a combined total and coverage without exposing farm rows", async () => {
     await db.exec(`INSERT INTO egg_production(farm_id,date,r2,r3,r4,extra) VALUES ('a','2020-02-01',1,0,0,0); SET ROLE anon;`);

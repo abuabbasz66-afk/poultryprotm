@@ -623,7 +623,7 @@ async function insertRow(kind: Kind, farm_id: string, d: Record<string, any>) {
     });
     if (error) throw error;
     // Decrement room current
-    const { data: rm } = await supabase.from("rooms").select("id,current").eq("farm_id", farm_id).eq("name", d.room).maybeSingle();
+    const { data: rm } = await supabase.from("rooms").select("id,current").eq("farm_id", farm_id).eq("name", d.room).is("superseded_by", null).maybeSingle();
     if (rm) {
       await supabase.from("rooms").update({ current: Math.max(0, (rm.current ?? 0) - d.loss) }).eq("id", rm.id);
     }
@@ -633,7 +633,7 @@ async function insertRow(kind: Kind, farm_id: string, d: Record<string, any>) {
     });
     if (error) throw error;
   } else if (kind === "rooms") {
-    const { data: existing } = await supabase.from("rooms").select("id").eq("farm_id", farm_id).eq("name", d.room).maybeSingle();
+    const { data: existing } = await supabase.from("rooms").select("id").eq("farm_id", farm_id).eq("name", d.room).is("superseded_by", null).maybeSingle();
     if (existing?.id) {
       const { error } = await supabase.from("rooms").update({ initial: d.initial, current: d.current }).eq("id", existing.id);
       if (error) throw error;
