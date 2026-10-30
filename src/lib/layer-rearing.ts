@@ -518,8 +518,13 @@ export function useUpdateLayerBatch() {
       input: { id: string } & Partial<Omit<LayerBatch, "id" | "farm_id" | "created_at">>,
     ) => {
       const { id, ...patch } = input;
-      const { error } = await supabase.from("layer_batches").update(patch).eq("id", id);
+      const { data, error } = await supabase
+        .from("layer_batches")
+        .update(patch)
+        .eq("id", id)
+        .select("id");
       if (error) throw error;
+      assertUpdated(data);
     },
     onSuccess: () => invalidateFarm(qc, farmId),
   });
