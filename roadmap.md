@@ -4,7 +4,11 @@
 
 - [x] Inspect actual farms and room records: no exact MK name; Emkay Integrated Farms has Rooms 1–3 plus three active Room 4 rows with different bird counts
 - [x] Owner confirmed Room 4 has 2,940 birds, identifying Emkay Integrated Farms and its authoritative existing room
-- [ ] Restore exactly four usable rooms without losing historical records; verify production, feed, mortality, health and vaccination save/read/edit flows
+- [x] Retain the existing 2,940-bird Room 4; mark two accidental duplicates superseded without deleting their identities; configure separate fourth production storage with unchanged legacy mappings for other farms
+- [x] Owner-session browser verified four active rooms and 8,190 birds; production, feed, mortality and health save/read/edit passed; temporary test records removed and Room 4 population restored
+- [x] Room 4 selectable in vaccination; existing flock requirement preserved
+- [ ] Vaccination save/read/edit — blocked because this farm has no registered layer flock; no invented flock or vaccination created
+- [ ] Publish four-room application support — awaiting explicit owner approval; database corrections already applied
 
 ## Public sitemap expansion (2026-10-23)
 
