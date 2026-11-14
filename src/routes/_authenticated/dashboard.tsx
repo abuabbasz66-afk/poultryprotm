@@ -15,6 +15,7 @@ import { ExportRecordsButton } from "@/components/export/export-button";
 import { RoomComparisonCard } from "@/components/room-comparison-card";
 import { ProfitOverviewCard } from "@/components/finance/profit-overview-card";
 import { ActiveFlockOperations } from "@/components/active-flock-operations";
+import { WhatsAppCommunityInvitation } from "@/components/whatsapp-community-invitation";
 import { AlertsBanner } from "@/components/alerts-banner";
 import { Button } from "@/components/ui/button";
 
@@ -677,6 +678,7 @@ const setBagWeightKg = (v: number | null) => {
       <main className="container-x mt-8 space-y-6 md:space-y-8">
         <AlertsBanner />
         <TrialBanner />
+        <WhatsAppCommunityInvitation />
 
         {/* Five stages reuse existing areas and the shared Action Centre. */}
         <div>

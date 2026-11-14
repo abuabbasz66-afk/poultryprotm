@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
-import { Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { notifyNewAccount } from "@/lib/notify-new-account.functions";
 import { ONBOARDING_GOALS, trackEvent } from "@/lib/growth";
+import { WhatsAppCommunityInvitation } from "@/components/whatsapp-community-invitation";
 
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
@@ -39,6 +41,7 @@ function OnboardingPage() {
   const [goal, setGoal] = useState<string>("production");
   const [checking, setChecking] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [registered, setRegistered] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -115,7 +118,7 @@ function OnboardingPage() {
 
       await qc.invalidateQueries();
       toast.success("Farm profile created.");
-      navigate({ to: "/dashboard", replace: true });
+      setRegistered(true);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to create farm");
     } finally {
@@ -127,6 +130,20 @@ function OnboardingPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-sm text-muted-foreground">Loading…</div>
+      </div>
+    );
+  }
+
+  if (registered) {
+    return (
+      <div className="min-h-screen bg-background px-4 py-10">
+        <div className="mx-auto w-full max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+          <span className="grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-primary"><CheckCircle2 className="h-8 w-8" /></span>
+          <h1 className="mt-5 font-display text-3xl font-semibold">Your Farm Is Successfully Registered!</h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">Welcome to PoultryPro. Your farm profile is ready, and you can now begin keeping records, tracking performance and receiving practical insights. Join our official farmers community to stay connected with the PoultryPro team.</p>
+          <div className="mt-6"><WhatsAppCommunityInvitation variant="onboarding" /></div>
+          <Button type="button" size="lg" className="mt-6 min-h-12 w-full rounded-full" onClick={() => navigate({ to: "/dashboard", replace: true })}>Continue to Dashboard <ArrowRight /></Button>
+        </div>
       </div>
     );
   }

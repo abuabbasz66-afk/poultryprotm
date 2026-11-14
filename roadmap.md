@@ -1,5 +1,13 @@
 # PoultryPro PWA and mobile upgrade
 
+## WhatsApp Farmer Community (2026-11-14)
+
+- [x] Add one centrally managed invitation to the dashboard, registration success screen, public landing page and footer, with accessible disabled states until configured
+- [x] Add protected super-admin settings, official-link validation and public read-only configuration access
+- [x] Four validation tests pass; public/mobile/dashboard/admin browser checks and disabled-settings save/readback pass; anonymous configuration writes rejected
+- [ ] Configure the official WhatsApp invitation URL — owner must supply it
+- [ ] Publish the invitation — awaiting explicit owner approval
+
 ## MK Integrated Farms Room 4 (2026-10-26)
 
 - [x] Inspect actual farms and room records: no exact MK name; Emkay Integrated Farms has Rooms 1–3 plus three active Room 4 rows with different bird counts

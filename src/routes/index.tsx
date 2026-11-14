@@ -22,6 +22,7 @@ import { RecognitionCard } from "@/components/recognition/international-recognit
 import { TUTORIAL_CATEGORIES } from "@/lib/tutorials";
 import { ActionCentrePreview } from "@/components/landing/action-centre-preview";
 import { FarmIntelligenceJourney } from "@/components/landing/farm-intelligence-journey";
+import { WhatsAppCommunityInvitation } from "@/components/whatsapp-community-invitation";
 import { Button } from "@/components/ui/button";
 
 
@@ -1367,7 +1368,9 @@ function Index() {
         </div>
       </section>
 
-      <section id="contact" className="pb-24">
+      <WhatsAppCommunityInvitation variant="public" />
+
+      <section id="contact" className="py-24">
 
         <div className="container-x">
           <div className="relative overflow-hidden rounded-[2.5rem] bg-[color:var(--forest)] text-primary-foreground px-8 md:px-16 py-16 md:py-24">

@@ -4313,6 +4313,10 @@ export type Database = {
         Args: { _key: string; _value: Json }
         Returns: undefined
       }
+      admin_set_whatsapp_community: {
+        Args: { _enabled: boolean; _url: string }
+        Returns: Json
+      }
       admin_start_support: {
         Args: { _farm_id: string; _reason: string }
         Returns: string
@@ -4505,6 +4509,7 @@ export type Database = {
           email: string
         }[]
       }
+      get_whatsapp_community: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

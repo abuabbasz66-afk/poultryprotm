@@ -38,6 +38,7 @@ import { Button } from "@/components/ui/button";
 import { AdminGrowthTab } from "@/components/growth/admin-growth-tab";
 import { AdminEngagementTab } from "@/components/engagement/admin-engagement-tab";
 import { AdminBroadcastTab } from "@/components/engagement/admin-broadcast-tab";
+import { AdminWhatsAppCommunitySettings } from "@/components/admin-whatsapp-community-settings";
 
 export const Route = createFileRoute("/super-admin")({
   ssr: false,
@@ -58,7 +59,7 @@ export const Route = createFileRoute("/super-admin")({
 type Tab =
   | "overview" | "accounts" | "farms" | "subscriptions"
   | "activity" | "activity-log" | "live-feed" | "analytics"
-  | "whatsapp" | "intelligence" | "health" | "academy" | "growth" | "engagement" | "broadcast" | "audit";
+  | "whatsapp" | "intelligence" | "health" | "academy" | "growth" | "engagement" | "broadcast" | "settings" | "audit";
 
 const NAV: { id: Tab; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -76,6 +77,7 @@ const NAV: { id: Tab; label: string; icon: any }[] = [
   { id: "growth", label: "Growth", icon: TrendingUp },
   { id: "engagement", label: "Customer Engagement", icon: MessageCircle },
   { id: "broadcast", label: "Broadcast Messages", icon: Send },
+  { id: "settings", label: "Platform Settings", icon: Settings },
   { id: "audit", label: "Admin Audit Log", icon: FileText },
 ];
 
@@ -199,7 +201,7 @@ function SuperAdminPage() {
             <NotificationBell userId={userId} isAdmin={!!isAdmin} />
 
             <button
-              onClick={() => toast("Settings", { description: "Admin preferences coming soon." })}
+              onClick={() => setTab("settings")}
               className="p-2 rounded-md border border-white/15 hover:bg-white/10"
               aria-label="Settings"
             >
@@ -277,6 +279,7 @@ function SuperAdminPage() {
           {tab === "growth" && <AdminGrowthTab enabled={!!isAdmin} />}
           {tab === "engagement" && <AdminEngagementTab enabled={!!isAdmin} />}
           {tab === "broadcast" && <AdminBroadcastTab userId={userId} />}
+          {tab === "settings" && <AdminWhatsAppCommunitySettings userId={userId} />}
           {tab === "audit" && <AuditTab userId={userId} />}
         </main>
 
