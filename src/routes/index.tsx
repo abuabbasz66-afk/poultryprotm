@@ -503,19 +503,21 @@ function Index() {
               Live • Automatically updated
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             {[
               { icon: Users, label: "Registered farms", value: fmtStat(live?.registered_farms) },
+              { icon: Users, label: "Registered users", value: fmtStat(live?.registered_users) },
               { icon: Bird, label: "Birds managed", value: fmtStat(live?.total_birds) },
               { icon: Egg, label: "Eggs recorded", value: fmtStat(live?.eggs) },
               { icon: LayoutDashboard, label: "Rooms managed", value: fmtStat(live?.rooms) },
+              { icon: Wallet, label: "Total Revenue Tracked", value: formatRecordedRevenue(live?.egg_value) },
             ].map((s) => (
-              <div key={s.label} className="flex items-center gap-3">
-                <span className="grid h-11 w-11 place-items-center rounded-full bg-[color:var(--gold)] text-[color:var(--ink)]">
+              <div key={s.label} className="flex min-w-0 items-center gap-3">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[color:var(--gold)] text-[color:var(--ink)]">
                   <s.icon className="h-5 w-5" />
                 </span>
                 <div className="min-w-0">
-                  <div className="font-display text-2xl md:text-3xl font-semibold leading-none break-words">
+                  <div className="font-display text-2xl md:text-3xl font-semibold leading-tight break-words">
                     {statsLoading || !live ? <StatSkeleton /> : s.value}
                   </div>
                   <div className="text-xs uppercase tracking-wider opacity-70 mt-1">{s.label}</div>
@@ -523,7 +525,12 @@ function Index() {
               </div>
             ))}
           </div>
-
+          <div className="mt-6 space-y-2 text-xs leading-relaxed text-primary-foreground/80 max-w-3xl">
+            <p>Total value of egg production recorded by participating farms on PoultryPro, calculated using their recorded egg prices. This represents farm activity tracked on the platform, not PoultryPro’s company revenue or independently verified sales or cash received.</p>
+            {live?.excluded_value_records != null && live.excluded_value_records > 0 && (
+              <p>{live.excluded_value_records.toLocaleString("en-NG")} records excluded because price, validity or currency could not be confirmed. This is a partial total of eligible records.</p>
+            )}
+          </div>
         </div>
       </section>
 

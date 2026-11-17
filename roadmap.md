@@ -1,5 +1,12 @@
 # PoultryPro PWA and mobile upgrade
 
+## Homepage snapshot additions (2026-11-17)
+
+- [x] Add registered users and Total Revenue Tracked using existing live aggregates, preserving valuation transparency and existing statistics
+- [x] Verify desktop/mobile snapshot: 80 registered users, live ₦91.8M valuation, no mobile overflow; 12 valuation tests pass and automatic build OK
+- [ ] Harden flagged recycle-bin restore — owner-only restore is used by the app; permission changes await owner decision to preserve legitimate recovery
+- [ ] Publish snapshot changes — awaiting explicit owner approval
+
 ## WhatsApp Farmer Community (2026-11-14)
 
 - [x] Add one centrally managed invitation to the dashboard, registration success screen, public landing page and footer, with accessible disabled states until configured
