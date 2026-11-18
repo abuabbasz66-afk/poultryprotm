@@ -2,9 +2,10 @@
 
 ## Homepage snapshot additions (2026-11-17)
 
+- [x] Remove the duplicate lower Live Platform Statistics section requested on 2026-11-18; browser confirms one revenue statistic and retained top snapshot without mobile overflow
 - [x] Add registered users and Total Revenue Tracked using existing live aggregates, preserving valuation transparency and existing statistics
 - [x] Verify desktop/mobile snapshot: 80 registered users, live ₦91.8M valuation, no mobile overflow; 12 valuation tests pass and automatic build OK
-- [ ] Harden flagged recycle-bin restore — owner-only restore is used by the app; permission changes await owner decision to preserve legitimate recovery
+- [x] Harden recycle-bin restore while retaining owner recovery: static allowed targets, farm/identity checks, five security tests plus seven valuation tests pass; signed-in owner restore/readback verified and temporary record removed; security finding cleared
 - [ ] Publish snapshot changes — awaiting explicit owner approval
 
 ## WhatsApp Farmer Community (2026-11-14)

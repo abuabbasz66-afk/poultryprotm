@@ -218,6 +218,13 @@
       "when": 1794651245423,
       "tag": "0030_whatsapp_community_invitation",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794982893086,
+      "tag": "0031_secure_owner_recycle_restore",
+      "breakpoints": true
     }
   ]
 }

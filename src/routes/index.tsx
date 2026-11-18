@@ -6,7 +6,6 @@ import heroImage from "@/assets/hero-farm-analytics.webp";
 import heroMobileImage from "@/assets/hero-farm-analytics-mobile.webp";
 import founderAsset from "@/assets/founder-abubakar.jpg.asset.json";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
-import eggsImg from "@/assets/eggs.jpg";
 import {
   Egg, Bird, LineChart, HeartPulse, Wheat, Wallet, LayoutDashboard,
   ShieldCheck, Sparkles, ArrowRight, MapPin, Trophy, Cpu, Users, Leaf,
@@ -651,59 +650,6 @@ function Index() {
             ))}
           </div>
 
-        </div>
-      </section>
-
-      <section id="impact" className="py-24">
-        <div className="container-x grid lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-6 order-2 lg:order-1">
-            <img src={eggsImg} alt="Fresh eggs" width={1200} height={900} loading="lazy" className="rounded-3xl object-cover w-full h-[480px] shadow-[var(--shadow-lift)]" />
-          </div>
-          <div className="lg:col-span-6 order-1 lg:order-2 space-y-6">
-            <span className="text-xs uppercase tracking-[0.2em] text-[color:var(--forest)] font-medium">Live Platform Statistics</span>
-            <h2 className="font-display text-4xl md:text-5xl font-semibold leading-tight">
-              Real numbers from the PoultryPro platform.
-            </h2>
-            <p className="text-muted-foreground text-lg leading-relaxed">
-              Platform statistics update automatically from recorded farm data.
-              Egg value combines eligible records across participating farms, not just one farm.
-              Better data provides the foundation for better analytics and more useful AI-supported insights.
-            </p>
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              {[
-                { k: fmtStat(live?.registered_farms), v: "Registered farms" },
-                { k: fmtStat(live?.registered_users), v: "Registered users" },
-                { k: fmtStat(live?.total_birds), v: "Birds currently managed" },
-                { k: fmtStat(live?.rooms), v: "Active rooms" },
-                { k: fmtStat(live?.production_records), v: "Production records captured" },
-                { k: fmtStat(live?.feed_records), v: "Feed records logged" },
-                { k: fmtStat(live?.mortality_records), v: "Mortality records logged" },
-                { k: fmtStat(live?.health_records), v: "Health records logged" },
-                { k: fmtStat(live?.eggs), v: "Eggs recorded" },
-                { k: formatRecordedRevenue(live?.egg_value), v: "Total Revenue Tracked", revenue: true },
-              ].map((x) => (
-                <div key={x.v} className={`min-w-0 rounded-2xl border border-border bg-card p-5 ${x.revenue ? "col-span-2" : ""}`}>
-                  <div className="font-display text-2xl sm:text-3xl font-semibold text-[color:var(--forest)] break-words">
-                    {statsLoading || (!live && !x.revenue) ? <StatSkeleton className="w-20" /> : x.k}
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">{x.v}</div>
-                  {x.revenue && (
-                    <div className="mt-3 space-y-2 text-xs text-muted-foreground leading-relaxed">
-                      <p>Total value of egg production recorded by participating farms on PoultryPro, calculated using their recorded egg prices. This represents farm activity tracked on the platform, not PoultryPro’s company revenue or independently verified sales or cash received.</p>
-                      {live?.excluded_value_records != null && live.excluded_value_records > 0 && (
-                        <p>{live.excluded_value_records.toLocaleString("en-NG")} records excluded because price, validity or currency could not be confirmed. This is a partial total of eligible records.</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-2 pt-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-[color:var(--forest)] animate-pulse" />
-              Live platform statistics • Automatically updated
-            </div>
-          </div>
         </div>
       </section>
 
