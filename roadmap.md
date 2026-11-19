@@ -1,5 +1,10 @@
 # PoultryPro PWA and mobile upgrade
 
+## Farmer training video series (2026-11-19)
+
+- [x] Capture the 11 lessons in order using the real interface and isolated, labelled demo data.
+- [x] Add English narration and captions; verify the 1080p exports, sample frames and audio levels; deliver the series privately in Files without publishing.
+
 ## Homepage snapshot additions (2026-11-17)
 
 - [x] Remove the duplicate lower Live Platform Statistics section requested on 2026-11-18; browser confirms one revenue statistic and retained top snapshot without mobile overflow
