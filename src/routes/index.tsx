@@ -1307,7 +1307,7 @@ function Index() {
               },
               {
                 q: "How can farmers, partners and investors contact the team?",
-                a: "Email greenfieldcontractsagroltd@gmail.com or use the Request a Demo button below. We welcome conversations with farmers, cooperatives, partners and investors.",
+                a: "Email poultrypro99@gmail.com or use the Request a Demo button below. We welcome conversations with farmers, cooperatives, partners and investors.",
               },
             ].map((f) => (
               <details key={f.q} className="group rounded-2xl border border-border bg-card p-5">
@@ -1348,7 +1348,7 @@ function Index() {
                   Create Free Account <ArrowRight className="h-4 w-4 flex-none" />
                 </Link>
                 <a
-                  href="mailto:greenfieldcontractsagroltd@gmail.com?subject=PoultryPro%20Demo%20Request"
+                  href="mailto:poultrypro99@gmail.com?subject=PoultryPro%20Demo%20Request"
                   className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 px-7 py-4 font-semibold hover:bg-white/10 transition"
                 >
                   Request a Demo

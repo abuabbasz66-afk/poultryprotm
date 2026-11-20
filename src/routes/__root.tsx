@@ -129,7 +129,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               url: "https://poultrypro.life/",
               logo: "https://poultrypro.life/favicon.png",
               areaServed: "Africa",
-              email: "greenfieldcontractsagroltd@gmail.com",
+              email: "poultrypro99@gmail.com",
               address: { "@type": "PostalAddress", addressCountry: "NG" },
             },
             {

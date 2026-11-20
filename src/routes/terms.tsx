@@ -99,8 +99,8 @@ function TermsPage() {
 
           <Section heading="10. Contact">
             <p>
-              <a className="text-primary underline" href="mailto:greenfieldcontractsagroltd@gmail.com">
-                greenfieldcontractsagroltd@gmail.com
+              <a className="text-primary underline" href="mailto:poultrypro99@gmail.com">
+                poultrypro99@gmail.com
               </a>
             </p>
           </Section>

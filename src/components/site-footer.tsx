@@ -36,7 +36,7 @@ const COMPANY: FooterLink[] = [
   { label: "About PoultryPro", to: "/", hash: "about" },
   { label: "WhatsApp Community", to: "/", hash: "community" },
   { label: "Achievements", to: "/achievements" },
-  { label: "Contact", href: "mailto:greenfieldcontractsagroltd@gmail.com", external: true },
+  { label: "Contact", href: "mailto:poultrypro99@gmail.com", external: true },
 
 ];
 
@@ -178,10 +178,10 @@ export function SiteFooter() {
               <li className="flex items-start gap-2 min-w-0">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--gold)]" />
                 <a
-                  href="mailto:greenfieldcontractsagroltd@gmail.com"
+                  href="mailto:poultrypro99@gmail.com"
                   className="text-primary-foreground/70 hover:text-[color:var(--gold)] break-all"
                 >
-                  greenfieldcontractsagroltd@gmail.com
+                  poultrypro99@gmail.com
                 </a>
               </li>
               <li className="flex items-start gap-2">
