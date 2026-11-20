@@ -4,6 +4,7 @@ import { AcademyBrowser } from "@/components/academy/academy-browser";
 import { TutorialCard } from "@/components/academy/tutorial-card";
 import { useAcademyCategories, useAcademyTutorials } from "@/lib/academy";
 import { AcademyPublicHeader } from "@/components/academy/public-header";
+import { AcademyBackHome } from "@/components/academy/back-home-buttons";
 import { SiteFooter } from "@/components/site-footer";
 
 const TITLE = "PoultryPro Academy | Poultry Farm Management Tutorials";
@@ -34,6 +35,7 @@ function AcademyIndex() {
     <div className="min-h-screen bg-background">
       <AcademyPublicHeader />
       <main className="container-x py-12 md:py-16">
+        <AcademyBackHome className="-mt-2" />
         <div className="max-w-2xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
             <GraduationCap className="h-3.5 w-3.5" /> Academy

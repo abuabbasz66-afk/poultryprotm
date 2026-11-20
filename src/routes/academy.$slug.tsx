@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AcademyPublicHeader } from "@/components/academy/public-header";
+import { AcademyBackHome } from "@/components/academy/back-home-buttons";
 import { AcademyVideoPlayer } from "@/components/academy/academy-video-player";
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/site-footer";
@@ -67,12 +68,15 @@ function TutorialPlayerPage() {
     <div className="min-h-screen bg-background">
       <AcademyPublicHeader />
       <main className="container-x py-8 md:py-12">
-        <Link
-          to="/academy"
-          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" /> All tutorials
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <AcademyBackHome />
+          <Link
+            to="/academy"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" /> All tutorials
+          </Link>
+        </div>
 
         {isPending ? (
           <div className="mt-8 flex min-h-[40vh] items-center justify-center">

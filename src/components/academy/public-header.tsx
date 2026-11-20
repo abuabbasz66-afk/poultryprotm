@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
+import { AcademyBackHome } from "@/components/academy/back-home-buttons";
 
 /** Slim public header for Academy pages, matching the landing brand. */
 export function AcademyPublicHeader() {
@@ -11,6 +12,7 @@ export function AcademyPublicHeader() {
           <span className="font-display text-lg font-semibold">PoultryPro</span>
         </Link>
         <nav className="flex items-center gap-2 text-sm">
+          <AcademyBackHome compact className="hidden sm:flex" />
           <Link to="/academy" className="rounded-full px-3 py-2 font-medium hover:bg-secondary">
             Academy
           </Link>
