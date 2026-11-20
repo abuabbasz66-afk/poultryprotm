@@ -3,7 +3,7 @@
 ## Academy farmer training series (2026-11-20)
 
 - [x] Replace the 33 public tutorials with the 11 completed PoultryPro lessons in the requested order, with product-screen thumbnails, exact durations and accurate descriptions; archive old tutorials without deleting learner history
-- [x] Verify all 11 public videos decode and play at 1080p, thumbnails download, Previous/Next follows series order, signed-in completion survives reload, and mobile/desktop layouts have no overflow; five tests and automatic build pass; publish nothing without owner approval
+- [x] Verify all 11 public videos decode and play at 1080p, thumbnails download, Previous/Next follows series order, signed-in completion survives reload, and mobile/desktop layouts have no overflow; all 44 lesson/theme/viewport combinations checked, dark-surface contrast corrected in the Academy player/header and shared footer, five tests and automatic build pass; publish nothing without owner approval
 
 ## Farmer training video series (2026-11-19)
 

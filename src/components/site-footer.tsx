@@ -74,7 +74,7 @@ function FooterItem({ item }: { item: FooterLink }) {
 export function SiteFooter() {
   const year = new Date().getFullYear();
   return (
-    <footer className="bg-[color:var(--forest)] text-primary-foreground border-t border-primary-foreground/10">
+    <footer className="[--primary-foreground:var(--cream)] bg-[color:var(--forest)] text-primary-foreground border-t border-primary-foreground/10">
       <div className="container-x py-12 md:py-16">
         <div className="grid gap-10 md:gap-8 md:grid-cols-2 lg:grid-cols-12">
           {/* Brand */}

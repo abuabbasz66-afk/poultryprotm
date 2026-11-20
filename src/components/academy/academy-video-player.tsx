@@ -132,7 +132,7 @@ export function AcademyVideoPlayer({ tutorial, initialPosition = 0, onProgress, 
 
   return (
     <section aria-label="Tutorial video">
-      <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-border bg-foreground">
+      <div className="[--primary-foreground:var(--cream)] relative aspect-video w-full overflow-hidden rounded-lg border border-border bg-[color:var(--forest)]">
         {!started && (
           <>
             {tutorial.thumbnail_url ? (
@@ -140,7 +140,7 @@ export function AcademyVideoPlayer({ tutorial, initialPosition = 0, onProgress, 
             ) : (
               <div className="absolute inset-0 bg-primary" />
             )}
-            <div className="absolute inset-0 bg-foreground/35" />
+            <div className="absolute inset-0 bg-[color:var(--forest)]/35" />
             <div className="absolute inset-x-4 bottom-4 top-4 flex flex-col items-center justify-center text-center text-primary-foreground">
               <Button type="button" size="icon" onClick={begin} aria-label={`Play ${tutorial.title}`} className="h-16 w-16 rounded-full bg-accent text-accent-foreground shadow-[var(--shadow-lift)] hover:bg-accent/90">
                 <Play className="h-7 w-7 fill-current" />
@@ -154,7 +154,7 @@ export function AcademyVideoPlayer({ tutorial, initialPosition = 0, onProgress, 
         {player}
 
         {loading && !failed && (
-          <div className="pointer-events-none absolute inset-0 grid place-items-center bg-foreground/65 text-primary-foreground">
+          <div className="pointer-events-none absolute inset-0 grid place-items-center bg-[color:var(--forest)]/65 text-primary-foreground">
             <div className="text-center">
               <Loader2 className="mx-auto h-7 w-7 animate-spin" />
               <p className="mt-3 text-sm font-medium">Loading {tutorial.title}…</p>
@@ -164,7 +164,7 @@ export function AcademyVideoPlayer({ tutorial, initialPosition = 0, onProgress, 
         )}
 
         {(failed || (started && !player)) && (
-          <div className="absolute inset-0 grid place-items-center bg-foreground px-5 text-center text-primary-foreground">
+          <div className="absolute inset-0 grid place-items-center bg-[color:var(--forest)] px-5 text-center text-primary-foreground">
             <div>
               <AlertTriangle className="mx-auto h-7 w-7 text-accent" />
               <p className="mt-3 font-display text-xl font-semibold">Video unavailable</p>
