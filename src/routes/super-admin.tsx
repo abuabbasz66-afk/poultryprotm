@@ -299,11 +299,15 @@ type VideoHealthRow = {
 };
 
 async function verifyDirectVideo(url: string, thumbnailUrl: string | null) {
-  const urlResponse = await fetch(url, { method: "HEAD", cache: "no-store" }).catch(() => null);
-  const thumbnailResponse = thumbnailUrl
-    ? await fetch(thumbnailUrl, { method: "HEAD", cache: "no-store" }).catch(() => null)
-    : null;
+  // CDN media endpoints may reject HEAD while supporting normal playback.
+  // Request only the first byte, then cancel the body before checking the poster.
+  const urlResponse = await fetch(url, { method: "GET", headers: { Range: "bytes=0-0" }, cache: "no-store" }).catch(() => null);
+  await urlResponse?.body?.cancel().catch(() => {});
   if (!urlResponse?.ok) return { status: "FAIL" as const, urlStatus: "UNREACHABLE", playbackStatus: "FAILED", detail: "Video URL could not be reached." };
+  const thumbnailResponse = thumbnailUrl
+    ? await fetch(thumbnailUrl, { method: "GET", cache: "no-store" }).catch(() => null)
+    : null;
+  await thumbnailResponse?.body?.cancel().catch(() => {});
   if (!thumbnailResponse?.ok) return { status: "WARNING" as const, urlStatus: "REACHABLE", playbackStatus: "NOT_VERIFIED", detail: "Video is reachable, but its thumbnail could not be loaded." };
 
   return new Promise<{ status: "PASS" | "FAIL"; urlStatus: string; playbackStatus: string; detail: string }>((resolve) => {

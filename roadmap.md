@@ -1,5 +1,10 @@
 # PoultryPro PWA and mobile upgrade
 
+## Academy farmer training series (2026-11-20)
+
+- [ ] Replace the existing Academy video catalogue with the 11 completed PoultryPro lessons in the requested order, with thumbnails, durations and accurate descriptions.
+- [ ] Verify public playback, navigation, progress and mobile/desktop presentation; retain learning history and publish nothing without owner approval.
+
 ## Farmer training video series (2026-11-19)
 
 - [x] Capture the 11 lessons in order using the real interface and isolated, labelled demo data.

@@ -12,7 +12,7 @@ import { TutorialCard } from "@/components/academy/tutorial-card";
 import { DIFFICULTY_CLASS } from "@/components/academy/tutorial-card";
 import { useAuthUserId } from "@/lib/farm-data";
 import {
-  formatDuration, reportTutorialVideo, saveTutorialPlayback, trackTutorialView, useAcademyCategories, useAcademyProgress,
+  formatDuration, orderAcademyTutorials, reportTutorialVideo, saveTutorialPlayback, trackTutorialView, useAcademyCategories, useAcademyProgress,
   useAcademyTutorial, useAcademyTutorials, useSetTutorialCompletion,
 } from "@/lib/academy";
 import { cn } from "@/lib/utils";
@@ -46,10 +46,7 @@ function TutorialPlayerPage() {
   const setCompletion = useSetTutorialCompletion();
 
   const category = categories.find((c) => c.id === tutorial?.category_id);
-  const ordered = useMemo(
-    () => [...all].sort((a, b) => a.category_id.localeCompare(b.category_id) || a.sort_order - b.sort_order),
-    [all],
-  );
+  const ordered = useMemo(() => orderAcademyTutorials(all), [all]);
   const index = ordered.findIndex((t) => t.slug === slug);
   const prev = index > 0 ? ordered[index - 1] : null;
   const next = index >= 0 && index < ordered.length - 1 ? ordered[index + 1] : null;

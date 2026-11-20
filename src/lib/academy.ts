@@ -79,6 +79,11 @@ export function formatDuration(seconds: number | null | undefined): string | nul
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+/** Preserve the catalogue's deliberate lesson sequence for previous/next navigation. */
+export function orderAcademyTutorials<T extends Pick<AcademyTutorial, "sort_order">>(tutorials: T[]): T[] {
+  return [...tutorials].sort((a, b) => a.sort_order - b.sort_order);
+}
+
 export function useAcademyCategories() {
   return useQuery({
     queryKey: ["academy", "categories"],
