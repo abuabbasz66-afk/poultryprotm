@@ -29,7 +29,7 @@ export function AcademyBackHome({
   }, []);
 
   const control = cn(
-    "inline-flex items-center gap-1.5 rounded-full border border-border bg-card text-sm font-medium text-muted-foreground transition hover:bg-secondary hover:text-foreground",
+    "inline-flex items-center gap-1.5 rounded-full border border-border bg-card text-sm font-medium text-foreground/70 transition hover:bg-secondary hover:text-foreground",
     compact ? "h-9 w-9 justify-center" : "px-4 py-2",
   );
 
