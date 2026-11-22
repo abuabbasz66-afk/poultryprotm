@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Facebook, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Mail, Phone, MapPin, Globe } from "lucide-react";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
 import { OFFICIAL_PROFILE } from "@/lib/official-profile";
 
@@ -38,7 +38,7 @@ const COMPANY: FooterLink[] = [
   { label: "WhatsApp Community", to: "/", hash: "community" },
   { label: "Achievements", to: "/achievements" },
   { label: "Contact", href: "mailto:poultrypro99@gmail.com", external: true },
-
+  { label: "Greenfield Website", href: OFFICIAL_PROFILE.website, external: true },
 ];
 
 function scrollToHash(hash?: string) {
@@ -73,6 +73,13 @@ function FooterItem({ item }: { item: FooterLink }) {
     );
   }
   if ("external" in item && item.external) {
+    if (/^https?:/i.test(item.href)) {
+      return (
+        <a href={item.href} target="_blank" rel="noreferrer" className={cls}>
+          {item.label}
+        </a>
+      );
+    }
     return (
       <a href={item.href} className={cls}>
         {item.label}
@@ -218,6 +225,17 @@ export function SiteFooter() {
                   Katsina State, Nigeria
                 </span>
               </li>
+              <li className="flex items-start gap-2 min-w-0">
+                <Globe className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--gold)]" />
+                <a
+                  href={OFFICIAL_PROFILE.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary-foreground/70 hover:text-[color:var(--gold)] break-all"
+                >
+                  {OFFICIAL_PROFILE.websiteLabel}
+                </a>
+              </li>
             </ul>
           </div>
         </div>
@@ -257,7 +275,14 @@ export function SiteFooter() {
       <div className="border-t border-primary-foreground/10">
         <div className="container-x py-4 text-center text-xs text-primary-foreground/55">
           <span className="text-primary-foreground/50">Developed by</span>{" "}
-          <span className="font-medium text-primary-foreground/80">Greenfield Contracts &amp; Agro Limited</span>
+          <a
+            href={OFFICIAL_PROFILE.website}
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium text-primary-foreground/80 hover:text-[color:var(--gold)] transition-colors"
+          >
+            Greenfield Contracts &amp; Agro Limited
+          </a>
         </div>
       </div>
     </footer>

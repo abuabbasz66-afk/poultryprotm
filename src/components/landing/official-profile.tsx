@@ -1,11 +1,22 @@
-import { Building2, Cpu, Layers3, Leaf } from "lucide-react";
+import { Building2, Cpu, Globe, Layers3, Leaf } from "lucide-react";
 import { OFFICIAL_PROFILE } from "@/lib/official-profile";
 
-const identity = [
+const identity: {
+  label: string;
+  value: string;
+  icon: typeof Building2;
+  href?: string;
+}[] = [
   { label: "Corporate Ownership", value: OFFICIAL_PROFILE.corporateOwnership, icon: Building2 },
   { label: "Product Name", value: OFFICIAL_PROFILE.productName, icon: Layers3 },
   { label: "Industry", value: OFFICIAL_PROFILE.industry, icon: Leaf },
   { label: "Product Category", value: OFFICIAL_PROFILE.productCategory, icon: Cpu },
+  {
+    label: "Company Website",
+    value: OFFICIAL_PROFILE.websiteLabel,
+    icon: Globe,
+    href: OFFICIAL_PROFILE.website,
+  },
 ];
 
 export function OfficialProfile() {
@@ -40,7 +51,7 @@ export function OfficialProfile() {
             Corporate Identity
           </h3>
           <dl className="mt-6 divide-y divide-primary-foreground/15">
-            {identity.map(({ label, value, icon: Icon }) => (
+            {identity.map(({ label, value, icon: Icon, href }) => (
               <div key={label} className="flex gap-4 py-5 first:pt-0 last:pb-0">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-foreground/10 text-[color:var(--gold)]">
                   <Icon className="h-5 w-5" aria-hidden="true" />
@@ -50,7 +61,18 @@ export function OfficialProfile() {
                     {label}
                   </dt>
                   <dd className="mt-1.5 break-words font-display text-lg font-semibold leading-snug">
-                    {value}
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline decoration-primary-foreground/30 underline-offset-4 hover:text-[color:var(--gold)] hover:decoration-[color:var(--gold)]"
+                      >
+                        {value}
+                      </a>
+                    ) : (
+                      value
+                    )}
                   </dd>
                 </div>
               </div>
