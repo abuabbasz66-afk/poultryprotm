@@ -21,14 +21,15 @@ import { RecognitionCard } from "@/components/recognition/international-recognit
 import { TUTORIAL_CATEGORIES } from "@/lib/tutorials";
 import { ActionCentrePreview } from "@/components/landing/action-centre-preview";
 import { FarmIntelligenceJourney } from "@/components/landing/farm-intelligence-journey";
+import { OfficialProfile } from "@/components/landing/official-profile";
 import { WhatsAppCommunityInvitation } from "@/components/whatsapp-community-invitation";
 import { Button } from "@/components/ui/button";
+import { OFFICIAL_PROFILE } from "@/lib/official-profile";
 
 
 
 const HOME_TITLE = "PoultryPro™ | AI-Powered Poultry Farm Management & Intelligence";
-const HOME_DESC =
-  "AI-powered intelligence for smarter poultry farming. PoultryPro turns farm records into analytics, supported insights and practical next steps for production, feed, flock health and farm finances.";
+const HOME_DESC = OFFICIAL_PROFILE.description;
 
 // Testimonials reproduced exactly as supplied by each person quoted.
 // `basis` records only how the person engaged with PoultryPro, as stated in their own words.
@@ -453,6 +454,8 @@ function Index() {
           </div>
         </div>
       </section>
+
+      <OfficialProfile />
 
       <ActionCentrePreview />
 

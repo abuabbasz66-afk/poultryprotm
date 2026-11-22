@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Facebook, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 import logoAsset from "@/assets/poultrypro-logo.png.asset.json";
+import { OFFICIAL_PROFILE } from "@/lib/official-profile";
 
 // Official social URLs are not yet configured. Icons render but are disabled
 // until an administrator sets these to real URLs.
@@ -40,6 +41,20 @@ const COMPANY: FooterLink[] = [
 
 ];
 
+function scrollToHash(hash?: string) {
+  if (!hash) return;
+  let tries = 0;
+  const tick = () => {
+    const element = document.getElementById(hash);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    if (tries++ < 20) window.setTimeout(tick, 60);
+  };
+  window.setTimeout(tick, 0);
+}
+
 function FooterItem({ item }: { item: FooterLink }) {
   const cls =
     "text-sm text-primary-foreground/70 hover:text-[color:var(--gold)] transition-colors";
@@ -65,7 +80,12 @@ function FooterItem({ item }: { item: FooterLink }) {
     );
   }
   return (
-    <Link to={item.to} hash={item.hash} className={cls}>
+    <Link
+      to={item.to}
+      hash={item.hash}
+      className={cls}
+      onClick={() => scrollToHash(item.hash)}
+    >
       {item.label}
     </Link>
   );
@@ -90,8 +110,7 @@ export function SiteFooter() {
               <span className="font-display text-xl font-semibold">PoultryPro™</span>
             </div>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-primary-foreground/70">
-              Helping poultry farmers transform everyday records into smarter decisions,
-              stronger businesses and more profitable farms.
+              {OFFICIAL_PROFILE.tagline}
             </p>
             <div className="mt-5 flex items-center gap-2">
               {SOCIALS.map(({ label, icon: Icon, href }) => {

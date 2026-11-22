@@ -1,5 +1,10 @@
 # PoultryPro PWA and mobile upgrade
 
+## Official corporate profile (2026-11-22)
+
+- [x] Add the owner-supplied official introduction and corporate identity to the homepage, footer and homepage search description without changing the existing brand or features
+- [x] Verify phone/desktop presentation, the existing About footer destination and metadata; keep unpublished
+
 ## Academy farmer training series (2026-11-20)
 
 - [x] Replace the 33 public tutorials with the 11 completed PoultryPro lessons in the requested order, with product-screen thumbnails, exact durations and accurate descriptions; archive old tutorials without deleting learner history
